@@ -674,12 +674,54 @@ export default function OperationalDashboardPage() {
 
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Articles commandés :</h4>
-              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 space-y-1.5 text-xs">
-                {selectedOrder.items.map((it, idx) => (
-                  <div key={idx} className="flex justify-between font-bold text-slate-900">
-                    <span>{it}</span>
-                  </div>
-                ))}
+              <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200 space-y-2.5 text-xs">
+                {selectedOrder.rawItems && selectedOrder.rawItems.length > 0 ? (
+                  selectedOrder.rawItems.map((it, idx) => {
+                    const dishName = it.name || it.menuItem?.name || 'Plat traditionnel';
+                    const dishPrice = Number(it.price || it.menuItem?.price || 0);
+                    const dishQty = Number(it.quantity) || 1;
+                    const lineTotal = dishPrice * dishQty;
+
+                    return (
+                      <div key={it.id || idx} className="flex justify-between items-start font-bold text-slate-900 border-b border-slate-200/60 last:border-0 pb-2 last:pb-0">
+                        <div className="space-y-0.5 min-w-0 flex-1 pr-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-amber-700 font-black font-mono shrink-0">{dishQty}x</span>
+                            <span className="truncate">{dishName}</span>
+                          </div>
+                          {it.notes && (
+                            <span className="block text-[11px] text-slate-500 italic font-normal pl-4">
+                              Note : {it.notes}
+                            </span>
+                          )}
+                          {it.options && (
+                            <div className="flex flex-wrap gap-1 pl-4 pt-0.5">
+                              {it.options.side && (
+                                <span className="text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600">
+                                  🍛 {it.options.side}
+                                </span>
+                              )}
+                              {it.options.spiceLevel && (
+                                <span className="text-[10px] bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded text-rose-700">
+                                  🌶️ {it.options.spiceLevel}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-mono text-slate-900 font-bold shrink-0">
+                          {formatFCFA(lineTotal)}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  selectedOrder.items.map((it, idx) => (
+                    <div key={idx} className="flex justify-between font-bold text-slate-900">
+                      <span>{it}</span>
+                    </div>
+                  ))
+                )}
               </div>
               {selectedOrder.customerNote && (
                 <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">

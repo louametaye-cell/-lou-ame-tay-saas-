@@ -229,6 +229,7 @@ export interface OrderType {
   customerName?: string | null;
   customerNote?: string | null;
   paymentMethod?: string | null;
+  transactionRef?: string | null;
   note?: string | null;
   restaurantId: string;
   restaurantName?: string | null;

@@ -32,7 +32,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { tableNumber, customerNote, restaurantId, items } = body;
+    const { tableNumber, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef } = body;
 
     if (!tableNumber || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     }
 
     const total = items.reduce(
-      (sum: number, item: any) => sum + item.price * item.quantity,
+      (sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
       0
     );
 
@@ -50,20 +50,31 @@ export async function POST(req: Request) {
     const newOrder: OrderType = {
       id: orderId,
       tableNumber: Number(tableNumber),
+      customerName: customerName || null,
       customerNote: customerNote || '',
       restaurantId: restaurantId || 'resto_thies_01',
       restaurantName: 'Chez Fatou & Frères',
+      paymentMethod: paymentMethod || 'CASH',
+      transactionRef: transactionRef || undefined,
       status: 'PENDING',
       total,
       createdAt: new Date().toISOString(),
-      items: items.map((i: any) => ({
-        id: `item_${Math.random().toString(36).substring(2, 7)}`,
-        menuItemId: i.menuItemId || i.menuItem?.id,
-        menuItem: i.menuItem,
-        quantity: i.quantity,
-        price: i.price || i.menuItem?.price,
-        notes: i.notes || i.customNotes,
-      })),
+      items: items.map((i: any) => {
+        const dishName = i.name || i.menuItem?.name || 'Plat du jour';
+        const dishPrice = Number(i.price || i.menuItem?.price) || 0;
+        const dishQty = Number(i.quantity) || 1;
+
+        return {
+          id: i.id || `item_${Math.random().toString(36).substring(2, 7)}`,
+          menuItemId: i.menuItemId || i.menuItem?.id || i.id,
+          name: dishName,
+          menuItem: i.menuItem || undefined,
+          quantity: dishQty,
+          price: dishPrice,
+          notes: i.notes || i.customNotes || null,
+          options: i.options,
+        };
+      }),
     };
 
     // Store in memory first
@@ -75,6 +86,7 @@ export async function POST(req: Request) {
         data: {
           id: newOrder.id,
           tableNumber: newOrder.tableNumber,
+          customerName: newOrder.customerName,
           customerNote: newOrder.customerNote,
           restaurantId: newOrder.restaurantId,
           total: newOrder.total,
@@ -91,7 +103,7 @@ export async function POST(req: Request) {
         },
       });
     } catch (dbErr) {
-      // Non-blocking database write error (e.g. dev mode without active postgres)
+      // Non-blocking database write error
       console.warn('Prisma DB write bypassed:', dbErr);
     }
 
