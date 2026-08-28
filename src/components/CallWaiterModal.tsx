@@ -3,27 +3,31 @@
 import React, { useState } from 'react';
 import { X, Bell, Receipt, Droplets, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Language } from '@/types';
+import { getUIText } from '@/lib/translation-engine';
 
 interface CallWaiterModalProps {
   isOpen: boolean;
   onClose: () => void;
   tableNumber: number;
+  lang?: Language;
 }
 
 export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
   isOpen,
   onClose,
   tableNumber,
+  lang = 'FR',
 }) => {
   const [called, setCalled] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
+  const t = getUIText(lang);
+
   const handleCall = (reason: string) => {
     setCalled(reason);
-    toast.success(`Serveur notifié pour la Table ${tableNumber < 10 ? `0${tableNumber}` : tableNumber} !`, {
-      description: `Motif : ${reason}`,
-    });
+    toast.success(`${t.table} ${tableNumber < 10 ? `0${tableNumber}` : tableNumber} - ${reason}!`);
 
     setTimeout(() => {
       setCalled(null);
@@ -32,10 +36,10 @@ export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
   };
 
   const reasons = [
-    { label: 'Demander l\'addition (Note)', icon: Receipt, key: 'bill', color: 'bg-amber-500' },
-    { label: 'Une carafe d\'eau / Glaçons', icon: Droplets, key: 'water', color: 'bg-blue-500' },
-    { label: 'Besoin d\'aide / Conseil menu', icon: HelpCircle, key: 'help', color: 'bg-green-600' },
-    { label: 'Autre demande particulière', icon: Bell, key: 'other', color: 'bg-purple-600' },
+    { label: t.callReasonBill, icon: Receipt, key: 'bill', color: 'bg-amber-500' },
+    { label: t.callReasonWater, icon: Droplets, key: 'water', color: 'bg-blue-500' },
+    { label: t.callReasonHelp, icon: HelpCircle, key: 'help', color: 'bg-green-600' },
+    { label: t.callReasonOther, icon: Bell, key: 'other', color: 'bg-purple-600' },
   ];
 
   return (
@@ -44,7 +48,7 @@ export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 min-h-[48px] min-w-[48px] p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center active:scale-95 transition-transform"
-          aria-label="Fermer"
+          aria-label={t.closeWindow}
         >
           <X className="w-6 h-6" />
         </button>
@@ -55,10 +59,10 @@ export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
           </div>
           <div>
             <h3 className="font-black text-lg sm:text-xl text-gray-950">
-              Appeler le Serveur
+              {t.callWaiterTitle}
             </h3>
             <p className="text-sm font-extrabold text-green-700">
-              🎯 Table {tableNumber < 10 ? `0${tableNumber}` : tableNumber}
+              🎯 {t.table} {tableNumber < 10 ? `0${tableNumber}` : tableNumber}
             </p>
           </div>
         </div>
@@ -67,10 +71,10 @@ export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
           <div className="py-8 text-center space-y-3">
             <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto animate-bounce" />
             <h4 className="text-lg font-black text-gray-900">
-              Appel transmis au comptoir !
+              {t.callWaiterSent}
             </h4>
             <p className="text-sm text-gray-600">
-              Un serveur arrive à votre table d&apos;ici quelques instants.
+              {t.callWaiterSubtitle}
             </p>
           </div>
         ) : (

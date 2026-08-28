@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { X, Plus, Minus, Trash2, Send, ShoppingBag } from 'lucide-react';
-import { CartItem } from '@/types';
+import { CartItem, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
+import { getUIText } from '@/lib/translation-engine';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface CartDrawerProps {
   onDeleteItem: (itemId: string) => void;
   onClearCart: () => void;
   onSubmitOrder: () => void;
+  lang?: Language;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -31,8 +33,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onDeleteItem,
   onClearCart,
   onSubmitOrder,
+  lang = 'FR',
 }) => {
   if (!isOpen) return null;
+
+  const t = getUIText(lang);
 
   const totalPrice = items.reduce(
     (sum, item) => sum + item.menuItem.price * item.quantity,
@@ -55,10 +60,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-gray-950">
-                Votre Commande
+                {t.yourOrder}
               </h2>
               <span className="text-sm font-extrabold text-green-700">
-                🎯 Table {tableNumber < 10 ? `0${tableNumber}` : tableNumber} • {totalCount} article{totalCount > 1 ? 's' : ''}
+                🎯 {t.table} {tableNumber < 10 ? `0${tableNumber}` : tableNumber} • {totalCount} {totalCount > 1 ? t.articles : t.article}
               </span>
             </div>
           </div>
@@ -78,10 +83,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <div className="text-center py-12 space-y-3">
               <span className="text-5xl block">🛒</span>
               <p className="text-base font-bold text-gray-800">
-                Votre panier est encore vide
+                {t.emptyCartTitle}
               </p>
               <p className="text-sm text-gray-500">
-                Ajoutez de délicieux plats pour débuter votre commande.
+                {t.emptyCartSubtitle}
               </p>
             </div>
           ) : (
@@ -135,13 +140,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               {/* Special Note Input (Font size 16px to prevent iOS auto-zoom) */}
               <div className="pt-2">
                 <label className="text-sm font-black text-gray-900 block mb-1.5">
-                  Une remarque pour le chef ? (Optionnel)
+                  {t.kitchenNoteLabel}
                 </label>
                 <input
                   type="text"
                   value={customerNote}
                   onChange={(e) => onCustomerNoteChange(e.target.value)}
-                  placeholder="Ex: Piment bien fort, servi sans couverts..."
+                  placeholder={t.kitchenNotePlaceholder}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-green-600 rounded-2xl p-3.5 text-base text-gray-900 outline-none shadow-inner transition-all"
                 />
               </div>
@@ -153,7 +158,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         {items.length > 0 && (
           <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-3">
             <div className="flex items-center justify-between px-1">
-              <span className="text-base font-bold text-gray-600">Total à régler</span>
+              <span className="text-base font-bold text-gray-600">{t.totalToPay}</span>
               <span className="text-2xl font-black text-gray-950 tracking-tight">
                 {formatFCFA(totalPrice)}
               </span>
@@ -165,7 +170,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               className="w-full min-h-[56px] bg-green-600 hover:bg-green-700 text-white text-lg font-black rounded-2xl shadow-xl shadow-green-600/30 flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
               <Send className="w-5 h-5 stroke-[2.5]" />
-              <span>Transmettre ma commande 🚀</span>
+              <span>{t.sendOrder}</span>
             </button>
           </div>
         )}

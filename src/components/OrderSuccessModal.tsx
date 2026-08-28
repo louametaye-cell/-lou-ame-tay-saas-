@@ -3,14 +3,16 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, Clock, Utensils, Sparkles, ChefHat, BellRing, ArrowRight } from 'lucide-react';
-import { OrderType } from '@/types';
+import { OrderType, Language } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
+import { getUIText } from '@/lib/translation-engine';
 
 interface OrderSuccessModalProps {
   order: OrderType | null;
   isOpen: boolean;
   onClose: () => void;
   onOrderMore: () => void;
+  lang?: Language;
 }
 
 export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
@@ -18,6 +20,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   isOpen,
   onClose,
   onOrderMore,
+  lang = 'FR',
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -39,6 +42,8 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
 
   if (!isOpen || !order) return null;
 
+  const t = getUIText(lang);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
@@ -52,14 +57,14 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           </div>
 
           <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-            Commande Transmise ! 🍽️
+            {t.orderSuccessTitle}
           </h2>
           <p className="text-xs sm:text-sm text-emerald-100 font-medium mt-1">
-            La cuisine a reçu votre commande avec succès
+            {t.orderSuccessSubtitle}
           </p>
 
           <div className="mt-3 inline-flex items-center gap-2 bg-black/20 px-3.5 py-1.5 rounded-full text-xs font-bold backdrop-blur-xs border border-white/20">
-            <span>🎯 Table {order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber}</span>
+            <span>🎯 {t.table} {order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber}</span>
             <span>•</span>
             <span>N° {order.id.slice(-6).toUpperCase()}</span>
           </div>
@@ -69,10 +74,6 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-4">
           {/* Real-time Order Status Timeline */}
           <div className="bg-orange-50/70 border border-orange-200/80 rounded-2xl p-4">
-            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
-              Suivi de préparation en direct
-            </h4>
-
             <div className="space-y-3">
               {/* Step 1 */}
               <div className="flex items-start gap-3">
@@ -81,10 +82,10 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-900">
-                    1. Reçue & Notifiée en cuisine
+                    {t.orderStep1Title}
                   </p>
                   <p className="text-[11px] text-gray-500">
-                    Bip sonore transmis au cuisinier avec vos instructions.
+                    {t.orderStep1Desc}
                   </p>
                 </div>
               </div>
@@ -96,10 +97,10 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-amber-900">
-                    2. En cours de préparation
+                    {t.orderStep2Title}
                   </p>
                   <p className="text-[11px] text-amber-700">
-                    Vos plats et boissons sont en cours de dressage.
+                    {t.orderStep2Desc}
                   </p>
                 </div>
               </div>
@@ -111,10 +112,10 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-600">
-                    3. Service à votre Table {order.tableNumber}
+                    {t.orderStep3Title} {order.tableNumber}
                   </p>
                   <p className="text-[11px] text-gray-400">
-                    Le serveur vous apporte vos plats chauds directement.
+                    {t.orderStep3Desc}
                   </p>
                 </div>
               </div>
@@ -124,7 +125,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           {/* Ordered Items Summary */}
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Récapitulatif des plats ({order.items.length})
+              {t.orderSummary} ({order.items.length})
             </h4>
 
             <div className="bg-gray-50 rounded-2xl p-3 border border-gray-200 divide-y divide-gray-100 text-xs">
@@ -145,7 +146,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
               ))}
 
               <div className="pt-2 flex justify-between items-center font-black text-sm text-gray-900">
-                <span>Total</span>
+                <span>{t.totalToPay}</span>
                 <span className="text-orange-600">{formatFCFA(order.total)}</span>
               </div>
             </div>
@@ -158,7 +159,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             onClick={onOrderMore}
             className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold text-sm py-3 px-4 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2"
           >
-            <span>Ajouter d&apos;autres plats / boissons</span>
+            <span>{t.orderMore}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
@@ -166,7 +167,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             onClick={onClose}
             className="w-full text-xs font-semibold text-gray-600 hover:text-gray-900 py-2 transition-colors"
           >
-            Fermer cette fenêtre
+            {t.closeWindow}
           </button>
         </div>
       </div>

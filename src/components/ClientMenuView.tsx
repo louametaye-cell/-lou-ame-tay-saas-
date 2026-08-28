@@ -13,6 +13,7 @@ import { RestaurantClosedView } from '@/components/RestaurantClosedView';
 import { RestaurantType, MenuItemType, OrderType } from '@/types';
 import { useCartStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { getUIText, translateCategoryName } from '@/lib/translation-engine';
 
 interface ClientMenuViewProps {
   initialRestaurant: RestaurantType;
@@ -221,6 +222,8 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
     }
   };
 
+  const t = getUIText(currentLang);
+
   return (
     <div className="min-h-screen bg-[#FFF8F0] pb-28 text-gray-900 font-sans">
       {/* 1. Header (Clean, brand colors, no cumbersome top allergen list) */}
@@ -230,12 +233,13 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onCallWaiter={() => setIsCallWaiterOpen(true)}
+        lang={currentLang}
       />
 
       {/* Multilingual 4-Flag Selector (FR, EN, ES, IT) */}
       <div className="max-w-4xl mx-auto px-4 pt-3 flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1">
-          <span>🌐 Langue du Menu :</span>
+          <span>🌐 {t.menuLang}</span>
         </span>
         <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md p-1 rounded-2xl border border-orange-200/80 shadow-xs">
           {[
@@ -266,6 +270,7 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         <CategoryNav
           categories={filteredCategories}
           activeCategoryId={activeCategoryId}
+          lang={currentLang}
           onSelectCategory={(id) => {
             setActiveCategoryId(id);
             const element = document.getElementById(id);
@@ -294,31 +299,37 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
             </button>
           </div>
         ) : (
-          filteredCategories.map((category) => (
-            <section key={category.id} id={category.id} className="scroll-mt-48 space-y-4">
-              {/* Category Section Title with Emoji */}
-              <div className="flex items-center gap-3 px-1">
-                <h2 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight flex items-center gap-2">
-                  <span>{category.name}</span>
-                </h2>
-                <div className="flex-1 h-[2px] bg-gradient-to-r from-orange-300/80 via-emerald-300/40 to-transparent ml-2" />
-              </div>
+          filteredCategories.map((category) => {
+            const icon = category.icon || '🍽️';
+            const translatedCat = translateCategoryName(category.name, currentLang);
 
-              {/* Grid of Dishes (Mobile First: 1 col, md: 2 cols) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                {category.items?.map((item) => (
-                  <MenuCard
-                    key={item.id}
-                    item={item}
-                    quantity={getItemQuantity(item.id)}
-                    onAdd={handleQuickAdd}
-                    onRemove={removeItem}
-                    onClickDetails={handleOpenDetails}
-                  />
-                ))}
-              </div>
-            </section>
-          ))
+            return (
+              <section key={category.id} id={category.id} className="scroll-mt-48 space-y-4">
+                {/* Category Section Title with Emoji */}
+                <div className="flex items-center gap-3 px-1">
+                  <h2 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight flex items-center gap-2">
+                    <span>{icon} {translatedCat}</span>
+                  </h2>
+                  <div className="flex-1 h-[2px] bg-gradient-to-r from-orange-300/80 via-emerald-300/40 to-transparent ml-2" />
+                </div>
+
+                {/* Grid of Dishes (Mobile First: 1 col, md: 2 cols) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  {category.items?.map((item) => (
+                    <MenuCard
+                      key={item.id}
+                      item={item}
+                      quantity={getItemQuantity(item.id)}
+                      onAdd={handleQuickAdd}
+                      onRemove={removeItem}
+                      onClickDetails={handleOpenDetails}
+                      lang={currentLang}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })
         )}
       </main>
 
@@ -328,6 +339,7 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         totalPrice={getTotalPrice()}
         tableNumber={tableNumber}
         onOpenCart={() => setIsCartOpen(true)}
+        lang={currentLang}
       />
 
       {/* 5. Dish Details Modal */}
@@ -336,6 +348,7 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         isOpen={isDishModalOpen}
         onClose={() => setIsDishModalOpen(false)}
         onAddToCart={handleAddFromModal}
+        lang={currentLang}
       />
 
       {/* 6. Client Cart Drawer */}
@@ -351,6 +364,7 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         onDeleteItem={deleteItem}
         onClearCart={clearCart}
         onSubmitOrder={handleSubmitOrder}
+        lang={currentLang}
       />
 
       {/* 7. Order Confirmation Modal */}
@@ -359,6 +373,7 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         isOpen={isOrderSuccessOpen}
         onClose={() => setIsOrderSuccessOpen(false)}
         onOrderMore={() => setIsOrderSuccessOpen(false)}
+        lang={currentLang}
       />
 
       {/* 8. Call Server Modal */}
@@ -366,6 +381,7 @@ export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
         isOpen={isCallWaiterOpen}
         onClose={() => setIsCallWaiterOpen(false)}
         tableNumber={tableNumber}
+        lang={currentLang}
       />
     </div>
   );

@@ -2,8 +2,9 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Search, Bell, Sparkles } from 'lucide-react';
-import { RestaurantType } from '@/types';
+import { Search, Bell } from 'lucide-react';
+import { RestaurantType, Language } from '@/types';
+import { getUIText } from '@/lib/translation-engine';
 
 interface HeaderProps {
   restaurant: RestaurantType;
@@ -11,6 +12,7 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onCallWaiter: () => void;
+  lang?: Language;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,7 +21,10 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearchChange,
   onCallWaiter,
+  lang = 'FR',
 }) => {
+  const t = getUIText(lang);
+
   return (
     <header className="bg-[#FFF8F0] border-b border-orange-200/80 sticky top-0 z-30 shadow-sm backdrop-blur-md">
       {/* Top Banner Bar */}
@@ -44,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </h1>
               </div>
               <p className="text-xs sm:text-sm font-bold text-[#FF6B00]">
-                {restaurant.name} • <span className="text-gray-600 font-medium">Scannez, choisissez, commandez.</span>
+                {restaurant.name} • <span className="text-gray-600 font-medium">{t.scanChooseOrder}</span>
               </p>
             </div>
           </div>
@@ -52,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right Action: Table Number Badge & Call Waiter */}
           <div className="flex items-center gap-2">
             <div className="bg-[#00A86B] text-white text-xs sm:text-sm font-black px-3.5 py-1.5 rounded-2xl shadow-md flex items-center gap-1">
-              <span>Table</span>
+              <span>{t.table}</span>
               <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-white font-mono">
                 {tableNumber < 10 ? `0${tableNumber}` : tableNumber}
               </span>
@@ -61,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onCallWaiter}
               className="p-2.5 bg-white hover:bg-orange-50 text-[#FF6B00] border-2 border-orange-200 rounded-2xl transition-all shadow-sm active:scale-95 flex items-center justify-center"
-              title="Appeler le serveur"
+              title={t.callWaiter}
             >
               <Bell className="w-4 h-4" />
             </button>
@@ -75,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Rechercher un plat, spécialité ou boisson..."
+            placeholder={t.searchPlaceholder}
             className="w-full bg-white border border-orange-200/90 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-gray-900 placeholder-gray-400 outline-none shadow-inner transition-all"
           />
         </div>

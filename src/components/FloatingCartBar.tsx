@@ -2,20 +2,26 @@
 
 import React from 'react';
 import { formatFCFA } from '@/lib/utils';
+import { Language } from '@/types';
+import { getUIText } from '@/lib/translation-engine';
 
 interface FloatingCartBarProps {
   totalCount: number;
   totalPrice: number;
   tableNumber: number;
   onOpenCart: () => void;
+  lang?: Language;
 }
 
 export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
   totalCount,
   totalPrice,
   onOpenCart,
+  lang = 'FR',
 }) => {
   if (totalCount === 0) return null;
+
+  const t = getUIText(lang);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t-4 border-green-600 shadow-2xl z-40 animate-in slide-in-from-bottom duration-300">
@@ -23,7 +29,7 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
         onClick={onOpenCart}
         className="w-full min-h-[56px] bg-green-600 hover:bg-green-700 text-white text-lg font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg"
       >
-        <span>🛒 Voir mon panier ({totalCount}) - {formatFCFA(totalPrice)}</span>
+        <span>🛒 {t.viewCart} ({totalCount}) - {formatFCFA(totalPrice)}</span>
       </button>
     </div>
   );

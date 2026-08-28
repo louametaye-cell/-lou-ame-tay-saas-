@@ -3,14 +3,16 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { X, Clock, Star, Plus, Minus, Sparkles, MessageSquare } from 'lucide-react';
-import { MenuItemType, ALLERGEN_ICONS } from '@/types';
+import { MenuItemType, ALLERGEN_ICONS, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
+import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
 
 interface DishModalProps {
   item: MenuItemType | null;
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (item: MenuItemType, notes?: string, quantity?: number) => void;
+  lang?: Language;
 }
 
 export const DishModal: React.FC<DishModalProps> = ({
@@ -18,11 +20,14 @@ export const DishModal: React.FC<DishModalProps> = ({
   isOpen,
   onClose,
   onAddToCart,
+  lang = 'FR',
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
 
   if (!isOpen || !item) return null;
+
+  const t = getUIText(lang);
 
   const handleAdd = () => {
     onAddToCart(item, notes.trim() ? notes.trim() : undefined, quantity);
@@ -46,7 +51,7 @@ export const DishModal: React.FC<DishModalProps> = ({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 min-h-[48px] min-w-[48px] rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all active:scale-95 flex items-center justify-center"
-          aria-label="Fermer"
+          aria-label={t.closeWindow}
         >
           <X className="w-6 h-6" />
         </button>
@@ -77,14 +82,14 @@ export const DishModal: React.FC<DishModalProps> = ({
               {isSpecial && (
                 <span className="bg-[#FF6B00] text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1">
                   <Sparkles className="w-4 h-4" />
-                  <span>🌟 Lou Ame Tay</span>
+                  <span>{t.specialOfTheDay}</span>
                 </span>
               )}
 
               <div className="ml-auto flex items-center gap-2">
                 <span className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 text-amber-300">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>⏱ {prepTime} min</span>
+                  <span>⏱ {prepTime} {t.prepTime}</span>
                 </span>
                 <span className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 text-amber-300">
                   <Star className="w-3.5 h-3.5 fill-amber-300" />
@@ -118,18 +123,19 @@ export const DishModal: React.FC<DishModalProps> = ({
             {item.allergens && item.allergens.length > 0 && (
               <div className="bg-amber-50/80 p-3.5 rounded-2xl border border-amber-200/80">
                 <span className="text-xs font-black text-amber-950 uppercase tracking-wider block mb-2">
-                  Allergènes présents :
+                  {t.allergensPresent}
                 </span>
                 <div className="flex items-center gap-2 flex-wrap">
                   {item.allergens.map((all, idx) => {
                     const match = ALLERGEN_ICONS[all] || { icon: '⚠️', label: all };
+                    const translatedLabel = translateAllergenLabel(match.label, lang);
                     return (
                       <span
                         key={idx}
                         className="bg-white border border-amber-300 text-sm px-3 py-1 rounded-xl font-bold flex items-center gap-1.5 text-gray-800 shadow-sm"
                       >
                         <span className="text-base">{match.icon}</span>
-                        <span>{match.label}</span>
+                        <span>{translatedLabel}</span>
                       </span>
                     );
                   })}
@@ -141,12 +147,12 @@ export const DishModal: React.FC<DishModalProps> = ({
             <div className="space-y-1.5 pt-2">
               <label className="text-sm font-black text-gray-900 flex items-center gap-1.5">
                 <MessageSquare className="w-4 h-4 text-green-600" />
-                <span>Instructions particulières pour la cuisine :</span>
+                <span>{t.specialInstructions}</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Ex: Sans oignons, bien pimenté, sauce à part..."
+                placeholder={t.specialInstructionsPlaceholder}
                 rows={2}
                 className="w-full bg-white border border-orange-200 focus:border-green-600 rounded-2xl p-3.5 text-base text-gray-900 outline-none resize-none shadow-inner"
               />
@@ -180,7 +186,7 @@ export const DishModal: React.FC<DishModalProps> = ({
             onClick={handleAdd}
             className="flex-1 min-h-[56px] px-5 bg-green-600 hover:bg-green-700 text-white font-black text-base rounded-2xl shadow-lg shadow-green-600/25 active:scale-95 transition-transform flex items-center justify-center gap-2"
           >
-            <span>Ajouter • {formatFCFA(item.price * quantity)}</span>
+            <span>{t.add} • {formatFCFA(item.price * quantity)}</span>
           </button>
         </div>
       </div>

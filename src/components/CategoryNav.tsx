@@ -1,18 +1,21 @@
 'use client';
 
 import React from 'react';
-import { CategoryType } from '@/types';
+import { CategoryType, Language } from '@/types';
+import { translateCategoryName } from '@/lib/translation-engine';
 
 interface CategoryNavProps {
   categories: CategoryType[];
   activeCategoryId: string;
   onSelectCategory: (id: string) => void;
+  lang?: Language;
 }
 
 export const CategoryNav: React.FC<CategoryNavProps> = ({
   categories,
   activeCategoryId,
   onSelectCategory,
+  lang = 'FR',
 }) => {
   return (
     <div className="sticky top-[124px] sm:top-[132px] z-20 bg-[#FFF8F0]/95 backdrop-blur-md border-b border-orange-200/80 py-3 shadow-sm">
@@ -21,6 +24,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
           {categories.map((category) => {
             const isActive = activeCategoryId === category.id;
             const icon = category.icon || '🍽️';
+            const translatedLabel = translateCategoryName(category.name, lang);
 
             return (
               <button
@@ -33,7 +37,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                 }`}
               >
                 <span className="text-[28px] leading-none">{icon}</span>
-                <span>{category.name.replace(/^[^\s]+\s/, '')}</span>
+                <span>{translatedLabel}</span>
               </button>
             );
           })}

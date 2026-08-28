@@ -3,8 +3,9 @@
 import React from 'react';
 import Image from 'next/image';
 import { Plus, Minus, Clock, Star, Sparkles } from 'lucide-react';
-import { MenuItemType, ALLERGEN_ICONS } from '@/types';
+import { MenuItemType, ALLERGEN_ICONS, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
+import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
 
 interface MenuCardProps {
   item: MenuItemType;
@@ -12,6 +13,7 @@ interface MenuCardProps {
   onAdd: (item: MenuItemType) => void;
   onRemove: (itemId: string) => void;
   onClickDetails?: (item: MenuItemType) => void;
+  lang?: Language;
 }
 
 export const MenuCard: React.FC<MenuCardProps> = ({
@@ -20,7 +22,9 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   onAdd,
   onRemove,
   onClickDetails,
+  lang = 'FR',
 }) => {
+  const t = getUIText(lang);
   const isOutOfStock = !item.isAvailable;
   const isSpecial = item.isSpecialOfTheDay || item.isSpecial;
   const wolofTitle = item.nameWolof || item.wolofName;
@@ -32,7 +36,8 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     .slice(0, 3)
     .map((all) => {
       const match = ALLERGEN_ICONS[all] || { icon: '⚠️', label: all };
-      return { label: match.label, icon: match.icon };
+      const translatedLabel = translateAllergenLabel(match.label, lang);
+      return { label: translatedLabel, icon: match.icon };
     });
 
   return (
@@ -62,14 +67,14 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           {isSpecial && (
             <span className="bg-[#FF6B00] text-white text-xs font-black px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider animate-pulse">
               <Sparkles className="w-4 h-4" />
-              <span>🌟 Lou Ame Tay</span>
+              <span>{t.specialOfTheDay}</span>
             </span>
           )}
 
           <div className="ml-auto flex items-center gap-2">
             <div className="bg-black/60 backdrop-blur-md text-white text-xs font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-amber-300" />
-              <span>⏱ {prepTime} min</span>
+              <span>⏱ {prepTime} {t.prepTime}</span>
             </div>
 
             <div className="bg-black/60 backdrop-blur-md text-amber-300 text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1">
@@ -82,7 +87,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-10">
             <span className="bg-red-600 text-white font-black text-sm uppercase tracking-widest px-5 py-2.5 rounded-full shadow-xl">
-              ⚠️ Momentanément Épuisé
+              ⚠️ {t.outOfStock}
             </span>
           </div>
         )}
@@ -124,7 +129,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             ))
           ) : (
             <span className="text-sm text-green-600 font-bold flex items-center gap-1">
-              🌿 Fait maison avec passion
+              {t.homemade}
             </span>
           )}
         </div>
@@ -132,7 +137,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         {/* 4. Bottom Controls: Big Price + 48px Touch Buttons */}
         <div className="pt-3 border-t border-amber-100 flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs text-gray-500 uppercase font-bold block">Prix</span>
+            <span className="text-xs text-gray-500 uppercase font-bold block">{t.price}</span>
             <span className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight block">
               {formatFCFA(item.price)}
             </span>
@@ -170,7 +175,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 aria-label={`Ajouter ${item.name} au panier`}
               >
                 <Plus className="w-5 h-5 stroke-[3]" />
-                <span className="font-extrabold">Ajouter</span>
+                <span className="font-extrabold">{t.add}</span>
               </button>
             )}
           </div>
