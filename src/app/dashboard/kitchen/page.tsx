@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useKitchenOrders } from '@/hooks/useKitchenOrders';
 import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitchen';
+import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
 import { KitchenHistory } from '@/components/KitchenHistory';
 import { History, LayoutGrid } from 'lucide-react';
 
@@ -23,7 +24,8 @@ export default function DashboardKitchenPage() {
   });
 
   // Calculate live counts
-  const pendingCount = orders.filter((o) => o.status === 'PENDING').length;
+  const pendingOrders = orders.filter((o) => o.status === 'PENDING');
+  const pendingCount = pendingOrders.length;
   const preparingCount = orders.filter((o) => o.status === 'PREPARING').length;
   const servedCount = orders.filter((o) => o.status === 'SERVED').length;
   const urgentCount = orders.filter((o) => {
@@ -31,6 +33,12 @@ export default function DashboardKitchenPage() {
     const diffMs = Date.now() - new Date(o.createdAt).getTime();
     return diffMs / (1000 * 60) >= 15;
   }).length;
+
+  const handleAcknowledgeAll = async () => {
+    for (const ord of pendingOrders) {
+      await updateOrderStatus(ord.id, 'PREPARING');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white pb-20">
@@ -54,6 +62,12 @@ export default function DashboardKitchenPage() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 pt-5 space-y-6">
+        {/* Repeating Alert Banner if pending orders */}
+        <KitchenAlertManager
+          pendingOrders={pendingOrders}
+          onAcknowledgeAll={handleAcknowledgeAll}
+        />
+
         {/* View Tabs Selector */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3 flex-wrap">
           <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-2xl border border-slate-800">
@@ -99,12 +113,9 @@ export default function DashboardKitchenPage() {
           />
         )}
 
-        {/* Tab 2: Served / Archived History */}
+        {/* Tab 2: History View */}
         {activeTab === 'HISTORY' && (
-          <KitchenHistory
-            restaurantId="resto_thies_01"
-            refreshTrigger={orders.length}
-          />
+          <KitchenHistory />
         )}
       </main>
     </div>

@@ -8,4 +8,8 @@ export * from './OrderSuccessTracker';
 export * from './DailySpecialsSection';
 export * from './SplitBillDrawer';
 export * from './ServiceCallModal';
+export * from './UpsellDrawer';
+export * from './TableSessionModal';
+export * from './MobileMoneyCheckout';
+export * from './ComboSection';
 export * from './ClientMenuContainer';

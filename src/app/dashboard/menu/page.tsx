@@ -22,11 +22,12 @@ import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType, MenuItemType, LEGAL_14_ALLERGENS } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { LiveStockManager } from '@/components/dashboard/LiveStockManager';
+import { ComboBuilder } from '@/components/dashboard/ComboBuilder';
 import { toast } from 'sonner';
 
 export default function DashboardMenuManagementPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType>(SAMPLE_RESTAURANT);
-  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG'>('LIVE_STOCK');
+  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG' | 'COMBOS'>('LIVE_STOCK');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -247,12 +248,29 @@ export default function DashboardMenuManagementPage() {
               <Utensils className="w-4 h-4" />
               <span>📑 Catalogue &amp; Fiches Détaillées</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('COMBOS')}
+              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                viewMode === 'COMBOS'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>🍱</span>
+              <span>Formules Midi / Soir</span>
+            </button>
           </div>
 
           <div className="text-xs text-slate-400 font-mono">
             {allItems.length} plats • {allItems.filter((i) => i.isAvailable).length} en stock
           </div>
         </div>
+
+        {/* View 0: Combo Builder */}
+        {viewMode === 'COMBOS' && (
+          <ComboBuilder categories={restaurant.categories} />
+        )}
 
         {/* View 1: Live Stock Manager (Toggle 1-Clic) */}
         {viewMode === 'LIVE_STOCK' && (

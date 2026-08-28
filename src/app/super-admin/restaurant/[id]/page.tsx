@@ -689,7 +689,7 @@ export default function SuperAdminRestaurantDetailPage() {
                             </span>
                           </td>
                           <td className="py-3 text-slate-300 max-w-[200px] truncate">
-                            {ord.items.map((i) => `${i.quantity}x ${i.menuItem.name}`).join(', ')}
+                            {ord.items.map((i) => `${i.quantity}x ${i.name || i.menuItem?.name || 'Plat'}`).join(', ')}
                           </td>
                           <td className="py-3 font-black text-amber-400">
                             {formatFCFA(ord.total)}

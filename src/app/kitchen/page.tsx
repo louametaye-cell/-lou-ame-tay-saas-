@@ -1,12 +1,13 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useKitchenOrders } from '@/hooks/useKitchenOrders';
 import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitchen';
+import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
 import { KitchenHistory } from '@/components/KitchenHistory';
 import { History, LayoutGrid } from 'lucide-react';
 
-export default function KitchenPage() {
+export default function DashboardKitchenPage() {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
   const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
@@ -22,7 +23,9 @@ export default function KitchenPage() {
     pollIntervalMs: 3500,
   });
 
-  const pendingCount = orders.filter((o) => o.status === 'PENDING').length;
+  // Calculate live counts
+  const pendingOrders = orders.filter((o) => o.status === 'PENDING');
+  const pendingCount = pendingOrders.length;
   const preparingCount = orders.filter((o) => o.status === 'PREPARING').length;
   const servedCount = orders.filter((o) => o.status === 'SERVED').length;
   const urgentCount = orders.filter((o) => {
@@ -31,9 +34,15 @@ export default function KitchenPage() {
     return diffMs / (1000 * 60) >= 15;
   }).length;
 
+  const handleAcknowledgeAll = async () => {
+    for (const ord of pendingOrders) {
+      await updateOrderStatus(ord.id, 'PREPARING');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white pb-20">
-      {/* KDS Fixed Header */}
+      {/* 1. KDS Fixed Header */}
       <KitchenHeader
         restaurantName="Chez Fatou & Frères - Thiès"
         isConnected={isConnected}
@@ -53,6 +62,12 @@ export default function KitchenPage() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 pt-5 space-y-6">
+        {/* Repeating Alert Banner if pending orders */}
+        <KitchenAlertManager
+          pendingOrders={pendingOrders}
+          onAcknowledgeAll={handleAcknowledgeAll}
+        />
+
         {/* View Tabs Selector */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3 flex-wrap">
           <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-2xl border border-slate-800">
@@ -98,12 +113,9 @@ export default function KitchenPage() {
           />
         )}
 
-        {/* Tab 2: Served / Archived History */}
+        {/* Tab 2: History View */}
         {activeTab === 'HISTORY' && (
-          <KitchenHistory
-            restaurantId="resto_thies_01"
-            refreshTrigger={orders.length}
-          />
+          <KitchenHistory />
         )}
       </main>
     </div>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Web Audio API Sound Generator for Kitchen KDS
  * Works on iOS Safari, Android Chrome, and Desktop browsers without external MP3 dependencies.
  */
@@ -124,3 +124,5 @@ export function playKitchenServedAlert() {
     // Ignore
   }
 }
+
+export const playKitchenChime = playKitchenOrderAlert;

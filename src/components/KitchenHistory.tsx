@@ -112,7 +112,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
                       Table {order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber}
                     </span>
                     <span className="text-xs text-slate-400 ml-2">
-                      ⏱ {servedTimeFormatted} • {itemCount} item{itemCount > 1 ? 's' : ''} ({order.items.map((i) => `${i.quantity}x ${i.menuItem.name}`).join(', ')})
+                      ⏱ {servedTimeFormatted} • {itemCount} item{itemCount > 1 ? 's' : ''} ({order.items.map((i) => `${i.quantity}x ${i.name || i.menuItem?.name || 'Plat'}`).join(', ')})
                     </span>
                   </div>
                 </div>

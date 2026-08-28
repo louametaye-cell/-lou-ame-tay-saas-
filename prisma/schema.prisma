@@ -9,6 +9,7 @@ generator client {
 
 enum Language {
   FR
+  WO
   EN
   ES
   IT
@@ -28,11 +29,35 @@ enum SubscriptionStatus {
   SUSPENDED 
 }
 
+enum MealPeriod {
+  ALL_DAY
+  LUNCH       // 12h00 - 16h00
+  DINNER      // 18h00 - 00h00
+  NIGHT_SNACK // 00h00 - 06h00
+}
+
 enum PaymentProvider { 
   WAVE 
   ORANGE_MONEY 
   CASH 
+  CARD
   MANUAL_AGENCY 
+}
+
+enum PaymentMethod { 
+  CASH 
+  WAVE 
+  ORANGE_MONEY 
+  CARD 
+  CASH_TPE 
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  SERVED
+  CANCELLED
 }
 
 enum PaymentStatus { 
@@ -102,9 +127,14 @@ model Tenant {
   city                  String             @default("Dakar")
   logoUrl               String?            @db.Text @map("logo_url")
   bannerUrl             String?            @db.Text @map("banner_url")
+  currency              String             @default("FCFA")
   currentPlanId         String             @map("current_plan_id")
   subscriptionStatus    SubscriptionStatus @default(TRIAL) @map("subscription_status")
+  trialEndsAt           DateTime?          @map("trial_ends_at")
   subscriptionExpiresAt DateTime?          @map("subscription_expires_at")
+  monthlyFee            Decimal            @default(15000) @map("monthly_fee") @db.Decimal(10, 2)
+  waveMerchantId        String?            @map("wave_merchant_id")
+  omMerchantNumber      String?            @map("om_merchant_number")
   lastSeenAt            DateTime?          @map("last_seen_at")
   qrScansToday          Int                @default(0) @map("qr_scans_today")
   ordersToday           Int                @default(0) @map("orders_today")
@@ -114,27 +144,117 @@ model Tenant {
 
   plan         Plan                 @relation(fields: [currentPlanId], references: [id])
   transactions PaymentTransaction[]
+  categories   Category[]
+  tables       Table[]
+  orders       Order[]
+  combos       ComboDeal[]
+  upsellRules  UpsellRule[]
   menuItems    MenuItem[]
 
   @@map("tenants")
 }
 
-model MenuItem {
-  id           String   @id @default(cuid())
-  tenantId     String   @map("tenant_id")
+model Category {
+  id           String     @id @default(cuid())
+  tenantId     String     @map("tenant_id")
   name         String
-  description  String?  @db.Text
-  price        Decimal  @db.Decimal(10, 2)
-  category     String   @default("Plats")
-  imageUrl     String?  @db.Text @map("image_url")
-  isAvailable  Boolean  @default(true) @map("is_available")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  icon         String?
+  displayOrder Int        @default(0) @map("display_order")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  translations MenuItemTranslation[]
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items        MenuItem[]
+
+  @@map("categories")
+}
+
+model Table {
+  id           String         @id @default(cuid())
+  tenantId     String         @map("tenant_id")
+  tableNumber  Int            @map("table_number")
+  label        String?
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions     TableSession[]
+  orders       Order[]
+
+  @@unique([tenantId, tableNumber], name: "uq_tenant_table")
+  @@map("tables")
+}
+
+model TableSession {
+  id          String      @id @default(cuid())
+  tableId     String      @map("table_id")
+  isActive    Boolean     @default(true) @map("is_active")
+  sharedCart  Json?       @map("shared_cart")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  table       Table       @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@map("table_sessions")
+}
+
+model MenuItem {
+  id             String       @id @default(cuid())
+  tenantId       String       @map("tenant_id")
+  categoryId     String?      @map("category_id")
+  name           String
+  description    String?      @db.Text
+  price          Decimal      @db.Decimal(10, 2)
+  period         MealPeriod   @default(ALL_DAY)
+  viewsCount     Int          @default(0)   @map("views_count")
+  salesCount     Int          @default(0)   @map("sales_count")
+  isDailySpecial Boolean      @default(false) @map("is_daily_special")
+  imageUrl       String?      @db.Text @map("image_url")
+  isAvailable    Boolean      @default(true) @map("is_available")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  tenant         Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category       Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  translations   MenuItemTranslation[]
+  upsellRules    UpsellRule[]          @relation("SuggestedItems")
+  orderItems     OrderItem[]
 
   @@map("menu_items")
+}
+
+model UpsellRule {
+  id              String      @id @default(cuid())
+  tenantId        String      @map("tenant_id")
+  triggerItemId   String?     @map("trigger_item_id")
+  suggestedItemId String      @map("suggested_item_id")
+  discountPrice   Decimal?    @map("discount_price") @db.Decimal(10, 2)
+  isActive        Boolean     @default(true) @map("is_active")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  suggestedItem   MenuItem    @relation("SuggestedItems", fields: [suggestedItemId], references: [id], onDelete: Cascade)
+
+  @@map("upsell_rules")
+}
+
+model ComboDeal {
+  id             String      @id @default(cuid())
+  tenantId       String      @map("tenant_id")
+  name           String      // ex: "Formule Midi Teranga"
+  description    String?     @db.Text
+  fixedPrice     Decimal     @map("fixed_price") @db.Decimal(10, 2)
+  period         MealPeriod  @default(LUNCH)
+  availableFrom  String      @default("12:00") @map("available_from")
+  availableTo    String      @default("16:00") @map("available_to")
+  isActive       Boolean     @default(true) @map("is_active")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("combo_deals")
 }
 
 model MenuItemTranslation {
@@ -148,8 +268,49 @@ model MenuItemTranslation {
 
   menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
-  @@unique([menuItemId, language]) // Un seul nom et une seule description par langue pour un plat
+  @@unique([menuItemId, language])
   @@map("menu_item_translations")
+}
+
+model Order {
+  id               String        @id @default(cuid())
+  tenantId         String        @map("tenant_id")
+  tableId          String?       @map("table_id")
+  tableNumber      Int           @map("table_number")
+  status           OrderStatus   @default(PENDING)
+  paymentMethod    PaymentMethod @default(CASH) @map("payment_method")
+  paymentStatus    String        @default("UNPAID") @map("payment_status")
+  transactionRef   String?       @map("transaction_ref")
+  customerName     String?       @map("customer_name")
+  customerNote     String?       @db.Text @map("customer_note")
+  totalAmount      Decimal       @map("total_amount") @db.Decimal(10, 2)
+  acknowledgedAt   DateTime?     @map("acknowledged_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  table            Table?        @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  items            OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String    @id @default(cuid())
+  orderId        String    @map("order_id")
+  menuItemId     String?   @map("menu_item_id")
+  name           String
+  price          Decimal   @db.Decimal(10, 2)
+  quantity       Int       @default(1)
+  selectedSide   String?   @map("selected_side")
+  selectedSpice  String?   @map("selected_spice")
+  selectedExtras Json?     @map("selected_extras")
+  customNotes    String?   @map("custom_notes")
+
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem       MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
 }
 
 model PaymentTransaction {

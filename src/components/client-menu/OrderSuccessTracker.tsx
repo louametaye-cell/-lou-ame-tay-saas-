@@ -131,7 +131,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                       {item.quantity}x
                     </span>
                     <span className="font-medium text-slate-900 truncate max-w-[180px]">
-                      {item.menuItem.name}
+                      {item.name || item.menuItem?.name || 'Plat commandé'}
                     </span>
                   </div>
                   <span className="font-bold text-slate-700">

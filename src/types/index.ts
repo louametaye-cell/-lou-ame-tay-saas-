@@ -53,7 +53,8 @@ export const ALLERGEN_ICONS: Record<string, { icon: string; label: string }> = {
   LUPIN: { icon: '🌼', label: 'Lupin' },
 };
 
-export type SubscriptionStatus = 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELLED';
+export type SubscriptionStatus = 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELLED' | 'PAST_DUE' | 'SUSPENDED';
+export type MealPeriod = 'ALL_DAY' | 'LUNCH' | 'DINNER' | 'NIGHT_SNACK';
 export type SubscriptionPlan = 'STARTER' | 'PRO' | 'ENTERPRISE';
 
 export interface SubscriptionType {
@@ -213,11 +214,13 @@ export type OrderStatus = 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED';
 
 export interface OrderItemType {
   id: string;
-  menuItemId: string;
-  menuItem: MenuItemType;
+  menuItemId?: string;
+  menuItem?: MenuItemType;
+  name?: string;
   quantity: number;
   price: number;
   notes?: string | null;
+  options?: CartItemOption;
 }
 
 export interface OrderType {

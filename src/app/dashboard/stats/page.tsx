@@ -28,6 +28,7 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { formatFCFA } from '@/lib/utils';
+import { AnalyticsDashboard } from '@/components/dashboard/AnalyticsDashboard';
 
 export default function DashboardStatsPage() {
   const [trends, setTrends] = useState<any[]>([]);
@@ -64,7 +65,7 @@ export default function DashboardStatsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-transparent text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -88,30 +89,30 @@ export default function DashboardStatsPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
+      <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
-            <span className="text-xs text-slate-400 font-bold block mb-1">Chiffre d&apos;Affaires Jour</span>
-            <div className="text-2xl font-black text-white">{formatFCFA(stats.todayRevenue)}</div>
+            <span className="text-xs text-slate-400 font-bold block mb-1">Chiffre d'Affaires Jour</span>
+            <div className="text-2xl font-black text-white font-mono">{formatFCFA(stats.todayRevenue)}</div>
             <span className="text-[11px] text-emerald-400 font-bold mt-1 block">↗ +12.5% vs hier</span>
           </div>
 
           <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
             <span className="text-xs text-slate-400 font-bold block mb-1">Commandes Traitées</span>
-            <div className="text-2xl font-black text-white">{stats.todayOrders}</div>
+            <div className="text-2xl font-black text-white font-mono">{stats.todayOrders}</div>
             <span className="text-[11px] text-emerald-400 font-bold mt-1 block">↗ +5.2% vs hier</span>
           </div>
 
           <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
             <span className="text-xs text-slate-400 font-bold block mb-1">Couverts Servis</span>
-            <div className="text-2xl font-black text-white">{stats.todayCovers}</div>
+            <div className="text-2xl font-black text-white font-mono">{stats.todayCovers}</div>
             <span className="text-[11px] text-emerald-400 font-bold mt-1 block">↗ +8.0% vs hier</span>
           </div>
 
           <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
             <span className="text-xs text-slate-400 font-bold block mb-1">Ticket Moyen</span>
-            <div className="text-2xl font-black text-orange-400">{formatFCFA(stats.avgTicket)}</div>
+            <div className="text-2xl font-black text-orange-400 font-mono">{formatFCFA(stats.avgTicket)}</div>
             <span className="text-[11px] text-slate-400 mt-1 block">Moyenne par table</span>
           </div>
         </div>
@@ -177,6 +178,9 @@ export default function DashboardStatsPage() {
             </div>
           </div>
         </div>
+
+        {/* Analytics Conversion & Performance Table */}
+        <AnalyticsDashboard />
       </main>
     </div>
   );

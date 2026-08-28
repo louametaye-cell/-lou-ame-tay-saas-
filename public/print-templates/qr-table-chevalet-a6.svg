@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 1480" width="105mm" height="148mm">
+  <defs>
+    <style>
+      .bg-card { fill: #FFFFFF; }
+      .text-dark { fill: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+    <linearGradient id="headerA6" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF6B00"/>
+      <stop offset="100%" stop-color="#EA580C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1050" height="1480" fill="#FFFDF9"/>
+  <rect x="35" y="35" width="980" height="1410" rx="36" fill="#FFFFFF" stroke="#FDBA74" stroke-width="6"/>
+
+  <!-- Top Hero Header -->
+  <rect x="35" y="35" width="980" height="240" rx="36" fill="url(#headerA6)"/>
+  <rect x="35" y="235" width="980" height="40" fill="url(#headerA6)"/>
+  <text x="525" y="140" text-anchor="middle" class="text-dark" font-weight="900" font-size="52" fill="#FFFFFF">🍽️ LOU AME TAY ?</text>
+  <text x="525" y="200" text-anchor="middle" class="text-dark" font-weight="700" font-size="26" fill="#FED7AA">MENU DIGITAL &amp; COMMANDE INSTANTANÉE</text>
+
+  <!-- Table Identification -->
+  <rect x="365" y="310" width="320" height="80" rx="24" fill="#00A86B"/>
+  <text x="525" y="362" text-anchor="middle" class="text-dark" font-weight="900" font-size="40" fill="#FFFFFF">TABLE N° 01</text>
+
+  <!-- Central QR Code -->
+  <rect x="235" y="420" width="580" height="580" rx="36" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="6"/>
+  <rect x="275" y="460" width="500" height="500" rx="24" fill="#0F172A"/>
+  
+  <!-- Simulated QR Pattern -->
+  <rect x="315" y="500" width="120" height="120" fill="#FFFFFF"/>
+  <rect x="335" y="520" width="80" height="80" fill="#0F172A"/>
+  <rect x="615" y="500" width="120" height="120" fill="#FFFFFF"/>
+  <rect x="635" y="520" width="80" height="80" fill="#0F172A"/>
+  <rect x="315" y="800" width="120" height="120" fill="#FFFFFF"/>
+  <rect x="335" y="820" width="80" height="80" fill="#0F172A"/>
+  <circle cx="525" cy="710" r="50" fill="#FF6B00"/>
+  <text x="525" y="726" text-anchor="middle" font-size="38">📱</text>
+
+  <!-- 3 Steps Instructions -->
+  <text x="525" y="1060" text-anchor="middle" class="text-dark" font-weight="900" font-size="32">1. Scannez • 2. Choisissez • 3. Dégustez</text>
+  <text x="525" y="1105" text-anchor="middle" class="text-dark" font-weight="600" font-size="22" fill="#64748B">Aucune application à télécharger • Ouvrez simplement l'appareil photo</text>
+
+  <!-- Payment Accepted Footer -->
+  <rect x="85" y="1170" width="880" height="210" rx="28" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="3"/>
+  <text x="525" y="1225" text-anchor="middle" class="text-dark" font-weight="800" font-size="24" fill="#334155">Paiements sur place acceptés :</text>
+
+  <g transform="translate(180, 1260)">
+    <rect x="0" y="0" width="200" height="70" rx="18" fill="#1DA1F2"/>
+    <text x="100" y="44" text-anchor="middle" class="text-dark" font-weight="900" font-size="24" fill="#FFFFFF">🔵 Wave</text>
+
+    <rect x="240" y="0" width="200" height="70" rx="18" fill="#FF6B00"/>
+    <text x="340" y="44" text-anchor="middle" class="text-dark" font-weight="900" font-size="24" fill="#FFFFFF">🟠 OM</text>
+
+    <rect x="480" y="0" width="200" height="70" rx="18" fill="#059669"/>
+    <text x="580" y="44" text-anchor="middle" class="text-dark" font-weight="900" font-size="24" fill="#FFFFFF">💵 Espèces</text>
+  </g>
+</svg>

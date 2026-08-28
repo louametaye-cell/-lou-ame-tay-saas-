@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="80mm" height="80mm">
+  <defs>
+    <style>
+      .bg { fill: #FFFFFF; }
+      .brand-orange { fill: #FF6B00; }
+      .brand-green { fill: #00A86B; }
+      .text-dark { fill: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .crop-mark { stroke: #000000; stroke-width: 1; stroke-dasharray: none; }
+    </style>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF6B00"/>
+      <stop offset="100%" stop-color="#FFA500"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Crop Marks (Repères de découpe d'imprimeur 8x8 cm) -->
+  <line x1="20" y1="40" x2="20" y2="20" class="crop-mark" />
+  <line x1="40" y1="20" x2="20" y2="20" class="crop-mark" />
+  <line x1="760" y1="20" x2="780" y2="20" class="crop-mark" />
+  <line x1="780" y1="20" x2="780" y2="40" class="crop-mark" />
+  <line x1="20" y1="760" x2="20" y2="780" class="crop-mark" />
+  <line x1="20" y1="780" x2="40" y2="780" class="crop-mark" />
+  <line x1="780" y1="760" x2="780" y2="780" class="crop-mark" />
+  <line x1="760" y1="780" x2="780" y2="780" class="crop-mark" />
+
+  <!-- Main Sticker Body -->
+  <rect x="40" y="40" width="720" height="720" rx="36" fill="#FFFFFF" stroke="#FF6B00" stroke-width="8"/>
+
+  <!-- Brand Header -->
+  <rect x="40" y="40" width="720" height="130" rx="36" fill="url(#headerGrad)"/>
+  <rect x="40" y="130" width="720" height="40" fill="url(#headerGrad)"/>
+  <text x="400" y="105" text-anchor="middle" class="text-dark" font-weight="900" font-size="34" fill="#FFFFFF" letter-spacing="1">🍽️ LOU AME TAY ?</text>
+  <text x="400" y="145" text-anchor="middle" class="text-dark" font-weight="700" font-size="18" fill="#FFF4EB">MENU DIGITAL &amp; COMMANDE SUR TABLE</text>
+
+  <!-- Central QR Code Zone (Lamination Mate Anti-Reflet) -->
+  <rect x="180" y="200" width="440" height="440" rx="28" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="4"/>
+  <rect x="210" y="230" width="380" height="380" rx="16" fill="#0F172A"/>
+  
+  <!-- Simulated QR Pattern Matrix -->
+  <rect x="240" y="260" width="90" height="90" fill="#FFFFFF"/>
+  <rect x="255" y="275" width="60" height="60" fill="#0F172A"/>
+  <rect x="470" y="260" width="90" height="90" fill="#FFFFFF"/>
+  <rect x="485" y="275" width="60" height="60" fill="#0F172A"/>
+  <rect x="240" y="490" width="90" height="90" fill="#FFFFFF"/>
+  <rect x="255" y="505" width="60" height="60" fill="#0F172A"/>
+  <circle cx="400" cy="420" r="38" fill="#FF6B00"/>
+  <text x="400" y="432" text-anchor="middle" font-size="28">📱</text>
+
+  <!-- Table Number Badge -->
+  <rect x="250" y="620" width="300" height="64" rx="20" fill="#00A86B"/>
+  <text x="400" y="662" text-anchor="middle" class="text-dark" font-weight="900" font-size="30" fill="#FFFFFF">TABLE 01</text>
+
+  <!-- Footer Scan CTA -->
+  <text x="400" y="725" text-anchor="middle" class="text-dark" font-weight="800" font-size="19" fill="#1E293B">Scannez pour commander sans attendre</text>
+</svg>

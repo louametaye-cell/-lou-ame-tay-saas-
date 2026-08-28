@@ -102,7 +102,7 @@ export async function GET(
       const rows = orders
         .map((o) => {
           const dateStr = new Date(o.createdAt).toLocaleString('fr-FR');
-          const itemsSummary = o.items.map((it) => `${it.quantity}x ${it.menuItem.name}`).join(', ');
+          const itemsSummary = o.items.map((it) => `${it.quantity}x ${it.name || it.menuItem?.name || 'Plat'}`).join(', ');
           return `"${o.id}";"${dateStr}";"Table ${o.tableNumber}";"${o.total}";"${o.status}";"${itemsSummary}"`;
         })
         .join('\n');

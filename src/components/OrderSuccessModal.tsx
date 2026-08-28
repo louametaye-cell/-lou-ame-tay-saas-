@@ -136,7 +136,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                       {item.quantity}x
                     </span>
                     <span className="font-medium text-gray-900 truncate max-w-[180px]">
-                      {item.menuItem.name}
+                      {item.name || item.menuItem?.name || 'Plat commandé'}
                     </span>
                   </div>
                   <span className="font-bold text-gray-700">

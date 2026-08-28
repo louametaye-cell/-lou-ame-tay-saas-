@@ -10,6 +10,10 @@ import { CartCheckoutDrawer } from './CartCheckoutDrawer';
 import { OrderSuccessTracker } from './OrderSuccessTracker';
 import { DailySpecialsSection } from './DailySpecialsSection';
 import { SplitBillDrawer } from './SplitBillDrawer';
+import { UpsellDrawer } from './UpsellDrawer';
+import { TableSessionModal } from './TableSessionModal';
+import { MobileMoneyCheckout } from './MobileMoneyCheckout';
+import { ComboSection } from './ComboSection';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
 import { 
   RestaurantType, 
@@ -23,7 +27,9 @@ import {
 import { DEFAULT_EXCHANGE_RATES } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { getUIText, translateCategoryName } from '@/lib/translation-engine';
+import { useMenuSchedule } from '@/hooks/useMenuSchedule';
 import { toast } from 'sonner';
+import { Clock } from 'lucide-react';
 
 interface ClientMenuContainerProps {
   initialRestaurant: RestaurantType;
@@ -43,6 +49,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   );
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Schedule Hook
+  const schedule = useMenuSchedule();
+
   // Fetch live daily exchange rates
   useEffect(() => {
     fetch('/api/exchange-rates')
@@ -61,6 +70,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const [selectedDish, setSelectedDish] = useState<MenuItemType | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false);
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+  const [isMobileMoneyOpen, setIsMobileMoneyOpen] = useState(false);
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
@@ -208,6 +220,24 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     toast.info(`Langue : ${langNames[lang]}`);
   };
 
+  // Upsell check before validating order
+  const handleOpenCartOrUpsell = () => {
+    // Check if cart has drinks or desserts
+    const hasDrinkOrDessert = items.some(
+      (i) =>
+        i.menuItem.categoryId?.toLowerCase().includes('boisson') ||
+        i.menuItem.categoryId?.toLowerCase().includes('dessert') ||
+        i.menuItem.name.toLowerCase().includes('bissap') ||
+        i.menuItem.name.toLowerCase().includes('bouye')
+    );
+
+    if (!hasDrinkOrDessert && items.length > 0) {
+      setIsUpsellOpen(true);
+    } else {
+      setIsCartOpen(true);
+    }
+  };
+
   // Submit order action
   const handleSubmitOrder = async () => {
     if (items.length === 0) {
@@ -215,6 +245,17 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       return;
     }
 
+    // If Wave or OM selected, offer direct checkout flow
+    if (paymentMethod === 'WAVE' || paymentMethod === 'ORANGE_MONEY') {
+      setIsCartOpen(false);
+      setIsMobileMoneyOpen(true);
+      return;
+    }
+
+    await executeOrderPlacement();
+  };
+
+  const executeOrderPlacement = async (transactionRef?: string) => {
     setIsSubmittingOrder(true);
     try {
       const orderPayload = {
@@ -223,6 +264,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         customerName: customerName.trim() || undefined,
         customerNote: customerNote.trim() || undefined,
         paymentMethod,
+        transactionRef,
         items: items.map((i) => ({
           menuItemId: i.menuItem.id,
           name: i.menuItem.name,
@@ -270,6 +312,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
       setActiveOrder(placedOrder);
       setIsCartOpen(false);
+      setIsMobileMoneyOpen(false);
       clearCart();
       setIsOrderSuccessOpen(true);
     } catch (err: any) {
@@ -301,39 +344,17 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
       />
 
-      {/* Multilingual & Currency Selector Bar */}
+      {/* Schedule Banner & Currency Selector Bar */}
       <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-3 space-y-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          {/* 1. Language Flags with Wolof */}
-          <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-orange-200 shadow-2xs overflow-x-auto no-scrollbar">
-            {[
-              { code: 'FR', label: 'FR', flag: '🇫🇷' },
-              { code: 'WO', label: 'Wolof', flag: '🇸🇳' },
-              { code: 'EN', label: 'EN', flag: '🇬🇧' },
-              { code: 'ES', label: 'ES', flag: '🇪🇸' },
-              { code: 'IT', label: 'IT', flag: '🇮🇹' },
-            ].map((l) => (
-              <button
-                key={l.code}
-                type="button"
-                onClick={() => handleLanguageChange(l.code as Language)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 shrink-0 ${
-                  currentLang === l.code
-                    ? 'bg-orange-500 text-white shadow-2xs scale-105'
-                    : 'bg-transparent text-slate-700 hover:bg-orange-50'
-                }`}
-              >
-                <span>{l.flag}</span>
-                <span className="hidden sm:inline">{l.label}</span>
-              </button>
-            ))}
+          {/* Schedule Pill */}
+          <div className="bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 text-xs font-bold text-amber-900">
+            <span>{schedule.periodIcon}</span>
+            <span>{schedule.periodLabel}</span>
           </div>
 
-          {/* 2. Currency Switcher Pills */}
+          {/* Currency Switcher Pills */}
           <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-emerald-200/80 shadow-2xs">
-            <span className="text-[10px] font-black text-slate-400 px-1 uppercase tracking-wider hidden sm:inline">
-              Devise :
-            </span>
             {[
               { code: 'FCFA', label: 'FCFA', symbol: '🇸🇳' },
               { code: 'EUR', label: 'EUR (€)', symbol: '🇪🇺' },
@@ -359,7 +380,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
       {/* 2. Daily Specials Carousel Section « Lou Ame Tay ? » */}
       {!searchQuery && (
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-4">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-4 space-y-4">
           <DailySpecialsSection
             items={allMenuItems}
             onQuickAdd={handleQuickAdd}
@@ -367,6 +388,14 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             lang={currentLang}
             currency={currentCurrency}
             exchangeRates={exchangeRates}
+          />
+
+          {/* Formule Midi / Soir Combinée */}
+          <ComboSection
+            onAddComboToCart={(comboDish) => {
+              addItem(comboDish);
+            }}
+            lang={currentLang}
           />
         </div>
       )}
@@ -453,12 +482,12 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         )}
       </main>
 
-      {/* 5. Bottom Floating Cart Bar with Split Bill Trigger */}
+      {/* 5. Bottom Floating Cart Bar with Split Bill & Upsell check */}
       <FloatingCartBar
         totalCount={getTotalCount()}
         totalPrice={getTotalPrice()}
         tableNumber={tableNumber}
-        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCart={handleOpenCartOrUpsell}
         onOpenSplitBill={() => setIsSplitBillOpen(true)}
         lang={currentLang}
         currency={currentCurrency}
@@ -476,7 +505,21 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         exchangeRates={exchangeRates}
       />
 
-      {/* 7. Cart & Checkout Drawer with Wave / OM / Cash Change */}
+      {/* 7. Upsell Drawer (Before Cart validation) */}
+      <UpsellDrawer
+        isOpen={isUpsellOpen}
+        onClose={() => setIsUpsellOpen(false)}
+        onContinueToCheckout={() => {
+          setIsUpsellOpen(false);
+          setIsCartOpen(true);
+        }}
+        onAddUpsellItem={(upsellDish) => {
+          addItem(upsellDish);
+        }}
+        lang={currentLang}
+      />
+
+      {/* 8. Cart & Checkout Drawer */}
       <CartCheckoutDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -499,7 +542,21 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         exchangeRates={exchangeRates}
       />
 
-      {/* 8. Split Bill Drawer with WhatsApp Share */}
+      {/* 9. Mobile Money Direct Checkout (Wave QR / OM USSD) */}
+      <MobileMoneyCheckout
+        isOpen={isMobileMoneyOpen}
+        onClose={() => setIsMobileMoneyOpen(false)}
+        method={paymentMethod === 'ORANGE_MONEY' ? 'ORANGE_MONEY' : 'WAVE'}
+        totalAmount={getTotalPrice()}
+        tableNumber={tableNumber}
+        restaurantName={restaurant.name}
+        onPaymentCompleted={(txRef) => {
+          executeOrderPlacement(txRef);
+        }}
+        lang={currentLang}
+      />
+
+      {/* 10. Split Bill Drawer with WhatsApp Share */}
       <SplitBillDrawer
         isOpen={isSplitBillOpen}
         onClose={() => setIsSplitBillOpen(false)}
@@ -509,7 +566,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
       />
 
-      {/* 9. Live Order Status Tracker */}
+      {/* 11. Live Order Status Tracker */}
       <OrderSuccessTracker
         order={activeOrder}
         isOpen={isOrderSuccessOpen}

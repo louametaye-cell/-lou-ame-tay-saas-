@@ -95,7 +95,7 @@ export async function GET(req: Request) {
     if (format === 'csv') {
       const headers = ['ID Commande', 'Table', 'Heure Commande', 'Heure Servie', 'Plats', 'Remarque', 'Total (FCFA)', 'Statut'];
       const rows = memoryServedToday.map((o) => {
-        const itemsSummary = o.items.map((i) => `${i.quantity}x ${i.menuItem.name}`).join(' | ');
+        const itemsSummary = o.items.map((i) => `${i.quantity}x ${i.name || i.menuItem?.name || 'Plat'}`).join(' | ');
         const orderTime = new Date(o.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         const servedTime = o.servedAt ? new Date(o.servedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
         return [

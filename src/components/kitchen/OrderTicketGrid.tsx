@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useMemo } from 'react';
 import { ChefHat, Sparkles, CheckCircle } from 'lucide-react';
@@ -35,15 +35,18 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
         }
 
         if (activeFilter === 'DRINKS') {
-          return order.items.some(
-            (i) =>
-              i.menuItem.categoryId?.toLowerCase().includes('boisson') ||
-              i.menuItem.name.toLowerCase().includes('bissap') ||
-              i.menuItem.name.toLowerCase().includes('bouye') ||
-              i.menuItem.name.toLowerCase().includes('eau') ||
-              i.menuItem.name.toLowerCase().includes('jus') ||
-              i.menuItem.name.toLowerCase().includes('coca')
-          );
+          return order.items.some((i) => {
+            const itemName = (i.name || i.menuItem?.name || '').toLowerCase();
+            const catId = (i.menuItem?.categoryId || '').toLowerCase();
+            return (
+              catId.includes('boisson') ||
+              itemName.includes('bissap') ||
+              itemName.includes('bouye') ||
+              itemName.includes('eau') ||
+              itemName.includes('jus') ||
+              itemName.includes('coca')
+            );
+          });
         }
 
         // 'ALL' filter: show pending and preparing orders
