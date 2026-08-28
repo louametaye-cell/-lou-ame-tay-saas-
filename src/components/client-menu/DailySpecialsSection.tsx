@@ -38,11 +38,11 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
         <div className="flex items-center gap-2">
           <span className="text-xl">🌟</span>
           <h2 className="text-base sm:text-lg font-black text-slate-950 tracking-tight">
-            {lang === 'WO' ? 'Lou am tay ? (Plats du Jour)' : 'Lou Ame Tay ? — Plats du Jour'}
+            {t.dailySpecialTitle}
           </h2>
         </div>
-        <span className="text-[11px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-          Cuisiné Frais ⏱️
+        <span className="text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
+          {t.dailySpecialBadge}
         </span>
       </div>
 
@@ -75,7 +75,7 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
 
                 {/* Top Badge */}
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
-                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider animate-pulse">
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider animate-pulse">
                     <Sparkles className="w-3 h-3" />
                     <span>Lou Ame Tay</span>
                   </span>
@@ -118,7 +118,7 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
                         e.stopPropagation();
                         onQuickAdd(dish);
                       }}
-                      className="min-h-[40px] px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs flex items-center gap-1 shadow-sm transition-all"
+                      className="min-h-[40px] px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs flex items-center gap-1 shadow-xs transition-all"
                       aria-label={`Ajouter ${dish.name}`}
                     >
                       <Plus className="w-4 h-4 stroke-[3]" />
@@ -126,7 +126,7 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
                     </button>
                   ) : (
                     <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg">
-                      Épuisé
+                      {t.outOfStock}
                     </span>
                   )}
                 </div>

@@ -26,7 +26,11 @@ import {
 } from '@/types';
 import { DEFAULT_EXCHANGE_RATES } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
-import { getUIText, translateCategoryName } from '@/lib/translation-engine';
+import { 
+  getUIText, 
+  translateCategoryName, 
+  getSynchronousDishTranslation 
+} from '@/lib/translation-engine';
 import { useMenuSchedule } from '@/hooks/useMenuSchedule';
 import { toast } from 'sonner';
 import { Clock } from 'lucide-react';
@@ -122,7 +126,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     }
   }, [restaurant.subdomain, restaurant.id, tableNumber]);
 
-  // Dynamic translated menu categories
+  // Dynamic translated menu categories & dishes
   const translatedCategories = useMemo(() => {
     return restaurant.categories.map((category) => {
       const translatedItems = (category.items || []).map((item) => {
@@ -147,11 +151,19 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             };
           }
         }
-        return item;
+
+        // Automatic fallback translation for all dishes
+        const fallbackTrans = getSynchronousDishTranslation(item.name, item.description, currentLang);
+        return {
+          ...item,
+          name: fallbackTrans.name || item.name,
+          description: fallbackTrans.description || item.description,
+        };
       });
 
       return {
         ...category,
+        name: translateCategoryName(category.name, currentLang),
         items: translatedItems,
       };
     });
@@ -222,7 +234,6 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
   // Upsell check before validating order
   const handleOpenCartOrUpsell = () => {
-    // Check if cart has drinks or desserts
     const hasDrinkOrDessert = items.some(
       (i) =>
         i.menuItem.categoryId?.toLowerCase().includes('boisson') ||
@@ -265,17 +276,15 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         customerNote: customerNote.trim() || undefined,
         paymentMethod,
         transactionRef,
+        total: getTotalPrice(),
         items: items.map((i) => ({
           menuItemId: i.menuItem.id,
           name: i.menuItem.name,
-          price: i.menuItem.price,
           quantity: i.quantity,
-          selectedSide: i.options?.side || null,
-          selectedSpiceLevel: i.options?.spiceLevel || null,
-          selectedExtras: i.options?.extras?.map((e) => e.name) || [],
-          customNotes: i.customNotes || null,
+          price: i.menuItem.price,
+          options: i.options,
+          notes: i.customNotes,
         })),
-        total: getTotalPrice(),
       };
 
       const res = await fetch('/api/orders', {
@@ -334,7 +343,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
   return (
     <div className="min-h-screen bg-[#FFFDF9] text-slate-900 pb-36 font-sans antialiased selection:bg-orange-500 selection:text-white">
-      {/* 1. Fixed Header with Table Badge, Waiter Bell & Search */}
+      {/* 1. Fixed Header with Table Badge, Waiter Bell, 5-Flag Language Switcher & Search */}
       <TableStickyHeader
         restaurantName={restaurant.name}
         logoUrl={restaurant.logoUrl}
@@ -342,6 +351,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         lang={currentLang}
+        onLanguageChange={handleLanguageChange}
       />
 
       {/* Schedule Banner & Currency Selector Bar */}

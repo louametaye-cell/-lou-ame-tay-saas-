@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Sparkles, Plus, Check, Utensils, ArrowRight } from 'lucide-react';
 import { MenuItemType, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
+import { getUIText } from '@/lib/translation-engine';
 import { toast } from 'sonner';
 
 interface ComboSectionProps {
@@ -15,6 +16,7 @@ export const ComboSection: React.FC<ComboSectionProps> = ({
   onAddComboToCart,
   lang = 'FR',
 }) => {
+  const t = getUIText(lang);
   const [selectedStarter, setSelectedStarter] = useState('Pastels Poisson (4 pcs)');
   const [selectedMain, setSelectedMain] = useState('Thiéboudienne Rouge Traditionnelle');
   const [selectedDrink, setSelectedDrink] = useState('Jus de Bissap Maison');
@@ -50,10 +52,10 @@ export const ComboSection: React.FC<ComboSectionProps> = ({
             Menu Tout-en-Un ☀️
           </span>
           <h3 className="text-base font-black text-slate-950">
-            🍱 Formule Midi Téranga (Entrée + Plat + Boisson)
+            {t.comboFormulaTitle || '🍱 Formule Midi Téranga (Entrée + Plat + Boisson)'}
           </h3>
           <p className="text-xs text-slate-600">
-            Composez votre déjeuner complet à tarif préférentiel.
+            {t.comboFormulaSubtitle || 'Composez votre déjeuner complet à tarif préférentiel.'}
           </p>
         </div>
 

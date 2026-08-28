@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search, Bell, X, Receipt, Droplets, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Bell, X, Receipt, Droplets, HelpCircle, CheckCircle2, Globe } from 'lucide-react';
 import { Language } from '@/types';
 import { getUIText } from '@/lib/translation-engine';
 import { ServiceCallModal } from './ServiceCallModal';
@@ -14,7 +14,16 @@ interface TableStickyHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   lang?: Language;
+  onLanguageChange?: (lang: Language) => void;
 }
+
+const LANGUAGES: { code: Language; label: string; flag: string }[] = [
+  { code: 'FR', label: 'Français', flag: '🇫🇷' },
+  { code: 'EN', label: 'English', flag: '🇬🇧' },
+  { code: 'ES', label: 'Español', flag: '🇪🇸' },
+  { code: 'IT', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'WO', label: 'Wolof', flag: '🇸🇳' },
+];
 
 export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   restaurantName,
@@ -23,6 +32,7 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   searchQuery,
   onSearchChange,
   lang = 'FR',
+  onLanguageChange,
 }) => {
   const t = getUIText(lang);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -32,7 +42,7 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-30 bg-[#FFF8F0]/95 backdrop-blur-md border-b border-orange-200/80 shadow-xs transition-all">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 space-y-3">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-3.5 space-y-2.5">
           {/* Top Brand & Actions Bar */}
           <div className="flex items-center justify-between gap-3">
             {/* Restaurant Brand & Avatar */}
@@ -79,6 +89,36 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Interactive Multi-Language Flags Switcher Bar */}
+          {onLanguageChange && (
+            <div className="flex items-center justify-between gap-1.5 bg-white/90 p-1 rounded-2xl border border-orange-200/90 shadow-2xs overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-1 shrink-0 px-1.5 text-xs text-slate-500 font-bold hidden sm:flex">
+                <Globe className="w-3.5 h-3.5 text-orange-600" />
+                <span>Langue :</span>
+              </div>
+              <div className="flex items-center gap-1 w-full sm:w-auto justify-between sm:justify-start">
+                {LANGUAGES.map((l) => {
+                  const isSelected = lang === l.code;
+                  return (
+                    <button
+                      key={l.code}
+                      type="button"
+                      onClick={() => onLanguageChange(l.code)}
+                      className={`min-h-[36px] flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                        isSelected
+                          ? 'bg-amber-500 text-slate-950 shadow-sm border border-amber-600 font-black'
+                          : 'text-slate-600 hover:text-slate-950 hover:bg-orange-50/70 border border-transparent'
+                      }`}
+                    >
+                      <span className="text-sm leading-none">{l.flag}</span>
+                      <span className="text-[11px] uppercase tracking-wide">{l.code}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Search Input Bar */}
           <div className="relative">
