@@ -49,6 +49,7 @@ import { toast } from 'sonner';
 interface CurrentOrder {
   id: string;
   tableNumber: number;
+  orderType?: 'TABLE' | 'EXPRESS';
   customerName?: string;
   time: string;
   items: string[];
@@ -355,6 +356,14 @@ export default function OperationalDashboardPage() {
               )}
             </div>
 
+            {/* Cashier Counter Quick View */}
+            <Link
+              href="/cashier"
+              className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+            >
+              <span>⚡ Caisse Express</span>
+            </Link>
+
             {/* Kitchen KDS Quick View */}
             <Link
               href="/dashboard/kitchen"
@@ -560,9 +569,15 @@ export default function OperationalDashboardPage() {
                         {/* Table, Client & Serveur */}
                         <td className="py-3.5 px-4 sm:px-6 font-black text-slate-900">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl font-bold border border-amber-200 block w-fit">
-                              Table {o.tableNumber}
-                            </span>
+                            {o.orderType === 'EXPRESS' || o.tableNumber === 0 ? (
+                              <span className="bg-purple-100 text-purple-900 px-2.5 py-1 rounded-xl font-bold border border-purple-300 block w-fit">
+                                ⚡ Comptoir Express
+                              </span>
+                            ) : (
+                              <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl font-bold border border-amber-200 block w-fit">
+                                Table {o.tableNumber}
+                              </span>
+                            )}
                             {o.customerName && (
                               <span className="text-[11px] font-black text-orange-950 bg-orange-100/90 border border-orange-200 px-2 py-0.5 rounded-lg">
                                 🏷️ {o.customerName}
@@ -570,7 +585,9 @@ export default function OperationalDashboardPage() {
                             )}
                           </div>
                           <span className="text-[11px] text-slate-500 font-bold block mt-1">
-                            👤 {getAssignedServerForTable(o.tableNumber)}
+                            {o.orderType === 'EXPRESS' || o.tableNumber === 0
+                              ? '⚡ Guichet Caisse'
+                              : `👤 ${getAssignedServerForTable(o.tableNumber)}`}
                           </span>
                         </td>
 
@@ -790,9 +807,15 @@ export default function OperationalDashboardPage() {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-slate-900 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="p-2 bg-amber-100 text-amber-800 rounded-xl font-black text-sm">
-                  Table {selectedOrder.tableNumber}
-                </span>
+                {selectedOrder.orderType === 'EXPRESS' || selectedOrder.tableNumber === 0 ? (
+                  <span className="p-2 bg-purple-100 text-purple-900 border border-purple-300 rounded-xl font-black text-sm">
+                    ⚡ Comptoir Express
+                  </span>
+                ) : (
+                  <span className="p-2 bg-amber-100 text-amber-800 rounded-xl font-black text-sm">
+                    Table {selectedOrder.tableNumber}
+                  </span>
+                )}
                 <span className="text-xs text-slate-500 font-mono">#{selectedOrder.id.slice(-5).toUpperCase()}</span>
                 {selectedOrder.customerName && (
                   <span className="text-[11px] font-black text-orange-950 bg-orange-100/90 border border-orange-200 px-2.5 py-1 rounded-lg">
@@ -800,7 +823,9 @@ export default function OperationalDashboardPage() {
                   </span>
                 )}
                 <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
-                  👤 Serveur : {getAssignedServerForTable(selectedOrder.tableNumber)}
+                  {selectedOrder.orderType === 'EXPRESS' || selectedOrder.tableNumber === 0
+                    ? '⚡ Guichet Caisse'
+                    : `👤 Serveur : ${getAssignedServerForTable(selectedOrder.tableNumber)}`}
                 </span>
               </div>
               <button

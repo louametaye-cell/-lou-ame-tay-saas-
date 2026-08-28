@@ -121,6 +121,7 @@ export async function GET(req: Request) {
       return {
         id: o.id,
         tableNumber: o.tableNumber,
+        orderType: o.orderType || (o.tableNumber === 0 ? 'EXPRESS' : 'TABLE'),
         customerName: o.customerName,
         paymentMethod: o.paymentMethod,
         time: orderDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),

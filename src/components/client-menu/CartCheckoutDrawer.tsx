@@ -23,6 +23,7 @@ interface CartCheckoutDrawerProps {
   onClose: () => void;
   items: CartItem[];
   tableNumber: number;
+  isExpress?: boolean;
   customerNote: string;
   customerName: string;
   paymentMethod: PaymentMethod;
@@ -45,6 +46,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
   onClose,
   items,
   tableNumber,
+  isExpress = false,
   customerNote,
   customerName,
   paymentMethod,
@@ -371,7 +373,13 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
               className="w-full min-h-[52px] bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 active:scale-[0.99] disabled:bg-slate-300 text-white font-black text-sm sm:text-base rounded-2xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all"
             >
               <Send className="w-4 h-4" />
-              <span>{isSubmitting ? 'Transmission...' : `🚀 Commander pour Table ${formattedTable}`}</span>
+              <span>
+                {isSubmitting
+                  ? 'Transmission...'
+                  : isExpress
+                  ? '⚡ Commander au Comptoir'
+                  : `🚀 Commander pour Table ${formattedTable}`}
+              </span>
             </button>
           </div>
         )}

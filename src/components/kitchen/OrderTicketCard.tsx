@@ -63,10 +63,14 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
     }
   };
 
+  const isExpressOrder = order.orderType === 'EXPRESS' || order.tableNumber === 0;
+
   return (
     <article
       className={`bg-white rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-md ${
-        is100PercentBar
+        isExpressOrder
+          ? 'border-purple-400 bg-purple-50/10'
+          : is100PercentBar
           ? 'border-blue-300 bg-blue-50/20'
           : order.status === 'PENDING'
           ? 'border-amber-400 shadow-amber-500/10'
@@ -78,7 +82,9 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
       {/* 1. Header Box with Table Number, Chrono & Payment */}
       <div
         className={`p-4 flex items-center justify-between gap-2 ${
-          is100PercentBar
+          isExpressOrder
+            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
+            : is100PercentBar
             ? 'bg-blue-600 text-white'
             : order.status === 'PENDING'
             ? 'bg-amber-500 text-slate-950'
@@ -89,7 +95,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
       >
         <div className="flex items-center gap-2">
           <span className="text-xl sm:text-2xl font-black tracking-tight">
-            TABLE {formattedTable}
+            {isExpressOrder ? '⚡ EXPRESS' : `TABLE ${formattedTable}`}
           </span>
           <span className="text-xs font-mono font-bold bg-black/15 px-2 py-0.5 rounded-md">
             #{order.id.slice(-5).toUpperCase()}
@@ -109,11 +115,17 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
               <span>{order.customerName}</span>
             </span>
           ) : (
-            <span className="text-slate-500 italic text-[11px]">Client à table</span>
+            <span className="text-slate-500 italic text-[11px]">
+              {isExpressOrder ? 'Client Express' : 'Client à table'}
+            </span>
           )}
 
-          <span className="text-[11px] font-black text-slate-800 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-lg">
-            👤 {getAssignedServerForTable(order.tableNumber)}
+          <span className={`text-[11px] font-black px-2 py-0.5 rounded-lg border ${
+            isExpressOrder
+              ? 'bg-purple-100 text-purple-900 border-purple-300'
+              : 'bg-amber-100/90 text-slate-800 border-amber-300'
+          }`}>
+            {isExpressOrder ? '⚡ Guichet Caisse' : `👤 ${getAssignedServerForTable(order.tableNumber)}`}
           </span>
         </div>
 

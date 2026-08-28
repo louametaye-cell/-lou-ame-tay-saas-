@@ -40,11 +40,13 @@ import { Clock } from 'lucide-react';
 interface ClientMenuContainerProps {
   initialRestaurant: RestaurantType;
   tableNumber: number;
+  isExpress?: boolean;
 }
 
 export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   initialRestaurant,
   tableNumber,
+  isExpress = false,
 }) => {
   const [restaurant, setRestaurant] = useState<RestaurantType>(initialRestaurant);
   const [currentLang, setCurrentLang] = useState<Language>('FR');
@@ -215,7 +217,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     try {
       const orderPayload = {
         restaurantId: restaurant.id,
-        tableNumber,
+        tableNumber: isExpress ? 0 : tableNumber,
+        orderType: isExpress ? 'EXPRESS' : 'TABLE',
         customerName: customerName.trim() || undefined,
         customerNote: customerNote.trim() || undefined,
         paymentMethod,
@@ -245,7 +248,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       const placedOrder: OrderType = data.order || {
         id: `ord_${Date.now()}`,
         restaurantId: restaurant.id,
-        tableNumber,
+        tableNumber: isExpress ? 0 : tableNumber,
+        orderType: isExpress ? 'EXPRESS' : 'TABLE',
         customerName: customerName.trim() || null,
         customerNote: customerNote.trim() || null,
         paymentMethod,
@@ -300,6 +304,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         restaurantName={restaurant.name}
         logoUrl={restaurant.logoUrl}
         tableNumber={tableNumber}
+        isExpress={isExpress}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         lang={currentLang}
@@ -516,6 +521,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onClose={() => setIsCartOpen(false)}
         items={items}
         tableNumber={tableNumber}
+        isExpress={isExpress}
         customerNote={customerNote}
         customerName={customerName}
         paymentMethod={paymentMethod}

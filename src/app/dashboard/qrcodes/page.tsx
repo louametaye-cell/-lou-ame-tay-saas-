@@ -208,8 +208,16 @@ export default function QRCodeOrderPage() {
           </div>
         </div>
 
-        {/* 3 Packs Order Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Packs Order Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <OrderCard
+            title="⚡ Pack Comptoir / Bar Express"
+            price="3 500 FCFA"
+            format="Chevalet Plexiglas A5 + Sticker QR Express"
+            tables={1}
+            onOrder={() => handleOpenOrder(1, '⚡ Pack Comptoir / Bar Express', 3500, 'Chevalet Plexiglas A5')}
+          />
+
           <OrderCard
             title="Jeu de 1 à 5 tables"
             price="5 000 FCFA"

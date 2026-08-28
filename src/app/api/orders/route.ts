@@ -32,9 +32,11 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { tableNumber, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef } = body;
+    const { tableNumber, orderType, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef } = body;
 
-    if (!tableNumber || !items || !Array.isArray(items) || items.length === 0) {
+    const isExpress = orderType === 'EXPRESS' || Number(tableNumber) === 0;
+
+    if ((!isExpress && !tableNumber) || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'Données de commande invalides (table ou articles manquants)' },
         { status: 400 }
@@ -49,7 +51,8 @@ export async function POST(req: Request) {
     const orderId = `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const newOrder: OrderType = {
       id: orderId,
-      tableNumber: Number(tableNumber),
+      tableNumber: isExpress ? 0 : Number(tableNumber),
+      orderType: isExpress ? 'EXPRESS' : 'TABLE',
       customerName: customerName || null,
       customerNote: customerNote || '',
       restaurantId: restaurantId || 'resto_thies_01',

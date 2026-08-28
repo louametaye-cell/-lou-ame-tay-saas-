@@ -210,7 +210,7 @@ export interface CartItem {
   options?: CartItemOption;
 }
 
-export type OrderStatus = 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'SERVED' | 'CANCELLED';
 
 export interface OrderItemType {
   id: string;
@@ -223,9 +223,13 @@ export interface OrderItemType {
   options?: CartItemOption;
 }
 
+export type OrderServiceType = 'TABLE' | 'EXPRESS';
+export type QRCodeType = 'TABLE' | 'EXPRESS';
+
 export interface OrderType {
   id: string;
   tableNumber: number;
+  orderType?: OrderServiceType;
   customerName?: string | null;
   customerNote?: string | null;
   paymentMethod?: string | null;

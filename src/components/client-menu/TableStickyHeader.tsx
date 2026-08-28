@@ -11,6 +11,7 @@ interface TableStickyHeaderProps {
   restaurantName: string;
   logoUrl?: string | null;
   tableNumber: number;
+  isExpress?: boolean;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   lang?: Language;
@@ -29,6 +30,7 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   restaurantName,
   logoUrl,
   tableNumber,
+  isExpress = false,
   searchQuery,
   onSearchChange,
   lang = 'FR',
@@ -62,19 +64,29 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
                   <span>👋 {restaurantName}</span>
                 </h1>
                 <p className="text-xs text-orange-600 font-bold tracking-wide truncate">
-                  {lang === 'WO' ? 'Skaneel, tànnal, komandeel léegi.' : t.scanChooseOrder}
+                  {isExpress
+                    ? '⚡ Service Express au Comptoir & Bar'
+                    : lang === 'WO'
+                    ? 'Skaneel, tànnal, komandeel léegi.'
+                    : t.scanChooseOrder}
                 </p>
               </div>
             </div>
 
-            {/* Right Action: Table Badge & Waiter Bell Button */}
+            {/* Right Action: Table / Express Badge & Waiter Bell Button */}
             <div className="flex items-center gap-2 shrink-0">
-              <div className="bg-emerald-600 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5">
-                <span>📍 {t.table}</span>
-                <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-white font-mono">
-                  {formattedTable}
-                </span>
-              </div>
+              {isExpress ? (
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 animate-pulse">
+                  <span>⚡ Comptoir / Bar</span>
+                </div>
+              ) : (
+                <div className="bg-emerald-600 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5">
+                  <span>📍 {t.table}</span>
+                  <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-white font-mono">
+                    {formattedTable}
+                  </span>
+                </div>
+              )}
 
               <button
                 type="button"
