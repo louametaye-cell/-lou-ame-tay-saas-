@@ -25,11 +25,12 @@ import { formatFCFA } from '@/lib/utils';
 import { LiveStockManager } from '@/components/dashboard/LiveStockManager';
 import { ComboBuilder } from '@/components/dashboard/ComboBuilder';
 import { WeeklyMenuScheduler } from '@/components/dashboard/WeeklyMenuScheduler';
+import { ImageUploadPicker } from '@/components/dashboard/ImageUploadPicker';
 import { toast } from 'sonner';
 
 export default function DashboardMenuManagementPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType>(SAMPLE_RESTAURANT);
-  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG' | 'COMBOS' | 'WEEKLY_SCHEDULE'>('WEEKLY_SCHEDULE');
+  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG' | 'COMBOS' | 'WEEKLY_SCHEDULE'>('LIVE_STOCK');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -322,6 +323,7 @@ export default function DashboardMenuManagementPage() {
         {viewMode === 'LIVE_STOCK' && (
           <LiveStockManager
             categories={restaurant.categories}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
             onItemUpdated={(updated) => {
               const clone = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
               clone.categories.forEach((c) => {
@@ -608,6 +610,13 @@ export default function DashboardMenuManagementPage() {
                   />
                 </div>
               </div>
+
+              {/* Photo Upload Picker (PC / Mobile / Presets / URL) */}
+              <ImageUploadPicker
+                currentImageUrl={imageUrl}
+                onImageChange={(url) => setImageUrl(url)}
+                dishName={name}
+              />
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Catégorie</label>
