@@ -8,6 +8,7 @@ import { ItemDetailDrawer } from './ItemDetailDrawer';
 import { FloatingCartBar } from './FloatingCartBar';
 import { CartCheckoutDrawer } from './CartCheckoutDrawer';
 import { OrderSuccessTracker } from './OrderSuccessTracker';
+import { ActiveOrderFloatingPill } from './ActiveOrderFloatingPill';
 import { DailySpecialsSection } from './DailySpecialsSection';
 import { WeeklyMenuCustomerBanner } from './WeeklyMenuCustomerBanner';
 import { SplitBillDrawer } from './SplitBillDrawer';
@@ -71,152 +72,94 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       });
   }, []);
 
-  // Modals & Drawers state
-  const [selectedDish, setSelectedDish] = useState<MenuItemType | null>(null);
-  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  // Sync with Cart Store
+  const {
+    items,
+    addItem,
+    removeItem,
+    deleteItem,
+    clearCart,
+    getTotalCount,
+    getTotalPrice,
+    getItemQuantity,
+    customerNote,
+    setCustomerNote,
+    customerName,
+    setCustomerName,
+    paymentMethod,
+    setPaymentMethod,
+  } = useCartStore();
+
+  // UI state for drawers/modals
+  const [selectedItemForDetail, setSelectedItemForDetail] = useState<MenuItemType | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [isMobileMoneyOpen, setIsMobileMoneyOpen] = useState(false);
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
+  const [activeOrder, setActiveOrder] = useState<OrderType | null>(null);
+
+  // Table session accumulated orders
+  const [sessionOrders, setSessionOrders] = useState<OrderType[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`louametay_session_orders_${tableNumber}`);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return [];
+  });
+
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
-  // Cart store
-  const {
-    items,
-    customerNote,
-    customerName,
-    paymentMethod,
-    setTableNumber,
-    setRestaurantId,
-    setCustomerNote,
-    setCustomerName,
-    setPaymentMethod,
-    addItem,
-    removeItem,
-    deleteItem,
-    clearCart,
-    getItemQuantity,
-    getTotalCount,
-    getTotalPrice,
-    activeOrder,
-    setActiveOrder,
-  } = useCartStore();
-
-  // Initialize table and restaurant in store
-  useEffect(() => {
-    setTableNumber(tableNumber);
-    setRestaurantId(initialRestaurant.id);
-  }, [tableNumber, initialRestaurant.id, setTableNumber, setRestaurantId]);
-
-  // Log scan stats
-  useEffect(() => {
-    try {
-      fetch('/api/stats/scans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subdomain: restaurant.subdomain,
-          restaurantId: restaurant.id,
-          tableNumber,
-        }),
-      });
-    } catch (err) {
-      // Non-blocking
-    }
-  }, [restaurant.subdomain, restaurant.id, tableNumber]);
-
-  // Dynamic translated menu categories & dishes
-  const translatedCategories = useMemo(() => {
-    return restaurant.categories.map((category) => {
-      const translatedItems = (category.items || []).map((item) => {
-        if (currentLang === 'FR') return item;
-
-        if (Array.isArray(item.translations)) {
-          const dynamicTrans = item.translations.find((t: any) => t.language === currentLang);
-          if (dynamicTrans) {
-            return {
-              ...item,
-              name: dynamicTrans.name || item.name,
-              description: dynamicTrans.description || item.description,
-            };
-          }
-        } else if (item.translations && typeof item.translations === 'object') {
-          const dynamicTrans = (item.translations as any)[currentLang];
-          if (dynamicTrans) {
-            return {
-              ...item,
-              name: dynamicTrans.name || item.name,
-              description: dynamicTrans.description || item.description,
-            };
-          }
-        }
-
-        // Automatic fallback translation for all dishes
-        const fallbackTrans = getSynchronousDishTranslation(item.name, item.description, currentLang);
-        return {
-          ...item,
-          name: fallbackTrans.name || item.name,
-          description: fallbackTrans.description || item.description,
-        };
-      });
-
-      return {
-        ...category,
-        name: translateCategoryName(category.name, currentLang),
-        items: translatedItems,
-      };
-    });
-  }, [restaurant.categories, currentLang]);
-
-  // Flattened items for daily specials & search
+  // Flattened menu items for search and specials
   const allMenuItems = useMemo(() => {
-    return translatedCategories.flatMap((c) => c.items || []);
-  }, [translatedCategories]);
+    const dishes: MenuItemType[] = [];
+    restaurant.categories.forEach((cat) => {
+      cat.items?.forEach((dish) => dishes.push(dish));
+    });
+    return dishes;
+  }, [restaurant]);
 
-  // Filtered categories based on search
+  // Categories filtered by search query
   const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return translatedCategories;
+    if (!searchQuery.trim()) return restaurant.categories;
 
-    const query = searchQuery.toLowerCase().trim();
-    return translatedCategories
+    const query = searchQuery.toLowerCase();
+    return restaurant.categories
       .map((cat) => ({
         ...cat,
-        items: (cat.items || []).filter(
-          (item) =>
-            item.name.toLowerCase().includes(query) ||
-            item.description.toLowerCase().includes(query)
-        ),
+        items: (cat.items || []).filter((item) => {
+          const nameFr = item.name.toLowerCase();
+          const nameWo = (item.nameWolof || item.wolofName || '').toLowerCase();
+          const desc = item.description.toLowerCase();
+          return nameFr.includes(query) || nameWo.includes(query) || desc.includes(query);
+        }),
       }))
-      .filter((cat) => cat.items.length > 0);
-  }, [translatedCategories, searchQuery]);
+      .filter((cat) => (cat.items || []).length > 0);
+  }, [restaurant.categories, searchQuery]);
 
   // Handlers
-  const handleOpenDetails = (dish: MenuItemType) => {
-    setSelectedDish(dish);
-    setIsDetailDrawerOpen(true);
+  const handleOpenDetails = (item: MenuItemType) => {
+    setSelectedItemForDetail(item);
   };
 
-  const handleQuickAdd = (dish: MenuItemType) => {
-    addItem(dish);
-    const t = getUIText(currentLang);
-    toast.success(`✅ « ${dish.name} » ${t.added}`, {
-      duration: 1800,
-    });
+  const handleCloseDetails = () => {
+    setSelectedItemForDetail(null);
   };
 
-  const handleAddFromDrawer = (
-    item: MenuItemType,
-    options?: CartItemOption,
-    customNotes?: string,
-    quantity: number = 1
-  ) => {
-    addItem(item, options, customNotes, quantity);
-    setIsDetailDrawerOpen(false);
-    setSelectedDish(null);
-    const t = getUIText(currentLang);
-    toast.success(`✅ « ${item.name} » ${t.added} (${quantity}x)`, {
+  const handleQuickAdd = (item: MenuItemType) => {
+    if (!item.isAvailable) {
+      toast.error('Ce plat est actuellement épuisé.');
+      return;
+    }
+
+    addItem(item);
+    toast.success(`Ajouté au panier !`, {
+      description: `${item.name} a été ajouté avec succès.`,
       duration: 2000,
     });
   };
@@ -321,6 +264,14 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       };
 
       setActiveOrder(placedOrder);
+      setSessionOrders((prev) => {
+        const updated = [...prev, placedOrder];
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(updated));
+        }
+        return updated;
+      });
+
       setIsCartOpen(false);
       setIsMobileMoneyOpen(false);
       clearCart();
@@ -358,26 +309,29 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       {/* Schedule Banner & Currency Selector Bar */}
       <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-3 space-y-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          {/* Schedule Pill */}
-          <div className="bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-xl flex items-center gap-1.5 text-xs font-bold text-amber-900">
-            <span>{schedule.periodIcon}</span>
-            <span>{schedule.periodLabel}</span>
-          </div>
+          {schedule.periodLabel && (
+            <div className="inline-flex items-center gap-1.5 bg-amber-100/90 text-amber-950 text-xs px-3 py-1.5 rounded-full font-bold border border-amber-200 shadow-2xs">
+              <span className="text-sm">{schedule.periodIcon}</span>
+              <span>{schedule.periodLabel}</span>
+            </div>
+          )}
 
-          {/* Currency Switcher Pills */}
-          <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-emerald-200/80 shadow-2xs">
-            {[
-              { code: 'FCFA', label: 'FCFA', symbol: '🇸🇳' },
-              { code: 'EUR', label: 'EUR (€)', symbol: '🇪🇺' },
-              { code: 'USD', label: 'USD ($)', symbol: '🇺🇸' },
-            ].map((c) => (
+          {/* Quick Currency Selector */}
+          <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-2xl text-xs font-bold shadow-2xs ml-auto">
+            {(
+              [
+                { code: 'FCFA', symbol: 'FCFA', label: 'CFA' },
+                { code: 'EUR', symbol: '€', label: 'EUR' },
+                { code: 'USD', symbol: '$', label: 'USD' },
+              ] as const
+            ).map((c) => (
               <button
                 key={c.code}
                 type="button"
-                onClick={() => setCurrentCurrency(c.code as CurrencyCode)}
-                className={`px-2 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                onClick={() => setCurrentCurrency(c.code)}
+                className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 ${
                   currentCurrency === c.code
-                    ? 'bg-emerald-600 text-white shadow-2xs scale-105'
+                    ? 'bg-emerald-600 text-white font-black shadow-xs'
                     : 'bg-transparent text-slate-700 hover:bg-emerald-50'
                 }`}
               >
@@ -502,7 +456,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         )}
       </main>
 
-      {/* 5. Bottom Floating Cart Bar with Split Bill & Upsell check */}
+      {/* 5. Sticky Bottom Cart Bar */}
       <FloatingCartBar
         totalCount={getTotalCount()}
         totalPrice={getTotalPrice()}
@@ -514,29 +468,46 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         exchangeRates={exchangeRates}
       />
 
-      {/* 6. Customization BottomSheet Drawer */}
+      {/* 5.5. Persistent Floating Pill for Active Table Orders */}
+      {sessionOrders.length > 0 && !isOrderSuccessOpen && (
+        <ActiveOrderFloatingPill
+          orders={sessionOrders}
+          tableNumber={tableNumber}
+          onOpenTracker={() => setIsOrderSuccessOpen(true)}
+        />
+      )}
+
+      {/* 6. Item Detail Drawer */}
       <ItemDetailDrawer
-        item={selectedDish}
-        isOpen={isDetailDrawerOpen}
-        onClose={() => setIsDetailDrawerOpen(false)}
-        onAddToCart={handleAddFromDrawer}
+        item={selectedItemForDetail}
+        isOpen={Boolean(selectedItemForDetail)}
+        onClose={handleCloseDetails}
+        onAddToCart={(item, qty, options, notes) => {
+          addItem(item, qty, options, notes);
+          handleCloseDetails();
+          toast.success(`Ajouté au panier !`, {
+            description: `${qty}x ${item.name}`,
+          });
+        }}
         lang={currentLang}
         currency={currentCurrency}
         exchangeRates={exchangeRates}
       />
 
-      {/* 7. Upsell Drawer (Before Cart validation) */}
+      {/* 7. Upsell Drawer (Bissap, Bouye, Pastels) */}
       <UpsellDrawer
         isOpen={isUpsellOpen}
-        onClose={() => setIsUpsellOpen(false)}
+        onClose={() => {
+          setIsUpsellOpen(false);
+          setIsCartOpen(true);
+        }}
+        onAddUpsellItem={(item) => {
+          addItem(item);
+        }}
         onContinueToCheckout={() => {
           setIsUpsellOpen(false);
           setIsCartOpen(true);
         }}
-        onAddUpsellItem={(upsellDish) => {
-          addItem(upsellDish);
-        }}
-        lang={currentLang}
       />
 
       {/* 8. Cart & Checkout Drawer */}
@@ -586,15 +557,21 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
       />
 
-      {/* 11. Live Order Status Tracker */}
+      {/* 11. Live Order Status & Digital Receipt Tracker */}
       <OrderSuccessTracker
         order={activeOrder}
+        sessionOrders={sessionOrders}
         isOpen={isOrderSuccessOpen}
         onClose={() => setIsOrderSuccessOpen(false)}
         onOrderMore={() => setIsOrderSuccessOpen(false)}
+        onPayOnline={(amount) => {
+          setIsOrderSuccessOpen(false);
+          setIsMobileMoneyOpen(true);
+        }}
         lang={currentLang}
         currency={currentCurrency}
         exchangeRates={exchangeRates}
+        restaurantName={restaurant.name}
       />
     </div>
   );
