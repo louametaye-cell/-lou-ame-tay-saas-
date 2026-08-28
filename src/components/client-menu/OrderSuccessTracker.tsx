@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, ChefHat, Utensils, ArrowRight, X } from 'lucide-react';
-import { OrderType, Language } from '@/types';
-import { formatFCFA, playOrderSound } from '@/lib/utils';
+import { OrderType, Language, CurrencyCode, ExchangeRates } from '@/types';
+import { formatFCFA, formatConvertedPrice, playOrderSound } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
 
 interface OrderSuccessTrackerProps {
@@ -13,6 +13,8 @@ interface OrderSuccessTrackerProps {
   onClose: () => void;
   onOrderMore: () => void;
   lang?: Language;
+  currency?: CurrencyCode;
+  exchangeRates?: ExchangeRates;
 }
 
 export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
@@ -21,6 +23,8 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   onClose,
   onOrderMore,
   lang = 'FR',
+  currency = 'FCFA',
+  exchangeRates,
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -138,7 +142,14 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
 
               <div className="pt-2 flex justify-between items-center font-black text-sm text-slate-900">
                 <span>{t.totalToPay}</span>
-                <span className="text-emerald-700">{formatFCFA(order.total)}</span>
+                <div className="text-right">
+                  <span className="text-emerald-700 block">{formatFCFA(order.total)}</span>
+                  {formatConvertedPrice(order.total, currency, lang, exchangeRates) && (
+                    <span className="text-[11px] font-black text-slate-500 block">
+                      ({formatConvertedPrice(order.total, currency, lang, exchangeRates)})
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

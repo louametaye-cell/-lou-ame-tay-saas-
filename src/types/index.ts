@@ -66,6 +66,13 @@ export interface SubscriptionType {
 }
 
 export type Language = 'FR' | 'EN' | 'ES' | 'IT';
+export type CurrencyCode = 'FCFA' | 'EUR' | 'USD';
+
+export interface ExchangeRates {
+  FCFA: number;
+  EUR: number;
+  USD: number;
+}
 
 export interface MenuItemTranslationType {
   id?: string;

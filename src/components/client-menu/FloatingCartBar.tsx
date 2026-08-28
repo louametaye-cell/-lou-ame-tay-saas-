@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
-import { formatFCFA } from '@/lib/utils';
-import { Language } from '@/types';
+import { Language, CurrencyCode, ExchangeRates } from '@/types';
+import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
 
 interface FloatingCartBarProps {
@@ -12,6 +12,8 @@ interface FloatingCartBarProps {
   tableNumber: number;
   onOpenCart: () => void;
   lang?: Language;
+  currency?: CurrencyCode;
+  exchangeRates?: ExchangeRates;
 }
 
 export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
@@ -19,10 +21,13 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
   totalPrice,
   onOpenCart,
   lang = 'FR',
+  currency = 'FCFA',
+  exchangeRates,
 }) => {
   if (totalCount === 0) return null;
 
   const t = getUIText(lang);
+  const convertedTotal = formatConvertedPrice(totalPrice, currency, lang, exchangeRates);
 
   return (
     <aside
@@ -43,9 +48,16 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
             <span className="text-xs text-slate-500 font-bold block truncate">
               {totalCount} {totalCount > 1 ? t.articles : t.article}
             </span>
-            <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight block">
-              {formatFCFA(totalPrice)}
-            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight block">
+                {formatFCFA(totalPrice)}
+              </span>
+              {convertedTotal && (
+                <span className="text-xs font-black text-emerald-700">
+                  ({convertedTotal})
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

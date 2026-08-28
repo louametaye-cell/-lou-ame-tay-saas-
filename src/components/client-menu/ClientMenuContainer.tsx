@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { TableStickyHeader } from './TableStickyHeader';
@@ -9,7 +9,8 @@ import { FloatingCartBar } from './FloatingCartBar';
 import { CartCheckoutDrawer } from './CartCheckoutDrawer';
 import { OrderSuccessTracker } from './OrderSuccessTracker';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
-import { RestaurantType, MenuItemType, CartItemOption, OrderType, Language } from '@/types';
+import { RestaurantType, MenuItemType, CartItemOption, OrderType, Language, CurrencyCode, ExchangeRates } from '@/types';
+import { DEFAULT_EXCHANGE_RATES } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { getUIText, translateCategoryName } from '@/lib/translation-engine';
 import { toast } from 'sonner';
@@ -25,10 +26,26 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 }) => {
   const [restaurant, setRestaurant] = useState<RestaurantType>(initialRestaurant);
   const [currentLang, setCurrentLang] = useState<Language>('FR');
+  const [currentCurrency, setCurrentCurrency] = useState<CurrencyCode>('FCFA');
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(DEFAULT_EXCHANGE_RATES);
   const [activeCategoryId, setActiveCategoryId] = useState<string>(
     initialRestaurant.categories[0]?.id || ''
   );
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Fetch live daily exchange rates
+  useEffect(() => {
+    fetch('/api/exchange-rates')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.rates) {
+          setExchangeRates(data.rates);
+        }
+      })
+      .catch(() => {
+        // Fallback to default rates
+      });
+  }, []);
 
   // Modals & Drawers state
   const [selectedDish, setSelectedDish] = useState<MenuItemType | null>(null);
@@ -82,9 +99,19 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     }
   }, [restaurant.subdomain, restaurant.id, tableNumber]);
 
-  // Language switcher
+  // Language switcher with auto-currency adaptation
   const handleLanguageChange = async (lang: Language) => {
     setCurrentLang(lang);
+    
+    // Auto adapt currency for foreigners
+    if (lang === 'EN') {
+      setCurrentCurrency('USD');
+    } else if (lang === 'ES' || lang === 'IT') {
+      setCurrentCurrency('EUR');
+    } else {
+      setCurrentCurrency('FCFA');
+    }
+
     try {
       const res = await fetch(`/api/menu?subdomain=${restaurant.subdomain}&lang=${lang}`);
       if (res.ok) {
@@ -270,32 +297,58 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
       />
 
-      {/* Multilingual 4-Flag Selector */}
-      <div className="max-w-4xl mx-auto px-4 pt-3 flex items-center justify-between gap-2">
-        <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-          <span>🌐 {t.menuLang}</span>
-        </span>
-        <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-orange-200 shadow-2xs">
-          {[
-            { code: 'FR', label: 'FR', flag: '🇫🇷' },
-            { code: 'EN', label: 'EN', flag: '🇬🇧' },
-            { code: 'ES', label: 'ES', flag: '🇪🇸' },
-            { code: 'IT', label: 'IT', flag: '🇮🇹' },
-          ].map((l) => (
-            <button
-              key={l.code}
-              type="button"
-              onClick={() => handleLanguageChange(l.code as Language)}
-              className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
-                currentLang === l.code
-                  ? 'bg-orange-500 text-white shadow-2xs scale-105'
-                  : 'bg-transparent text-slate-700 hover:bg-orange-50'
-              }`}
-            >
-              <span>{l.flag}</span>
-              <span className="hidden sm:inline">{l.label}</span>
-            </button>
-          ))}
+      {/* Multilingual & Currency Selector Bar */}
+      <div className="max-w-4xl mx-auto px-4 pt-3 space-y-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* 1. Language Flags */}
+          <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-orange-200 shadow-2xs">
+            {[
+              { code: 'FR', label: 'FR', flag: '🇫🇷' },
+              { code: 'EN', label: 'EN', flag: '🇬🇧' },
+              { code: 'ES', label: 'ES', flag: '🇪🇸' },
+              { code: 'IT', label: 'IT', flag: '🇮🇹' },
+            ].map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => handleLanguageChange(l.code as Language)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                  currentLang === l.code
+                    ? 'bg-orange-500 text-white shadow-2xs scale-105'
+                    : 'bg-transparent text-slate-700 hover:bg-orange-50'
+                }`}
+              >
+                <span>{l.flag}</span>
+                <span className="hidden sm:inline">{l.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* 2. Currency Switcher Pills */}
+          <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-emerald-200/80 shadow-2xs">
+            <span className="text-[10px] font-black text-slate-400 px-1 uppercase tracking-wider">
+              Devise :
+            </span>
+            {[
+              { code: 'FCFA', label: 'FCFA', symbol: '🇸🇳' },
+              { code: 'EUR', label: 'EUR (€)', symbol: '🇪🇺' },
+              { code: 'USD', label: 'USD ($)', symbol: '🇺🇸' },
+            ].map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => setCurrentCurrency(c.code as CurrencyCode)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                  currentCurrency === c.code
+                    ? 'bg-emerald-600 text-white shadow-2xs scale-105'
+                    : 'bg-transparent text-slate-700 hover:bg-emerald-50'
+                }`}
+              >
+                <span>{c.symbol}</span>
+                <span className="text-[11px] font-extrabold">{c.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -364,6 +417,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                       onQuickRemove={removeItem}
                       onClickDetails={handleOpenDetails}
                       lang={currentLang}
+                      currency={currentCurrency}
+                      exchangeRates={exchangeRates}
                     />
                   ))}
                 </div>
@@ -380,6 +435,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         tableNumber={tableNumber}
         onOpenCart={() => setIsCartOpen(true)}
         lang={currentLang}
+        currency={currentCurrency}
+        exchangeRates={exchangeRates}
       />
 
       {/* 5. Customization BottomSheet Drawer */}
@@ -389,6 +446,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onClose={() => setIsDetailDrawerOpen(false)}
         onAddToCart={handleAddFromDrawer}
         lang={currentLang}
+        currency={currentCurrency}
+        exchangeRates={exchangeRates}
       />
 
       {/* 6. Checkout Drawer */}
@@ -410,6 +469,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onSubmitOrder={handleSubmitOrder}
         isSubmitting={isSubmittingOrder}
         lang={currentLang}
+        currency={currentCurrency}
+        exchangeRates={exchangeRates}
       />
 
       {/* 7. Order Confirmation & Live Tracker */}
@@ -419,6 +480,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onClose={() => setIsOrderSuccessOpen(false)}
         onOrderMore={() => setIsOrderSuccessOpen(false)}
         lang={currentLang}
+        currency={currentCurrency}
+        exchangeRates={exchangeRates}
       />
     </div>
   );

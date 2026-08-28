@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Image from 'next/image';
 import { Plus, Minus, Clock, Star, Sparkles, AlertCircle } from 'lucide-react';
-import { MenuItemType, ALLERGEN_ICONS, Language } from '@/types';
-import { formatFCFA } from '@/lib/utils';
+import { MenuItemType, ALLERGEN_ICONS, Language, CurrencyCode, ExchangeRates } from '@/types';
+import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
 
 interface MenuItemCardProps {
@@ -14,6 +14,8 @@ interface MenuItemCardProps {
   onQuickRemove: (itemId: string) => void;
   onClickDetails: (item: MenuItemType) => void;
   lang?: Language;
+  currency?: CurrencyCode;
+  exchangeRates?: ExchangeRates;
 }
 
 export const MenuItemCard: React.FC<MenuItemCardProps> = ({
@@ -23,8 +25,11 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
   onQuickRemove,
   onClickDetails,
   lang = 'FR',
+  currency = 'FCFA',
+  exchangeRates,
 }) => {
   const t = getUIText(lang);
+  const convertedPrice = formatConvertedPrice(item.price, currency, lang, exchangeRates);
   const isOutOfStock = item.isAvailable === false;
   const isSpecial = item.isSpecialOfTheDay || item.isSpecial;
   const wolofTitle = item.nameWolof || item.wolofName;
@@ -140,9 +145,16 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         <div className="pt-3 border-t border-orange-100 flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] text-slate-500 uppercase font-bold block">{t.price}</span>
-            <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight block">
-              {formatFCFA(item.price)}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
+                {formatFCFA(item.price)}
+              </span>
+              {convertedPrice && (
+                <span className="text-[11px] font-black text-emerald-700 bg-emerald-50/80 px-1.5 py-0.5 rounded-md self-start mt-0.5 border border-emerald-200/60">
+                  {convertedPrice}
+                </span>
+              )}
+            </div>
           </div>
 
           <div>

@@ -5,11 +5,74 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+import { CurrencyCode, ExchangeRates, Language } from '@/types';
+
+export const DEFAULT_EXCHANGE_RATES: ExchangeRates = {
+  FCFA: 1,
+  EUR: 1 / 655.957, // Parité fixe légale BCEAO
+  USD: 1 / 605.0,   // Taux de référence USD
+};
+
 export function formatFCFA(amount: number): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'decimal',
     maximumFractionDigits: 0,
   }).format(amount) + ' FCFA';
+}
+
+export function convertFCFATo(
+  amountFCFA: number,
+  currency: CurrencyCode,
+  rates: ExchangeRates = DEFAULT_EXCHANGE_RATES
+): number {
+  const rate = rates[currency] || DEFAULT_EXCHANGE_RATES[currency] || 1;
+  return amountFCFA * rate;
+}
+
+export function formatConvertedPrice(
+  amountFCFA: number,
+  currency: CurrencyCode,
+  lang: Language = 'FR',
+  rates: ExchangeRates = DEFAULT_EXCHANGE_RATES
+): string | null {
+  if (currency === 'FCFA') return null;
+
+  const converted = convertFCFATo(amountFCFA, currency, rates);
+  const locale = lang === 'EN' ? 'en-US' : lang === 'ES' ? 'es-ES' : lang === 'IT' ? 'it-IT' : 'fr-FR';
+
+  if (currency === 'EUR') {
+    const formatted = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(converted);
+    return `≈ ${formatted}`;
+  }
+
+  if (currency === 'USD') {
+    const formatted = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(converted);
+    return `≈ ${formatted}`;
+  }
+
+  return null;
+}
+
+export function formatDualPrice(
+  amountFCFA: number,
+  currency: CurrencyCode = 'FCFA',
+  lang: Language = 'FR',
+  rates: ExchangeRates = DEFAULT_EXCHANGE_RATES
+): { primary: string; secondary: string | null } {
+  return {
+    primary: formatFCFA(amountFCFA),
+    secondary: formatConvertedPrice(amountFCFA, currency, lang, rates),
+  };
 }
 
 export function playOrderSound() {

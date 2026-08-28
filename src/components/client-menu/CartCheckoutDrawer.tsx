@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { X, Plus, Minus, Trash2, Send, ShoppingBag, CreditCard, Banknote, Smartphone } from 'lucide-react';
-import { CartItem, Language } from '@/types';
+import { CartItem, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { PaymentMethod } from '@/store/useCartStore';
-import { formatFCFA } from '@/lib/utils';
+import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
 
 interface CartCheckoutDrawerProps {
@@ -25,6 +25,8 @@ interface CartCheckoutDrawerProps {
   onSubmitOrder: () => void;
   isSubmitting?: boolean;
   lang?: Language;
+  currency?: CurrencyCode;
+  exchangeRates?: ExchangeRates;
 }
 
 export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
@@ -45,6 +47,8 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
   onSubmitOrder,
   isSubmitting = false,
   lang = 'FR',
+  currency = 'FCFA',
+  exchangeRates,
 }) => {
   if (!isOpen) return null;
 
@@ -57,6 +61,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
   }, 0);
 
   const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const convertedTotalPrice = formatConvertedPrice(totalPrice, currency, lang, exchangeRates);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -265,9 +270,16 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
           <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
             <div className="flex items-center justify-between px-1">
               <span className="text-sm font-bold text-slate-600">{t.totalToPay}</span>
-              <span className="text-2xl font-black text-slate-950 tracking-tight">
-                {formatFCFA(totalPrice)}
-              </span>
+              <div className="text-right">
+                <span className="text-2xl font-black text-slate-950 tracking-tight block">
+                  {formatFCFA(totalPrice)}
+                </span>
+                {convertedTotalPrice && (
+                  <span className="text-xs font-black text-emerald-700 block">
+                    {convertedTotalPrice}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* The Big 56px Green Button */}

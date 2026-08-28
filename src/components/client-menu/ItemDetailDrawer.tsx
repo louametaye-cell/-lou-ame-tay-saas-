@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { X, Clock, Star, Plus, Minus, Sparkles, Check, MessageSquare } from 'lucide-react';
-import { MenuItemType, CartItemOption, CartItemExtra, ALLERGEN_ICONS, Language } from '@/types';
-import { formatFCFA } from '@/lib/utils';
+import { MenuItemType, CartItemOption, CartItemExtra, ALLERGEN_ICONS, Language, CurrencyCode, ExchangeRates } from '@/types';
+import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
 
 interface ItemDetailDrawerProps {
@@ -18,6 +18,8 @@ interface ItemDetailDrawerProps {
     quantity: number
   ) => void;
   lang?: Language;
+  currency?: CurrencyCode;
+  exchangeRates?: ExchangeRates;
 }
 
 const AVAILABLE_SIDES = [
@@ -45,6 +47,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onClose,
   onAddToCart,
   lang = 'FR',
+  currency = 'FCFA',
+  exchangeRates,
 }) => {
   const t = getUIText(lang);
 
@@ -77,6 +81,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   const extrasTotalPrice = selectedExtras.reduce((sum, e) => sum + e.price, 0);
   const singleItemPrice = item.price + extrasTotalPrice;
   const grandTotal = singleItemPrice * quantity;
+  const convertedGrandTotal = formatConvertedPrice(grandTotal, currency, lang, exchangeRates);
+  const convertedItemPrice = formatConvertedPrice(item.price, currency, lang, exchangeRates);
 
   const handleConfirmAdd = () => {
     const options: CartItemOption = {
@@ -155,9 +161,16 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <h2 className="text-xl sm:text-2xl font-black text-slate-950">
                 {item.name}
               </h2>
-              <span className="text-2xl font-black text-orange-600 block mt-1">
-                {formatFCFA(item.price)}
-              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-2xl font-black text-orange-600">
+                  {formatFCFA(item.price)}
+                </span>
+                {convertedItemPrice && (
+                  <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                    {convertedItemPrice}
+                  </span>
+                )}
+              </div>
             </div>
 
             <p className="text-sm text-slate-600 leading-relaxed">
@@ -329,7 +342,9 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             onClick={handleConfirmAdd}
             className="flex-1 min-h-[56px] px-5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-sm sm:text-base rounded-2xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2"
           >
-            <span>{t.add} • {formatFCFA(grandTotal)}</span>
+            <span>
+              {t.add} • {formatFCFA(grandTotal)} {convertedGrandTotal ? `(${convertedGrandTotal})` : ''}
+            </span>
           </button>
         </div>
       </div>
