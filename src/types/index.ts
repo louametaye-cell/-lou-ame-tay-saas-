@@ -220,7 +220,9 @@ export interface OrderItemType {
 export interface OrderType {
   id: string;
   tableNumber: number;
+  customerName?: string | null;
   customerNote?: string | null;
+  paymentMethod?: string | null;
   note?: string | null;
   restaurantId: string;
   restaurantName?: string | null;

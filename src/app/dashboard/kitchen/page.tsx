@@ -6,7 +6,7 @@ import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitc
 import { KitchenHistory } from '@/components/KitchenHistory';
 import { History, LayoutGrid } from 'lucide-react';
 
-export default function KitchenPage() {
+export default function DashboardKitchenPage() {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
   const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
@@ -22,6 +22,7 @@ export default function KitchenPage() {
     pollIntervalMs: 3500,
   });
 
+  // Calculate live counts
   const pendingCount = orders.filter((o) => o.status === 'PENDING').length;
   const preparingCount = orders.filter((o) => o.status === 'PREPARING').length;
   const servedCount = orders.filter((o) => o.status === 'SERVED').length;
@@ -33,7 +34,7 @@ export default function KitchenPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white pb-20">
-      {/* KDS Fixed Header */}
+      {/* 1. KDS Fixed Header */}
       <KitchenHeader
         restaurantName="Chez Fatou & Frères - Thiès"
         isConnected={isConnected}

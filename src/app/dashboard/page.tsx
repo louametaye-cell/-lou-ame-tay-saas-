@@ -288,12 +288,12 @@ export default function OperationalDashboardPage() {
               )}
             </div>
 
-            {/* Kitchen Quick View */}
+            {/* Kitchen KDS Quick View */}
             <Link
-              href="/kitchen"
-              className="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              href="/dashboard/kitchen"
+              className="flex items-center gap-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
             >
-              <span>👨‍🍳 Cuisine</span>
+              <span>👨‍🍳 Écran Cuisine KDS</span>
             </Link>
 
             {/* Logout */}

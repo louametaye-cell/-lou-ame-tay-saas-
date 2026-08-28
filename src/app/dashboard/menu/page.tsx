@@ -21,10 +21,12 @@ import {
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType, MenuItemType, LEGAL_14_ALLERGENS } from '@/types';
 import { formatFCFA } from '@/lib/utils';
+import { LiveStockManager } from '@/components/dashboard/LiveStockManager';
 import { toast } from 'sonner';
 
 export default function DashboardMenuManagementPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType>(SAMPLE_RESTAURANT);
+  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG'>('LIVE_STOCK');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -215,51 +217,109 @@ export default function DashboardMenuManagementPage() {
         </div>
       </header>
 
-      {/* Filter & Search Bar */}
+      {/* Main Container with View Mode Tabs */}
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-slate-900/70 border border-slate-800 p-4 rounded-2xl">
-          {/* Search */}
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un plat (ex: Ceebu, Dibi)..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder:text-slate-500 outline-none focus:border-orange-500"
-            />
-          </div>
-
-          {/* Category Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        {/* View Mode Tabs */}
+        <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-2xl border border-slate-800">
             <button
-              onClick={() => setSelectedCategory('ALL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCategory === 'ALL'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+              type="button"
+              onClick={() => setViewMode('LIVE_STOCK')}
+              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                viewMode === 'LIVE_STOCK'
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
-              Tous ({allItems.length})
+              <Sparkles className="w-4 h-4" />
+              <span>⚡ Ruptures en Direct &amp; Plat du Jour</span>
             </button>
-            {restaurant.categories.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedCategory(c.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedCategory === c.id
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                {c.name} ({c.items?.length || 0})
-              </button>
-            ))}
+
+            <button
+              type="button"
+              onClick={() => setViewMode('CATALOG')}
+              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                viewMode === 'CATALOG'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Utensils className="w-4 h-4" />
+              <span>📑 Catalogue &amp; Fiches Détaillées</span>
+            </button>
+          </div>
+
+          <div className="text-xs text-slate-400 font-mono">
+            {allItems.length} plats • {allItems.filter((i) => i.isAvailable).length} en stock
           </div>
         </div>
 
-        {/* Dishes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* View 1: Live Stock Manager (Toggle 1-Clic) */}
+        {viewMode === 'LIVE_STOCK' && (
+          <LiveStockManager
+            categories={restaurant.categories}
+            onItemUpdated={(updated) => {
+              const clone = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
+              clone.categories.forEach((c) => {
+                (c.items || []).forEach((item) => {
+                  if (item.id === updated.id) {
+                    item.isAvailable = updated.isAvailable;
+                    item.isSpecialOfTheDay = updated.isSpecialOfTheDay;
+                    item.isSpecial = updated.isSpecial;
+                  }
+                });
+              });
+              setRestaurant(clone);
+            }}
+          />
+        )}
+
+        {/* View 2: Detailed Catalog Grid */}
+        {viewMode === 'CATALOG' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-slate-900/70 border border-slate-800 p-4 rounded-2xl">
+              {/* Search */}
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un plat (ex: Ceebu, Dibi)..."
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder:text-slate-500 outline-none focus:border-orange-500"
+                />
+              </div>
+
+              {/* Category Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                <button
+                  onClick={() => setSelectedCategory('ALL')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                    selectedCategory === 'ALL'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Tous ({allItems.length})
+                </button>
+                {restaurant.categories.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedCategory(c.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      selectedCategory === c.id
+                        ? 'bg-orange-600 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {c.name} ({c.items?.length || 0})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dishes Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item) => (
             <div
               key={item.id}
@@ -328,7 +388,9 @@ export default function DashboardMenuManagementPage() {
             </div>
           ))}
         </div>
-      </main>
+      </div>
+    )}
+  </main>
 
       {/* Add Modal */}
       {isAddModalOpen && (
