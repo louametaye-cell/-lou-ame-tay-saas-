@@ -1,0 +1,104 @@
+version: '3.8'
+
+# ==============================================================================
+# ORCHESTRATION DOCKER COMPOSE PRODUCTION (LOU AME TAY ? - 1000 RESTAURANTS)
+# Infrastructure Haute Disponibilité • Dakar, Thiès, Saly
+# ==============================================================================
+
+services:
+  # 1. Base de Données MySQL 8.0
+  mysql:
+    image: mysql:8.0
+    container_name: louametay_mysql_prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: RootSecur3Passw0rd2026!
+      MYSQL_DATABASE: louametay_prod
+      MYSQL_USER: louametay_user
+      MYSQL_PASSWORD: Secur3Passw0rd_Dakar2026!
+    command: --default-authentication-plugin=mysql_native_password --max_connections=500 --innodb_buffer_pool_size=2G
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+    networks:
+      - louametay_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Cache Redis 7.0 (In-Memory TTL 5min)
+  redis:
+    image: redis:7.0-alpine
+    container_name: louametay_redis_prod
+    restart: always
+    command: redis-server --requirepass RedisSecur3Pass2026 --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - louametay_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Application Next.js 14 / Node.js
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: louametay_app_prod
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - louametay_network
+    expose:
+      - "3000"
+
+  # 4. Nginx Reverse Proxy & SSL Let's Encrypt
+  nginx:
+    image: nginx:alpine
+    container_name: louametay_nginx_prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/lib/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    depends_on:
+      - app
+    networks:
+      - louametay_network
+
+  # 5. Certbot pour le renouvellement SSL automatique Let's Encrypt
+  certbot:
+    image: certbot/certbot
+    container_name: louametay_certbot
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/lib/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12d & wait $${!}; done;'"
+
+networks:
+  louametay_network:
+    driver: bridge
+
+volumes:
+  mysql_prod_data:
+  redis_prod_data:
+  certbot_etc:
+  certbot_var:

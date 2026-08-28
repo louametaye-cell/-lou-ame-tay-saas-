@@ -1,0 +1,172 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Language {
+  FR
+  EN
+  ES
+  IT
+}
+
+enum ValueType { 
+  BOOLEAN 
+  NUMERIC 
+  TEXT 
+}
+
+enum SubscriptionStatus { 
+  TRIAL 
+  ACTIVE 
+  PAST_DUE 
+  CANCELED 
+  SUSPENDED 
+}
+
+enum PaymentProvider { 
+  WAVE 
+  ORANGE_MONEY 
+  CASH 
+  MANUAL_AGENCY 
+}
+
+enum PaymentStatus { 
+  PENDING 
+  SUCCESS 
+  FAILED 
+  REFUNDED 
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  price         Decimal        @db.Decimal(10, 2)
+  currency      String         @default("FCFA")
+  description   String?        @db.Text
+  colorTheme    String         @default("#FF6B00") @map("color_theme")
+  isRecommended Boolean        @default(false) @map("is_recommended")
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  planFeatures  PlanFeature[]
+  tenants       Tenant[]
+  transactions  PaymentTransaction[]
+
+  @@map("plans")
+}
+
+model Feature {
+  id          String        @id @default(cuid())
+  keyName     String        @unique @map("key_name")
+  label       String
+  description String?       @db.Text
+  category    String        @default("CORE")
+  valueType   ValueType     @default(BOOLEAN) @map("value_type")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  planFeatures PlanFeature[]
+
+  @@map("features")
+}
+
+model PlanFeature {
+  id         String   @id @default(cuid())
+  planId     String   @map("plan_id")
+  featureId  String   @map("feature_id")
+  isActive   Boolean  @default(true) @map("is_active")
+  limitValue Int?     @map("limit_value")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  plan    Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  feature Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, featureId], name: "uq_plan_feature")
+  @@map("plan_features")
+}
+
+model Tenant {
+  id                    String             @id @default(cuid())
+  businessName          String             @map("business_name")
+  subdomain             String             @unique
+  ownerName             String?            @map("owner_name")
+  phone                 String
+  address               String?
+  city                  String             @default("Dakar")
+  logoUrl               String?            @db.Text @map("logo_url")
+  bannerUrl             String?            @db.Text @map("banner_url")
+  currentPlanId         String             @map("current_plan_id")
+  subscriptionStatus    SubscriptionStatus @default(TRIAL) @map("subscription_status")
+  subscriptionExpiresAt DateTime?          @map("subscription_expires_at")
+  lastSeenAt            DateTime?          @map("last_seen_at")
+  qrScansToday          Int                @default(0) @map("qr_scans_today")
+  ordersToday           Int                @default(0) @map("orders_today")
+  storageUsedMb         Int                @default(0) @map("storage_used_mb")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  plan         Plan                 @relation(fields: [currentPlanId], references: [id])
+  transactions PaymentTransaction[]
+  menuItems    MenuItem[]
+
+  @@map("tenants")
+}
+
+model MenuItem {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  name         String
+  description  String?  @db.Text
+  price        Decimal  @db.Decimal(10, 2)
+  category     String   @default("Plats")
+  imageUrl     String?  @db.Text @map("image_url")
+  isAvailable  Boolean  @default(true) @map("is_available")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  translations MenuItemTranslation[]
+
+  @@map("menu_items")
+}
+
+model MenuItemTranslation {
+  id          String   @id @default(cuid())
+  menuItemId  String   @map("menu_item_id")
+  language    Language
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([menuItemId, language]) // Un seul nom et une seule description par langue pour un plat
+  @@map("menu_item_translations")
+}
+
+model PaymentTransaction {
+  id                String          @id @default(cuid())
+  tenantId          String          @map("tenant_id")
+  planId            String          @map("plan_id")
+  amount            Decimal         @db.Decimal(10, 2)
+  provider          PaymentProvider
+  providerTxId      String?         @map("provider_tx_id")
+  status            PaymentStatus   @default(PENDING)
+  webhookVerifiedAt DateTime?       @map("webhook_verified_at")
+  periodMonths      Int             @default(1) @map("period_months")
+  paidAt            DateTime?       @map("paid_at")
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@map("payment_transactions")
+}
