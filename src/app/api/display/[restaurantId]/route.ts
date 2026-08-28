@@ -98,19 +98,42 @@ export async function GET(
       id: cat.id,
       name: cat.name,
       icon: cat.icon || '🍽️',
-      items: (cat.items || []).map((item) => {
+      items: (cat.items || []).map((item: any) => {
         const liveAvailable = orderStorage.getItemAvailability(item.id, item.isAvailable);
         return {
           id: item.id,
           name: item.name,
+          nameWolof: item.nameWolof || item.wolofName || undefined,
           description: item.description,
           price: Number(item.price),
           imageUrl: item.imageUrl,
           isAvailable: liveAvailable,
           isSpecialOfTheDay: item.isSpecialOfTheDay,
+          isSpecial: item.isSpecialOfTheDay || false,
+          allergens: item.allergens || [],
         };
       }),
     }));
+
+    // Generate flattened list of available items for Slideshow and Quadrant modes
+    const availableSlides: any[] = [];
+    formattedCategories.forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (item.isAvailable) {
+          availableSlides.push({
+            id: item.id,
+            name: item.name,
+            nameWolof: item.nameWolof,
+            description: item.description || '',
+            price: item.price,
+            imageUrl: item.imageUrl || '/images/placeholder-small.jpg',
+            isSpecial: Boolean(item.isSpecialOfTheDay || item.isSpecial),
+            allergens: item.allergens || [],
+            category: cat.name,
+          });
+        }
+      });
+    });
 
     const responsePayload = {
       restaurantId: restaurant.id,
@@ -122,6 +145,7 @@ export async function GET(
       bannerUrl: restaurant.bannerUrl,
       currency: restaurant.currency || 'FCFA',
       categories: formattedCategories,
+      items: availableSlides,
       updatedAt: new Date().toISOString(),
     };
 
