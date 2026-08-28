@@ -18,6 +18,7 @@ import { OrderType, OrderStatus } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { OrderTimerBadge } from './OrderTimerBadge';
 import { isDrinkOrBarItem, isKitchenDish } from '@/lib/order-routing';
+import { getAssignedServerForTable } from '@/lib/server-shift';
 import { EscPosPrinterService } from '@/services/EscPosPrinterService';
 import { toast } from 'sonner';
 
@@ -99,17 +100,21 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
         <OrderTimerBadge createdAt={order.createdAt} />
       </div>
 
-      {/* 2. Customer details & Payment Badge */}
-      <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs text-slate-600">
-        <div className="flex items-center gap-1.5 truncate">
+      {/* 2. Customer details & Assigned Waiter & Payment Badge */}
+      <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs text-slate-600 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {order.customerName ? (
-            <span className="text-slate-900 font-bold flex items-center gap-1">
+            <span className="text-slate-900 font-extrabold flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded-lg shadow-2xs">
               <User className="w-3.5 h-3.5 text-orange-600" />
               <span>{order.customerName}</span>
             </span>
           ) : (
-            <span className="text-slate-500 italic">Client à table</span>
+            <span className="text-slate-500 italic text-[11px]">Client à table</span>
           )}
+
+          <span className="text-[11px] font-black text-slate-800 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-lg">
+            👤 {getAssignedServerForTable(order.tableNumber)}
+          </span>
         </div>
 
         <div className="flex items-center gap-1 font-bold">

@@ -13,11 +13,23 @@ import {
   ChevronRight, 
   AlertCircle,
   Sparkles,
-  DollarSign
+  DollarSign,
+  Edit2,
+  Phone,
+  User,
+  ArrowRightLeft
 } from 'lucide-react';
 import { OrderType, OrderItemType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { isDrinkOrBarItem, isKitchenDish } from '@/lib/order-routing';
+import { 
+  ServerShiftMember, 
+  getServerShiftMembers, 
+  saveServerShiftMembers, 
+  getTableServerMap,
+  assignTableToServer 
+} from '@/lib/server-shift';
+import { EditWaiterModal } from './EditWaiterModal';
 import { toast } from 'sonner';
 
 interface TableServiceLiveStatusProps {
@@ -26,44 +38,29 @@ interface TableServiceLiveStatusProps {
   onRefreshOrders?: () => void;
 }
 
-// Serveurs par défaut pour le shift
-const DEFAULT_WAITERS = [
-  'Modou Faye',
-  'Fatou Diop',
-  'Moussa Sall',
-  'Awa Ndiaye',
-  'Ibrahima Fall',
-];
-
 export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   orders,
   tableCount = 12,
   onRefreshOrders,
 }) => {
-  // Liste des serveurs du shift
-  const [waiters, setWaiters] = useState<string[]>(DEFAULT_WAITERS);
-  const [newWaiterName, setNewWaiterName] = useState('');
-  const [isAddWaiterOpen, setIsAddWaiterOpen] = useState(false);
+  // Liste des membres du shift
+  const [shiftMembers, setShiftMembers] = useState<ServerShiftMember[]>(() => {
+    return getServerShiftMembers();
+  });
 
   // Table -> Assigned Server map: { 1: "Modou Faye", 2: "Modou Faye", ... }
   const [tableServerMap, setTableServerMap] = useState<Record<number, string>>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('louametay_table_server_shift');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {}
-      }
-    }
-    // Distribution par défaut (rangées de tables)
-    const initial: Record<number, string> = {};
-    for (let i = 1; i <= tableCount; i++) {
-      if (i <= 4) initial[i] = 'Modou Faye';
-      else if (i <= 8) initial[i] = 'Fatou Diop';
-      else initial[i] = 'Moussa Sall';
-    }
-    return initial;
+    return getTableServerMap();
   });
+
+  // Modale d'édition d'un serveur
+  const [editingMember, setEditingMember] = useState<ServerShiftMember | null>(null);
+
+  // Formulaire d'ajout rapide
+  const [isAddWaiterOpen, setIsAddWaiterOpen] = useState(false);
+  const [newWaiterName, setNewWaiterName] = useState('');
+  const [newWaiterPhone, setNewWaiterPhone] = useState('');
+  const [newWaiterHours, setNewWaiterHours] = useState('11h00 - 23h30 (Journée Complète)');
 
   // Track served individual item keys: Set of "orderId_itemId"
   const [servedItemsMap, setServedItemsMap] = useState<Record<string, boolean>>(() => {
@@ -82,9 +79,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   const handleAssignServer = (tableNum: number, serverName: string) => {
     const updated = { ...tableServerMap, [tableNum]: serverName };
     setTableServerMap(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('louametay_table_server_shift', JSON.stringify(updated));
-    }
+    assignTableToServer(tableNum, serverName);
     toast.success(`👤 Table ${tableNum} assignée à ${serverName}`);
   };
 
@@ -92,15 +87,85 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   const handleAddWaiter = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWaiterName.trim()) return;
-    if (waiters.includes(newWaiterName.trim())) {
-      toast.error('Ce serveur est déjà dans la liste');
-      return;
-    }
-    const updated = [...waiters, newWaiterName.trim()];
-    setWaiters(updated);
+
+    const newMember: ServerShiftMember = {
+      id: `srv_${Date.now()}`,
+      name: newWaiterName.trim(),
+      phone: newWaiterPhone.trim() || undefined,
+      shiftHours: newWaiterHours,
+      periodType: 'FULL_DAY',
+      status: 'ACTIVE',
+      assignedTables: [],
+    };
+
+    const updated = [...shiftMembers, newMember];
+    setShiftMembers(updated);
+    saveServerShiftMembers(updated);
+
     setNewWaiterName('');
+    setNewWaiterPhone('');
     setIsAddWaiterOpen(false);
-    toast.success(`✨ Serveur « ${newWaiterName.trim()} » ajouté au shift`);
+    toast.success(`✨ Serveur « ${newMember.name} » ajouté au shift`);
+  };
+
+  // Save member edits
+  const handleSaveMember = (updated: ServerShiftMember) => {
+    const nextList = shiftMembers.map((m) => (m.id === updated.id ? updated : m));
+    setShiftMembers(nextList);
+    saveServerShiftMembers(nextList);
+
+    // Update table names if name changed
+    const oldName = shiftMembers.find((m) => m.id === updated.id)?.name;
+    if (oldName && oldName !== updated.name) {
+      const newMap = { ...tableServerMap };
+      Object.keys(newMap).forEach((k) => {
+        const num = Number(k);
+        if (newMap[num] === oldName) {
+          newMap[num] = updated.name;
+        }
+      });
+      setTableServerMap(newMap);
+    }
+  };
+
+  // Delete a server member
+  const handleDeleteMember = (memberId: string) => {
+    const target = shiftMembers.find((m) => m.id === memberId);
+    const nextList = shiftMembers.filter((m) => m.id !== memberId);
+    setShiftMembers(nextList);
+    saveServerShiftMembers(nextList);
+
+    // Unassign tables
+    if (target) {
+      const newMap = { ...tableServerMap };
+      Object.keys(newMap).forEach((k) => {
+        const num = Number(k);
+        if (newMap[num] === target.name) {
+          delete newMap[num];
+        }
+      });
+      setTableServerMap(newMap);
+    }
+  };
+
+  // Transfer all tables from one member to another
+  const handleTransferTables = (fromMemberId: string, toMemberId: string) => {
+    const fromMember = shiftMembers.find((m) => m.id === fromMemberId);
+    const toMember = shiftMembers.find((m) => m.id === toMemberId);
+    if (!fromMember || !toMember) return;
+
+    const newMap = { ...tableServerMap };
+    Object.keys(newMap).forEach((k) => {
+      const num = Number(k);
+      if (newMap[num] === fromMember.name) {
+        newMap[num] = toMember.name;
+      }
+    });
+
+    setTableServerMap(newMap);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('louametay_table_server_shift', JSON.stringify(newMap));
+    }
   };
 
   // Toggle single item served status
@@ -181,142 +246,212 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   return (
     <div className="space-y-6">
       {/* 1. Header: Shift & Waiters Summary */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-amber-100 text-amber-900 rounded-xl">
-              <Users className="w-5 h-5" />
+      <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-amber-100 text-amber-900 rounded-xl">
+                <Users className="w-5 h-5" />
+              </div>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                Shift en Cours &amp; Attribution des Serveurs
+              </h2>
             </div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-              Shift en Cours & Attribution des Serveurs
-            </h2>
+            <p className="text-xs text-slate-500">
+              Gérez les horaires, les pauses et les attributions de tables de chaque serveur en temps réel
+            </p>
           </div>
-          <p className="text-xs text-slate-500">
-            Chaque table est assignée à un serveur dédié pour sécuriser l'encaissement et le service
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {waiters.map((w) => (
-            <span
-              key={w}
-              className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xs"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>{w}</span>
-            </span>
-          ))}
 
           <button
             type="button"
             onClick={() => setIsAddWaiterOpen(!isAddWaiterOpen)}
-            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-xl font-bold text-xs flex items-center gap-1 shadow-2xs transition-all"
+            className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-all"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Ajouter Serveur</span>
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            <span>Ajouter Serveur au Shift</span>
           </button>
         </div>
+
+        {/* Server Cards with Shifts & Edit Actions */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+          {shiftMembers.map((member) => {
+            const tableCountAssigned = Object.values(tableServerMap).filter((v) => v === member.name).length;
+
+            return (
+              <div
+                key={member.id}
+                className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-amber-400 p-3.5 rounded-2xl transition-all shadow-2xs flex flex-col justify-between gap-2.5 group"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-black text-slate-900 text-xs truncate">
+                        {member.name}
+                      </span>
+                      <span
+                        className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                          member.status === 'ACTIVE'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : member.status === 'BREAK'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : 'bg-rose-100 text-rose-800'
+                        }`}
+                      >
+                        {member.status === 'ACTIVE' ? '🟢 En Service' : member.status === 'BREAK' ? '⏸️ En Pause' : '🔴 Terminé'}
+                      </span>
+                    </div>
+
+                    <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1 truncate">
+                      <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span>{member.shiftHours}</span>
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditingMember(member)}
+                    className="p-1.5 bg-white group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-900 rounded-lg border border-slate-200 group-hover:border-amber-300 transition-all shadow-2xs"
+                    title="Modifier horaires / shift"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-medium">Tables assignées</span>
+                  <span className="font-mono font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                    {tableCountAssigned} table{tableCountAssigned > 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Add Waiter Inline Drawer */}
+        {isAddWaiterOpen && (
+          <form
+            onSubmit={handleAddWaiter}
+            className="p-4 bg-amber-50/70 border border-amber-300 rounded-2xl flex flex-col sm:flex-row items-end gap-3 animate-in fade-in"
+          >
+            <div className="w-full sm:flex-1 space-y-1">
+              <label className="text-xs font-bold text-slate-800">Nom &amp; Prénom</label>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Modou Faye"
+                value={newWaiterName}
+                onChange={(e) => setNewWaiterName(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-900 outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div className="w-full sm:flex-1 space-y-1">
+              <label className="text-xs font-bold text-slate-800">Créneau de Travail</label>
+              <select
+                value={newWaiterHours}
+                onChange={(e) => setNewWaiterHours(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-900 outline-none focus:border-amber-500"
+              >
+                <option value="11h00 - 16h30 (Service Midi)">☀️ Midi (11h00 - 16h30)</option>
+                <option value="17h00 - 00h30 (Service Soirée)">🌙 Soirée (17h00 - 00h30)</option>
+                <option value="11h00 - 23h30 (Journée Complète)">⚡ Journée Complète (11h00 - 23h30)</option>
+                <option value="12h00 - 20h00 (Renfort)">✨ Renfort (12h00 - 20h00)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAddWaiterOpen(false)}
+                className="px-3 py-2 text-slate-500 hover:text-slate-800 text-xs font-bold"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-xs"
+              >
+                Ajouter
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
-      {/* Add Waiter Form */}
-      {isAddWaiterOpen && (
-        <form
-          onSubmit={handleAddWaiter}
-          className="bg-amber-50/80 border border-amber-200 p-4 rounded-2xl flex items-center gap-3 flex-wrap animate-in fade-in"
-        >
-          <span className="text-xs font-bold text-amber-900">Nouveau serveur en service :</span>
-          <input
-            type="text"
-            required
-            placeholder="Ex: Babacar Seck"
-            value={newWaiterName}
-            onChange={(e) => setNewWaiterName(e.target.value)}
-            className="bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 min-w-[200px]"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-black text-xs shadow-2xs transition-all"
-          >
-            Enregistrer pour le shift
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsAddWaiterOpen(false)}
-            className="px-3 py-2 text-slate-600 text-xs font-bold hover:text-slate-900"
-          >
-            Annuler
-          </button>
-        </form>
-      )}
-
-      {/* 2. Grid of Tables Live Service Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* 2. Tables Grid with Waiter Assignment & Live Service Status */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeTablesList.map((t) => {
           const hasOrder = Boolean(t.activeOrder);
 
           return (
             <div
               key={t.tableNum}
-              className={`rounded-3xl border-2 p-5 flex flex-col justify-between space-y-4 transition-all shadow-xs ${
-                !hasOrder
-                  ? 'bg-white border-slate-200/80 opacity-80'
-                  : t.isAllServed
-                  ? 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-200'
-                  : 'bg-white border-amber-400 shadow-sm'
+              className={`bg-white rounded-3xl border-2 p-4 sm:p-5 transition-all shadow-xs flex flex-col justify-between gap-3 relative ${
+                t.isAllServed
+                  ? 'border-emerald-400 bg-emerald-50/10'
+                  : hasOrder
+                  ? 'border-amber-400 bg-amber-50/10 ring-1 ring-amber-400/50'
+                  : 'border-slate-200'
               }`}
             >
-              {/* Header Box: Table #, Server Dropdown & Total */}
+              {/* Header: Table Number + Assigned Server Dropdown */}
               <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                <div className="space-y-1">
+                <div>
                   <div className="flex items-center gap-2">
-                    <span className="bg-amber-100 text-amber-900 font-black text-sm px-3 py-1 rounded-xl border border-amber-200">
-                      Table {t.tableNum}
+                    <span className="text-base sm:text-lg font-black text-slate-950 font-mono">
+                      TABLE {t.tableNum < 10 ? `0${t.tableNum}` : t.tableNum}
                     </span>
                     {hasOrder && (
-                      <span className="text-[11px] font-mono font-bold text-slate-500">
-                        #{t.activeOrder?.id.slice(-5).toUpperCase()}
+                      <span className="text-[11px] font-bold text-slate-400 font-mono">
+                        #{t.activeOrder!.id.slice(-5).toUpperCase()}
                       </span>
                     )}
                   </div>
 
-                  {/* Server selector */}
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    <span className="text-[11px] text-slate-400 font-bold">👤 Serveur :</span>
-                    <select
-                      value={t.assignedServer}
-                      onChange={(e) => handleAssignServer(t.tableNum, e.target.value)}
-                      className="text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 rounded-lg px-2 py-0.5 focus:outline-none focus:border-amber-500 cursor-pointer"
-                    >
-                      {waiters.map((w) => (
-                        <option key={w} value={w}>
-                          {w}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Customer Name if provided */}
+                  {hasOrder && t.activeOrder?.customerName && (
+                    <span className="text-[11px] font-black text-slate-700 flex items-center gap-1 mt-0.5">
+                      <User className="w-3 h-3 text-orange-600" />
+                      <span>{t.activeOrder.customerName}</span>
+                    </span>
+                  )}
                 </div>
 
-                {hasOrder && (
-                  <div className="text-right">
-                    <span className="text-xs text-slate-500 font-medium block">Total</span>
-                    <span className="text-sm font-black text-slate-900 font-mono">
-                      {formatFCFA(t.activeOrder?.total || 0)}
-                    </span>
-                  </div>
-                )}
+                {/* Server assignment dropdown */}
+                <div className="text-right space-y-0.5">
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                    Serveur dédié
+                  </span>
+                  <select
+                    value={t.assignedServer}
+                    onChange={(e) => handleAssignServer(t.tableNum, e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 cursor-pointer shadow-2xs"
+                  >
+                    {shiftMembers.map((m) => (
+                      <option key={m.id} value={m.name}>
+                        👤 {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Body: Live Service Breakdown */}
+              {/* Body: Items Status (Cuisine vs Bar) */}
               {hasOrder ? (
-                <div className="space-y-3.5 flex-1">
+                <div className="space-y-3 flex-1">
                   {/* Progress Bar */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs font-bold">
+                    <div className="flex justify-between text-xs font-bold">
                       <span className="text-slate-600">
-                        Avancement du service :
+                        {t.servedItemsCount} / {t.totalItemsCount} servis
                       </span>
-                      <span className={t.isAllServed ? 'text-emerald-700 font-black' : 'text-amber-700'}>
-                        {t.servedItemsCount} / {t.totalItemsCount} articles ({t.progressPercent}%)
+                      <span
+                        className={`font-mono font-black ${
+                          t.isAllServed ? 'text-emerald-700' : 'text-amber-700'
+                        }`}
+                      >
+                        {t.progressPercent}%
                       </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
@@ -334,7 +469,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                     <div className="space-y-1.5">
                       <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                         <Utensils className="w-3.5 h-3.5 text-orange-600" />
-                        <span>Cuisine (Plats chauds & grillades)</span>
+                        <span>Cuisine (Plats chauds &amp; grillades)</span>
                       </span>
 
                       <div className="space-y-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 text-xs">
@@ -459,6 +594,17 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
           );
         })}
       </div>
+
+      {/* Edit Waiter Modal */}
+      <EditWaiterModal
+        member={editingMember}
+        allMembers={shiftMembers}
+        isOpen={Boolean(editingMember)}
+        onClose={() => setEditingMember(null)}
+        onSaveMember={handleSaveMember}
+        onDeleteMember={handleDeleteMember}
+        onTransferTables={handleTransferTables}
+      />
     </div>
   );
 };

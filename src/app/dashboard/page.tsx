@@ -43,11 +43,13 @@ import {
 } from 'recharts';
 import { formatFCFA } from '@/lib/utils';
 import { isDrinkOrBarItem } from '@/lib/order-routing';
+import { getAssignedServerForTable } from '@/lib/server-shift';
 import { toast } from 'sonner';
 
 interface CurrentOrder {
   id: string;
   tableNumber: number;
+  customerName?: string;
   time: string;
   items: string[];
   rawItems?: any[];
@@ -555,11 +557,18 @@ export default function OperationalDashboardPage() {
                         onClick={() => setSelectedOrder(o)}
                         className="hover:bg-slate-50 cursor-pointer transition-colors"
                       >
-                        {/* Table */}
+                        {/* Table, Client & Serveur */}
                         <td className="py-3.5 px-4 sm:px-6 font-black text-slate-900">
-                          <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl font-bold border border-amber-200 block w-fit">
-                            Table {o.tableNumber}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl font-bold border border-amber-200 block w-fit">
+                              Table {o.tableNumber}
+                            </span>
+                            {o.customerName && (
+                              <span className="text-[11px] font-black text-orange-950 bg-orange-100/90 border border-orange-200 px-2 py-0.5 rounded-lg">
+                                🏷️ {o.customerName}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] text-slate-500 font-bold block mt-1">
                             👤 {getAssignedServerForTable(o.tableNumber)}
                           </span>
@@ -785,8 +794,13 @@ export default function OperationalDashboardPage() {
                   Table {selectedOrder.tableNumber}
                 </span>
                 <span className="text-xs text-slate-500 font-mono">#{selectedOrder.id.slice(-5).toUpperCase()}</span>
+                {selectedOrder.customerName && (
+                  <span className="text-[11px] font-black text-orange-950 bg-orange-100/90 border border-orange-200 px-2.5 py-1 rounded-lg">
+                    🏷️ Client : {selectedOrder.customerName}
+                  </span>
+                )}
                 <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
-                  👤 {getAssignedServerForTable(selectedOrder.tableNumber)}
+                  👤 Serveur : {getAssignedServerForTable(selectedOrder.tableNumber)}
                 </span>
               </div>
               <button

@@ -20,6 +20,7 @@ import {
 import { OrderType, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { formatFCFA, formatConvertedPrice, playOrderSound } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
+import { getAssignedServerForTable } from '@/lib/server-shift';
 import { toast } from 'sonner';
 
 interface OrderSuccessTrackerProps {
@@ -130,9 +131,17 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               <h2 className="text-base sm:text-lg font-black tracking-tight text-white truncate">
                 {restaurantName}
               </h2>
-              <div className="flex items-center gap-2 pt-0.5 text-xs text-slate-300">
+              <div className="flex items-center gap-1.5 pt-1 text-xs text-slate-300 flex-wrap">
                 <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-md font-bold">
                   📍 Table {formattedTable}
+                </span>
+                {order.customerName && (
+                  <span className="bg-orange-500/20 text-orange-200 border border-orange-400/30 px-2 py-0.5 rounded-md font-bold">
+                    🏷️ {order.customerName}
+                  </span>
+                )}
+                <span className="bg-white/10 text-slate-200 border border-white/20 px-2 py-0.5 rounded-md font-bold">
+                  👤 Serveur : {getAssignedServerForTable(order.tableNumber)}
                 </span>
                 <span>•</span>
                 <span className="font-mono text-slate-300 font-bold">
@@ -179,7 +188,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                   🔔 Commande Prête &amp; Attribuée pour être servie !
                 </h4>
                 <p className="text-[11px] text-emerald-800 leading-relaxed font-medium">
-                  Votre serveur apporte vos plats et boissons à votre table. Merci pour votre patience et bon appétit ! 😋
+                  Votre serveur dédié <strong>{getAssignedServerForTable(order.tableNumber)}</strong> apporte vos plats et boissons à votre table. Merci pour votre patience et bon appétit {order.customerName ? `à vous ${order.customerName}` : ''} ! 😋
                 </p>
               </div>
             </div>
