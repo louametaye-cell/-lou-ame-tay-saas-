@@ -5,10 +5,12 @@ import {
   Sparkles, 
   Search, 
   CheckCircle2, 
-  AlertTriangle 
+  AlertTriangle,
+  Pencil
 } from 'lucide-react';
 import { MenuItemType, CategoryType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
+import { EditMenuItemModal } from './EditMenuItemModal';
 import { toast } from 'sonner';
 
 interface LiveStockManagerProps {
@@ -33,6 +35,8 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
   });
 
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<MenuItemType | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const allItems = useMemo(() => {
     return Object.values(itemsState);
@@ -118,6 +122,24 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
     } finally {
       setIsUpdatingId(null);
     }
+  };
+
+  const handleOpenEdit = (item: MenuItemType) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleItemSaved = (updated: MenuItemType) => {
+    setItemsState((prev) => ({ ...prev, [updated.id]: updated }));
+    onItemUpdated?.(updated);
+  };
+
+  const handleItemDeleted = (deletedId: string) => {
+    setItemsState((prev) => {
+      const copy = { ...prev };
+      delete copy[deletedId];
+      return copy;
+    });
   };
 
   return (
@@ -242,12 +264,25 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+              {/* Action Buttons: Edit, Daily Special, Availability */}
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap">
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(item)}
+                  className="min-h-[38px] px-2.5 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center gap-1.5 transition-all shadow-2xs"
+                  title="Modifier le plat (photos, prix, description)"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Modifier</span>
+                </button>
+
+                {/* Daily Special ⭐ */}
                 <button
                   type="button"
                   disabled={isUpdatingId === item.id}
                   onClick={() => handleToggleDailySpecial(item)}
-                  className={`min-h-[40px] px-3 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border ${
+                  className={`min-h-[38px] px-2.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all border ${
                     isSpecial
                       ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
                       : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-amber-700'
@@ -260,11 +295,12 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
                   </span>
                 </button>
 
+                {/* Stock Toggle */}
                 <button
                   type="button"
                   disabled={isUpdatingId === item.id}
                   onClick={() => handleToggleAvailability(item)}
-                  className={`min-h-[40px] px-3.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all border active:scale-95 shadow-2xs ${
+                  className={`min-h-[38px] px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all border active:scale-95 shadow-2xs ${
                     isAvailable
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                       : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
@@ -272,12 +308,12 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
                 >
                   {isAvailable ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                       <span>En Stock</span>
                     </>
                   ) : (
                     <>
-                      <AlertTriangle className="w-4 h-4 text-rose-600" />
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
                       <span>Épuisé</span>
                     </>
                   )}
@@ -287,6 +323,19 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
           );
         })}
       </div>
+
+      {/* Edit Dish Modal */}
+      <EditMenuItemModal
+        item={editingItem}
+        categories={categories}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingItem(null);
+        }}
+        onItemSaved={handleItemSaved}
+        onItemDeleted={handleItemDeleted}
+      />
     </div>
   );
 };

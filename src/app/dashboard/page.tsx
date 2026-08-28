@@ -27,7 +27,8 @@ import {
   HelpCircle,
   TrendingUp,
   Headphones,
-  Plus
+  Plus,
+  Wine
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -41,6 +42,7 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { formatFCFA } from '@/lib/utils';
+import { isDrinkOrBarItem } from '@/lib/order-routing';
 import { toast } from 'sonner';
 
 interface CurrentOrder {
@@ -108,6 +110,47 @@ export default function OperationalDashboardPage() {
 
   // Notifications toggle
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  // Track served drinks at bar locally
+  const [servedDrinkKeys, setServedDrinkKeys] = useState<string[]>([]);
+
+  // Pending Bar Drinks extracted from live orders for bartenders/servers
+  const pendingBarDrinks = useMemo(() => {
+    const drinksList: {
+      key: string;
+      orderId: string;
+      tableNumber: number;
+      time: string;
+      item: any;
+    }[] = [];
+
+    orders.forEach((o) => {
+      if (o.status !== 'SERVED') {
+        const raw = o.rawItems || [];
+        raw.forEach((it: any, itIdx: number) => {
+          if (isDrinkOrBarItem(it)) {
+            const key = `${o.id}_${it.id || itIdx}_${it.name}`;
+            if (!servedDrinkKeys.includes(key)) {
+              drinksList.push({
+                key,
+                orderId: o.id,
+                tableNumber: o.tableNumber,
+                time: o.time || 'En cours',
+                item: it,
+              });
+            }
+          }
+        });
+      }
+    });
+
+    return drinksList;
+  }, [orders, servedDrinkKeys]);
+
+  const handleMarkDrinkServed = (key: string, drinkName: string, tableNumber: number) => {
+    setServedDrinkKeys((prev) => [...prev, key]);
+    toast.success(`🥤 « ${drinkName} » marqué comme SERVI à la Table ${tableNumber} !`);
+  };
 
   // Initialize restaurant name & date
   useEffect(() => {
@@ -397,6 +440,67 @@ export default function OperationalDashboardPage() {
             </div>
           </div>
         </section>
+
+        {/* SECTION 2.5 : COMPTOIR BAR & BOISSONS EN ATTENTE (AIGUILLAGE SERVEURS) */}
+        {pendingBarDrinks.length > 0 && (
+          <section className="bg-blue-50/70 border-2 border-blue-300 rounded-3xl p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-600 text-white rounded-xl">
+                  <Wine className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-blue-950 flex items-center gap-2">
+                    <span>Comptoir Bar & Boissons Fraîches en Attente</span>
+                    <span className="bg-blue-600 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">
+                      {pendingBarDrinks.length} à servir
+                    </span>
+                  </h3>
+                  <p className="text-xs text-blue-800">
+                    Ces boissons ne passent pas par la cuisine : préparez-les au bar et attribuez-les aux serveurs
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {pendingBarDrinks.map((b) => (
+                <div
+                  key={b.key}
+                  className="p-3 bg-white border border-blue-200 rounded-2xl flex items-center justify-between gap-2 shadow-2xs"
+                >
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md font-black text-xs border border-amber-200">
+                        Table {b.tableNumber}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-medium">{b.time}</span>
+                    </div>
+                    <span className="text-xs font-black text-slate-900 block truncate">
+                      {b.item.quantity}x {b.item.name || b.item.menuItem?.name || 'Boisson'}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleMarkDrinkServed(
+                        b.key,
+                        b.item.name || b.item.menuItem?.name || 'Boisson',
+                        b.tableNumber
+                      )
+                    }
+                    className="min-h-[36px] px-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-2xs shrink-0 transition-all"
+                    title="Marquer comme servie"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Servie</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* SECTION 3 : DERNIÈRES COMMANDES */}
         <section className="space-y-4">
