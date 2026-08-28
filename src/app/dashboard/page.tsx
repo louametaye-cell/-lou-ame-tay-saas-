@@ -111,6 +111,9 @@ export default function OperationalDashboardPage() {
     { id: '2', itemName: 'Pastels Poisson (Portion 6)', stock: 2, unit: 'portions', isOutOfStock: false, category: 'Entrées' },
   ]);
 
+  // Live Waiter Calls
+  const [waiterCalls, setWaiterCalls] = useState<any[]>([]);
+
   // Notifications toggle
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -231,12 +234,33 @@ export default function OperationalDashboardPage() {
         }
       }
 
+      // 5. Live Waiter Calls
+      const resCalls = await fetch('/api/dashboard/waiter-calls?restaurantId=resto_thies_01');
+      if (resCalls.ok) {
+        const dataCalls = await resCalls.json();
+        if (dataCalls.calls) {
+          setWaiterCalls(dataCalls.calls);
+        }
+      }
+
       setLastRefreshed(new Date());
     } catch (e) {
       console.error('Erreur actualisation dashboard', e);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleResolveWaiterCall = async (callId: string, tableNumber: number) => {
+    try {
+      await fetch('/api/dashboard/waiter-calls', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callId }),
+      });
+      setWaiterCalls((prev) => prev.filter((c) => c.id !== callId));
+      toast.success(`✅ Appel de la Table ${tableNumber} pris en charge.`);
+    } catch (e) {}
   };
 
   // Auto-refresh every 10 seconds
@@ -397,6 +421,44 @@ export default function OperationalDashboardPage() {
 
       {/* 2. CORPS PRINCIPAL DU DASHBOARD */}
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
+        
+        {/* LIVE WAITER CALLS FLASHING BANNER */}
+        {waiterCalls.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-4 sm:p-5 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-3 border-2 border-amber-300">
+            <div className="flex items-center gap-3.5 text-center md:text-left">
+              <div className="p-3 bg-white text-orange-600 rounded-2xl shadow-md animate-bounce shrink-0 hidden sm:block">
+                <Bell className="w-6 h-6" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 justify-center md:justify-start">
+                  <span className="bg-black/25 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                    🚨 {waiterCalls.length} APPEL{waiterCalls.length > 1 ? 'S' : ''} SERVEUR EN ATTENTE
+                  </span>
+                  <span className="text-xs font-mono font-bold text-amber-100">Live</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black tracking-tight text-white">
+                  🔔 {waiterCalls[0].tableNumber === 0 ? 'Comptoir Express' : `Table ${waiterCalls[0].tableNumber}`} : « {waiterCalls[0].reason} »
+                </h3>
+                <p className="text-xs text-amber-100 font-medium">
+                  {waiterCalls[0].customerName ? `Client : ${waiterCalls[0].customerName} • ` : ''}
+                  Serveur assigné : <strong>{getAssignedServerForTable(waiterCalls[0].tableNumber)}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleResolveWaiterCall(waiterCalls[0].id, waiterCalls[0].tableNumber)}
+                className="py-3 px-6 bg-white text-slate-950 hover:bg-amber-50 font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all active:scale-95 flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>J'interviens ✓</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* KPIS */}
         <section>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

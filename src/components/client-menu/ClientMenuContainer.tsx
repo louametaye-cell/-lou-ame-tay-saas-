@@ -16,6 +16,7 @@ import { UpsellDrawer } from './UpsellDrawer';
 import { TableSessionModal } from './TableSessionModal';
 import { MobileMoneyCheckout } from './MobileMoneyCheckout';
 import { ComboSection } from './ComboSection';
+import { CallWaiterModal } from './CallWaiterModal';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
 import { 
   RestaurantType, 
@@ -101,6 +102,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState<OrderType | null>(null);
+  const [isCallWaiterOpen, setIsCallWaiterOpen] = useState(false);
 
   // Table session accumulated orders
   const [sessionOrders, setSessionOrders] = useState<OrderType[]>(() => {
@@ -114,6 +116,47 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     }
     return [];
   });
+
+  // Real-time polling to sync order status (PENDING -> PREPARING -> READY -> SERVED)
+  useEffect(() => {
+    if (sessionOrders.length === 0 && !activeOrder) return;
+
+    const pollLiveOrders = async () => {
+      try {
+        const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id || 'resto_thies_01'}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
+            setSessionOrders((prev) => {
+              // Check if any order transitioned to SERVED
+              data.orders.forEach((updatedOrd: OrderType) => {
+                const prevOrd = prev.find((p) => p.id === updatedOrd.id);
+                if (prevOrd && prevOrd.status !== 'SERVED' && updatedOrd.status === 'SERVED') {
+                  const tableDisplay = isExpress ? 'Comptoir' : `Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber}`;
+                  toast.success(`🎉 Votre commande ${tableDisplay} a été servie ! Bon appétit ! 😋`);
+                }
+              });
+
+              localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(data.orders));
+              return data.orders;
+            });
+
+            // Update activeOrder if matched
+            if (activeOrder) {
+              const matched = data.orders.find((o: OrderType) => o.id === activeOrder.id);
+              if (matched && matched.status !== activeOrder.status) {
+                setActiveOrder(matched);
+              }
+            }
+          }
+        }
+      } catch (err) {}
+    };
+
+    pollLiveOrders();
+    const interval = setInterval(pollLiveOrders, 3500);
+    return () => clearInterval(interval);
+  }, [tableNumber, restaurant.id, activeOrder?.id, sessionOrders.length, isExpress]);
 
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
@@ -570,6 +613,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         isOpen={isOrderSuccessOpen}
         onClose={() => setIsOrderSuccessOpen(false)}
         onOrderMore={() => setIsOrderSuccessOpen(false)}
+        onCallWaiter={() => setIsCallWaiterOpen(true)}
         onPayOnline={(amount) => {
           setIsOrderSuccessOpen(false);
           setIsMobileMoneyOpen(true);
@@ -578,6 +622,16 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         currency={currentCurrency}
         exchangeRates={exchangeRates}
         restaurantName={restaurant.name}
+      />
+
+      {/* 12. Call Waiter / Server Dedicated Modal */}
+      <CallWaiterModal
+        isOpen={isCallWaiterOpen}
+        onClose={() => setIsCallWaiterOpen(false)}
+        tableNumber={tableNumber}
+        restaurantId={restaurant.id}
+        customerName={customerName}
+        isExpress={isExpress}
       />
     </div>
   );

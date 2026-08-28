@@ -15,7 +15,8 @@ import {
   Plus, 
   Sparkles,
   Banknote,
-  Smartphone
+  Smartphone,
+  Check
 } from 'lucide-react';
 import { OrderType, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { formatFCFA, formatConvertedPrice, playOrderSound } from '@/lib/utils';
@@ -30,6 +31,7 @@ interface OrderSuccessTrackerProps {
   onClose: () => void;
   onOrderMore: () => void;
   onPayOnline?: (totalAmount: number) => void;
+  onCallWaiter?: () => void;
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
@@ -43,6 +45,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   onClose,
   onOrderMore,
   onPayOnline,
+  onCallWaiter,
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
@@ -52,9 +55,21 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   const allOrders = sessionOrders.length > 0 ? sessionOrders : order ? [order] : [];
   const totalBalance = allOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
+  // Derive latest live status from backend
+  const activeStatus = order?.status || (sessionOrders.length > 0 ? sessionOrders[sessionOrders.length - 1].status : 'PENDING');
+  
+  // Current Step: 1 = PENDING, 2 = PREPARING, 3 = READY, 4 = SERVED
+  const currentStep: 1 | 2 | 3 | 4 = 
+    activeStatus === 'SERVED' 
+      ? 4 
+      : activeStatus === 'READY' 
+      ? 3 
+      : activeStatus === 'PREPARING' 
+      ? 2 
+      : 1;
+
   // Live Countdown state (12 min = 720 sec)
   const [secondsRemaining, setSecondsRemaining] = useState<number>(720);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(2); // 1: Reçue, 2: Cuisson, 3: Attribuée/Prête, 4: Servie
   const [billRequested, setBillRequested] = useState(false);
 
   useEffect(() => {
@@ -71,21 +86,26 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
     }
   }, [isOpen]);
 
-  // Countdown timer effect
+  // Trigger confetti when order transitions to SERVED
   useEffect(() => {
-    if (!isOpen) return;
+    if (currentStep === 4 && isOpen) {
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.5 },
+          colors: ['#10b981', '#059669', '#34d399', '#f59e0b'],
+        });
+      } catch (err) {}
+    }
+  }, [currentStep, isOpen]);
+
+  // Countdown timer effect (only active when not yet ready or served)
+  useEffect(() => {
+    if (!isOpen || currentStep >= 3) return;
 
     const interval = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          setCurrentStep(3); // Marked as ready & assigned
-          return 0;
-        }
-        if (prev <= 180 && currentStep === 2) {
-          setCurrentStep(3);
-        }
-        return prev - 1;
-      });
+      setSecondsRemaining((prev) => (prev > 1 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(interval);
@@ -94,7 +114,10 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   if (!isOpen || !order) return null;
 
   const t = getUIText(lang);
-  const formattedTable = order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber;
+  const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0;
+  const formattedTable = isExpress ? 'Comptoir' : order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber;
+  const serverName = isExpress ? 'Guichet Caisse' : getAssignedServerForTable(order.tableNumber);
+  
   const minutes = Math.floor(secondsRemaining / 60);
   const seconds = secondsRemaining % 60;
   const formattedTimeRemaining = `${minutes} min ${seconds < 10 ? '0' + seconds : seconds} s`;
@@ -109,7 +132,11 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
       <div className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[94vh] border border-slate-200">
         
         {/* TOP RECEIPT HEADER */}
-        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950 p-5 text-white relative overflow-hidden shrink-0">
+        <div className={`p-5 text-white relative overflow-hidden shrink-0 transition-colors ${
+          currentStep === 4 
+            ? 'bg-gradient-to-br from-emerald-950 via-teal-900 to-emerald-900' 
+            : 'bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950'
+        }`}>
           <button
             type="button"
             onClick={onClose}
@@ -120,7 +147,9 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
           </button>
 
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-500 text-slate-950 rounded-2xl shadow-md shrink-0">
+            <div className={`p-3 rounded-2xl shadow-md shrink-0 ${
+              currentStep === 4 ? 'bg-emerald-400 text-slate-950' : 'bg-amber-500 text-slate-950'
+            }`}>
               <Receipt className="w-6 h-6" />
             </div>
 
@@ -133,7 +162,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               </h2>
               <div className="flex items-center gap-1.5 pt-1 text-xs text-slate-300 flex-wrap">
                 <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-md font-bold">
-                  📍 Table {formattedTable}
+                  📍 {isExpress ? 'Comptoir Express' : `Table ${formattedTable}`}
                 </span>
                 {order.customerName && (
                   <span className="bg-orange-500/20 text-orange-200 border border-orange-400/30 px-2 py-0.5 rounded-md font-bold">
@@ -141,7 +170,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                   </span>
                 )}
                 <span className="bg-white/10 text-slate-200 border border-white/20 px-2 py-0.5 rounded-md font-bold">
-                  👤 Serveur : {getAssignedServerForTable(order.tableNumber)}
+                  👤 Serveur : {serverName}
                 </span>
                 <span>•</span>
                 <span className="font-mono text-slate-300 font-bold">
@@ -151,16 +180,20 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             </div>
           </div>
 
-          {/* PROGRESS COUNTDOWN BAR */}
+          {/* PROGRESS COUNTDOWN / LIVE STATUS BAR */}
           <div className="mt-4 p-3 bg-white/10 rounded-2xl border border-white/15 backdrop-blur-xs flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+              <Clock className={`w-4 h-4 ${currentStep === 4 ? 'text-emerald-300' : 'text-amber-400 animate-spin'}`} style={{ animationDuration: '6s' }} />
               <div>
                 <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
-                  Temps d'attente estimé
+                  {currentStep === 4 ? 'État du Service' : "Temps d'attente estimé"}
                 </span>
-                <span className="text-xs sm:text-sm font-black text-amber-300 font-mono">
-                  {secondsRemaining > 0 ? `⏳ ~ ${formattedTimeRemaining}` : '✅ Commande Prête !'}
+                <span className={`text-xs sm:text-sm font-black font-mono ${currentStep === 4 ? 'text-emerald-300' : 'text-amber-300'}`}>
+                  {currentStep === 4
+                    ? '🎉 Commande Servie à Table !'
+                    : currentStep === 3
+                    ? '🍽️ Prête & en cours de service !'
+                    : `⏳ ~ ${formattedTimeRemaining}`}
                 </span>
               </div>
             </div>
@@ -168,8 +201,16 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             <div className="text-right">
               <span className="text-[10px] font-bold text-slate-300 uppercase block">Statut Live</span>
               <span className="text-xs font-black text-emerald-400 flex items-center gap-1 justify-end">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>{currentStep === 2 ? 'En Cuisson' : currentStep === 3 ? 'Prête & Attribuée' : 'Validée'}</span>
+                <span className={`w-2 h-2 rounded-full ${currentStep === 4 ? 'bg-emerald-400' : 'bg-emerald-400 animate-pulse'}`} />
+                <span>
+                  {currentStep === 4
+                    ? 'Servie ✓'
+                    : currentStep === 3
+                    ? 'Prête'
+                    : currentStep === 2
+                    ? 'En Cuisson'
+                    : 'Reçue'}
+                </span>
               </span>
             </div>
           </div>
@@ -177,8 +218,23 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
 
         {/* MODAL BODY */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
-          {/* 1. NOTIFICATION BANNER : ATTRIBUÉE AU SERVEUR */}
-          {currentStep >= 3 && (
+          
+          {/* 1. CELEBRATION BANNER WHEN SERVED */}
+          {currentStep === 4 ? (
+            <div className="p-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 text-white rounded-2xl flex items-start gap-3.5 shadow-md animate-in zoom-in-95">
+              <div className="p-2.5 bg-white text-emerald-700 rounded-2xl shrink-0 shadow-sm">
+                <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+              </div>
+              <div className="space-y-1 min-w-0">
+                <h4 className="text-sm font-black tracking-tight">
+                  🎉 Votre commande a été servie à votre table !
+                </h4>
+                <p className="text-xs text-emerald-100 font-medium leading-relaxed">
+                  Bon appétit {order.customerName ? `à vous ${order.customerName}` : ''} ! Servi par <strong>{serverName}</strong>. N'hésitez pas à demander l'addition ou appeler le serveur si vous avez besoin d'autre chose.
+                </p>
+              </div>
+            </div>
+          ) : currentStep === 3 ? (
             <div className="p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 rounded-2xl flex items-start gap-3 shadow-xs animate-in slide-in-from-top-2">
               <div className="p-2 bg-emerald-500 text-white rounded-xl shadow-xs shrink-0 animate-bounce">
                 <Bell className="w-4 h-4" />
@@ -188,11 +244,11 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                   🔔 Commande Prête &amp; Attribuée pour être servie !
                 </h4>
                 <p className="text-[11px] text-emerald-800 leading-relaxed font-medium">
-                  Votre serveur dédié <strong>{getAssignedServerForTable(order.tableNumber)}</strong> apporte vos plats et boissons à votre table. Merci pour votre patience et bon appétit {order.customerName ? `à vous ${order.customerName}` : ''} ! 😋
+                  Votre serveur dédié <strong>{serverName}</strong> apporte vos plats et boissons à votre table. Merci pour votre patience !
                 </p>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* 2. LIVE STEPS TIMELINE */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
@@ -210,9 +266,9 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             {/* Step 2 */}
             <div className="flex items-center gap-3">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
-                currentStep >= 2 ? 'bg-amber-500 text-slate-950 animate-pulse' : 'bg-slate-200 text-slate-500'
+                currentStep >= 2 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
               }`}>
-                <ChefHat className="w-3.5 h-3.5" />
+                {currentStep >= 2 ? '✓' : <ChefHat className="w-3.5 h-3.5" />}
               </div>
               <div className="min-w-0 flex-1">
                 <span className="font-bold text-slate-900 block leading-tight">2. En Préparation &amp; Cuisson</span>
@@ -223,13 +279,28 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             {/* Step 3 */}
             <div className="flex items-center gap-3">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
-                currentStep >= 3 ? 'bg-emerald-500 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
+                currentStep >= 3 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
               }`}>
-                <Utensils className="w-3.5 h-3.5" />
+                {currentStep >= 3 ? '✓' : <Utensils className="w-3.5 h-3.5" />}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="font-bold text-slate-900 block leading-tight">3. Service à Table ({formattedTable})</span>
-                <span className="text-[10px] text-slate-500">Attribuée à votre serveur dédié</span>
+                <span className="font-bold text-slate-900 block leading-tight">3. Prête &amp; Attribuée au Serveur</span>
+                <span className="text-[10px] text-slate-500">{serverName} prend en charge le plateau</span>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex items-center gap-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
+                currentStep === 4 ? 'bg-emerald-500 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
+              }`}>
+                {currentStep === 4 ? '🎉' : '4'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="font-bold text-slate-900 block leading-tight">4. Servie à Table ({formattedTable})</span>
+                <span className="text-[10px] text-slate-500">
+                  {currentStep === 4 ? 'Plats servis • Bon appétit !' : 'Service en cours'}
+                </span>
               </div>
             </div>
           </div>
@@ -282,7 +353,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center justify-between text-slate-950 font-black border-t-2 border-amber-300">
                 <div>
                   <span className="text-xs uppercase tracking-wider block text-slate-700">
-                    Solde Total Cumulé (Table {formattedTable})
+                    Solde Total Cumulé ({isExpress ? 'Comptoir' : `Table ${formattedTable}`})
                   </span>
                   <span className="text-[10px] text-slate-500 font-normal">
                     Toutes consommations de la session incluses
@@ -305,7 +376,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
           {/* 4. PAYMENT & BILL OPTIONS */}
           <div className="space-y-2 pt-1">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Règlement &amp; Addition :
+              Règlement &amp; Services :
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -332,22 +403,31 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                 <span>Payer par Wave / Orange Money</span>
               </button>
             </div>
-
-            <p className="text-[11px] text-center text-slate-500 italic pt-1">
-              Vous pouvez également régler en espèces directement à table auprès de votre serveur après votre repas.
-            </p>
           </div>
         </div>
 
         {/* MODAL FOOTER ACTIONS */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-xs font-bold text-slate-500 hover:text-slate-800 py-2 px-3 transition-colors"
-          >
-            Fermer
-          </button>
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 py-2 px-3 transition-colors"
+            >
+              Fermer
+            </button>
+
+            {onCallWaiter && (
+              <button
+                type="button"
+                onClick={onCallWaiter}
+                className="py-2 px-3 bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs rounded-xl border border-amber-300 flex items-center gap-1.5 transition-all"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-700" />
+                <span>Appeler Serveur</span>
+              </button>
+            )}
+          </div>
 
           <button
             type="button"
@@ -355,7 +435,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ Ajouter d'autres Plats (Boissons/Desserts)</span>
+            <span>+ Ajouter d'autres Plats</span>
           </button>
         </div>
       </div>

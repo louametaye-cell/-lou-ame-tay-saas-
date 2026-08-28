@@ -3,6 +3,38 @@ import { prisma } from '@/lib/prisma';
 import { orderStorage } from '@/lib/order-storage';
 import { OrderStatus } from '@/types';
 
+export async function GET(
+  req: Request,
+  { params }: { params: { orderId: string } }
+) {
+  try {
+    const { orderId } = params;
+
+    // 1. Search in orderStorage
+    const order = orderStorage.getOrderById(orderId);
+    if (order) {
+      return NextResponse.json({ order });
+    }
+
+    // 2. Fallback to Prisma DB
+    try {
+      const dbOrder = await (prisma as any).order?.findUnique({
+        where: { id: orderId },
+        include: {
+          items: true,
+        },
+      });
+      if (dbOrder) {
+        return NextResponse.json({ order: dbOrder });
+      }
+    } catch {}
+
+    return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Erreur récupération commande' }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: { orderId: string } }

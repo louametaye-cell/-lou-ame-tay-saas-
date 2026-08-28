@@ -329,6 +329,11 @@ export const orderStorage = {
     return order;
   },
 
+  getOrderById: (orderId: string): OrderType | null => {
+    if (!globalThis.globalOrders) return null;
+    return globalThis.globalOrders.find((o) => o.id === orderId) || null;
+  },
+
   updateOrderStatus: (orderId: string, status: OrderStatus): OrderType | null => {
     if (!globalThis.globalOrders) return null;
     const index = globalThis.globalOrders.findIndex((o) => o.id === orderId);
@@ -841,5 +846,46 @@ export const orderStorage = {
       }
     }
   },
+
+  // ---------------- WAITER CALL ALERTS ---------------- //
+  getWaiterCalls: (restaurantId?: string) => {
+    if (!(globalThis as any).globalWaiterCalls) {
+      (globalThis as any).globalWaiterCalls = [];
+    }
+    const calls: any[] = (globalThis as any).globalWaiterCalls;
+    if (restaurantId) {
+      return calls.filter((c) => (c.restaurantId === restaurantId || c.restaurantId === 'resto_thies_01') && !c.resolved);
+    }
+    return calls.filter((c) => !c.resolved);
+  },
+
+  addWaiterCall: (data: { restaurantId: string; tableNumber: number; customerName?: string; reason?: string }) => {
+    if (!(globalThis as any).globalWaiterCalls) {
+      (globalThis as any).globalWaiterCalls = [];
+    }
+    const newCall = {
+      id: `call_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      restaurantId: data.restaurantId || 'resto_thies_01',
+      tableNumber: Number(data.tableNumber),
+      customerName: data.customerName || null,
+      reason: data.reason || "Demande d'assistance / Serveur",
+      createdAt: new Date().toISOString(),
+      resolved: false,
+    };
+    (globalThis as any).globalWaiterCalls.unshift(newCall);
+    return newCall;
+  },
+
+  resolveWaiterCall: (callId: string) => {
+    if (!(globalThis as any).globalWaiterCalls) return false;
+    const call = (globalThis as any).globalWaiterCalls.find((c: any) => c.id === callId);
+    if (call) {
+      call.resolved = true;
+      call.resolvedAt = new Date().toISOString();
+      return true;
+    }
+    return false;
+  },
 };
+
 

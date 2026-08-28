@@ -80,6 +80,18 @@ export const ServiceCallModal: React.FC<ServiceCallModalProps> = ({
         ? `${reasonText} (${paymentOption === 'WAVE' ? 'Paiement Wave 🔵' : paymentOption === 'OM' ? 'Orange Money 🟠' : 'Espèces 💵'})`
         : reasonText;
 
+    try {
+      await fetch('/api/table/call-waiter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableNumber,
+          restaurantId: 'resto_thies_01',
+          reason: fullMessage,
+        }),
+      });
+    } catch (e) {}
+
     toast.success(`🛎️ Table ${formattedTable} : ${fullMessage}`, {
       description: 'Demande transmise au serveur. Il arrive à votre table.',
       duration: 4000,
