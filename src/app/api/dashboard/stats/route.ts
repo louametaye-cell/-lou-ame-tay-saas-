@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server';
 import { orderStorage } from '@/lib/order-storage';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
+import { getCachedDashboardStats, setCachedDashboardStats } from '@/lib/cache';
+import { startTimer, logPerformance } from '@/lib/logger';
 
 // GET /api/dashboard/stats
 // Récupère les KPIs temps réel de caisse pour le restaurateur
 export async function GET(req: Request) {
+  const timer = startTimer();
   try {
     const { searchParams } = new URL(req.url);
     const restaurantId = searchParams.get('restaurantId') || 'resto_thies_01';
+
+    // 1. Check Redis Cache (TTL 60s)
+    const cachedStats = await getCachedDashboardStats(restaurantId);
+    if (cachedStats) {
+      logPerformance(`GET /api/dashboard/stats (${restaurantId})`, timer.elapsedMs(), 'CACHE_HIT');
+      return NextResponse.json(cachedStats, { headers: { 'X-Cache': 'HIT' } });
+    }
 
     const orders = orderStorage.getOrdersByRestaurantId(restaurantId);
     const today = new Date();
@@ -37,7 +47,7 @@ export async function GET(req: Request) {
       });
     });
 
-    return NextResponse.json({
+    const statsPayload = {
       todayRevenue: todayRevenue > 0 ? todayRevenue : 125000,
       todayOrders: todayOrdersCount > 0 ? todayOrdersCount : 18,
       todayCovers: todayCovers > 0 ? todayCovers : 42,
@@ -45,7 +55,14 @@ export async function GET(req: Request) {
       revenueChange: 12.5, // % vs hier
       ordersChange: 5.2,   // % vs hier
       coversChange: 8.0,   // % vs hier
-    });
+    };
+
+    // Save into Redis (TTL 60s)
+    await setCachedDashboardStats(restaurantId, statsPayload);
+
+    logPerformance(`GET /api/dashboard/stats (${restaurantId})`, timer.elapsedMs(), 'CACHE_MISS');
+
+    return NextResponse.json(statsPayload, { headers: { 'X-Cache': 'MISS' } });
   } catch (error) {
     return NextResponse.json({ error: 'Erreur calcul KPIs' }, { status: 500 });
   }

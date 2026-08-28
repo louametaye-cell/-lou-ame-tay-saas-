@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
+import { invalidateMenuCache } from '@/lib/cache';
 
 export async function PATCH(
   request: Request,
@@ -9,7 +10,7 @@ export async function PATCH(
   try {
     const { id } = params;
     const body = await request.json();
-    const { isAvailable, isSpecialOfTheDay } = body;
+    const { isAvailable, isSpecialOfTheDay, restaurantId = 'chezfatou' } = body;
 
     // 1. Update in-memory SAMPLE_RESTAURANT for instant UI reflection
     SAMPLE_RESTAURANT.categories.forEach((cat) => {
@@ -25,6 +26,9 @@ export async function PATCH(
         }
       });
     });
+
+    // Invalidate Redis Menu & Display Cache
+    await invalidateMenuCache(restaurantId);
 
     // 2. Update Database via Prisma if connected
     try {

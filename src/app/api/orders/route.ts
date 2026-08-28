@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { orderStorage } from '@/lib/order-storage';
 import { OrderType } from '@/types';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/cache';
+import { startTimer, logPerformance } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -30,9 +33,25 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const timer = startTimer();
   try {
+    // 1. Rate Limiting Check (25 orders/min per IP to prevent spam attacks)
+    const rate = await checkRateLimit(req, 'orders');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de commandes envoyées rapidement. Veuillez patienter un instant.' },
+        { 
+          status: 429, 
+          headers: { 
+            'Retry-After': String(rate.reset),
+            'X-RateLimit-Remaining': '0',
+          } 
+        }
+      );
+    }
+
     const body = await req.json();
-    const { tableNumber, orderType, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef } = body;
+    const { tableNumber, orderType, customerName, customerNote, restaurantId = 'resto_thies_01', items, paymentMethod, transactionRef } = body;
 
     const isExpress = orderType === 'EXPRESS' || Number(tableNumber) === 0;
 
@@ -109,6 +128,12 @@ export async function POST(req: Request) {
       // Non-blocking database write error
       console.warn('Prisma DB write bypassed:', dbErr);
     }
+
+    // Invalidate Redis caches for live orders and dashboard stats
+    await invalidateLiveOrdersCache(newOrder.restaurantId);
+    await invalidateDashboardStatsCache(newOrder.restaurantId);
+
+    logPerformance(`POST /api/orders (${newOrder.id})`, timer.elapsedMs(), `Table ${newOrder.tableNumber}`);
 
     return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
   } catch (error: any) {

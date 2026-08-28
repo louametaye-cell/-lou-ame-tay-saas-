@@ -3,13 +3,36 @@ import { prisma } from '@/lib/prisma';
 import { SAMPLE_RESTAURANTS, SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { orderStorage } from '@/lib/order-storage';
 import { RestaurantType } from '@/types';
+import { redis } from '@/lib/redis';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { startTimer, logPerformance } from '@/lib/logger';
 
 export async function GET(
   req: Request,
   { params }: { params: { restaurantId: string } }
 ) {
+  const timer = startTimer();
   try {
+    // 1. Rate Limiting Check (200 req/min for TV displays)
+    const rate = await checkRateLimit(req, 'display');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes TV.' },
+        { status: 429, headers: { 'Retry-After': String(rate.reset) } }
+      );
+    }
+
     const searchId = params.restaurantId.toLowerCase();
+    const cacheKey = `display:${searchId}`;
+
+    // 2. Check Redis Cache
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        logPerformance(`GET /api/display/${searchId}`, timer.elapsedMs(), 'CACHE_HIT');
+        return NextResponse.json(cached, { headers: { 'X-Cache': 'HIT' } });
+      }
+    } catch {}
 
     // 1. Try finding in Prisma DB first if available
     let dbRestaurant: any = null;
@@ -89,7 +112,7 @@ export async function GET(
       }),
     }));
 
-    return NextResponse.json({
+    const responsePayload = {
       restaurantId: restaurant.id,
       restaurantName: restaurant.name,
       subdomain: restaurant.subdomain,
@@ -100,6 +123,20 @@ export async function GET(
       currency: restaurant.currency || 'FCFA',
       categories: formattedCategories,
       updatedAt: new Date().toISOString(),
+    };
+
+    // Save into Redis (TTL 300s)
+    try {
+      await redis.set(cacheKey, responsePayload, { ex: 300 });
+    } catch {}
+
+    logPerformance(`GET /api/display/${searchId}`, timer.elapsedMs(), 'CACHE_MISS');
+
+    return NextResponse.json(responsePayload, {
+      headers: {
+        'X-Cache': 'MISS',
+        'X-RateLimit-Remaining': String(rate.remaining),
+      },
     });
   } catch (error) {
     return NextResponse.json({ error: 'Erreur récupération menu display' }, { status: 500 });

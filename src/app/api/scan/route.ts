@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { orderStorage } from '@/lib/order-storage';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { invalidateDashboardStatsCache } from '@/lib/cache';
 
 export async function POST(req: Request) {
   try {
+    // Rate Limiting (100 req/min)
+    const rate = await checkRateLimit(req, 'public');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de scans.' },
+        { status: 429, headers: { 'Retry-After': String(rate.reset) } }
+      );
+    }
+
     const body = await req.json();
     const { subdomain, restaurantId, tableNumber } = body;
 
@@ -32,6 +43,9 @@ export async function POST(req: Request) {
     } catch (e) {
       // Non-blocking
     }
+
+    // Invalidate dashboard stats cache
+    await invalidateDashboardStatsCache(targetId);
 
     return NextResponse.json({ success: true, recorded: true });
   } catch (error) {

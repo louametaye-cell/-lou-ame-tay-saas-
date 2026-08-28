@@ -4,14 +4,46 @@ import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { orderStorage } from '@/lib/order-storage';
 import { autoTranslateDish } from '@/lib/translation-engine';
 import { Language } from '@/types';
+import { getCachedMenu, setCachedMenu, invalidateMenuCache } from '@/lib/cache';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { startTimer, logPerformance } from '@/lib/logger';
 
 export async function GET(req: Request) {
+  const timer = startTimer();
   try {
+    // 1. Rate Limiting Check (100 req/min)
+    const rate = await checkRateLimit(req, 'public');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes. Veuillez patienter quelques secondes.' },
+        { 
+          status: 429, 
+          headers: { 
+            'Retry-After': String(rate.reset),
+            'X-RateLimit-Limit': String(rate.limit),
+            'X-RateLimit-Remaining': '0',
+          } 
+        }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const lang = (searchParams.get('lang') || 'FR').toUpperCase() as Language;
     const subdomain = searchParams.get('subdomain') || searchParams.get('tenantId') || 'chezfatou';
 
-    // Clone restaurant data
+    // 2. Check Redis Cache
+    const cachedData = await getCachedMenu(subdomain, lang);
+    if (cachedData) {
+      logPerformance(`GET /api/menu (${subdomain}, ${lang})`, timer.elapsedMs(), 'CACHE_HIT');
+      return NextResponse.json(cachedData, {
+        headers: {
+          'X-Cache': 'HIT',
+          'X-RateLimit-Remaining': String(rate.remaining),
+        },
+      });
+    }
+
+    // 3. Cache Miss: Compute Menu
     const restaurant = JSON.parse(JSON.stringify(SAMPLE_RESTAURANT));
 
     // Update with runtime availability and language translations
@@ -37,9 +69,21 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ 
+    const responsePayload = {
       restaurant,
       language: ['FR', 'EN', 'ES', 'IT'].includes(lang) ? lang : 'FR',
+    };
+
+    // 4. Save into Redis Cache (TTL 300s)
+    await setCachedMenu(subdomain, lang, responsePayload);
+
+    logPerformance(`GET /api/menu (${subdomain}, ${lang})`, timer.elapsedMs(), 'CACHE_MISS');
+
+    return NextResponse.json(responsePayload, {
+      headers: {
+        'X-Cache': 'MISS',
+        'X-RateLimit-Remaining': String(rate.remaining),
+      },
     });
   } catch (error) {
     return NextResponse.json({ error: 'Erreur récupération menu' }, { status: 500 });
@@ -49,7 +93,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { itemId, isAvailable, translations } = body;
+    const { itemId, isAvailable, translations, restaurantId = 'chezfatou' } = body;
 
     if (!itemId) {
       return NextResponse.json({ error: 'itemId obligatoire' }, { status: 400 });
@@ -58,6 +102,9 @@ export async function POST(req: Request) {
     if (typeof isAvailable === 'boolean') {
       orderStorage.toggleItemAvailability(itemId, isAvailable);
     }
+
+    // Invalidate Redis Cache for this restaurant
+    await invalidateMenuCache(restaurantId);
 
     return NextResponse.json({ 
       success: true, 
