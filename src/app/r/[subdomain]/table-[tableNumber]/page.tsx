@@ -12,21 +12,14 @@ interface PageProps {
   };
 }
 
-export async function generateMetadata({ params }: PageProps) {
-  const tableNum = parseInt(params.tableNumber, 10) || 1;
-  const resto = orderStorage.getRestaurantById(params.subdomain) || SAMPLE_RESTAURANT;
-  return {
-    title: `Table ${tableNum} • Lou Ame Tay ? 🍽️ ${resto.name}`,
-    description: `Menu digital et commande en direct pour la Table ${tableNum}`,
-  };
-}
-
 export default async function TableMenuPage({ params }: PageProps) {
-  const tableNum = parseInt(params.tableNumber, 10) || 1;
+  const rawTableStr = (params.tableNumber || '1').replace(/[^0-9]/g, '');
+  const tableNum = parseInt(rawTableStr, 10) || 1;
+
   let restaurant: RestaurantType = orderStorage.getRestaurantById(params.subdomain) || SAMPLE_RESTAURANT;
 
   try {
-    const dbRestaurant = await (prisma as any).restaurant?.findFirst({
+    const dbTenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
           { subdomain: params.subdomain },
@@ -37,27 +30,33 @@ export default async function TableMenuPage({ params }: PageProps) {
         categories: {
           orderBy: { displayOrder: 'asc' },
           include: {
-            items: true,
+            items: {
+              orderBy: { createdAt: 'asc' },
+            },
           },
         },
+        tables: true,
       },
     });
 
-    if (dbRestaurant) {
+    if (dbTenant) {
+      const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
+
       restaurant = {
-        id: dbRestaurant.id,
-        name: dbRestaurant.name,
-        tagline: 'Gastronomie sénégalaise authentique & Grillades',
-        subdomain: dbRestaurant.subdomain,
-        phone: dbRestaurant.phone,
-        address: dbRestaurant.address,
-        logoUrl: dbRestaurant.logoUrl,
-        bannerUrl: dbRestaurant.bannerUrl,
-        currency: dbRestaurant.currency,
-        isActive: dbRestaurant.isActive ?? true,
-        tableCount: dbRestaurant.tableCount ?? 12,
-        tablesCount: dbRestaurant.tableCount ?? 12,
-        categories: (dbRestaurant.categories || []).map((c: any) => ({
+        id: dbTenant.id,
+        name: dbTenant.businessName,
+        tagline: brandingObj.tagline || 'Scannez • Commandez • Savourez !',
+        subdomain: dbTenant.subdomain,
+        phone: dbTenant.phone,
+        address: dbTenant.address,
+        logoUrl: dbTenant.logoUrl,
+        bannerUrl: dbTenant.bannerUrl,
+        currency: dbTenant.currency || 'FCFA',
+        isActive: dbTenant.subscriptionStatus === 'ACTIVE' || dbTenant.subscriptionStatus === 'TRIAL',
+        tableCount: dbTenant.tables?.length || 12,
+        tablesCount: dbTenant.tables?.length || 12,
+        branding: brandingObj,
+        categories: (dbTenant.categories || []).map((c: any) => ({
           id: c.id,
           name: c.name,
           icon: c.icon,
@@ -67,19 +66,19 @@ export default async function TableMenuPage({ params }: PageProps) {
             name: i.name,
             wolofName: undefined,
             description: i.description || '',
-            price: i.price,
+            price: Number(i.price),
             imageUrl: i.imageUrl || '',
-            isAvailable: i.isAvailable,
-            isSpecialOfTheDay: i.isSpecialOfTheDay,
-            preparationTime: i.preparationTime || 10,
-            allergens: i.allergens || [],
-            categoryId: i.categoryId,
+            isAvailable: i.isAvailable ?? true,
+            isSpecialOfTheDay: i.isDailySpecial ?? false,
+            preparationTime: 15,
+            allergens: [],
+            categoryId: c.id,
           })),
         })),
       };
     }
   } catch (error) {
-    // Fallback to orderStorage lookup
+    console.error('Erreur chargement menu restaurant :', error);
   }
 
   return (

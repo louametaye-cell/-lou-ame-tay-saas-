@@ -55,7 +55,7 @@ export const ALLERGEN_ICONS: Record<string, { icon: string; label: string }> = {
 
 export type SubscriptionStatus = 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELLED' | 'PAST_DUE' | 'SUSPENDED';
 export type MealPeriod = 'ALL_DAY' | 'LUNCH' | 'DINNER' | 'NIGHT_SNACK';
-export type SubscriptionPlan = 'STARTER' | 'PRO' | 'ENTERPRISE';
+export type SubscriptionPlan = 'STARTER' | 'PRO' | 'PREMIUM' | 'ENTERPRISE';
 
 export interface SubscriptionType {
   id: string;
@@ -187,7 +187,29 @@ export interface RestaurantType {
   categories: CategoryType[];
   ordersCount?: number;
   stats?: RestaurantStatsType;
+  branding?: RestaurantBranding | null;
   createdAt?: string;
+}
+
+export interface RestaurantBranding {
+  primaryColor?: string;       // Couleur principale (boutons, badges, titres majeurs)
+  secondaryColor?: string;     // Couleur secondaire (accents, bordures, contrastes)
+  backgroundColor?: string;    // Couleur de fond de l'application client
+  textColor?: string;          // Couleur du texte principal
+  fontTitle?: string;          // Police Google Fonts des titres (ex: Playfair Display, Poppins)
+  fontBody?: string;           // Police Google Fonts du texte courant (ex: Roboto, Plus Jakarta Sans)
+  logoUrl?: string | null;     // Logo du restaurant (PNG transparent)
+  bannerUrl?: string | null;   // Image bannière de couverture
+  phone?: string | null;       // Téléphone direct
+  whatsapp?: string | null;    // Numéro WhatsApp pour commande/contact
+  address?: string | null;     // Adresse physique
+  googleMapsUrl?: string | null; // Lien d'itinéraire Google Maps
+  website?: string | null;     // Site web officiel
+  instagram?: string | null;   // Lien profil Instagram
+  facebook?: string | null;    // Lien page Facebook
+  tiktok?: string | null;      // Lien compte TikTok
+  googleReviewUrl?: string | null; // Lien direct vers la fiche Google Maps pour avis ⭐
+  tagline?: string | null;     // Slogan personnalisé
 }
 
 export interface CartItemExtra {

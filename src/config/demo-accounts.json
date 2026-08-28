@@ -1,0 +1,40 @@
+{
+  "agency": "Médias Graphisme / MDA Arts Work",
+  "contact": "+221 77 458 74 74",
+  "demoAccounts": [
+    {
+      "pack": "STARTER",
+      "price": "15 000 FCFA/mois",
+      "email": "demo.starter@louametay.sn",
+      "password": "Demo123!",
+      "pin": "1234",
+      "restaurantName": "MG Café Resto (Madiba)",
+      "subdomain": "mg-cafe-resto",
+      "clientUrl": "/r/mg-cafe-resto/table-1"
+    },
+    {
+      "pack": "PRO",
+      "price": "25 000 FCFA/mois",
+      "email": "demo.pro@louametay.sn",
+      "password": "Demo123!",
+      "pin": "1234",
+      "restaurantName": "Chez Collé (Sam's)",
+      "subdomain": "chez-colle",
+      "clientUrl": "/r/chez-colle/table-1"
+    },
+    {
+      "pack": "PREMIUM",
+      "price": "45 000 FCFA/mois",
+      "email": "demo.premium@louametay.sn",
+      "password": "Demo123!",
+      "pin": "1234",
+      "restaurantName": "Hôtel Restaurant Cayor (Lat-Dior)",
+      "subdomain": "hotel-cayor",
+      "clientUrl": "/r/hotel-cayor/table-1"
+    }
+  ],
+  "superAdmin": {
+    "url": "/super-admin",
+    "accessCode": "admin123"
+  }
+}

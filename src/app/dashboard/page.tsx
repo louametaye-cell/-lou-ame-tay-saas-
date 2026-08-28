@@ -380,13 +380,22 @@ export default function OperationalDashboardPage() {
               )}
             </div>
 
+            {/* Studio de Marque Branding */}
+            <Link
+              href="/dashboard/branding"
+              className="flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-orange-950 border border-orange-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Personnaliser les couleurs, typographies, logo et avis Google"
+            >
+              <span>🎨 Studio de Marque</span>
+            </Link>
+
             {/* TV Display Public Menu Quick View */}
             <Link
               href="/dashboard/display"
               className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
               title="Configurer la diffusion sur écran TV / Vidéoprojecteur"
             >
-              <span>🖥️ Écran TV (3 Modes)</span>
+              <span>🖥️ Écran TV</span>
             </Link>
 
             {/* Cashier Counter Quick View */}
@@ -825,7 +834,18 @@ export default function OperationalDashboardPage() {
         </section>
 
         {/* SECTION 5 : RACCOURCIS MODULES */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <Link
+            href="/dashboard/branding"
+            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-orange-500 hover:shadow-sm transition-all group"
+          >
+            <div className="p-3 bg-orange-100 text-orange-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Studio de Marque</h4>
+            <p className="text-xs text-slate-500 mt-1">Couleurs, Google Fonts & Avis Maps</p>
+          </Link>
+
           <Link
             href="/dashboard/menu"
             className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-amber-400 hover:shadow-sm transition-all group"

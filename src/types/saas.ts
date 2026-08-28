@@ -55,6 +55,7 @@ export interface SaaSTenant {
   storageUsedMb?: number;
   photosCount?: number;
   tablesCount?: number;
+  branding?: any;
   createdAt: string;
   updatedAt: string;
 }

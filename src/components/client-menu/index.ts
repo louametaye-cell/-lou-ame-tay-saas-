@@ -12,4 +12,6 @@ export * from './UpsellDrawer';
 export * from './TableSessionModal';
 export * from './MobileMoneyCheckout';
 export * from './ComboSection';
+export * from './GoogleReviewBanner';
+export * from './RestaurantFooterInfo';
 export * from './ClientMenuContainer';

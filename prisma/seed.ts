@@ -1,4 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+// ==============================================================================
+// 🇸🇳 LOU AME TAY ? - SCRIPT PRISMA SEED EXHAUSTIF (PILOTES THIÈS & DAKAR)
+// Éditeur : MDA Arts Work / Médias Graphisme Sénégal (+221 77 458 74 74)
+// Menus complets avec prix réels certifiés et traductions multilingues
+// ==============================================================================
+
+import { PrismaClient, Language, ValueType, SubscriptionStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -42,25 +48,25 @@ const DEFAULT_PLANS = [
 ];
 
 const DEFAULT_FEATURES = [
-  { id: 'feat_photos', keyName: 'MAX_PHOTOS', label: 'Photos Plats HD', category: 'CORE', valueType: 'NUMERIC' },
-  { id: 'feat_tables', keyName: 'MAX_TABLES', label: 'Tables & QR Codes', category: 'CORE', valueType: 'NUMERIC' },
-  { id: 'feat_kds', keyName: 'KITCHEN_DISPLAY_KDS', label: 'Écran Cuisine KDS & Alerte Sonore', category: 'OPERATION', valueType: 'BOOLEAN' },
-  { id: 'feat_wave_om', keyName: 'WAVE_ORANGE_MONEY', label: 'Paiements Mobiles Wave & Orange Money', category: 'BILLING', valueType: 'BOOLEAN' },
-  { id: 'feat_basic_stats', keyName: 'BASIC_STATS', label: 'Statistiques de Caisse Standard', category: 'CORE', valueType: 'BOOLEAN' },
-  { id: 'feat_multizone', keyName: 'MULTI_ZONE', label: 'Multi-Zones (Salle, Terrasse, Piscine)', category: 'OPERATION', valueType: 'BOOLEAN' },
-  { id: 'feat_bilingual', keyName: 'BILINGUAL_MENU', label: 'Menu Bilingue & Multi-Langues', category: 'MARKETING', valueType: 'BOOLEAN' },
-  { id: 'feat_multilang', keyName: 'MULTI_LANGUAGE_MENU', label: 'Menu Multilingue 5 Langues (FR, WO, EN, ES, IT)', category: 'MARKETING', valueType: 'BOOLEAN' },
-  { id: 'feat_advanced_stats', keyName: 'ADVANCED_STATS', label: 'Statistiques Avancées & Exports Excel', category: 'BILLING', valueType: 'BOOLEAN' },
-  { id: 'feat_vip_support', keyName: 'VIP_SUPPORT', label: 'Accompagnement VIP & Support Dédié 24/7', category: 'CORE', valueType: 'BOOLEAN' },
+  { id: 'feat_photos', keyName: 'MAX_PHOTOS', label: 'Photos Plats HD', category: 'CORE', valueType: 'NUMERIC' as ValueType },
+  { id: 'feat_tables', keyName: 'MAX_TABLES', label: 'Tables & QR Codes', category: 'CORE', valueType: 'NUMERIC' as ValueType },
+  { id: 'feat_kds', keyName: 'KITCHEN_DISPLAY_KDS', label: 'Écran Cuisine KDS & Alerte Sonore', category: 'OPERATION', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_wave_om', keyName: 'WAVE_ORANGE_MONEY', label: 'Paiements Mobiles Wave & Orange Money', category: 'BILLING', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_basic_stats', keyName: 'BASIC_STATS', label: 'Statistiques de Caisse Standard', category: 'CORE', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_multizone', keyName: 'MULTI_ZONE', label: 'Multi-Zones (Salle, Terrasse, Piscine)', category: 'OPERATION', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_bilingual', keyName: 'BILINGUAL_MENU', label: 'Menu Bilingue & Multi-Langues', category: 'MARKETING', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_multilang', keyName: 'MULTI_LANGUAGE_MENU', label: 'Menu Multilingue 5 Langues (FR, WO, EN, ES, IT)', category: 'MARKETING', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_advanced_stats', keyName: 'ADVANCED_STATS', label: 'Statistiques Avancées & Exports Excel', category: 'BILLING', valueType: 'BOOLEAN' as ValueType },
+  { id: 'feat_vip_support', keyName: 'VIP_SUPPORT', label: 'Accompagnement VIP & Support Dédié 24/7', category: 'CORE', valueType: 'BOOLEAN' as ValueType },
 ];
 
 // ------------------------------------------------------------------------------
-// 2. DONNÉES DES 4 RESTAURANTS PILOTES / DÉMOS AVEC MENUS EXACTS
+// 2. DONNÉES INTÉGRALES DES RESTAURANTS PILOTES / DÉMOS
 // ------------------------------------------------------------------------------
 const RESTAURANTS_DATA = [
   // ============================================================================
-  // RESTAURANT 1 : Madiba Restau (Thiès) -> Pack STARTER (ou Pro) / Démo Starter
-  // Compte Démo : demo.starter@louametay.sn / Demo123!
+  // RESTAURANT 1 : Madiba Restau / MG Café Resto (Thiès / Dakar) -> Pack STARTER / PRO
+  // Compte Démo Commercial : demo.starter@louametay.sn / Demo123!
   // ============================================================================
   {
     id: 'tenant_madiba_restau',
@@ -68,25 +74,13 @@ const RESTAURANTS_DATA = [
     subdomain: 'mg-cafe-resto',
     ownerName: 'Moussa Guèye',
     phone: '+221 77 458 74 74',
-    address: 'HLM Route de Mbour, Thiès',
+    address: 'HLM Route de Mbour, Thiès / Plateau, Dakar',
     city: 'Thiès',
     currentPlanId: 'plan_starter',
-    subscriptionStatus: 'ACTIVE',
+    subscriptionStatus: 'ACTIVE' as SubscriptionStatus,
     monthlyFee: 15000,
     logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
     bannerUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
-    branding: {
-      primaryColor: '#FF6B00',
-      secondaryColor: '#00A86B',
-      fontTitle: 'Poppins',
-      fontBody: 'Plus Jakarta Sans',
-      googleReviewUrl: 'https://maps.app.goo.gl/mgcaferesto',
-      phone: '+221 77 458 74 74',
-      whatsapp: '+221 77 458 74 74',
-      address: 'HLM Route de Mbour, Thiès',
-      website: 'https://louametay.sn',
-      instagram: 'mgcaferesto'
-    },
     tablesCount: 12,
     zones: null,
     categories: [
@@ -168,8 +162,8 @@ const RESTAURANTS_DATA = [
   },
 
   // ============================================================================
-  // RESTAURANT 2 : Sam's Restaurant (Thiès) -> Pack PRO / Démo Pro
-  // Compte Démo : demo.pro@louametay.sn / Demo123!
+  // RESTAURANT 2 : Sam's Restaurant / Chez Collé (Thiès) -> Pack PRO
+  // Compte Démo Commercial : demo.pro@louametay.sn / Demo123!
   // ============================================================================
   {
     id: 'tenant_sams_restaurant',
@@ -177,25 +171,13 @@ const RESTAURANTS_DATA = [
     subdomain: 'chez-colle',
     ownerName: "Collé Cissé",
     phone: '+221 77 458 74 74',
-    address: 'Avenue Lamine Guèye, Thiès',
+    address: 'Avenue Lamine Guèye, Thiès, Sénégal',
     city: 'Thiès',
     currentPlanId: 'plan_pro',
-    subscriptionStatus: 'ACTIVE',
+    subscriptionStatus: 'ACTIVE' as SubscriptionStatus,
     monthlyFee: 25000,
     logoUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80',
     bannerUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
-    branding: {
-      primaryColor: '#00A86B',
-      secondaryColor: '#FF6B00',
-      fontTitle: 'Montserrat',
-      fontBody: 'Roboto',
-      googleReviewUrl: 'https://maps.app.goo.gl/chezcolle',
-      phone: '+221 77 458 74 74',
-      whatsapp: '+221 77 458 74 74',
-      address: 'Avenue Lamine Guèye, Thiès',
-      website: 'https://chezcolle.sn',
-      instagram: 'chezcolle'
-    },
     tablesCount: 14,
     zones: null,
     categories: [
@@ -284,7 +266,7 @@ const RESTAURANTS_DATA = [
   },
 
   // ============================================================================
-  // RESTAURANT 3 : Anima Pizzeria (Dakar) -> Pack PREMIUM
+  // RESTAURANT 3 : Anima Pizzeria (Dakar - Plage BCEAO) -> Pack PREMIUM
   // ============================================================================
   {
     id: 'tenant_anima_pizzeria',
@@ -295,22 +277,10 @@ const RESTAURANTS_DATA = [
     address: 'Plage BCEAO, Yoff / Guédiawaye, Dakar',
     city: 'Dakar',
     currentPlanId: 'plan_premium',
-    subscriptionStatus: 'ACTIVE',
+    subscriptionStatus: 'ACTIVE' as SubscriptionStatus,
     monthlyFee: 45000,
     logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
     bannerUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80',
-    branding: {
-      primaryColor: '#DC2626',
-      secondaryColor: '#F59E0B',
-      fontTitle: 'Playfair Display',
-      fontBody: 'Lato',
-      googleReviewUrl: 'https://maps.app.goo.gl/animapizzeria',
-      phone: '+221 77 458 74 74',
-      whatsapp: '+221 77 458 74 74',
-      address: 'Plage BCEAO, Yoff / Guédiawaye, Dakar',
-      website: 'https://animapizza.sn',
-      instagram: 'animapizzeria'
-    },
     tablesCount: 20,
     zones: null,
     categories: [
@@ -383,8 +353,8 @@ const RESTAURANTS_DATA = [
   },
 
   // ============================================================================
-  // RESTAURANT 4 : Hôtel Résidence Lat-Dior (Thiès) -> Pack PREMIUM (5 Langues)
-  // Compte Démo : demo.premium@louametay.sn / Demo123!
+  // RESTAURANT 4 : Hôtel Résidence Lat-Dior / Hôtel Cayor -> Pack PREMIUM (5 Langues)
+  // Compte Démo Commercial : demo.premium@louametay.sn / Demo123!
   // ============================================================================
   {
     id: 'tenant_hotel_lat_dior',
@@ -392,25 +362,13 @@ const RESTAURANTS_DATA = [
     subdomain: 'hotel-cayor',
     ownerName: 'Direction Hôtel Cayor',
     phone: '+221 77 458 74 74',
-    address: 'Quartier Résidentiel Lat-Dior, Thiès',
+    address: 'Quartier Résidentiel Lat-Dior, Thiès / Saly Portudal',
     city: 'Thiès',
     currentPlanId: 'plan_premium',
-    subscriptionStatus: 'ACTIVE',
+    subscriptionStatus: 'ACTIVE' as SubscriptionStatus,
     monthlyFee: 45000,
     logoUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=300&q=80',
     bannerUrl: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=80',
-    branding: {
-      primaryColor: '#D97706',
-      secondaryColor: '#1E293B',
-      fontTitle: 'Cinzel',
-      fontBody: 'Plus Jakarta Sans',
-      googleReviewUrl: 'https://maps.app.goo.gl/hotelcayor',
-      phone: '+221 77 458 74 74',
-      whatsapp: '+221 77 458 74 74',
-      address: 'Quartier Résidentiel Lat-Dior, Thiès',
-      website: 'https://hotelcayor.sn',
-      instagram: 'hotelcayor'
-    },
     tablesCount: 24,
     zones: [
       { name: 'Salle Climatisée', start: 1, end: 8 },
@@ -423,11 +381,66 @@ const RESTAURANTS_DATA = [
         icon: '🥗',
         displayOrder: 1,
         items: [
-          { name: 'Salade Niçoise', description: 'Salade méditerranéenne au thon blanc, œufs durs, olives noires et haricots verts.', price: 4000, imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Salade César', description: 'Cœur de romaine, aiguillettes de poulet grillé, croûtons à l\'ail et copeaux de parmesan.', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Salade de Crudités', description: 'Légumes croquants du potager et vinaigrette légère aux herbes.', price: 3500, imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Assiette de Nems', description: 'Nems croustillants faits maison avec sauce nuoc-mâm et menthe fraîche.', price: 3500, imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Potage du Jour', description: 'Velouté chaud réconfortant préparé selon le marché du matin.', price: 1500, imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80' },
+          {
+            name: 'Salade Niçoise',
+            description: 'Salade méditerranéenne au thon blanc, œufs durs, olives noires et haricots verts.',
+            price: 4000,
+            imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Niçoise Salad', description: 'Mediterranean salad with white tuna, boiled eggs and olives.' },
+              ES: { name: 'Ensalada Nicosiada', description: 'Ensalada tradicional con atún, huevos cocidos y aceitunas.' },
+              IT: { name: 'Insalata Nizzarda', description: 'Insalata classica con tonno, uova sode e olive.' },
+              WO: { name: 'Salade Niçoise', description: 'Salat bu am jën thon ak nen ak pompiteer.' },
+            }
+          },
+          {
+            name: 'Salade César',
+            description: 'Cœur de romaine, aiguillettes de poulet grillé, croûtons à l\'ail et copeaux de parmesan.',
+            price: 4500,
+            imageUrl: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Caesar Salad', description: 'Romaine lettuce, grilled chicken breast, garlic croutons and parmesan.' },
+              ES: { name: 'Ensalada César', description: 'Lechuga romana, pechuga de pollo a la plancha, picatostes y parmesano.' },
+              IT: { name: 'Insalata Cesare', description: 'Lattuga romana, petto di pollo grigliato, crostini e parmigiano.' },
+              WO: { name: 'Salade César', description: 'Salat bu bees ak ginaar bu ñor ak formaas parmesan.' },
+            }
+          },
+          {
+            name: 'Salade de Crudités',
+            description: 'Légumes croquants du potager et vinaigrette légère aux herbes.',
+            price: 3500,
+            imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Fresh Garden Salad', description: 'Fresh raw garden vegetables with herb vinaigrette.' },
+              ES: { name: 'Ensalada de Crudités', description: 'Verduras frescas de la huerta con vinagreta de hierbas.' },
+              IT: { name: 'Insalata di Crudité', description: 'Verdure fresche dell\'orto con vinaigrette alle erbe.' },
+              WO: { name: 'Salade de Crudités', description: 'Salat légum yu bees ak vinaigrette.' },
+            }
+          },
+          {
+            name: 'Assiette de Nems',
+            description: 'Nems croustillants faits maison avec sauce nuoc-mâm et menthe fraîche.',
+            price: 3500,
+            imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Crispy Spring Rolls', description: 'Homemade crispy spring rolls with dipping sauce.' },
+              ES: { name: 'Plato de Nems Crujientes', description: 'Rollitos de primavera caseros con salsa.' },
+              IT: { name: 'Involtini Primavera', description: 'Involtini croccanti fatti in casa con salsa.' },
+              WO: { name: 'Nems Ginaar', description: 'Nems bu saf ak ginaar ak sauce.' },
+            }
+          },
+          {
+            name: 'Potage du Jour',
+            description: 'Velouté chaud réconfortant préparé selon le marché du matin.',
+            price: 1500,
+            imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Soup of the Day', description: 'Fresh comforting vegetable soup prepared daily.' },
+              ES: { name: 'Sopa del Día', description: 'Sopa casera caliente preparada con verduras frescas.' },
+              IT: { name: 'Zuppa del Giorno', description: 'Zuppa calda confortante preparata con verdure di stagione.' },
+              WO: { name: 'Soup bu Tang', description: 'Soup bu tang bu neex ak légum.' },
+            }
+          },
         ]
       },
       {
@@ -435,12 +448,78 @@ const RESTAURANTS_DATA = [
         icon: '🥩',
         displayOrder: 2,
         items: [
-          { name: 'Escalope de Poulet Pané', description: 'Escalope de poulet tendre enrobée d\'une panure dorée et croustillante.', price: 5000, imageUrl: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Poulet Grillé à l\'Estragon', description: 'Morceaux de poulet grillés nappés d\'une sauce crémeuse à l\'estragon frais.', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Cordon Bleu', description: 'Escalope fourrée au jambon et fromage fondant, panée et dorée au beurre.', price: 6000, imageUrl: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Brochette de Poulet', description: 'Brochettes de suprême de poulet mariné aux herbes et grillé minute.', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Filet de Bœuf', description: 'Pièce maîtresse de filet de bœuf extra-tendre avec réduction au jus corsé.', price: 6000, imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Entrecôte Grillé à la Crème', description: 'Entrecôte généreuse grillée accompagnée d\'une sauce onctueuse à la crème.', price: 7500, imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80' },
+          {
+            name: 'Escalope de Poulet Pané',
+            description: 'Escalope de poulet tendre enrobée d\'une panure dorée et croustillante.',
+            price: 5000,
+            imageUrl: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Breaded Chicken Cutlet', description: 'Tender chicken cutlet in a crispy golden breading.' },
+              ES: { name: 'Escalope de Pollo Empanado', description: 'Escalope tierno de pollo con empanado dorado y crujiente.' },
+              IT: { name: 'Cotoletta di Pollo Impanata', description: 'Cotoletta di pollo tenera con panatura dorata croccante.' },
+              WO: { name: 'Poulet Pané', description: 'Ginaar bu ñu pané ba mu croustillant.' },
+            }
+          },
+          {
+            name: 'Poulet Grillé à l\'Estragon',
+            description: 'Morceaux de poulet grillés nappés d\'une sauce crémeuse à l\'estragon frais.',
+            price: 4500,
+            imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Tarragon Grilled Chicken', description: 'Grilled chicken breast with fresh creamy tarragon sauce.' },
+              ES: { name: 'Pollo a la Plancha con Estragón', description: 'Pollo a la plancha con salsa cremosa de estragón.' },
+              IT: { name: 'Pollo alla Griglia all\'Estragone', description: 'Pollo alla griglia con salsa cremosa all\'estragone fresco.' },
+              WO: { name: 'Poulet Grillé Estragon', description: 'Ginaar bu ñu grillé ak sauce crème estragon.' },
+            }
+          },
+          {
+            name: 'Cordon Bleu',
+            description: 'Escalope fourrée au jambon et fromage fondant, panée et dorée au beurre.',
+            price: 6000,
+            imageUrl: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Classic Cordon Bleu', description: 'Chicken schnitzel filled with turkey ham and melted cheese.' },
+              ES: { name: 'Cordon Bleu Casero', description: 'Escalope relleno de jamón y queso fundido empanado.' },
+              IT: { name: 'Cordon Bleu Tradizionale', description: 'Scaloppina ripiena di prosciutto e formaggio fuso impanata.' },
+              WO: { name: 'Cordon Bleu', description: 'Cordon bleu ak yàpp ak formaas bu seey.' },
+            }
+          },
+          {
+            name: 'Brochette de Poulet',
+            description: 'Brochettes de suprême de poulet mariné aux herbes et grillé minute.',
+            price: 4500,
+            imageUrl: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Chicken Skewers', description: 'Marinated chicken breast skewers grilled to perfection.' },
+              ES: { name: 'Brochetas de Pollo', description: 'Brochetas de pechuga de pollo marinada a la brasa.' },
+              IT: { name: 'Spiedini di Pollo', description: 'Spiedini di pollo marinati alle erbe grigliati a puntino.' },
+              WO: { name: 'Brochette Ginaar', description: 'Brochette ginaar bu ñu grillé ci grill.' },
+            }
+          },
+          {
+            name: 'Filet de Bœuf',
+            description: 'Pièce maîtresse de filet de bœuf extra-tendre avec réduction au jus corsé.',
+            price: 6000,
+            imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Prime Beef Tenderloin Fillet', description: 'Pan-seared tender beef fillet with rich meat jus and potatoes.' },
+              ES: { name: 'Solomillo de Ternera', description: 'Solomillo tierno de ternera con jugo concentrado y patatas.' },
+              IT: { name: 'Filetto di Manzo alla Griglia', description: 'Filetto di manzo tenerissimo con purè e riduzione di sugo.' },
+              WO: { name: 'Filet de Bœuf bu Ñor', description: 'Yàpp nag bu nooy nink bu ñu toog ak pompiteer.' },
+            }
+          },
+          {
+            name: 'Entrecôte Grillé à la Crème',
+            description: 'Entrecôte généreuse grillée accompagnée d\'une sauce onctueuse à la crème.',
+            price: 7500,
+            imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Grilled Ribeye with Cream Sauce', description: 'Generous ribeye steak with rich cream sauce and fries.' },
+              ES: { name: 'Entrecot a la Plancha con Crema', description: 'Entrecot jugoso a la plancha con salsa cremosa.' },
+              IT: { name: 'Entrecôte alla Griglia con Crema', description: 'Entrecôte succosa alla brace con salsa alla crema.' },
+              WO: { name: 'Entrecôte Grillé', description: 'Entrecôte nag bu mag bu ñu grillé ak sauce crème.' },
+            }
+          },
         ]
       },
       {
@@ -448,9 +527,43 @@ const RESTAURANTS_DATA = [
         icon: '🐟',
         displayOrder: 3,
         items: [
-          { name: 'Thiof Grillé à la Citronnelle', description: 'Mérou blanc Thiof braisé parfumé à la citronnelle fraîche et alloco.', price: 6000, isDailySpecial: true, imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Daurade Grillé', description: 'Daurade royale entière grillée au feu de bois avec riz parfumé.', price: 5000, imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Lotte Pané', description: 'Morceaux tendres de lotte panés servis avec sauce tartare maison.', price: 5000, imageUrl: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=800&q=80' },
+          {
+            name: 'Thiof Grillé à la Citronnelle',
+            description: 'Mérou blanc Thiof braisé parfumé à la citronnelle fraîche et alloco.',
+            price: 6000,
+            isDailySpecial: true,
+            imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Lemongrass Grilled Grouper (Thiof)', description: 'Fresh white grouper grilled with lemongrass and plantains.' },
+              ES: { name: 'Mero a la Parrilla con Hierba Luisa', description: 'Mero blanco fresco a la parrilla con hierba de limón y plátano.' },
+              IT: { name: 'Cernia Bianca alla Citronella', description: 'Cernia bianca fresca alla brace aromatizzata alla citronella.' },
+              WO: { name: 'Coof bu Ñor Citronnelle', description: 'Jën coof bu mag bu ñu grillé ak citronnelle ak alloco.' },
+            }
+          },
+          {
+            name: 'Daurade Grillé',
+            description: 'Daurade royale entière grillée au feu de bois avec riz parfumé.',
+            price: 5000,
+            imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Grilled Sea Bream', description: 'Whole grilled sea bream with seasoned aromatic rice.' },
+              ES: { name: 'Dorada a la Plancha', description: 'Dorada fresca a la plancha con arroz blanco aromático.' },
+              IT: { name: 'Orata alla Griglia', description: 'Orata fresca intera cotta alla griglia con riso.' },
+              WO: { name: 'Daurade bu Ñor', description: 'Daurade bu bees bu ñu grillé ak ceeb.' },
+            }
+          },
+          {
+            name: 'Lotte Pané',
+            description: 'Morceaux tendres de lotte panés servis avec sauce tartare maison.',
+            price: 5000,
+            imageUrl: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Crispy Breaded Monkfish', description: 'Tender breaded monkfish nuggets served with tartar sauce.' },
+              ES: { name: 'Rape Empanado Crujiente', description: 'Trozos de rape empanado con salsa tártara casera.' },
+              IT: { name: 'Rana Pescatrice Impanata', description: 'Bocconcini di rana pescatrice impanati con salsa tartara.' },
+              WO: { name: 'Lotte Pané', description: 'Jën lotte bu ñu pané ak sauce tartare.' },
+            }
+          },
         ]
       },
       {
@@ -458,11 +571,66 @@ const RESTAURANTS_DATA = [
         icon: '🍝',
         displayOrder: 4,
         items: [
-          { name: 'Spaghetti Bolognaise', description: 'Spaghetti al dente avec coulis de tomates mûres et pur bœuf haché.', price: 5000, imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281072?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Lasagnes', description: 'Lasagnes maison gratinées au four avec pur bœuf, béchamel et mozzarella.', price: 6000, imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281072?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Pizza Reine', description: 'Sauce tomate mijotée, mozzarella, jambon blanc et champignons.', price: 4000, imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Pizza Fruits de Mer', description: 'Garniture généreuse de crevettes, calamars et moules avec mozzarella.', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Pizza Orientale', description: 'Merguez épicées, poivrons doux, oignons caramélisés et fromage.', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
+          {
+            name: 'Spaghetti Bolognaise',
+            description: 'Spaghetti al dente avec coulis de tomates mûres et pur bœuf haché.',
+            price: 5000,
+            imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281072?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Spaghetti Bolognese', description: 'Al dente spaghetti with slow-cooked beef ragù.' },
+              ES: { name: 'Espaguetis a la Boloñesa', description: 'Espaguetis con salsa boloñesa tradicional de ternera.' },
+              IT: { name: 'Spaghetti alla Bolognese', description: 'Spaghetti al dente con ragù tradizionale di manzo.' },
+              WO: { name: 'Spaghetti Bolognaise', description: 'Spaghetti ak sauce yàpp bu saf.' },
+            }
+          },
+          {
+            name: 'Lasagnes',
+            description: 'Lasagnes maison gratinées au four avec pur bœuf, béchamel et mozzarella.',
+            price: 6000,
+            imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281072?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Homemade Baked Lasagna', description: 'Layers of fresh pasta, beef ragù, béchamel and melted mozzarella.' },
+              ES: { name: 'Lasaña Casera al Horno', description: 'Lasaña tradicional con carne de ternera, bechamel y queso fundido.' },
+              IT: { name: 'Lasagne alla Bolognese', description: 'Lasagne tradizionali al forno con ragù di carne e besciamella.' },
+              WO: { name: 'Lasagne Maison', description: 'Lasagne bu am yàpp ak béchamel ak formaas.' },
+            }
+          },
+          {
+            name: 'Pizza Reine',
+            description: 'Sauce tomate mijotée, mozzarella, jambon blanc et champignons.',
+            price: 4000,
+            imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Regina Pizza', description: 'Tomato sauce, mozzarella, ham and fresh mushrooms.' },
+              ES: { name: 'Pizza Reina', description: 'Salsa de tomate, mozzarella, jamón y champiñones.' },
+              IT: { name: 'Pizza Regina', description: 'Pomodoro, mozzarella, prosciutto cotto e funghi.' },
+              WO: { name: 'Pizza Reine', description: 'Pizza ak tomate, mozzarella ak yàpp.' },
+            }
+          },
+          {
+            name: 'Pizza Fruits de Mer',
+            description: 'Garniture généreuse de crevettes, calamars et moules avec mozzarella.',
+            price: 4500,
+            imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Seafood Pizza', description: 'Tomato sauce, mozzarella, fresh shrimps and squid.' },
+              ES: { name: 'Pizza de Mariscos', description: 'Salsa de tomate, mozzarella y mariscos variados.' },
+              IT: { name: 'Pizza ai Frutti di Mare', description: 'Pomodoro, mozzarella, gamberi e calamari freschi.' },
+              WO: { name: 'Pizza Jën ak Crevettes', description: 'Pizza ak crevettes ak jën ak mozzarella.' },
+            }
+          },
+          {
+            name: 'Pizza Orientale',
+            description: 'Merguez épicées, poivrons doux, oignons caramélisés et fromage.',
+            price: 4500,
+            imageUrl: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Oriental Spicy Pizza', description: 'Spicy sausage, bell peppers, onions and mozzarella.' },
+              ES: { name: 'Pizza Oriental Especiada', description: 'Salchicha picante, pimientos, cebolla y queso.' },
+              IT: { name: 'Pizza Orientale Piccante', description: 'Salsiccia speziata, peperoni, cipolla e mozzarella.' },
+              WO: { name: 'Pizza Orientale', description: 'Pizza ak merguez ak poivrons ak formaas.' },
+            }
+          },
         ]
       },
       {
@@ -470,10 +638,54 @@ const RESTAURANTS_DATA = [
         icon: '🍰',
         displayOrder: 5,
         items: [
-          { name: 'Crêpe au Chocolat', description: 'Crêpe fine tiède généreusement nappée de chocolat et chantilly.', price: 3000, imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Salade de Fruits', description: 'Mélange de fruits exotiques frais parfumés à la menthe.', price: 2500, imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Moelleux au Chocolat', description: 'Gâteau coulant pur cacao servi avec une boule de glace vanille.', price: 3500, imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Tiramisu', description: 'Véritable tiramisu italien au mascarpone et café espresso.', price: 4000, imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80' },
+          {
+            name: 'Crêpe au Chocolat',
+            description: 'Crêpe fine tiède généreusement nappée de chocolat et chantilly.',
+            price: 3000,
+            imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Chocolate Crepe', description: 'Warm French crepe with melted chocolate and whipped cream.' },
+              ES: { name: 'Crepe de Chocolate', description: 'Crepe caliente con chocolate derretido y nata.' },
+              IT: { name: 'Crêpe al Cioccolato', description: 'Crêpe calda con cioccolato fuso e panna montata.' },
+              WO: { name: 'Crêpe Chocolat', description: 'Crêpe bu tang ak chocolat ak crème.' },
+            }
+          },
+          {
+            name: 'Salade de Fruits',
+            description: 'Mélange de fruits exotiques frais parfumés à la menthe.',
+            price: 2500,
+            imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Tropical Fruit Salad', description: 'Freshly diced tropical fruits with mint syrup.' },
+              ES: { name: 'Macedonia de Frutas Tropicales', description: 'Frutas tropicales frescas con sirope de menta.' },
+              IT: { name: 'Macedonia di Frutta Fresca', description: 'Frutta tropicale fresca tagliata con menta.' },
+              WO: { name: 'Salade de Fruits', description: 'Fruits yu bees yu ñu dagg ak menthe.' },
+            }
+          },
+          {
+            name: 'Moelleux au Chocolat',
+            description: 'Gâteau coulant pur cacao servi avec une boule de glace vanille.',
+            price: 3500,
+            imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Molten Chocolate Lava Cake', description: 'Warm molten chocolate cake with vanilla ice cream.' },
+              ES: { name: 'Volcán de Chocolate', description: 'Pastel caliente con corazón de chocolate y helado de vainilla.' },
+              IT: { name: 'Tortino al Cioccolato dal Cuore Caldo', description: 'Tortino al cioccolato con gelato alla vaniglia.' },
+              WO: { name: 'Moelleux Chocolat', description: 'Gâteau chocolat bu seey ak glace vanille.' },
+            }
+          },
+          {
+            name: 'Tiramisu',
+            description: 'Véritable tiramisu italien au mascarpone et café espresso.',
+            price: 4000,
+            imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Authentic Tiramisu', description: 'Traditional Italian espresso tiramisu with mascarpone cream.' },
+              ES: { name: 'Tiramisú Auténtico', description: 'Tiramisú italiano tradicional con mascarpone y café espresso.' },
+              IT: { name: 'Tiramisù Tradizionale', description: 'Tiramisù tradizionale fatto in casa con savoiardi e mascarpone.' },
+              WO: { name: 'Tiramisu', description: 'Dessert italien bu am crème mascarpone ak kafé.' },
+            }
+          },
         ]
       },
       {
@@ -481,17 +693,48 @@ const RESTAURANTS_DATA = [
         icon: '🍽️',
         displayOrder: 6,
         items: [
-          { name: 'Yassa Poulet ou Poisson', description: 'Formule déjeuner rapide : Yassa authentique au poulet ou poisson frais.', price: 3000, imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80' },
-          { name: 'Plat du jour', description: 'Création du chef selon le marché du matin (ex: Ceebu Jën Pëndaa Mbaye, Mafé ou Dibi).', price: 3000, isDailySpecial: true, imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80' },
+          {
+            name: 'Yassa Poulet ou Poisson',
+            description: 'Formule déjeuner rapide : Yassa authentique au poulet ou poisson frais.',
+            price: 3000,
+            imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: 'Yassa Lunch Special (Chicken or Fish)', description: 'Quick lunch formula: Authentic Yassa with caramelized lime onions.' },
+              ES: { name: 'Menú Yassa (Pollo o Pescado)', description: 'Fórmula de mediodía: Yassa tradicional con cebolla y lima.' },
+              IT: { name: 'Menu Pranzo Yassa (Pollo o Pesce)', description: 'Formula pranzo veloce: Yassa tradizionale marinato al lime.' },
+              WO: { name: 'Formule Yassa Ginaar / Jën', description: 'Yassa ginaar walla jën bu ñor ci midi.' },
+            }
+          },
+          {
+            name: 'Plat du jour',
+            description: 'Création du chef selon le marché du matin (ex: Ceebu Jën Pëndaa Mbaye, Mafé ou Dibi).',
+            price: 3000,
+            isDailySpecial: true,
+            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+            translations: {
+              EN: { name: "Daily Chef's Special (Lou Ame Tay)", description: "Daily chef special prepared with fresh morning market products." },
+              ES: { name: 'Plato del Día del Chef', description: 'Plato del día especial elaborado con productos frescos del mercado.' },
+              IT: { name: 'Piatto del Giorno dello Chef', description: 'Piatto del giorno dello Chef con prodotti freschi del mercato.' },
+              WO: { name: 'Plat du jour (Lou Ame Tay ?)', description: 'Ceeb bu xonq walla maffe bu toog tay ci suba.' },
+            }
+          },
         ]
       },
     ]
-  }
+  },
 ];
 
+// ------------------------------------------------------------------------------
+// 3. EXÉCUTION DU SEED
+// ------------------------------------------------------------------------------
 async function main() {
-  console.log('🚀 LOU AME TAY ? - DÉMARRAGE DU SEED DES DONNÉES RÉELLES...');
+  console.log('🚀 =========================================================');
+  console.log('🇸🇳 LOU AME TAY ? - SEEDING DES MENUS RÉELS & COMPTES DÉMO');
+  console.log('🏢 ÉDITEUR : MDA ARTS WORK / MÉDIAS GRAPHISME SÉNÉGAL');
+  console.log('=========================================================\n');
 
+  // 1. Sauvegarde et mise à jour des Plans et Features
+  console.log('📦 Synchronisation des Plans et Features...');
   for (const plan of DEFAULT_PLANS) {
     await prisma.plan.upsert({
       where: { slug: plan.slug },
@@ -519,8 +762,10 @@ async function main() {
       create: feat,
     });
   }
+  console.log('✅ Plans et Features préservés intacts !\n');
 
-  console.log('🧹 Purge des données...');
+  // 2. Purge des anciennes données
+  console.log('🧹 Purge des anciennes tables opérationnelles...');
   await prisma.menuItemTranslation.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
@@ -532,7 +777,10 @@ async function main() {
   await prisma.table.deleteMany();
   await prisma.paymentTransaction.deleteMany();
   await prisma.tenant.deleteMany();
+  console.log('✅ Purge terminée avec succès !\n');
 
+  // 3. Implantation des restaurants et menus
+  console.log('🍽️ Implantation des menus réels...');
   for (const rData of RESTAURANTS_DATA) {
     const tenant = await prisma.tenant.create({
       data: {
@@ -548,12 +796,14 @@ async function main() {
         monthlyFee: rData.monthlyFee,
         logoUrl: rData.logoUrl,
         bannerUrl: rData.bannerUrl,
-        branding: rData.branding || null,
         subscriptionExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         lastSeenAt: new Date(),
       },
     });
 
+    console.log(`  🏢 Restaurant créé : [${tenant.businessName}] (${tenant.subdomain})`);
+
+    // Tables
     for (let tableNum = 1; tableNum <= rData.tablesCount; tableNum++) {
       let label = `Table ${tableNum < 10 ? '0' + tableNum : tableNum}`;
       if (rData.zones) {
@@ -573,6 +823,7 @@ async function main() {
       });
     }
 
+    // Catégories & Plats
     for (const catData of rData.categories) {
       const category = await prisma.category.create({
         data: {
@@ -584,7 +835,7 @@ async function main() {
       });
 
       for (const itemData of catData.items) {
-        await prisma.menuItem.create({
+        const menuItem = await prisma.menuItem.create({
           data: {
             tenantId: tenant.id,
             categoryId: category.id,
@@ -596,16 +847,53 @@ async function main() {
             isAvailable: true,
           },
         });
+
+        // Traductions multilingues
+        const translations = (itemData as any).translations;
+        if (translations) {
+          const translationsToInsert: { language: Language; name: string; description: string }[] = [
+            { language: 'FR', name: itemData.name, description: itemData.description },
+            { language: 'EN', name: translations.EN?.name || itemData.name, description: translations.EN?.description || '' },
+            { language: 'ES', name: translations.ES?.name || itemData.name, description: translations.ES?.description || '' },
+            { language: 'IT', name: translations.IT?.name || itemData.name, description: translations.IT?.description || '' },
+            { language: 'WO', name: translations.WO?.name || itemData.name, description: translations.WO?.description || '' },
+          ];
+
+          for (const tr of translationsToInsert) {
+            await prisma.menuItemTranslation.create({
+              data: {
+                menuItemId: menuItem.id,
+                language: tr.language,
+                name: tr.name,
+                description: tr.description,
+              },
+            });
+          }
+        }
       }
     }
   }
 
-  console.log('✅ Seed terminé avec succès !');
+  console.log('\n🎉 =========================================================');
+  console.log('✅ SEEDING TERMINÉ AVEC SUCCÈS !');
+  console.log('3 Comptes Démo Commerciaux Configurés :');
+  console.log('  1. Démo Starter : demo.starter@louametay.sn / Demo123!');
+  console.log('     -> Restaurant : MG Café Resto (Madiba) | Pack Starter (15k)');
+  console.log('     -> URL Client : /r/mg-cafe-resto/table-1');
+  console.log('');
+  console.log('  2. Démo Pro     : demo.pro@louametay.sn / Demo123!');
+  console.log('     -> Restaurant : Chez Collé (Sam\'s) | Pack Pro (25k)');
+  console.log('     -> URL Client : /r/chez-colle/table-1');
+  console.log('');
+  console.log('  3. Démo Premium : demo.premium@louametay.sn / Demo123!');
+  console.log('     -> Restaurant : Hôtel Restaurant Cayor (Lat-Dior) | Pack Premium (45k)');
+  console.log('     -> URL Client : /r/hotel-cayor/table-1 (Multi-Zones & 5 Langues)');
+  console.log('=========================================================\n');
 }
 
 main()
   .catch((e) => {
-    console.error('Erreur :', e);
+    console.error('❌ Erreur lors du seed :', e);
     process.exit(1);
   })
   .finally(async () => {

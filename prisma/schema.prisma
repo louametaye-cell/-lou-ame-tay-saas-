@@ -139,6 +139,7 @@ model Tenant {
   qrScansToday          Int                @default(0) @map("qr_scans_today")
   ordersToday           Int                @default(0) @map("orders_today")
   storageUsedMb         Int                @default(0) @map("storage_used_mb")
+  branding              Json?              // Personnalisation graphique (couleurs, polices, logo, réseaux, Google Avis)
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
 

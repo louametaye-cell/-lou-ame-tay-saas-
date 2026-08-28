@@ -17,6 +17,8 @@ import { TableSessionModal } from './TableSessionModal';
 import { MobileMoneyCheckout } from './MobileMoneyCheckout';
 import { ComboSection } from './ComboSection';
 import { CallWaiterModal } from './CallWaiterModal';
+import { GoogleReviewBanner } from './GoogleReviewBanner';
+import { RestaurantFooterInfo } from './RestaurantFooterInfo';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
 import { 
   RestaurantType, 
@@ -340,12 +342,37 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     );
   }
 
+  const branding = restaurant.branding;
+  const fontTitle = branding?.fontTitle || 'Playfair Display';
+  const fontBody = branding?.fontBody || 'Plus Jakarta Sans';
+  const primaryColor = branding?.primaryColor || '#FF6B00';
+  const secondaryColor = branding?.secondaryColor || '#00A86B';
+  const bgColor = branding?.backgroundColor || '#FFFDF9';
+  const textColor = branding?.textColor || '#0F172A';
+  const bannerUrl = branding?.bannerUrl || restaurant.bannerUrl;
+  const logoUrl = branding?.logoUrl || restaurant.logoUrl;
+
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-slate-900 pb-36 font-sans antialiased selection:bg-orange-500 selection:text-white">
+    <div 
+      className="min-h-screen pb-36 font-sans antialiased selection:bg-orange-500 selection:text-white transition-colors"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        fontFamily: fontBody,
+      }}
+    >
+      {/* 0. Dynamic Google Fonts Loading */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link 
+        href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontTitle)}:wght@400;600;700;800;900&family=${encodeURIComponent(fontBody)}:wght@400;500;600;700&display=swap`} 
+        rel="stylesheet" 
+      />
+
       {/* 1. Fixed Header with Table Badge, Waiter Bell, 5-Flag Language Switcher & Search */}
       <TableStickyHeader
         restaurantName={restaurant.name}
-        logoUrl={restaurant.logoUrl}
+        logoUrl={logoUrl}
         tableNumber={tableNumber}
         isExpress={isExpress}
         searchQuery={searchQuery}
@@ -353,6 +380,29 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
         onLanguageChange={handleLanguageChange}
       />
+
+      {/* 1.5. Brand Banner Header (Si configurée) */}
+      {bannerUrl && !searchQuery && (
+        <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3">
+          <div className="relative w-full h-36 sm:h-48 rounded-3xl overflow-hidden shadow-md border border-orange-200/60 group">
+            <img
+              src={bannerUrl}
+              alt={restaurant.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-4 sm:p-6">
+              <div className="text-white">
+                <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-amber-300 bg-black/40 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                  {branding?.tagline || 'Menu Digital Officiel'}
+                </span>
+                <h2 className="text-xl sm:text-3xl font-black mt-1.5" style={{ fontFamily: fontTitle }}>
+                  {restaurant.name}
+                </h2>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Schedule Banner & Currency Selector Bar */}
       <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-3 space-y-2">
@@ -502,6 +552,20 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             );
           })
         )}
+
+        {/* 4.5. Google Review Call to Action Banner ⭐ */}
+        <GoogleReviewBanner
+          googleReviewUrl={branding?.googleReviewUrl}
+          restaurantName={restaurant.name}
+        />
+
+        {/* 4.6. Coordonnées & Réseaux Sociaux Footer */}
+        <RestaurantFooterInfo
+          restaurantName={restaurant.name}
+          branding={branding}
+          phone={restaurant.phone}
+          address={restaurant.address}
+        />
       </main>
 
       {/* 5. Sticky Bottom Cart Bar */}
