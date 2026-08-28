@@ -148,36 +148,36 @@ export const SupportAIAssistant: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#0f1422] border-2 border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
+    <div className="bg-[#0f1422] border-2 border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-slate-800">
+      <div className="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/20">
+          <div className="p-3 bg-indigo-600 text-slate-900 rounded-2xl shadow-lg shadow-indigo-500/20">
             <Bot className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg sm:text-xl font-black text-white">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900">
                 Service Après-Vente (SAV) & Assistance IA 24/7
               </h3>
               <span className="bg-indigo-950 text-indigo-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-indigo-500/30">
                 IA Active 24/7
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Résolution instantanée des pannes, questions techniques et gestion des tickets restaurateurs
             </p>
           </div>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-2xl border border-slate-200">
           <button
             onClick={() => setActiveTab('chat')}
             className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
               activeTab === 'chat'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 text-slate-900 shadow-md'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <Bot className="w-4 h-4" />
@@ -188,8 +188,8 @@ export const SupportAIAssistant: React.FC = () => {
             onClick={() => setActiveTab('tickets')}
             className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
               activeTab === 'tickets'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 text-slate-900 shadow-md'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <Headphones className="w-4 h-4" />
@@ -201,7 +201,7 @@ export const SupportAIAssistant: React.FC = () => {
       {/* TAB 1: CHATBOT IA 24/7 */}
       {activeTab === 'chat' && (
         <div className="space-y-4">
-          <div className="bg-slate-950/70 border border-slate-800 rounded-3xl p-4 h-[360px] overflow-y-auto space-y-3.5 pr-2">
+          <div className="bg-slate-50/70 border border-slate-200 rounded-3xl p-4 h-[360px] overflow-y-auto space-y-3.5 pr-2">
             {messages.map((msg) => {
               const isAi = msg.sender === 'assistant';
               return (
@@ -214,8 +214,8 @@ export const SupportAIAssistant: React.FC = () => {
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                       isAi
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-emerald-600 text-white'
+                        ? 'bg-indigo-600 text-slate-900'
+                        : 'bg-emerald-600 text-slate-900'
                     }`}
                   >
                     {isAi ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
@@ -225,7 +225,7 @@ export const SupportAIAssistant: React.FC = () => {
                     className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
                       isAi
                         ? 'bg-[#151b2e] border border-indigo-500/20 text-slate-100'
-                        : 'bg-emerald-700 text-white'
+                        : 'bg-emerald-700 text-slate-900'
                     }`}
                   >
                     <p>{msg.content}</p>
@@ -252,12 +252,12 @@ export const SupportAIAssistant: React.FC = () => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Posez une question technique (Ex: Comment renouveler par Wave ? Problème QR Code ?)..."
-              className="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-2xl p-3.5 text-sm text-white outline-none shadow-inner"
+              className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-2xl p-3.5 text-sm text-slate-900 outline-none shadow-inner"
             />
             <button
               type="submit"
               disabled={isAiTyping || !inputMessage.trim()}
-              className="min-h-[48px] px-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 active:scale-95 transition-all"
+              className="min-h-[48px] px-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-slate-900 font-black text-sm rounded-2xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 active:scale-95 transition-all"
             >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">Envoyer</span>
@@ -270,12 +270,12 @@ export const SupportAIAssistant: React.FC = () => {
       {activeTab === 'tickets' && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
+            <span className="text-xs font-black uppercase text-slate-500 tracking-wider">
               Tickets Support des Restaurateurs
             </span>
             <button
               onClick={() => setIsCreatingTicket(!isCreatingTicket)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 active:scale-95 transition-all"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-slate-900 font-bold text-xs rounded-xl flex items-center gap-1.5 active:scale-95 transition-all"
             >
               <Plus className="w-4 h-4" />
               <span>Ouvrir un Nouveau Ticket</span>
@@ -284,7 +284,7 @@ export const SupportAIAssistant: React.FC = () => {
 
           {/* Formulaire de création de ticket */}
           {isCreatingTicket && (
-            <form onSubmit={handleCreateTicket} className="bg-slate-950 p-4 rounded-2xl border border-indigo-500/30 space-y-3">
+            <form onSubmit={handleCreateTicket} className="bg-slate-50 p-4 rounded-2xl border border-indigo-500/30 space-y-3">
               <h4 className="text-xs font-black text-indigo-300 uppercase">Création Ticket Assistance</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
@@ -293,13 +293,13 @@ export const SupportAIAssistant: React.FC = () => {
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
                   placeholder="Objet du ticket (Ex: Panne affichage table 4)"
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-indigo-500"
+                  className="bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-indigo-500"
                 />
 
                 <select
                   value={newPriority}
                   onChange={(e) => setNewPriority(e.target.value as TicketPriority)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-indigo-500"
+                  className="bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-indigo-500"
                 >
                   <option value="BASSE">Priorité Basse</option>
                   <option value="MOYENNE">Priorité Moyenne</option>
@@ -314,20 +314,20 @@ export const SupportAIAssistant: React.FC = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Détail du problème rencontré par le restaurateur..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-indigo-500 resize-none"
+                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-indigo-500 resize-none"
               />
 
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsCreatingTicket(false)}
-                  className="px-3 py-1.5 bg-slate-900 text-slate-300 rounded-lg text-xs font-bold"
+                  className="px-3 py-1.5 bg-white text-slate-700 rounded-lg text-xs font-bold"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-black"
+                  className="px-4 py-1.5 bg-indigo-600 text-slate-900 rounded-lg text-xs font-black"
                 >
                   Valider le Ticket
                 </button>
@@ -342,7 +342,7 @@ export const SupportAIAssistant: React.FC = () => {
               return (
                 <div
                   key={t.id}
-                  className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-2.5 hover:border-slate-700 transition-all"
+                  className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 space-y-2.5 hover:border-slate-200 transition-all"
                 >
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
@@ -352,12 +352,12 @@ export const SupportAIAssistant: React.FC = () => {
                             ? 'bg-red-950 text-red-400 border border-red-500/30'
                             : t.priority === 'HAUTE'
                             ? 'bg-amber-950 text-amber-400 border border-amber-500/30'
-                            : 'bg-slate-900 text-slate-400'
+                            : 'bg-white text-slate-500'
                         }`}
                       >
                         {t.priority}
                       </span>
-                      <h4 className="text-sm font-bold text-white">{t.subject}</h4>
+                      <h4 className="text-sm font-bold text-slate-900">{t.subject}</h4>
                     </div>
 
                     {/* Statut Toggle */}
@@ -365,7 +365,7 @@ export const SupportAIAssistant: React.FC = () => {
                       <button
                         onClick={() => handleUpdateTicketStatus(t.id, 'OUVERT')}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                          t.status === 'OUVERT' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'
+                          t.status === 'OUVERT' ? 'bg-red-600 text-slate-900' : 'bg-white text-slate-500'
                         }`}
                       >
                         Ouvert
@@ -373,7 +373,7 @@ export const SupportAIAssistant: React.FC = () => {
                       <button
                         onClick={() => handleUpdateTicketStatus(t.id, 'EN_COURS')}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                          t.status === 'EN_COURS' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                          t.status === 'EN_COURS' ? 'bg-amber-500 text-slate-950' : 'bg-white text-slate-500'
                         }`}
                       >
                         En cours
@@ -381,7 +381,7 @@ export const SupportAIAssistant: React.FC = () => {
                       <button
                         onClick={() => handleUpdateTicketStatus(t.id, 'RESOLU')}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                          t.status === 'RESOLU' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-400'
+                          t.status === 'RESOLU' ? 'bg-emerald-600 text-slate-900' : 'bg-white text-slate-500'
                         }`}
                       >
                         ✓ Résolu
@@ -389,7 +389,7 @@ export const SupportAIAssistant: React.FC = () => {
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-300">{t.message}</p>
+                  <p className="text-xs text-slate-700">{t.message}</p>
 
                   {t.aiSuggestedSolution && (
                     <div className="bg-indigo-950/40 border border-indigo-500/20 p-2.5 rounded-xl text-xs text-indigo-300">

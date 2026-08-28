@@ -100,8 +100,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   const isSpecial = item.isSpecialOfTheDay || item.isSpecial;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-[#FFFDFB] rounded-t-[32px] sm:rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl border-t-4 border-emerald-600 relative animate-in slide-in-from-bottom duration-300 max-h-[92vh] flex flex-col justify-between">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-[#FFFDFB] rounded-t-[32px] sm:rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl border-t-4 border-amber-500 relative animate-in slide-in-from-bottom duration-300 max-h-[92vh] flex flex-col justify-between">
         {/* Mobile Pull Bar */}
         <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 sm:hidden" />
 

@@ -150,23 +150,23 @@ export default function SuperAdminPlansPage() {
 
   return (
     <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-slate-900 pb-20">
         {/* Header */}
-        <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
+        <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Link
                 href="/super-admin"
-                className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-colors"
+                className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
               <div>
-                <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-orange-400" />
                   <span>Gestion des Packs & Fonctionnalités SaaS</span>
                 </h1>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Configurez les prix, activez les options et ajustez les plafonds d&apos;utilisation
                 </p>
               </div>
@@ -175,7 +175,7 @@ export default function SuperAdminPlansPage() {
             <div className="flex items-center gap-2.5">
               <Link
                 href="/super-admin/tenants"
-                className="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all"
+                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all"
               >
                 <Store className="w-4 h-4 text-emerald-400" />
                 <span>Liste des Restaurants</span>
@@ -184,7 +184,7 @@ export default function SuperAdminPlansPage() {
               <button
                 onClick={handleSavePlan}
                 disabled={isSaving}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-orange-600 hover:opacity-90 active:scale-95 text-white text-xs sm:text-sm font-extrabold px-4 sm:px-5 py-2.5 rounded-xl shadow-lg transition-all"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-orange-600 hover:opacity-90 active:scale-95 text-slate-900 text-xs sm:text-sm font-extrabold px-4 sm:px-5 py-2.5 rounded-xl shadow-lg transition-all"
               >
                 {isSaving ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -210,12 +210,12 @@ export default function SuperAdminPlansPage() {
                   onClick={() => setSelectedPlanId(p.id)}
                   className={`p-5 rounded-3xl border text-left transition-all relative overflow-hidden ${
                     isSelected
-                      ? 'bg-slate-900 border-orange-500 shadow-xl ring-2 ring-orange-500/20'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                      ? 'bg-white border-orange-500 shadow-xl ring-2 ring-orange-500/20'
+                      : 'bg-white/60 border-slate-200 hover:border-slate-200'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-500">
                       Pack {p.name}
                     </span>
                     {p.isRecommended && (
@@ -224,11 +224,11 @@ export default function SuperAdminPlansPage() {
                       </span>
                     )}
                   </div>
-                  <div className="text-2xl font-black text-white">
+                  <div className="text-2xl font-black text-slate-900">
                     {formatFCFA(p.price)}
-                    <span className="text-xs text-slate-400 font-normal"> /mois</span>
+                    <span className="text-xs text-slate-500 font-normal"> /mois</span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-2 line-clamp-2">
+                  <p className="text-xs text-slate-500 mt-2 line-clamp-2">
                     {p.description}
                   </p>
                 </button>
@@ -238,18 +238,18 @@ export default function SuperAdminPlansPage() {
 
           {/* Active Plan Editor Form */}
           {activePlan && (
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                 <div>
-                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
                     <Sliders className="w-5 h-5 text-orange-400" />
                     <span>Configuration du Pack : {activePlan.name}</span>
                   </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Modifiez le tarif mensuel et cochez/décochez les droits d&apos;accès
                   </p>
                 </div>
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-300">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-700">
                   Slug: {activePlan.slug}
                 </span>
               </div>
@@ -257,7 +257,7 @@ export default function SuperAdminPlansPage() {
               {/* Price & Description Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1.5 flex items-center gap-1">
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5 flex items-center gap-1">
                     <DollarSign className="w-4 h-4 text-orange-400" />
                     <span>Tarif Mensuel (FCFA)</span>
                   </label>
@@ -265,32 +265,32 @@ export default function SuperAdminPlansPage() {
                     type="number"
                     value={activePlan.price}
                     onChange={(e) => handlePriceChange(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3.5 text-sm font-bold text-white outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-sm font-bold text-slate-900 outline-none focus:border-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
                     Description Commerciale
                   </label>
                   <input
                     type="text"
                     value={activePlan.description}
                     onChange={(e) => handleDescriptionChange(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3.5 text-sm text-white outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-sm text-slate-900 outline-none focus:border-orange-500"
                   />
                 </div>
               </div>
 
               {/* Features Matrix Table */}
               <div className="space-y-3 pt-2">
-                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
                   Matrice des Fonctionnalités & Limites
                 </h3>
 
-                <div className="border border-slate-800 rounded-2xl overflow-hidden">
+                <div className="border border-slate-200 rounded-2xl overflow-hidden">
                   <table className="w-full text-left text-xs sm:text-sm">
-                    <thead className="bg-slate-950/90 border-b border-slate-800 text-slate-400 font-bold uppercase text-[11px]">
+                    <thead className="bg-white border-b border-slate-200 shadow-xs text-slate-500 font-bold uppercase text-[11px]">
                       <tr>
                         <th className="py-3.5 px-4 sm:px-6">Fonctionnalité</th>
                         <th className="py-3.5 px-4">Catégorie</th>
@@ -298,23 +298,23 @@ export default function SuperAdminPlansPage() {
                         <th className="py-3.5 px-4 sm:px-6 text-right">Limite / Plafond</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800 text-slate-200">
+                    <tbody className="divide-y divide-slate-100 text-slate-800">
                       {features.map((feat) => {
                         const pf = activePlan.features.find((f) => f.featureKey === feat.keyName);
                         const isIncluded = pf?.isActive ?? false;
                         const limitVal = pf?.limitValue;
 
                         return (
-                          <tr key={feat.id} className="hover:bg-slate-800/40 transition-colors">
+                          <tr key={feat.id} className="hover:bg-slate-50/40 transition-colors">
                             {/* Feature Name & Desc */}
                             <td className="py-3.5 px-4 sm:px-6">
-                              <span className="font-bold text-white block">{feat.label}</span>
-                              <span className="text-[11px] text-slate-400">{feat.description}</span>
+                              <span className="font-bold text-slate-900 block">{feat.label}</span>
+                              <span className="text-[11px] text-slate-500">{feat.description}</span>
                             </td>
 
                             {/* Category */}
                             <td className="py-3.5 px-4">
-                              <span className="bg-slate-950 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-lg border border-slate-800">
+                              <span className="bg-slate-50 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-lg border border-slate-200">
                                 {feat.category}
                               </span>
                             </td>
@@ -349,9 +349,9 @@ export default function SuperAdminPlansPage() {
                                         e.target.value ? Number(e.target.value) : null
                                       )
                                     }
-                                    className="w-24 bg-slate-950 border border-slate-700 rounded-xl p-1.5 text-xs text-right text-white outline-none focus:border-orange-500"
+                                    className="w-24 bg-slate-50 border border-slate-200 rounded-xl p-1.5 text-xs text-right text-slate-900 outline-none focus:border-orange-500"
                                   />
-                                  <span className="text-xs text-slate-400">max</span>
+                                  <span className="text-xs text-slate-500">max</span>
                                 </div>
                               ) : (
                                 <span className="text-xs text-slate-500">

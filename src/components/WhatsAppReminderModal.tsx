@@ -77,11 +77,11 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
         {/* Header */}
         <div className="p-5 bg-[#14261d] border-b border-emerald-500/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/30">
+            <div className="p-2.5 bg-emerald-500 text-slate-900 rounded-2xl shadow-lg shadow-emerald-500/30">
               <MessageCircle className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <span>Relance Paiement WhatsApp (J-5 Automatisé)</span>
               </h2>
               <p className="text-xs text-emerald-300">
@@ -92,17 +92,17 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white/60 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-5 text-slate-200 text-sm">
+        <div className="p-6 overflow-y-auto space-y-5 text-slate-800 text-sm">
           {/* Quick Timing Selector */}
           <div>
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
               Type de Relance & Échéance :
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -111,8 +111,8 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
                 onClick={() => fetchReminderText(5)}
                 className={`p-2.5 rounded-xl text-xs font-bold transition-all ${
                   daysOffset === 5
-                    ? 'bg-emerald-600 text-white shadow-lg'
-                    : 'bg-slate-900 text-slate-300 border border-slate-800'
+                    ? 'bg-emerald-600 text-slate-900 shadow-lg'
+                    : 'bg-white text-slate-700 border border-slate-200'
                 }`}
               >
                 J-5 (5 jours)
@@ -122,8 +122,8 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
                 onClick={() => fetchReminderText(2)}
                 className={`p-2.5 rounded-xl text-xs font-bold transition-all ${
                   daysOffset === 2
-                    ? 'bg-amber-600 text-white shadow-lg'
-                    : 'bg-slate-900 text-slate-300 border border-slate-800'
+                    ? 'bg-amber-600 text-slate-900 shadow-lg'
+                    : 'bg-white text-slate-700 border border-slate-200'
                 }`}
               >
                 J-2 (Urgent)
@@ -133,8 +133,8 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
                 onClick={() => fetchReminderText(0)}
                 className={`p-2.5 rounded-xl text-xs font-bold transition-all ${
                   daysOffset === 0
-                    ? 'bg-red-600 text-white shadow-lg'
-                    : 'bg-slate-900 text-slate-300 border border-slate-800'
+                    ? 'bg-red-600 text-slate-900 shadow-lg'
+                    : 'bg-white text-slate-700 border border-slate-200'
                 }`}
               >
                 Jour J (Aujourd&apos;hui)
@@ -144,8 +144,8 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
                 onClick={() => fetchReminderText(-3)}
                 className={`p-2.5 rounded-xl text-xs font-bold transition-all ${
                   daysOffset === -3
-                    ? 'bg-purple-600 text-white shadow-lg'
-                    : 'bg-slate-900 text-slate-300 border border-slate-800'
+                    ? 'bg-purple-600 text-slate-900 shadow-lg'
+                    : 'bg-white text-slate-700 border border-slate-200'
                 }`}
               >
                 Expiré (Relance)
@@ -155,7 +155,7 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
 
           {/* Numéro de Téléphone WhatsApp */}
           <div>
-            <label className="text-xs font-bold text-slate-400 block mb-1">
+            <label className="text-xs font-bold text-slate-500 block mb-1">
               Numéro de Téléphone WhatsApp :
             </label>
             <div className="relative">
@@ -164,7 +164,7 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 pl-10 text-white focus:border-emerald-400 outline-none text-sm font-mono font-bold"
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 pl-10 text-slate-900 focus:border-emerald-400 outline-none text-sm font-mono font-bold"
               />
             </div>
           </div>
@@ -172,7 +172,7 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
           {/* Aperçu du Message Pré-Rempli */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-400">
+              <label className="text-xs font-bold text-slate-500">
                 Message Généré & Prêt à Envoyer :
               </label>
               <button
@@ -189,7 +189,7 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
               rows={8}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-2xl p-4 text-sm text-slate-100 font-sans leading-relaxed outline-none resize-none shadow-inner"
+              className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-2xl p-4 text-sm text-slate-100 font-sans leading-relaxed outline-none resize-none shadow-inner"
             />
           </div>
 
@@ -203,17 +203,17 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs"
+            className="px-4 py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs"
           >
             Fermer
           </button>
 
           <button
             onClick={handleSendWhatsApp}
-            className="min-h-[48px] px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all ml-auto"
+            className="min-h-[48px] px-6 bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-black text-sm rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all ml-auto"
           >
             <Send className="w-4 h-4 stroke-[2.5]" />
             <span>Ouvrir WhatsApp & Envoyer 🚀</span>

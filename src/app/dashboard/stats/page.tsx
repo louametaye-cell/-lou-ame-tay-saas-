@@ -65,23 +65,23 @@ export default function DashboardStatsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30">
+      <header className="border-b border-slate-200 bg-white px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-colors"
+              className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-colors shadow-2xs"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-orange-400" />
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-orange-600" />
                 <span>Statistiques Détaillées de Caisse</span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Analyse des ventes, affluence et performances en direct
               </p>
             </div>
@@ -92,41 +92,41 @@ export default function DashboardStatsPage() {
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
-            <span className="text-xs text-slate-400 font-bold block mb-1">Chiffre d'Affaires Jour</span>
-            <div className="text-2xl font-black text-white font-mono">{formatFCFA(stats.todayRevenue)}</div>
-            <span className="text-[11px] text-emerald-400 font-bold mt-1 block">↗ +12.5% vs hier</span>
+          <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-xs">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Chiffre d'Affaires Jour</span>
+            <div className="text-2xl font-black text-slate-900 font-mono">{formatFCFA(stats.todayRevenue)}</div>
+            <span className="text-[11px] text-emerald-700 font-bold mt-1 block">↗ +12.5% vs hier</span>
           </div>
 
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
-            <span className="text-xs text-slate-400 font-bold block mb-1">Commandes Traitées</span>
-            <div className="text-2xl font-black text-white font-mono">{stats.todayOrders}</div>
-            <span className="text-[11px] text-emerald-400 font-bold mt-1 block">↗ +5.2% vs hier</span>
+          <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-xs">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Commandes Traitées</span>
+            <div className="text-2xl font-black text-slate-900 font-mono">{stats.todayOrders}</div>
+            <span className="text-[11px] text-emerald-700 font-bold mt-1 block">↗ +5.2% vs hier</span>
           </div>
 
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
-            <span className="text-xs text-slate-400 font-bold block mb-1">Couverts Servis</span>
-            <div className="text-2xl font-black text-white font-mono">{stats.todayCovers}</div>
-            <span className="text-[11px] text-emerald-400 font-bold mt-1 block">↗ +8.0% vs hier</span>
+          <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-xs">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Couverts Servis</span>
+            <div className="text-2xl font-black text-slate-900 font-mono">{stats.todayCovers}</div>
+            <span className="text-[11px] text-emerald-700 font-bold mt-1 block">↗ +8.0% vs hier</span>
           </div>
 
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-3xl">
-            <span className="text-xs text-slate-400 font-bold block mb-1">Ticket Moyen</span>
-            <div className="text-2xl font-black text-orange-400 font-mono">{formatFCFA(stats.avgTicket)}</div>
-            <span className="text-[11px] text-slate-400 mt-1 block">Moyenne par table</span>
+          <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-xs">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Ticket Moyen</span>
+            <div className="text-2xl font-black text-amber-700 font-mono">{formatFCFA(stats.avgTicket)}</div>
+            <span className="text-[11px] text-slate-500 mt-1 block">Moyenne par table</span>
           </div>
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Revenue Chart */}
-          <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl space-y-4">
+          <div className="bg-white border border-slate-200 p-6 rounded-3xl space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white">Évolution du CA (7 Derniers Jours)</h3>
-                <p className="text-xs text-slate-400">Revenus générés par commandes QR code</p>
+                <h3 className="text-base font-bold text-slate-900">Évolution du CA (7 Derniers Jours)</h3>
+                <p className="text-xs text-slate-500">Revenus générés par commandes QR code</p>
               </div>
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                 En direct
               </span>
             </div>
@@ -136,43 +136,43 @@ export default function DashboardStatsPage() {
                 <AreaChart data={trends}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FF6B00" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#FF6B00" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="day" stroke="#64748B" fontSize={12} />
+                  <YAxis stroke="#64748B" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', color: '#0F172A' }}
                     formatter={(value: any) => [`${Number(value).toLocaleString('fr-FR')} FCFA`, 'CA']}
                   />
-                  <Area type="monotone" dataKey="revenue" stroke="#FF6B00" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                  <Area type="monotone" dataKey="revenue" stroke="#F59E0B" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Scans vs Orders */}
-          <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl space-y-4">
+          <div className="bg-white border border-slate-200 p-6 rounded-3xl space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white">Scans vs Commandes Converties</h3>
-                <p className="text-xs text-slate-400">Taux de conversion moyen : ~45%</p>
+                <h3 className="text-base font-bold text-slate-900">Scans vs Commandes Converties</h3>
+                <p className="text-xs text-slate-500">Taux de conversion moyen : ~45%</p>
               </div>
             </div>
 
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart data={trends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} />
-                  <YAxis stroke="#94a3b8" fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="day" stroke="#64748B" fontSize={12} />
+                  <YAxis stroke="#64748B" fontSize={12} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderRadius: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', color: '#0F172A' }}
                   />
-                  <Bar dataKey="scans" name="Scans QR" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="orders" name="Commandes" fill="#10b981" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="scans" name="Scans QR" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="orders" name="Commandes" fill="#10B981" radius={[6, 6, 0, 0]} />
                 </RechartsBarChart>
               </ResponsiveContainer>
             </div>

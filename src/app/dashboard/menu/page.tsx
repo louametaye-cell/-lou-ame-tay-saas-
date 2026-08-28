@@ -53,16 +53,75 @@ export default function DashboardMenuManagementPage() {
   const [isTranslating, setIsTranslating] = useState(false);
 
   const [price, setPrice] = useState<number>(3500);
-  const [prepTime, setPrepTime] = useState<number>(12);
-  const [categoryId, setCategoryId] = useState<string>(restaurant.categories[0]?.id || '');
-  const [imageUrl, setImageUrl] = useState<string>('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80');
+  const [categoryId, setCategoryId] = useState<string>(SAMPLE_RESTAURANT.categories[0].id);
+  const [imageUrl, setImageUrl] = useState<string>('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80');
+  const [prepTime, setPrepTime] = useState<number>(20);
   const [allergens, setAllergens] = useState<string[]>([]);
-  const [isSpecial, setIsSpecial] = useState(false);
+  const [isSpecial, setIsSpecial] = useState<boolean>(false);
 
-  // Auto-translate using AI / Google Translate API
+  // Load from API
+  useEffect(() => {
+    fetch('/api/menu')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.restaurant) {
+          setRestaurant(data.restaurant);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Toggle item availability
+  const handleToggle = async (item: MenuItemType) => {
+    const updated = !item.isAvailable;
+    const cloned = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
+    cloned.categories.forEach((c) => {
+      const found = (c.items || []).find((i) => i.id === item.id);
+      if (found) found.isAvailable = updated;
+    });
+    setRestaurant(cloned);
+
+    try {
+      await fetch(`/api/restaurant/menu-items/${item.id}/availability`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isAvailable: updated }),
+      });
+      toast.success(updated ? `"${item.name}" est de nouveau EN STOCK` : `"${item.name}" est marqué RUPTURE DE STOCK`);
+    } catch (e) {
+      toast.error('Erreur de mise à jour');
+    }
+  };
+
+  // Toggle Daily Special
+  const handleToggleSpecial = async (item: MenuItemType) => {
+    const updated = !item.isSpecialOfTheDay;
+    const cloned = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
+    cloned.categories.forEach((c) => {
+      const found = (c.items || []).find((i) => i.id === item.id);
+      if (found) {
+        found.isSpecialOfTheDay = updated;
+        found.isSpecial = updated;
+      }
+    });
+    setRestaurant(cloned);
+
+    try {
+      await fetch(`/api/restaurant/menu-items/${item.id}/availability`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isSpecialOfTheDay: updated }),
+      });
+      toast.success(updated ? `⭐ "${item.name}" défini comme PLAT DU JOUR !` : `"${item.name}" retiré des plats du jour.`);
+    } catch (e) {
+      toast.error('Erreur de mise à jour');
+    }
+  };
+
+  // Auto-translate using AI / dictionary engine
   const handleAutoTranslate = async () => {
     if (!name.trim()) {
-      toast.error('Veuillez d\'abord saisir le nom du plat en Français.');
+      toast.error('Veuillez renseigner le nom en Français d\'abord');
       return;
     }
 
@@ -71,110 +130,77 @@ export default function DashboardMenuManagementPage() {
       const res = await fetch('/api/translate/auto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description: desc }),
+        body: JSON.stringify({
+          name,
+          description: desc,
+          wolofName,
+        }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.translations) {
-          setTranslations(data.translations);
-          toast.success('Traductions EN, ES, IT générées avec succès !');
-        }
+      const data = await res.json();
+      if (data.translations) {
+        setTranslations(data.translations);
+        toast.success('✨ Traduction IA instantanée effectuée (EN, ES, IT) !');
       } else {
-        toast.error('Erreur lors de la traduction automatique');
+        throw new Error();
       }
-    } catch (err) {
-      toast.error('Erreur réseau traduction');
+    } catch (e) {
+      toast.error('Erreur lors de la traduction IA');
     } finally {
       setIsTranslating(false);
     }
   };
 
-  useEffect(() => {
-    fetch('/api/menu')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.restaurant) {
-          setRestaurant(data.restaurant);
-          if (data.restaurant.categories?.[0]) {
-            setCategoryId(data.restaurant.categories[0].id);
-          }
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleToggle = async (item: MenuItemType) => {
-    const newStatus = !item.isAvailable;
-    const updated = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
-    updated.categories.forEach((cat) => {
-      cat.items?.forEach((i) => {
-        if (i.id === item.id) {
-          i.isAvailable = newStatus;
-        }
-      });
-    });
-    setRestaurant(updated);
-
-    try {
-      await fetch('/api/menu', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: item.id, isAvailable: newStatus }),
-      });
-      if (newStatus) {
-        toast.success(`${item.name} remis EN STOCK`);
-      } else {
-        toast.warning(`${item.name} basculé EN RUPTURE`);
-      }
-    } catch (e) {
-      toast.error('Erreur de mise à jour');
-    }
-  };
-
-  const handleToggleAllergen = (a: string) => {
-    if (allergens.includes(a)) {
-      setAllergens(allergens.filter((x) => x !== a));
-    } else {
-      setAllergens([...allergens, a]);
-    }
-  };
-
+  // Create dish
   const handleCreateDish = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error('Nom du plat obligatoire');
-      return;
-    }
+    if (!name) return;
 
-    const newItem: MenuItemType = {
-      id: `dish_custom_${Date.now()}`,
+    const newDish: MenuItemType = {
+      id: `dish_${Date.now()}`,
       name,
-      wolofName: wolofName.trim() ? wolofName : undefined,
       description: desc,
-      price: Number(price),
+      price,
       imageUrl,
       isAvailable: true,
-      isSpecialOfTheDay: isSpecial,
-      preparationTime: Number(prepTime),
-      rating: 5.0,
+      preparationTime: prepTime,
       allergens,
-      categoryId: categoryId || 'cat_special',
+      categoryId,
+      isSpecialOfTheDay: isSpecial,
+      isSpecial: isSpecial,
+      translations: {
+        FR: { name, description: desc },
+        EN: translations.EN.name ? translations.EN : undefined,
+        ES: translations.ES.name ? translations.ES : undefined,
+        IT: translations.IT.name ? translations.IT : undefined,
+      } as any,
     };
 
-    const updated = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
-    const targetCat = updated.categories.find((c) => c.id === categoryId);
-    if (targetCat) {
-      targetCat.items = [newItem, ...(targetCat.items || [])];
+    const cloned = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
+    const cat = cloned.categories.find((c) => c.id === categoryId);
+    if (cat) {
+      if (!cat.items) cat.items = [];
+      cat.items.unshift(newDish);
     }
-    setRestaurant(updated);
+    setRestaurant(cloned);
     setIsAddModalOpen(false);
-    toast.success(`Plat "${name}" ajouté au menu !`);
+    toast.success(`✨ Plat "${name}" ajouté avec succès au menu !`);
+
+    // Reset form
+    setName('');
+    setWolofName('');
+    setDesc('');
+    setTranslations({
+      FR: { name: '', description: '' },
+      EN: { name: '', description: '' },
+      ES: { name: '', description: '' },
+      IT: { name: '', description: '' },
+    });
   };
 
-  // Filtered items
-  const allItems = restaurant.categories.flatMap((c) => 
-    (c.items || []).map((item) => ({ ...item, categoryName: c.name, catId: c.id }))
+  // Flattened items for table search
+  const allItems = restaurant.categories.flatMap((c) =>
+    (c.items || []).map((i) => ({ ...i, catName: c.name, catId: c.id }))
   );
 
   const filteredItems = allItems.filter((i) => {
@@ -186,23 +212,23 @@ export default function DashboardMenuManagementPage() {
   });
 
   return (
-    <div className="min-h-screen bg-transparent text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* Top Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30">
+      <header className="border-b border-slate-200 bg-white px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-colors"
+              className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-colors shadow-2xs"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                <Utensils className="w-5 h-5 text-orange-400" />
-                <span>Gestion du Menu & Ruptures</span>
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-orange-600" />
+                <span>Gestion du Menu &amp; Ruptures</span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {restaurant.name} • {allItems.length} plats enregistrés
               </p>
             </div>
@@ -210,7 +236,7 @@ export default function DashboardMenuManagementPage() {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-orange-600 hover:opacity-90 text-white text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg transition-all"
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>Nouveau Plat</span>
@@ -221,15 +247,15 @@ export default function DashboardMenuManagementPage() {
       {/* Main Container with View Mode Tabs */}
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
         {/* View Mode Tabs */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-2xl border border-slate-800">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
               type="button"
               onClick={() => setViewMode('LIVE_STOCK')}
               className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 viewMode === 'LIVE_STOCK'
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Sparkles className="w-4 h-4" />
@@ -241,8 +267,8 @@ export default function DashboardMenuManagementPage() {
               onClick={() => setViewMode('CATALOG')}
               className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 viewMode === 'CATALOG'
-                  ? 'bg-slate-800 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Utensils className="w-4 h-4" />
@@ -253,8 +279,8 @@ export default function DashboardMenuManagementPage() {
               onClick={() => setViewMode('COMBOS')}
               className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 viewMode === 'COMBOS'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <span>🍱</span>
@@ -262,7 +288,7 @@ export default function DashboardMenuManagementPage() {
             </button>
           </div>
 
-          <div className="text-xs text-slate-400 font-mono">
+          <div className="text-xs text-slate-500 font-mono font-medium">
             {allItems.length} plats • {allItems.filter((i) => i.isAvailable).length} en stock
           </div>
         </div>
@@ -295,7 +321,7 @@ export default function DashboardMenuManagementPage() {
         {/* View 2: Detailed Catalog Grid */}
         {viewMode === 'CATALOG' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-slate-900/70 border border-slate-800 p-4 rounded-2xl">
+            <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-white border border-slate-200 p-4 rounded-2xl shadow-xs">
               {/* Search */}
               <div className="relative w-full sm:w-80">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -304,7 +330,7 @@ export default function DashboardMenuManagementPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Rechercher un plat (ex: Ceebu, Dibi)..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder:text-slate-500 outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -314,8 +340,8 @@ export default function DashboardMenuManagementPage() {
                   onClick={() => setSelectedCategory('ALL')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                     selectedCategory === 'ALL'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-amber-500 text-slate-950 font-black shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Tous ({allItems.length})
@@ -326,8 +352,8 @@ export default function DashboardMenuManagementPage() {
                     onClick={() => setSelectedCategory(c.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                       selectedCategory === c.id
-                        ? 'bg-orange-600 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     {c.name} ({c.items?.length || 0})
@@ -338,92 +364,92 @@ export default function DashboardMenuManagementPage() {
 
             {/* Dishes Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className={`border rounded-3xl p-4 transition-all ${
-                item.isAvailable
-                  ? 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
-                  : 'bg-slate-950/60 border-red-900/30 opacity-75'
-              }`}
-            >
-              <div className="flex gap-4">
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-slate-800"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-1">
-                    <h3 className="font-bold text-sm text-white truncate">
-                      {item.name}
-                    </h3>
-                    <span className="text-xs font-black text-orange-400 shrink-0">
-                      {formatFCFA(item.price)}
-                    </span>
-                  </div>
+              {filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`border rounded-3xl p-4 transition-all shadow-xs ${
+                    item.isAvailable
+                      ? 'bg-white border-slate-200 hover:border-slate-300'
+                      : 'bg-slate-50 border-rose-200 opacity-75'
+                  }`}
+                >
+                  <div className="flex gap-4">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-slate-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1">
+                        <h3 className="font-bold text-sm text-slate-900 truncate">
+                          {item.name}
+                        </h3>
+                        <span className="text-xs font-black text-orange-600 shrink-0 font-mono">
+                          {formatFCFA(item.price)}
+                        </span>
+                      </div>
 
-                  {item.wolofName && (
-                    <span className="text-[11px] text-amber-400/90 block font-medium">
-                      « {item.wolofName} »
-                    </span>
-                  )}
-
-                  <p className="text-xs text-slate-400 line-clamp-2 mt-1">
-                    {item.description}
-                  </p>
-
-                  <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-800/80 justify-between">
-                    <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-orange-400" />
-                      <span>{item.preparationTime} min</span>
-                    </span>
-
-                    {/* Stock Switch */}
-                    <button
-                      onClick={() => handleToggle(item)}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black transition-all ${
-                        item.isAvailable
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
-                      }`}
-                    >
-                      {item.isAvailable ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>EN STOCK</span>
-                        </>
-                      ) : (
-                        <>
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>RUPTURE</span>
-                        </>
+                      {item.wolofName && (
+                        <span className="text-[11px] text-amber-700 block font-medium">
+                          « {item.wolofName} »
+                        </span>
                       )}
-                    </button>
+
+                      <p className="text-xs text-slate-500 line-clamp-2 mt-1">
+                        {item.description}
+                      </p>
+
+                      <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-100 justify-between">
+                        <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-orange-600" />
+                          <span>{item.preparationTime} min</span>
+                        </span>
+
+                        {/* Stock Switch */}
+                        <button
+                          onClick={() => handleToggle(item)}
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black transition-all ${
+                            item.isAvailable
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                              : 'bg-rose-50 text-rose-800 border border-rose-300'
+                          }`}
+                        >
+                          {item.isAvailable ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>EN STOCK</span>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>RUPTURE</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </main>
+          </div>
+        )}
+      </main>
 
       {/* Add Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-4">
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <Plus className="w-5 h-5 text-orange-400" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl text-slate-900">
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-orange-600" />
               <span>Ajouter un Plat au Menu</span>
             </h2>
 
             <form onSubmit={handleCreateDish} className="space-y-4">
               {/* Language Tabs & Auto-Translate Action */}
-              <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-3">
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
                     {[
                       { code: 'FR', label: 'Français', flag: '🇫🇷' },
                       { code: 'EN', label: 'English', flag: '🇬🇧' },
@@ -436,8 +462,8 @@ export default function DashboardMenuManagementPage() {
                         onClick={() => setActiveLangTab(l.code as any)}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
                           activeLangTab === l.code
-                            ? 'bg-orange-600 text-white shadow-xs'
-                            : 'text-slate-400 hover:text-white'
+                            ? 'bg-amber-500 text-slate-950 font-black shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
                         <span>{l.flag}</span>
@@ -450,7 +476,7 @@ export default function DashboardMenuManagementPage() {
                     type="button"
                     onClick={handleAutoTranslate}
                     disabled={isTranslating}
-                    className="flex items-center gap-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                    className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{isTranslating ? 'Traduction...' : '🌐 Traduction IA (Google)'}</span>
@@ -461,7 +487,7 @@ export default function DashboardMenuManagementPage() {
                 {activeLangTab === 'FR' ? (
                   <div className="space-y-2">
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
                         Nom du plat (🇫🇷 Français)
                       </label>
                       <input
@@ -476,11 +502,11 @@ export default function DashboardMenuManagementPage() {
                           }));
                         }}
                         placeholder="Ex: Thiéboudienne Rouge Penda Mbaye..."
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
                         Description & Ingrédients (🇫🇷 Français)
                       </label>
                       <textarea
@@ -494,14 +520,14 @@ export default function DashboardMenuManagementPage() {
                           }));
                         }}
                         placeholder="Légumes frais du terroir, mérou blanc, riz rouge..."
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500"
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
                         Nom du plat ({activeLangTab === 'EN' ? '🇬🇧 English' : activeLangTab === 'ES' ? '🇪🇸 Español' : '🇮🇹 Italiano'})
                       </label>
                       <input
@@ -515,11 +541,11 @@ export default function DashboardMenuManagementPage() {
                           }));
                         }}
                         placeholder={`Traduction du nom en ${activeLangTab}...`}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
                         Description ({activeLangTab === 'EN' ? '🇬🇧 English' : activeLangTab === 'ES' ? '🇪🇸 Español' : '🇮🇹 Italiano'})
                       </label>
                       <textarea
@@ -533,7 +559,7 @@ export default function DashboardMenuManagementPage() {
                           }));
                         }}
                         placeholder={`Traduction de la description en ${activeLangTab}...`}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500"
                       />
                     </div>
                   </div>
@@ -542,33 +568,33 @@ export default function DashboardMenuManagementPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Nom en Wolof (Optionnel)</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Nom en Wolof (Optionnel)</label>
                   <input
                     type="text"
                     value={wolofName}
                     onChange={(e) => setWolofName(e.target.value)}
                     placeholder="Ex: Ceebu Jën..."
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Prix (FCFA)</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Prix (FCFA)</label>
                   <input
                     type="number"
                     required
                     value={price}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Catégorie</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Catégorie</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 outline-none focus:border-amber-500"
                 >
                   {restaurant.categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -576,28 +602,17 @@ export default function DashboardMenuManagementPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Description & Ingrédients</label>
-                <textarea
-                  rows={2}
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  placeholder="Légumes frais du terroir, mérou blanc..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white font-bold"
+                  className="px-4 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-800 font-bold"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-lg"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow-xs"
                 >
                   Enregistrer le Plat
                 </button>

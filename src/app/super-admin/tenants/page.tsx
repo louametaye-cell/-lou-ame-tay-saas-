@@ -183,23 +183,23 @@ export default function SuperAdminTenantsListPage() {
 
   return (
     <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-slate-900 pb-20">
         {/* Header */}
-        <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
+        <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Link
                 href="/super-admin"
-                className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-colors"
+                className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
               <div>
-                <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
                   <Store className="w-5 h-5 text-emerald-400" />
                   <span>Tableau de Bord 1 000 Restaurants</span>
                 </h1>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Pilotage global des abonnements, filtrage par ville et gestion autonome des impayés
                 </p>
               </div>
@@ -209,7 +209,7 @@ export default function SuperAdminTenantsListPage() {
               <button
                 onClick={handleRun3Strikes}
                 disabled={isCronRunning}
-                className="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 border border-orange-500/40 text-orange-400 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all"
+                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 border border-orange-500/40 text-orange-400 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all"
                 title="Exécuter l'audit 3-Strikes nocturne"
               >
                 <Zap className="w-4 h-4" />
@@ -218,7 +218,7 @@ export default function SuperAdminTenantsListPage() {
 
               <Link
                 href="/super-admin/plans"
-                className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-lg transition-all"
+                className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-600 text-slate-900 text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-lg transition-all"
               >
                 <Layers className="w-4 h-4" />
                 <span>Gérer les Packs</span>
@@ -230,27 +230,27 @@ export default function SuperAdminTenantsListPage() {
         <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
           {/* Real-time KPI Counters */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-900/90 border border-emerald-900/40 rounded-3xl p-5 shadow-lg flex items-center justify-between">
+            <div className="bg-white/90 border border-emerald-900/40 rounded-3xl p-5 shadow-lg flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-slate-400">Clients Actifs (En règle)</span>
+                <span className="text-xs font-bold text-slate-500">Clients Actifs (En règle)</span>
                 <div className="text-2xl font-black text-emerald-400 mt-1">{activeCount}</div>
                 <span className="text-[11px] text-emerald-500/80 font-bold">Menus 100% opérationnels</span>
               </div>
               <span className="w-4 h-4 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50" />
             </div>
 
-            <div className="bg-slate-900/90 border border-amber-900/40 rounded-3xl p-5 shadow-lg flex items-center justify-between">
+            <div className="bg-white/90 border border-amber-900/40 rounded-3xl p-5 shadow-lg flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-slate-400">Impayés (Strikes 1 & 2)</span>
+                <span className="text-xs font-bold text-slate-500">Impayés (Strikes 1 & 2)</span>
                 <div className="text-2xl font-black text-amber-400 mt-1">{pastDueCount}</div>
                 <span className="text-[11px] text-amber-500/80 font-bold">Relances WhatsApp actives</span>
               </div>
               <AlertTriangle className="w-5 h-5 text-amber-400" />
             </div>
 
-            <div className="bg-slate-900/90 border border-red-900/40 rounded-3xl p-5 shadow-lg flex items-center justify-between">
+            <div className="bg-white/90 border border-red-900/40 rounded-3xl p-5 shadow-lg flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-slate-400">Suspendus (Strike 3)</span>
+                <span className="text-xs font-bold text-slate-500">Suspendus (Strike 3)</span>
                 <div className="text-2xl font-black text-red-400 mt-1">{suspendedCount}</div>
                 <span className="text-[11px] text-red-500/80 font-bold">Menus coupés (&gt; 3 jours)</span>
               </div>
@@ -259,17 +259,17 @@ export default function SuperAdminTenantsListPage() {
           </div>
 
           {/* Search Bar & Filters Controls */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
+          <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-5 shadow-xl space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               {/* Search input */}
               <div className="md:col-span-2 relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Recherche par nom, patron, téléphone (+221), sous-domaine..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-900 outline-none focus:border-orange-500"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export default function SuperAdminTenantsListPage() {
                 <select
                   value={selectedCity}
                   onChange={(e) => setSelectedCity(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3.5 py-3 text-xs text-slate-200 outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 text-xs text-slate-800 outline-none focus:border-orange-500"
                 >
                   <option value="ALL">📍 Toutes les villes</option>
                   <option value="Dakar">Dakar</option>
@@ -293,7 +293,7 @@ export default function SuperAdminTenantsListPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3.5 py-3 text-xs text-slate-200 outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 text-xs text-slate-800 outline-none focus:border-orange-500"
                 >
                   <option value="ALL">⚡ Tous les statuts</option>
                   <option value="ACTIVE">🟢 Actifs uniquement</option>
@@ -305,14 +305,14 @@ export default function SuperAdminTenantsListPage() {
           </div>
 
           {/* Tenants Table Card */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-              <h2 className="text-base font-bold text-white">
+          <div className="bg-white border border-slate-200 shadow-xs rounded-3xl overflow-hidden shadow-xl">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900">
                 Résultats ({filteredTenants.length} restaurants affichés)
               </h2>
               <button
                 onClick={fetchData}
-                className="p-2 bg-slate-950 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors"
+                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-500 hover:text-slate-900 transition-colors"
                 title="Actualiser"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -321,7 +321,7 @@ export default function SuperAdminTenantsListPage() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-950/90 border-b border-slate-800 text-slate-400 font-bold uppercase text-[11px]">
+                <thead className="bg-white border-b border-slate-200 shadow-xs text-slate-500 font-bold uppercase text-[11px]">
                   <tr>
                     <th className="py-3.5 px-4 sm:px-6">Restaurant</th>
                     <th className="py-3.5 px-4">Ville</th>
@@ -332,7 +332,7 @@ export default function SuperAdminTenantsListPage() {
                     <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-200">
+                <tbody className="divide-y divide-slate-100 text-slate-800">
                   {filteredTenants.map((t) => {
                     const planName = t.plan?.name || 'Starter';
                     const isStarter = planName.toLowerCase().includes('starter');
@@ -342,16 +342,16 @@ export default function SuperAdminTenantsListPage() {
                     const isPastDue = t.subscriptionStatus === 'PAST_DUE';
 
                     return (
-                      <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
+                      <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                         {/* Restaurant Name */}
-                        <td className="py-3.5 px-4 sm:px-6 font-bold text-white">
+                        <td className="py-3.5 px-4 sm:px-6 font-bold text-slate-900">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-orange-400 font-black text-xs">
+                            <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-orange-400 font-black text-xs">
                               {t.businessName.substring(0, 2).toUpperCase()}
                             </div>
                             <div>
                               <span>{t.businessName}</span>
-                              <span className="block text-[11px] text-slate-400 font-normal">
+                              <span className="block text-[11px] text-slate-500 font-normal">
                                 /{t.subdomain} • {t.phone}
                               </span>
                             </div>
@@ -359,7 +359,7 @@ export default function SuperAdminTenantsListPage() {
                         </td>
 
                         {/* City */}
-                        <td className="py-3.5 px-4 text-slate-300">
+                        <td className="py-3.5 px-4 text-slate-700">
                           {t.city || 'Dakar'}
                         </td>
 
@@ -371,7 +371,7 @@ export default function SuperAdminTenantsListPage() {
                                 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                                 : isPro
                                 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                                : 'bg-slate-800 text-slate-700 border-slate-200'
                             }`}
                           >
                             <Sparkles className="w-3 h-3" />
@@ -398,7 +398,7 @@ export default function SuperAdminTenantsListPage() {
                         </td>
 
                         {/* Expiration */}
-                        <td className="py-3.5 px-4 text-xs text-slate-400">
+                        <td className="py-3.5 px-4 text-xs text-slate-500">
                           {t.subscriptionExpiresAt
                             ? new Date(t.subscriptionExpiresAt).toLocaleDateString('fr-FR')
                             : 'Illimité'}
@@ -420,7 +420,7 @@ export default function SuperAdminTenantsListPage() {
                         <td className="py-3.5 px-4 sm:px-6 text-right space-x-2">
                           <button
                             onClick={() => runLiveTest(t)}
-                            className="bg-slate-950 hover:bg-slate-800 border border-slate-700 text-orange-400 hover:text-orange-300 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1"
+                            className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-orange-400 hover:text-orange-300 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1"
                           >
                             <Play className="w-3 h-3" />
                             <span>Tester</span>
@@ -431,7 +431,7 @@ export default function SuperAdminTenantsListPage() {
                               setUpgradingTenant(t);
                               setSelectedNewPlanId(isStarter ? 'plan_pro' : 'plan_premium');
                             }}
-                            className="bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-90 active:scale-95 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm"
+                            className="bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-90 active:scale-95 text-slate-900 font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm"
                           >
                             Pack
                           </button>
@@ -448,18 +448,18 @@ export default function SuperAdminTenantsListPage() {
         {/* Live Test Modal */}
         {testingTenant && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <div>
                   <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">
                     Simulateur Droits & Restrictions
                   </span>
-                  <h3 className="text-lg font-black text-white">{testingTenant.businessName}</h3>
-                  <p className="text-xs text-slate-400">Pack : {testingTenant.plan?.name} • Statut : {testingTenant.subscriptionStatus}</p>
+                  <h3 className="text-lg font-black text-slate-900">{testingTenant.businessName}</h3>
+                  <p className="text-xs text-slate-500">Pack : {testingTenant.plan?.name} • Statut : {testingTenant.subscriptionStatus}</p>
                 </div>
                 <button
                   onClick={() => setTestingTenant(null)}
-                  className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-950"
+                  className="p-2 text-slate-500 hover:text-slate-900 rounded-xl bg-slate-50"
                 >
                   ✕
                 </button>
@@ -468,7 +468,7 @@ export default function SuperAdminTenantsListPage() {
               {isTesting ? (
                 <div className="py-8 text-center space-y-2">
                   <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-xs text-slate-400">Vérification en cours...</p>
+                  <p className="text-xs text-slate-500">Vérification en cours...</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -482,7 +482,7 @@ export default function SuperAdminTenantsListPage() {
                       }`}
                     >
                       <div className="min-w-0 flex-1">
-                        <span className="font-bold text-white block mb-0.5">{res.label}</span>
+                        <span className="font-bold text-slate-900 block mb-0.5">{res.label}</span>
                         <p className={`text-[11px] ${res.allowed ? 'text-emerald-400' : 'text-red-400'}`}>
                           {res.message}
                         </p>
@@ -501,10 +501,10 @@ export default function SuperAdminTenantsListPage() {
                 </div>
               )}
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end">
+              <div className="pt-3 border-t border-slate-200 flex justify-end">
                 <button
                   onClick={() => setTestingTenant(null)}
-                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-xl text-xs"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs"
                 >
                   Fermer
                 </button>
@@ -516,12 +516,12 @@ export default function SuperAdminTenantsListPage() {
         {/* Upgrade Modal */}
         {upgradingTenant && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-orange-400" />
                 <span>Changer le Pack du Restaurant</span>
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Sélectionnez le pack pour <strong>{upgradingTenant.businessName}</strong>
               </p>
 
@@ -532,12 +532,12 @@ export default function SuperAdminTenantsListPage() {
                     onClick={() => setSelectedNewPlanId(p.id)}
                     className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all ${
                       selectedNewPlanId === p.id
-                        ? 'bg-slate-950 border-orange-500 ring-2 ring-orange-500/20'
-                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                        ? 'bg-slate-50 border-orange-500 ring-2 ring-orange-500/20'
+                        : 'bg-slate-50/60 border-slate-200 hover:border-slate-200'
                     }`}
                   >
                     <div>
-                      <span className="font-bold text-sm text-white block">Pack {p.name}</span>
+                      <span className="font-bold text-sm text-slate-900 block">Pack {p.name}</span>
                       <span className="text-xs text-orange-400 font-extrabold">{formatFCFA(p.price)}/mois</span>
                     </div>
                     {selectedNewPlanId === p.id && (
@@ -547,17 +547,17 @@ export default function SuperAdminTenantsListPage() {
                 ))}
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
                 <button
                   onClick={() => setUpgradingTenant(null)}
-                  className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-900"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleUpgrade}
                   disabled={isUpgrading}
-                  className="bg-orange-600 hover:bg-orange-700 text-white text-xs font-black px-5 py-2.5 rounded-xl shadow-lg"
+                  className="bg-orange-600 hover:bg-orange-700 text-slate-900 text-xs font-black px-5 py-2.5 rounded-xl shadow-lg"
                 >
                   {isUpgrading ? 'Application...' : 'Valider'}
                 </button>

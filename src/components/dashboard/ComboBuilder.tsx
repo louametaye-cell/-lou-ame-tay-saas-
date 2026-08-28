@@ -100,13 +100,13 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap bg-slate-900 border border-slate-800 p-5 rounded-3xl">
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-white border border-slate-200 p-5 rounded-3xl shadow-xs">
         <div className="space-y-0.5">
-          <h3 className="text-lg font-black text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-400" />
+          <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
             <span>Moteur de Formules & Menus Midi / Soir</span>
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Créez des offres combinées tout-en-un (Entrée + Plat + Boisson) pour augmenter le ticket moyen.
           </p>
         </div>
@@ -114,7 +114,7 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
         <button
           type="button"
           onClick={() => setIsCreating(true)}
-          className="min-h-[44px] px-4 rounded-2xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-black text-xs flex items-center gap-2 shadow-md transition-all"
+          className="min-h-[44px] px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs flex items-center gap-2 shadow-xs transition-all"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
           <span>Nouvelle Formule</span>
@@ -125,16 +125,16 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
       {isCreating && (
         <form
           onSubmit={handleCreateCombo}
-          className="bg-slate-900 border-2 border-orange-500/80 p-6 rounded-3xl space-y-4 shadow-xl animate-in zoom-in-95"
+          className="bg-white border-2 border-amber-400 p-6 rounded-3xl space-y-4 shadow-xl animate-in zoom-in-95"
         >
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h4 className="text-sm font-black text-white">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 className="text-sm font-black text-slate-900">
               Créer une nouvelle Formule Combinée
             </h4>
             <button
               type="button"
               onClick={() => setIsCreating(false)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="text-xs text-slate-500 hover:text-slate-900 font-bold"
             >
               Annuler
             </button>
@@ -142,7 +142,7 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300">
+              <label className="text-xs font-bold text-slate-700">
                 Nom de la formule *
               </label>
               <input
@@ -151,12 +151,12 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Formule Midi Téranga Express"
                 required
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300">
+              <label className="text-xs font-bold text-slate-700">
                 Tarif Forfaitaire (FCFA) *
               </label>
               <input
@@ -165,13 +165,13 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
                 onChange={(e) => setFixedPrice(e.target.value)}
                 placeholder="4500"
                 required
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 font-mono"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-mono"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-300">
+            <label className="text-xs font-bold text-slate-700">
               Description & Inclusions
             </label>
             <input
@@ -179,12 +179,12 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: 1 Entrée au choix (Pastels) + 1 Plat du Jour + 1 Jus local frais (Bissap ou Bouye)"
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-300">
+            <label className="text-xs font-bold text-slate-700">
               Créneau horaire d'affichage automatique
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -199,8 +199,8 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
                   onClick={() => setPeriod(p.id as any)}
                   className={`p-2.5 rounded-xl text-xs font-bold transition-all border ${
                     period === p.id
-                      ? 'bg-orange-500 text-white border-orange-600 shadow-xs'
-                      : 'bg-slate-950 text-slate-400 border-slate-800'
+                      ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-xs font-black'
+                      : 'bg-slate-50 text-slate-700 border-slate-200'
                   }`}
                 >
                   {p.label}
@@ -213,13 +213,13 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
             <button
               type="button"
               onClick={() => setIsCreating(false)}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow-md"
+              className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-xs"
             >
               Enregistrer la Formule
             </button>
@@ -232,30 +232,30 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
         {combos.map((combo) => (
           <div
             key={combo.id}
-            className={`p-5 rounded-3xl border-2 transition-all space-y-3 flex flex-col justify-between ${
+            className={`p-5 rounded-3xl border-2 transition-all space-y-3 flex flex-col justify-between shadow-xs ${
               combo.isActive
-                ? 'bg-slate-900 border-amber-500/50 shadow-md shadow-amber-500/5'
-                : 'bg-slate-950/60 border-slate-800 opacity-60'
+                ? 'bg-white border-amber-300'
+                : 'bg-slate-50 border-slate-200 opacity-60'
             }`}
           >
             <div className="space-y-1.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🍱</span>
-                  <h4 className="text-sm font-black text-white">{combo.name}</h4>
+                  <h4 className="text-sm font-black text-slate-900">{combo.name}</h4>
                 </div>
-                <span className="text-xs font-black text-amber-400 font-mono bg-amber-950/80 px-2.5 py-1 rounded-xl border border-amber-800/80 shrink-0">
+                <span className="text-xs font-black text-amber-800 font-mono bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 shrink-0">
                   {formatFCFA(combo.fixedPrice)}
                 </span>
               </div>
 
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 {combo.description}
               </p>
 
               <div className="flex items-center gap-2 pt-1">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-orange-400" />
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 flex items-center gap-1 border border-slate-200">
+                  <Clock className="w-3 h-3 text-orange-600" />
                   <span>
                     {combo.period === 'LUNCH'
                       ? 'Midi (12h-16h)'
@@ -267,8 +267,8 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                     combo.isActive
-                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                      : 'bg-slate-800 text-slate-500'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                      : 'bg-slate-100 text-slate-500'
                   }`}
                 >
                   {combo.isActive ? 'Active' : 'Désactivée'}
@@ -276,14 +276,14 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => handleToggleActive(combo.id)}
                 className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
                   combo.isActive
-                    ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    : 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40'
+                    ? 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-300'
                 }`}
               >
                 {combo.isActive ? 'Désactiver' : 'Activer'}
@@ -292,7 +292,7 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => handleDelete(combo.id)}
-                className="text-xs text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-950/40 transition-colors"
+                className="text-xs text-rose-600 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
                 title="Supprimer"
               >
                 <Trash2 className="w-4 h-4" />

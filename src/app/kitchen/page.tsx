@@ -41,7 +41,7 @@ export default function DashboardKitchenPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* 1. KDS Fixed Header */}
       <KitchenHeader
         restaurantName="Chez Fatou & Frères - Thiès"
@@ -69,15 +69,15 @@ export default function DashboardKitchenPage() {
         />
 
         {/* View Tabs Selector */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-2xl border border-slate-800">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
               type="button"
               onClick={() => setActiveTab('LIVE')}
               className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 activeTab === 'LIVE'
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -89,8 +89,8 @@ export default function DashboardKitchenPage() {
               onClick={() => setActiveTab('HISTORY')}
               className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 activeTab === 'HISTORY'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <History className="w-4 h-4" />
@@ -98,7 +98,7 @@ export default function DashboardKitchenPage() {
             </button>
           </div>
 
-          <div className="text-xs text-slate-400 font-mono">
+          <div className="text-xs text-slate-500 font-mono font-medium">
             {pendingCount + preparingCount} en cuisine • {servedCount} servie(s)
           </div>
         </div>

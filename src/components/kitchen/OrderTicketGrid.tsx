@@ -63,14 +63,14 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
   if (filteredOrders.length === 0) {
     return (
       <div className="py-20 text-center space-y-4 max-w-md mx-auto">
-        <div className="w-20 h-20 rounded-full bg-slate-900 border-2 border-slate-800 text-emerald-400 flex items-center justify-center mx-auto shadow-xl">
+        <div className="w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
           <CheckCircle className="w-10 h-10" />
         </div>
         <div className="space-y-1">
-          <h3 className="text-xl font-black text-white">
+          <h3 className="text-xl font-black text-slate-900">
             Tout est prêt en cuisine ! 👨‍🍳
           </h3>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             {activeFilter === 'ALL'
               ? 'Aucune commande en attente. Les nouveaux tickets apparaîtront instantanément ici.'
               : `Aucune commande correspondant au filtre sélectionné.`}

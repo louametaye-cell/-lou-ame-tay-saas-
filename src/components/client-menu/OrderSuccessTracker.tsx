@@ -48,7 +48,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   const formattedTable = order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
         {/* Top Celebration Banner */}
         <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white text-center relative overflow-hidden">

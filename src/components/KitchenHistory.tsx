@@ -50,86 +50,102 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   };
 
   return (
-    <div className="bg-[#0f1422] border-2 border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+    <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-slate-800">
+      <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 rounded-2xl">
+          <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-2xl shadow-2xs">
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <span>📜 HISTORIQUE - COMMANDES SERVIES (AJOURD&apos;HUI)</span>
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-500/20">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+              <span>📜 HISTORIQUE - COMMANDES SERVIES (AJOURD'HUI)</span>
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
                 {historyOrders.length}
               </span>
             </h3>
-            <p className="text-xs text-slate-400">
-              Journal des plats envoyés en salle aujourd&apos;hui
+            <p className="text-xs text-slate-500">
+              Journal des plats envoyés en salle aujourd'hui
             </p>
           </div>
         </div>
 
-        <button
-          onClick={fetchHistory}
-          className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition-all text-xs flex items-center gap-1.5"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>Actualiser</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs flex items-center gap-1.5 border border-slate-200 shadow-2xs transition-all"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Exporter CSV</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Total Revenue Banner */}
+      <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-emerald-600" />
+          <span className="text-xs font-bold text-emerald-900">Total Encaissé Aujourd'hui :</span>
+        </div>
+        <span className="text-base font-black text-emerald-800 font-mono">
+          {formatFCFA(totalRevenue)}
+        </span>
       </div>
 
       {/* Orders List */}
-      {historyOrders.length === 0 ? (
-        <div className="py-10 text-center text-slate-400 text-xs bg-slate-950/50 rounded-2xl border border-slate-800/80">
-          Aucune commande servie pour le moment aujourd&apos;hui.
+      {isLoading ? (
+        <div className="py-12 text-center text-xs text-slate-400">
+          Chargement de l'historique...
+        </div>
+      ) : historyOrders.length === 0 ? (
+        <div className="py-12 text-center text-xs text-slate-400">
+          Aucune commande servie pour l'instant aujourd'hui.
         </div>
       ) : (
-        <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+        <div className="space-y-2.5 max-h-[450px] overflow-y-auto pr-1">
           {historyOrders.map((order) => {
-            const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
             const servedTimeFormatted = order.servedAt
               ? new Date(order.servedAt).toLocaleTimeString('fr-FR', {
                   hour: '2-digit',
                   minute: '2-digit',
                 })
-              : new Date(order.createdAt).toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
+              : 'Servi';
+
+            const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
 
             return (
               <div
                 key={order.id}
-                className="bg-slate-950/90 border border-slate-800/90 hover:border-slate-700 p-3.5 rounded-2xl flex items-center justify-between flex-wrap gap-3 transition-all"
+                className="p-3.5 bg-slate-50 border border-slate-200 hover:bg-slate-100/70 rounded-2xl flex items-center justify-between gap-3 flex-wrap transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center font-black text-sm shrink-0">
                     ✓
                   </div>
                   <div>
-                    <span className="text-sm font-black text-white">
+                    <span className="text-sm font-black text-slate-900">
                       Table {order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber}
                     </span>
-                    <span className="text-xs text-slate-400 ml-2">
+                    <span className="text-xs text-slate-500 ml-2">
                       ⏱ {servedTimeFormatted} • {itemCount} item{itemCount > 1 ? 's' : ''} ({order.items.map((i) => `${i.quantity}x ${i.name || i.menuItem?.name || 'Plat'}`).join(', ')})
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 ml-auto">
-                  <span className="text-sm font-black text-amber-400">
+                  <span className="text-sm font-black text-amber-700 font-mono">
                     {formatFCFA(order.total)}
                   </span>
 
                   {onRestoreOrder && (
                     <button
+                      type="button"
                       onClick={() => onRestoreOrder(order.id)}
-                      className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-orange-400 border border-slate-800 rounded-lg text-xs flex items-center gap-1 active:scale-95 transition-all"
+                      className="p-1.5 bg-white hover:bg-slate-200 text-slate-500 hover:text-orange-600 border border-slate-200 rounded-lg text-xs flex items-center gap-1 active:scale-95 transition-all shadow-2xs"
                       title="Rétablir en cuisine"
                     >
-                      <RotateCcw className="w-3 h-3" />
-                      <span className="hidden sm:inline">Rétablir</span>
+                      <RotateCcw className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
@@ -138,23 +154,6 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
           })}
         </div>
       )}
-
-      {/* Footer: Summary & Export CSV Button */}
-      <div className="pt-4 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs sm:text-sm font-black text-white">
-            📊 TOTAL AUJOURD&apos;HUI : {historyOrders.length} commande{historyOrders.length > 1 ? 's' : ''} - {formatFCFA(totalRevenue)}
-          </span>
-        </div>
-
-        <button
-          onClick={handleExportCSV}
-          className="min-h-[44px] px-4 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md ml-auto"
-        >
-          <Download className="w-4 h-4 text-emerald-400" />
-          <span>📥 Exporter en CSV</span>
-        </button>
-      </div>
     </div>
   );
 };

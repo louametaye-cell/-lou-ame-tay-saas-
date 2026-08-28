@@ -43,23 +43,23 @@ export default function SuperAdminTicketsPage() {
 
   return (
     <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-slate-900 pb-20">
         {/* Header */}
-        <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
+        <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Link
                 href="/super-admin"
-                className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-colors"
+                className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
               <div>
-                <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
                   <LifeBuoy className="w-5 h-5 text-orange-400" />
                   <span>Helpdesk & Support Client (1000 Restaurants)</span>
                 </h1>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Traitement des demandes techniques, facturation, réimpressions QR et relais WhatsApp
                 </p>
               </div>
@@ -78,7 +78,7 @@ export default function SuperAdminTicketsPage() {
 
               <button
                 onClick={fetchTickets}
-                className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-all"
+                className="p-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-all"
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
@@ -90,7 +90,7 @@ export default function SuperAdminTicketsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tickets List */}
             <div className="lg:col-span-2 space-y-3">
-              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
                 Tickets d&apos;Assistance ({tickets.length})
               </h2>
 
@@ -101,12 +101,12 @@ export default function SuperAdminTicketsPage() {
                     onClick={() => setSelectedTicket(t)}
                     className={`p-5 rounded-3xl border transition-all cursor-pointer ${
                       selectedTicket?.id === t.id
-                        ? 'bg-slate-900 border-orange-500 shadow-xl ring-2 ring-orange-500/20'
-                        : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                        ? 'bg-white border-orange-500 shadow-xl ring-2 ring-orange-500/20'
+                        : 'bg-white/60 border-slate-200 hover:border-slate-200'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="font-bold text-white text-sm">{t.restaurantName}</span>
+                      <span className="font-bold text-slate-900 text-sm">{t.restaurantName}</span>
                       <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
                         t.priority === 'CRITICAL'
                           ? 'bg-red-500/20 text-red-400 border-red-500/30'
@@ -118,10 +118,10 @@ export default function SuperAdminTicketsPage() {
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-sm text-slate-200 mb-1">{t.subject}</h3>
-                    <p className="text-xs text-slate-400 line-clamp-2">{t.message}</p>
+                    <h3 className="font-bold text-sm text-slate-800 mb-1">{t.subject}</h3>
+                    <p className="text-xs text-slate-500 line-clamp-2">{t.message}</p>
 
-                    <div className="flex items-center justify-between mt-3 text-[11px] text-slate-500 pt-2 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between mt-3 text-[11px] text-slate-500 pt-2 border-t border-slate-200/80">
                       <span>Catégorie : {t.category}</span>
                       <span>{new Date(t.createdAt).toLocaleDateString('fr-FR')}</span>
                     </div>
@@ -131,18 +131,18 @@ export default function SuperAdminTicketsPage() {
             </div>
 
             {/* Selected Ticket Details */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 h-fit sticky top-24 space-y-4 shadow-xl">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 h-fit sticky top-24 space-y-4 shadow-xl">
               {selectedTicket ? (
                 <>
-                  <div className="border-b border-slate-800 pb-3">
+                  <div className="border-b border-slate-200 pb-3">
                     <span className="text-xs font-black text-orange-400 uppercase">
                       Ticket #{selectedTicket.id}
                     </span>
-                    <h3 className="text-base font-black text-white">{selectedTicket.restaurantName}</h3>
-                    <p className="text-xs text-slate-400 mt-1">{selectedTicket.subject}</p>
+                    <h3 className="text-base font-black text-slate-900">{selectedTicket.restaurantName}</h3>
+                    <p className="text-xs text-slate-500 mt-1">{selectedTicket.subject}</p>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-700 leading-relaxed">
                     {selectedTicket.message}
                   </div>
 

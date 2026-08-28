@@ -35,7 +35,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#FF6B00',
+  themeColor: '#F59E0B',
 };
 
 export default function RootLayout({
@@ -44,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="scroll-smooth">
-      <body className="antialiased selection:bg-orange-500 selection:text-white min-h-screen bg-[#faf7f2]">
+    <html lang="fr" className="light scroll-smooth">
+      <body className="antialiased selection:bg-amber-500 selection:text-white min-h-screen bg-[#F8FAFC] text-slate-900">
         {children}
         <Toaster position="top-center" richColors closeButton />
       </body>

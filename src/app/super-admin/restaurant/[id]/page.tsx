@@ -166,7 +166,7 @@ export default function SuperAdminRestaurantDetailPage() {
   if (isLoading) {
     return (
       <SuperAdminAuthGuard>
-        <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
         </div>
       </SuperAdminAuthGuard>
@@ -176,7 +176,7 @@ export default function SuperAdminRestaurantDetailPage() {
   if (!restaurant) {
     return (
       <SuperAdminAuthGuard>
-        <div className="min-h-screen bg-slate-900 text-white p-8 text-center">
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 p-8 text-center">
           <h2 className="text-xl font-bold">Restaurant introuvable</h2>
           <Link
             href="/super-admin"
@@ -246,20 +246,20 @@ export default function SuperAdminRestaurantDetailPage() {
 
   return (
     <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-slate-900 text-slate-100 font-sans pb-16">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-16">
         {/* Top Breadcrumb Header */}
-        <header className="bg-slate-950/90 border-b border-slate-800 px-4 sm:px-8 py-4 sticky top-0 z-30 backdrop-blur-md print:hidden">
+        <header className="bg-white border-b border-slate-200 shadow-xs px-4 sm:px-8 py-4 sticky top-0 z-30 backdrop-blur-md print:hidden">
           <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <Link
                 href="/super-admin"
-                className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl transition-all"
+                className="p-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl transition-all"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-lg sm:text-xl font-black text-white truncate">
+                  <h1 className="text-lg sm:text-xl font-black text-slate-900 truncate">
                     {restaurant.name}
                   </h1>
                   <span
@@ -272,7 +272,7 @@ export default function SuperAdminRestaurantDetailPage() {
                     {restaurant.isActive ? '● En Ligne (Ouvert)' : '✕ Fermé / Désactivé'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Identifiant : <span className="font-mono text-[#FF6B00]">/{restaurant.subdomain}</span> • {totalTables} tables
                 </p>
               </div>
@@ -283,7 +283,7 @@ export default function SuperAdminRestaurantDetailPage() {
               {/* Bouton Relance WhatsApp */}
               <button
                 onClick={() => setIsWhatsAppModalOpen(true)}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95"
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Relance WhatsApp J-5</span>
@@ -301,7 +301,7 @@ export default function SuperAdminRestaurantDetailPage() {
               <a
                 href={`/dashboard`}
                 target="_blank"
-                className="flex items-center gap-1.5 bg-[#FF6B00] hover:bg-orange-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all"
+                className="flex items-center gap-1.5 bg-[#FF6B00] hover:bg-orange-700 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all"
               >
                 <Store className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -310,7 +310,7 @@ export default function SuperAdminRestaurantDetailPage() {
               <a
                 href={`/r/${restaurant.subdomain}/table-1`}
                 target="_blank"
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all"
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-700 rounded-xl transition-all"
                 title="Voir le Menu Client"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -334,10 +334,10 @@ export default function SuperAdminRestaurantDetailPage() {
                 <Power className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-white">
+                <h3 className="text-base sm:text-lg font-black text-slate-900">
                   {restaurant.isActive ? 'Restaurant Actif & Ouvert au Public' : 'Restaurant Désactivé & Fermé'}
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5 max-w-lg">
+                <p className="text-xs text-slate-500 mt-0.5 max-w-lg">
                   {restaurant.isActive
                     ? 'Les clients peuvent scanner les QR codes et commander en direct.'
                     : 'La page client affiche le message : "Ce restaurant est actuellement fermé. Revenez plus tard !".'}
@@ -348,7 +348,7 @@ export default function SuperAdminRestaurantDetailPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="px-4 py-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all"
+                className="px-4 py-3.5 bg-white hover:bg-slate-50 border border-slate-200 text-amber-300 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all"
               >
                 <Settings className="w-4 h-4" />
                 <span>Modifier Abonnement</span>
@@ -359,8 +359,8 @@ export default function SuperAdminRestaurantDetailPage() {
                 disabled={isUpdating}
                 className={`px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-xl transition-all active:scale-95 flex items-center gap-2 ${
                   restaurant.isActive
-                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/30'
-                    : 'bg-[#00A86B] hover:bg-[#00915c] text-white shadow-emerald-600/30'
+                    ? 'bg-red-600 hover:bg-red-700 text-slate-900 shadow-red-600/30'
+                    : 'bg-[#00A86B] hover:bg-[#00915c] text-slate-900 shadow-emerald-600/30'
                 }`}
               >
                 <Power className="w-4 h-4 stroke-[3]" />
@@ -370,13 +370,13 @@ export default function SuperAdminRestaurantDetailPage() {
           </div>
 
           {/* Navigation Tabs (4 TABS) */}
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3 print:hidden overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-3 print:hidden overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab('overview')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'overview'
-                  ? 'bg-[#FF6B00] text-white shadow-md'
-                  : 'bg-slate-950 text-slate-400 hover:text-white'
+                  ? 'bg-[#FF6B00] text-slate-900 shadow-md'
+                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
               }`}
             >
               <Store className="w-4 h-4" />
@@ -387,8 +387,8 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('performance')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'performance'
-                  ? 'bg-[#00A86B] text-white shadow-md'
-                  : 'bg-slate-950 text-slate-400 hover:text-white'
+                  ? 'bg-[#00A86B] text-slate-900 shadow-md'
+                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -399,8 +399,8 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('tables')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'tables'
-                  ? 'bg-[#FF6B00] text-white shadow-md'
-                  : 'bg-slate-950 text-slate-400 hover:text-white'
+                  ? 'bg-[#FF6B00] text-slate-900 shadow-md'
+                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
               }`}
             >
               <QrCode className="w-4 h-4" />
@@ -411,8 +411,8 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('stats')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'stats'
-                  ? 'bg-[#FF6B00] text-white shadow-md'
-                  : 'bg-slate-950 text-slate-400 hover:text-white'
+                  ? 'bg-[#FF6B00] text-slate-900 shadow-md'
+                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
               }`}
             >
               <Activity className="w-4 h-4" />
@@ -424,52 +424,52 @@ export default function SuperAdminRestaurantDetailPage() {
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 space-y-6">
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-slate-800">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-200">
                     <Store className="w-4 h-4 text-[#FF6B00]" />
                     <span>Fiche d&apos;Identité</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200">
                       <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
                         Gérant / Propriétaire
                       </span>
-                      <p className="font-bold text-slate-200 text-sm">
+                      <p className="font-bold text-slate-800 text-sm">
                         {restaurant.ownerName || 'Non renseigné'}
                       </p>
                     </div>
 
-                    <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200">
                       <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
                         Téléphone WhatsApp
                       </span>
-                      <p className="font-bold text-slate-200 text-sm flex items-center gap-1.5">
+                      <p className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 text-[#FF6B00]" />
                         <span>{restaurant.phone || 'Non renseigné'}</span>
                       </p>
                     </div>
 
-                    <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 sm:col-span-2">
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200 sm:col-span-2">
                       <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
                         Adresse physique
                       </span>
-                      <p className="font-medium text-slate-200 flex items-center gap-1.5">
+                      <p className="font-medium text-slate-800 flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-[#FF6B00] shrink-0" />
                         <span>{restaurant.address || 'Thiès / Sénégal'}</span>
                       </p>
                     </div>
 
-                    <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200">
                       <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
                         Tables Déployées
                       </span>
-                      <p className="font-bold text-slate-200">
+                      <p className="font-bold text-slate-800">
                         {totalTables} tables actives
                       </p>
                     </div>
 
-                    <div className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200">
                       <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
                         Lien Menu Public
                       </span>
@@ -487,11 +487,11 @@ export default function SuperAdminRestaurantDetailPage() {
               </div>
 
               <div className="lg:col-span-5 space-y-6">
-                <div className="bg-slate-950 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-5">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="bg-slate-50 rounded-3xl p-6 border border-slate-200 shadow-2xl space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-[#FF6B00]" />
-                      <h3 className="text-base font-black text-white">
+                      <h3 className="text-base font-black text-slate-900">
                         Abonnement SaaS Agence
                       </h3>
                     </div>
@@ -500,21 +500,21 @@ export default function SuperAdminRestaurantDetailPage() {
                     </span>
                   </div>
 
-                  <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
+                  <div className="bg-white/90 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Statut d&apos;abonnement</span>
+                      <span className="text-slate-500">Statut d&apos;abonnement</span>
                       <span className={`font-black uppercase ${isSubActive ? 'text-[#00A86B]' : 'text-red-400'}`}>
                         {isSubActive ? '● ACTIF' : '✕ EXPIRÉ'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Tarif mensuel</span>
-                      <span className="font-bold text-white">{formatFCFA(sub?.price || 25000)} / mois</span>
+                      <span className="text-slate-500">Tarif mensuel</span>
+                      <span className="font-bold text-slate-900">{formatFCFA(sub?.price || 25000)} / mois</span>
                     </div>
 
-                    <div className="flex justify-between items-center pt-1 border-t border-slate-800">
-                      <span className="font-bold text-slate-300">Expiration</span>
+                    <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+                      <span className="font-bold text-slate-700">Expiration</span>
                       <span className="font-black text-[#FF6B00]">{endDateFormatted}</span>
                     </div>
                   </div>
@@ -523,7 +523,7 @@ export default function SuperAdminRestaurantDetailPage() {
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       onClick={() => setIsEditModalOpen(true)}
-                      className="p-3 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                      className="p-3 bg-white hover:bg-slate-50 text-amber-300 border border-slate-200 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                     >
                       <Settings className="w-4 h-4" />
                       <span>Modifier Tarif / Durée</span>
@@ -531,7 +531,7 @@ export default function SuperAdminRestaurantDetailPage() {
 
                     <button
                       onClick={() => setIsWhatsAppModalOpen(true)}
-                      className="p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95"
+                      className="p-3 bg-emerald-600 hover:bg-emerald-500 text-slate-900 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>Relance WhatsApp</span>
@@ -547,17 +547,17 @@ export default function SuperAdminRestaurantDetailPage() {
             <div className="space-y-6">
               {/* 5 KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-lg">
-                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-lg">
+                  <div className="flex items-center justify-between text-slate-500 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider">Total Scans</span>
                     <QrCode className="w-4 h-4 text-[#FF6B00]" />
                   </div>
-                  <p className="text-2xl font-black text-white">{totalScansVal}</p>
+                  <p className="text-2xl font-black text-slate-900">{totalScansVal}</p>
                   <span className="text-[10px] text-slate-500 mt-1 block">depuis la création</span>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-lg">
-                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-lg">
+                  <div className="flex items-center justify-between text-slate-500 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider">Total Commandes</span>
                     <ShoppingBag className="w-4 h-4 text-[#00A86B]" />
                   </div>
@@ -565,8 +565,8 @@ export default function SuperAdminRestaurantDetailPage() {
                   <span className="text-[10px] text-slate-500 mt-1 block">commandes traitées</span>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-lg">
-                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-lg">
+                  <div className="flex items-center justify-between text-slate-500 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider">Taux Conversion</span>
                     <TrendingUp className="w-4 h-4 text-emerald-400" />
                   </div>
@@ -574,8 +574,8 @@ export default function SuperAdminRestaurantDetailPage() {
                   <span className="text-[10px] text-slate-500 mt-1 block">commandes / scans</span>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-lg">
-                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-lg">
+                  <div className="flex items-center justify-between text-slate-500 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider">CA Total Généré</span>
                     <DollarSign className="w-4 h-4 text-amber-400" />
                   </div>
@@ -583,20 +583,20 @@ export default function SuperAdminRestaurantDetailPage() {
                   <span className="text-[10px] text-slate-500 mt-1 block">volume d&apos;affaires</span>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-lg col-span-2 sm:col-span-1">
-                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-lg col-span-2 sm:col-span-1">
+                  <div className="flex items-center justify-between text-slate-500 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider">Panier Moyen</span>
                     <Flame className="w-4 h-4 text-[#FF6B00]" />
                   </div>
-                  <p className="text-xl font-black text-white">{formatFCFA(avgBasketVal)}</p>
+                  <p className="text-xl font-black text-slate-900">{formatFCFA(avgBasketVal)}</p>
                   <span className="text-[10px] text-slate-500 mt-1 block">par commande client</span>
                 </div>
               </div>
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                  <h4 className="text-sm font-black text-white flex items-center gap-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+                  <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
                     <QrCode className="w-4 h-4 text-[#FF6B00]" />
                     <span>Évolution des Scans QR (30 Derniers Jours)</span>
                   </h4>
@@ -613,8 +613,8 @@ export default function SuperAdminRestaurantDetailPage() {
                   </div>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                  <h4 className="text-sm font-black text-white flex items-center gap-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+                  <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
                     <ShoppingBag className="w-4 h-4 text-[#00A86B]" />
                     <span>Évolution des Commandes & CA (30 Derniers Jours)</span>
                   </h4>
@@ -639,19 +639,19 @@ export default function SuperAdminRestaurantDetailPage() {
               </div>
 
               {/* 20 Dernières commandes + Export CSV */}
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-800">
+              <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-200">
                   <div>
-                    <h4 className="text-base font-black text-white flex items-center gap-2">
+                    <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
                       <ShoppingBag className="w-5 h-5 text-[#00A86B]" />
                       <span>Historique des 20 Dernières Commandes</span>
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5">Données synchronisées en direct avec la cuisine</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Données synchronisées en direct avec la cuisine</p>
                   </div>
 
                   <button
                     onClick={handleExportCSV}
-                    className="flex items-center gap-2 bg-[#00A86B] hover:bg-[#00915c] text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-lg transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-[#00A86B] hover:bg-[#00915c] text-slate-900 text-xs font-black px-4 py-2.5 rounded-xl shadow-lg transition-all active:scale-95"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     <span>Exporter les Commandes en CSV</span>
@@ -661,7 +661,7 @@ export default function SuperAdminRestaurantDetailPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400">
+                      <tr className="border-b border-slate-200 text-slate-500">
                         <th className="pb-3 font-bold">Réf / Date</th>
                         <th className="pb-3 font-bold">Table</th>
                         <th className="pb-3 font-bold">Articles</th>
@@ -669,11 +669,11 @@ export default function SuperAdminRestaurantDetailPage() {
                         <th className="pb-3 font-bold text-right">Statut</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-slate-100/60">
                       {orders.map((ord) => (
-                        <tr key={ord.id} className="hover:bg-slate-900/60 transition-colors">
-                          <td className="py-3 font-mono text-slate-300">
-                            <span className="font-bold text-white block">{ord.id}</span>
+                        <tr key={ord.id} className="hover:bg-white/60 transition-colors">
+                          <td className="py-3 font-mono text-slate-700">
+                            <span className="font-bold text-slate-900 block">{ord.id}</span>
                             <span className="text-[10px] text-slate-500">
                               {new Date(ord.createdAt).toLocaleString('fr-FR', {
                                 day: '2-digit',
@@ -688,7 +688,7 @@ export default function SuperAdminRestaurantDetailPage() {
                               Table {ord.tableNumber < 10 ? `0${ord.tableNumber}` : ord.tableNumber}
                             </span>
                           </td>
-                          <td className="py-3 text-slate-300 max-w-[200px] truncate">
+                          <td className="py-3 text-slate-700 max-w-[200px] truncate">
                             {ord.items.map((i) => `${i.quantity}x ${i.name || i.menuItem?.name || 'Plat'}`).join(', ')}
                           </td>
                           <td className="py-3 font-black text-amber-400">
@@ -717,13 +717,13 @@ export default function SuperAdminRestaurantDetailPage() {
           {/* TAB 3: TABLES & QR CODES (AVEC EXPORT CSV IMPRIMEUR & PLANCHES A5) */}
           {activeTab === 'tables' && (
             <div className="space-y-6">
-              <div className="bg-slate-950 p-5 sm:p-6 rounded-3xl border border-slate-800 flex items-center justify-between flex-wrap gap-4 print:hidden">
+              <div className="bg-slate-50 p-5 sm:p-6 rounded-3xl border border-slate-200 flex items-center justify-between flex-wrap gap-4 print:hidden">
                 <div>
-                  <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                     <QrCode className="w-5 h-5 text-[#FF6B00]" />
                     <span>Planches de QR Codes des Tables (1 à {totalTables})</span>
                   </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Téléchargez le fichier CSV pour publipostage imprimeur ou imprimez les planches A5.
                   </p>
                 </div>
@@ -732,7 +732,7 @@ export default function SuperAdminRestaurantDetailPage() {
                   {/* BOUTON EXPORT CSV QR CODES POUR IMPRIMEUR */}
                   <button
                     onClick={handleExportQRCodesCSV}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95"
                   >
                     <Download className="w-4 h-4" />
                     <span>📥 Exporter la liste CSV des QR Codes (Imprimeur)</span>
@@ -740,7 +740,7 @@ export default function SuperAdminRestaurantDetailPage() {
 
                   <button
                     onClick={handlePrintAllQRs}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-slate-900 text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Imprimer les planches A5</span>
@@ -755,7 +755,7 @@ export default function SuperAdminRestaurantDetailPage() {
                     key={tableNum}
                     className="bg-white text-gray-900 rounded-3xl p-6 border-2 border-orange-200 shadow-xl text-center flex flex-col items-center justify-between page-break-inside-avoid"
                   >
-                    <div className="w-full bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-white py-2.5 px-3 rounded-2xl mb-4">
+                    <div className="w-full bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-slate-900 py-2.5 px-3 rounded-2xl mb-4">
                       <h4 className="font-black text-base">{restaurant.name}</h4>
                       <p className="text-xs text-orange-100 font-medium">Menu Digital • Lou Ame Tay ?</p>
                     </div>
@@ -788,8 +788,8 @@ export default function SuperAdminRestaurantDetailPage() {
 
           {/* TAB 4: RÉPARTITION PAR TABLE */}
           {activeTab === 'stats' && (
-            <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-              <h3 className="text-base font-black text-white flex items-center gap-2">
+            <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-[#FF6B00]" />
                 <span>Volume de Scans par Table Physique</span>
               </h3>
@@ -797,8 +797,8 @@ export default function SuperAdminRestaurantDetailPage() {
                 {Array.from({ length: totalTables }, (_, i) => i + 1).map((num) => {
                   const scansForTable = stats?.scansByTable?.find((t) => t.tableNumber === num)?.scans || (15 + num * 3);
                   return (
-                    <div key={num} className="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 text-center">
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Table {num}</span>
+                    <div key={num} className="bg-white p-3.5 rounded-2xl border border-slate-200 text-center">
+                      <span className="text-[10px] font-bold text-slate-500 block uppercase">Table {num}</span>
                       <span className="text-lg font-black text-[#FF6B00]">{scansForTable}</span>
                       <span className="text-[9px] text-slate-500 block">scans</span>
                     </div>

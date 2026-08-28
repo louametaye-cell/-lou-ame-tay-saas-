@@ -129,23 +129,23 @@ export default function SuperAdminMonitoringPage() {
 
   return (
     <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-orange-500 selection:text-white pb-20">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-slate-900 pb-20">
         {/* Header */}
-        <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
+        <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Link
                 href="/super-admin"
-                className="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-colors"
+                className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
               <div>
-                <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
                   <Activity className="w-5 h-5 text-emerald-400" />
                   <span>Monitoring Haute Charge (Scale 1000 Restaurants)</span>
                 </h1>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Surveillance en direct des clusters, santé des serveurs et détection des pannes
                 </p>
               </div>
@@ -155,7 +155,7 @@ export default function SuperAdminMonitoringPage() {
               <button
                 onClick={handleRunCron}
                 disabled={isCronRunning}
-                className="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all"
+                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all"
                 title="Déclencher manuellement le Cron Job 03h00"
               >
                 <Clock className="w-4 h-4 text-orange-400" />
@@ -164,7 +164,7 @@ export default function SuperAdminMonitoringPage() {
 
               <button
                 onClick={fetchMonitoringData}
-                className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 transition-all"
+                className="p-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-all"
                 title="Actualiser"
               >
                 <RefreshCw className={`w-4 h-4 text-emerald-400 ${isLoading ? 'animate-spin' : ''}`} />
@@ -177,21 +177,21 @@ export default function SuperAdminMonitoringPage() {
           {/* Top KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Restos */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-400">Total Restaurants</span>
+                <span className="text-xs font-bold text-slate-500">Total Restaurants</span>
                 <Store className="w-4 h-4 text-blue-400" />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-white">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stats.totalRestaurants}
               </div>
-              <span className="text-[11px] text-slate-400 mt-1 block">Capacité cluster : 1 000+</span>
+              <span className="text-[11px] text-slate-500 mt-1 block">Capacité cluster : 1 000+</span>
             </div>
 
             {/* Actifs & Santé */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-400">Restaurants Actifs</span>
+                <span className="text-xs font-bold text-slate-500">Restaurants Actifs</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-emerald-400">
@@ -205,12 +205,12 @@ export default function SuperAdminMonitoringPage() {
             </div>
 
             {/* Scans du Jour */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-400">Scans QR Aujourd&apos;hui</span>
+                <span className="text-xs font-bold text-slate-500">Scans QR Aujourd&apos;hui</span>
                 <Zap className="w-4 h-4 text-orange-400" />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-white">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stats.totalScansToday}
               </div>
               <span className="text-[11px] text-orange-400 font-bold mt-1 block">
@@ -219,12 +219,12 @@ export default function SuperAdminMonitoringPage() {
             </div>
 
             {/* MRR Global */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-400">Revenus Mensuels (MRR)</span>
+                <span className="text-xs font-bold text-slate-500">Revenus Mensuels (MRR)</span>
                 <DollarSign className="w-4 h-4 text-emerald-400" />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-white">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
                 {formatFCFA(stats.monthlyRevenue)}
               </div>
               <span className="text-[11px] text-emerald-400 font-bold mt-1 block">
@@ -234,20 +234,20 @@ export default function SuperAdminMonitoringPage() {
           </div>
 
           {/* Monitoring Table */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+          <div className="bg-white border border-slate-200 shadow-xs rounded-3xl overflow-hidden shadow-xl">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Server className="w-5 h-5 text-emerald-400" />
-                <h2 className="text-base font-bold text-white">
+                <h2 className="text-base font-bold text-slate-900">
                   Santé des Établissements & Trafic en Direct
                 </h2>
               </div>
-              <span className="text-xs text-slate-400">Tri par dernière activité (lastSeenAt)</span>
+              <span className="text-xs text-slate-500">Tri par dernière activité (lastSeenAt)</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-950/90 border-b border-slate-800 text-slate-400 font-bold uppercase text-[11px]">
+                <thead className="bg-white border-b border-slate-200 shadow-xs text-slate-500 font-bold uppercase text-[11px]">
                   <tr>
                     <th className="py-3.5 px-4 sm:px-6">Restaurant</th>
                     <th className="py-3.5 px-4">Statut</th>
@@ -258,16 +258,16 @@ export default function SuperAdminMonitoringPage() {
                     <th className="py-3.5 px-4 sm:px-6 text-right">Diagnostic</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-200">
+                <tbody className="divide-y divide-slate-100 text-slate-800">
                   {tenants.map((t) => {
                     const isSuspended = t.subscriptionStatus === 'SUSPENDED';
                     const isPastDue = t.subscriptionStatus === 'PAST_DUE';
                     const isActive = t.subscriptionStatus === 'ACTIVE';
 
                     return (
-                      <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
+                      <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                         {/* Business Name */}
-                        <td className="py-3.5 px-4 sm:px-6 font-bold text-white">
+                        <td className="py-3.5 px-4 sm:px-6 font-bold text-slate-900">
                           <div className="flex items-center gap-2.5">
                             <span
                               className={`w-2.5 h-2.5 rounded-full shrink-0 ${
@@ -280,7 +280,7 @@ export default function SuperAdminMonitoringPage() {
                             />
                             <div>
                               <span>{t.businessName}</span>
-                              <span className="block text-[11px] text-slate-400 font-normal">
+                              <span className="block text-[11px] text-slate-500 font-normal">
                                 /{t.subdomain}
                               </span>
                             </div>
@@ -308,7 +308,7 @@ export default function SuperAdminMonitoringPage() {
                         </td>
 
                         {/* Last Seen */}
-                        <td className="py-3.5 px-4 text-xs text-slate-300">
+                        <td className="py-3.5 px-4 text-xs text-slate-700">
                           {formatRelativeTime(t.lastSeenAt)}
                         </td>
 
@@ -320,7 +320,7 @@ export default function SuperAdminMonitoringPage() {
                         </td>
 
                         {/* Storage */}
-                        <td className="py-3.5 px-4 text-xs text-slate-400">
+                        <td className="py-3.5 px-4 text-xs text-slate-500">
                           {t.storageUsedMb || 10} MB
                         </td>
 
@@ -328,7 +328,7 @@ export default function SuperAdminMonitoringPage() {
                         <td className="py-3.5 px-4 sm:px-6 text-right">
                           <button
                             onClick={() => handleTestConnection(t)}
-                            className="bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 active:scale-95"
+                            className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 hover:text-slate-900 px-3 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 active:scale-95"
                           >
                             <Play className="w-3 h-3 text-orange-400" />
                             <span>Tester Connexion</span>
@@ -346,8 +346,8 @@ export default function SuperAdminMonitoringPage() {
         {/* Test Connection Dialog */}
         {testingTenant && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
+            <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-emerald-400" />
                 <span>Diagnostic : {testingTenant.businessName}</span>
               </h3>
@@ -355,7 +355,7 @@ export default function SuperAdminMonitoringPage() {
               {isTesting ? (
                 <div className="py-8 text-center space-y-2">
                   <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-xs text-slate-400">Test de ping & permissions en cours...</p>
+                  <p className="text-xs text-slate-500">Test de ping & permissions en cours...</p>
                 </div>
               ) : (
                 testResult && (
@@ -369,13 +369,13 @@ export default function SuperAdminMonitoringPage() {
                     >
                       <div className="font-bold flex items-center justify-between mb-1">
                         <span>Statut : {testResult.allowed ? '200 OK' : '403 FORBIDDEN'}</span>
-                        <span className="text-slate-400 font-normal">Latence : {testResult.latencyMs} ms</span>
+                        <span className="text-slate-500 font-normal">Latence : {testResult.latencyMs} ms</span>
                       </div>
-                      <p className="text-[11px] text-slate-200">{testResult.message}</p>
+                      <p className="text-[11px] text-slate-800">{testResult.message}</p>
                     </div>
 
-                    <div className="text-xs text-slate-400 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                      <span className="block font-bold text-white mb-1">Détails Tenant :</span>
+                    <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                      <span className="block font-bold text-slate-900 mb-1">Détails Tenant :</span>
                       <span>Sous-domaine : {testingTenant.subdomain}</span><br />
                       <span>Pack Actuel : {testingTenant.plan?.name}</span><br />
                       <span>Statut Abonnement : {testingTenant.subscriptionStatus}</span>
@@ -387,7 +387,7 @@ export default function SuperAdminMonitoringPage() {
               <div className="pt-2 flex justify-end">
                 <button
                   onClick={() => setTestingTenant(null)}
-                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-xl text-xs"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs"
                 >
                   Fermer
                 </button>
