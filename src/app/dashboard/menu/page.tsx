@@ -237,13 +237,23 @@ export default function DashboardMenuManagementPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nouveau Plat</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/display/${restaurant.subdomain || 'chezfatou'}`}
+              target="_blank"
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
+            >
+              <span>🖥️ Écran Menu TV</span>
+            </Link>
+
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nouveau Plat</span>
+            </button>
+          </div>
         </div>
       </header>
 

@@ -356,6 +356,16 @@ export default function OperationalDashboardPage() {
               )}
             </div>
 
+            {/* TV Display Public Menu Quick View */}
+            <Link
+              href={`/display/${restaurantSubdomain}`}
+              target="_blank"
+              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Diffuser sur écran TV / Vidéoprojecteur"
+            >
+              <span>🖥️ Affichage TV</span>
+            </Link>
+
             {/* Cashier Counter Quick View */}
             <Link
               href="/cashier"
