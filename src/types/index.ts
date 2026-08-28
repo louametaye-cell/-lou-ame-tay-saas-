@@ -179,11 +179,24 @@ export interface RestaurantType {
   createdAt?: string;
 }
 
+export interface CartItemExtra {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface CartItemOption {
+  side?: string;
+  spiceLevel?: string;
+  extras?: CartItemExtra[];
+}
+
 export interface CartItem {
   id: string;
   menuItem: MenuItemType;
   quantity: number;
   customNotes?: string;
+  options?: CartItemOption;
 }
 
 export type OrderStatus = 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED';

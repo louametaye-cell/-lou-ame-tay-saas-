@@ -17,8 +17,13 @@ export default async function FriendlyTableMenuPage({ params }: PageProps) {
   let restaurant: RestaurantType = orderStorage.getRestaurantById(params.subdomain) || SAMPLE_RESTAURANT;
 
   try {
-    const dbRestaurant = await (prisma as any).restaurant?.findUnique({
-      where: { subdomain: params.subdomain },
+    const dbRestaurant = await (prisma as any).restaurant?.findFirst({
+      where: {
+        OR: [
+          { subdomain: params.subdomain },
+          { id: params.subdomain }
+        ]
+      },
       include: {
         categories: {
           orderBy: { displayOrder: 'asc' },
