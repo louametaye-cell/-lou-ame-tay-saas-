@@ -9,6 +9,7 @@ import { FloatingCartBar } from './FloatingCartBar';
 import { CartCheckoutDrawer } from './CartCheckoutDrawer';
 import { OrderSuccessTracker } from './OrderSuccessTracker';
 import { DailySpecialsSection } from './DailySpecialsSection';
+import { WeeklyMenuCustomerBanner } from './WeeklyMenuCustomerBanner';
 import { SplitBillDrawer } from './SplitBillDrawer';
 import { UpsellDrawer } from './UpsellDrawer';
 import { TableSessionModal } from './TableSessionModal';
@@ -388,9 +389,18 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         </div>
       </div>
 
-      {/* 2. Daily Specials Carousel Section « Lou Ame Tay ? » */}
+      {/* 2. Daily Specials Carousel Section « Lou Ame Tay ? » & Weekly Multi-Dish Schedule */}
       {!searchQuery && (
         <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-4 space-y-4">
+          {/* Emploi du Temps Hebdomadaire Multi-Plats (Lundi au Dimanche - Midi & Soir) */}
+          <WeeklyMenuCustomerBanner
+            onQuickAdd={handleQuickAdd}
+            onOpenDetails={handleOpenDetails}
+            lang={currentLang}
+            currency={currentCurrency}
+            exchangeRates={exchangeRates}
+          />
+
           <DailySpecialsSection
             items={allMenuItems}
             onQuickAdd={handleQuickAdd}

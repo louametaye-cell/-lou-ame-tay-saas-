@@ -16,18 +16,20 @@ import {
   Filter,
   Flame,
   ShieldCheck,
-  Store
+  Store,
+  Calendar
 } from 'lucide-react';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType, MenuItemType, LEGAL_14_ALLERGENS } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { LiveStockManager } from '@/components/dashboard/LiveStockManager';
 import { ComboBuilder } from '@/components/dashboard/ComboBuilder';
+import { WeeklyMenuScheduler } from '@/components/dashboard/WeeklyMenuScheduler';
 import { toast } from 'sonner';
 
 export default function DashboardMenuManagementPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType>(SAMPLE_RESTAURANT);
-  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG' | 'COMBOS'>('LIVE_STOCK');
+  const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG' | 'COMBOS' | 'WEEKLY_SCHEDULE'>('WEEKLY_SCHEDULE');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -276,6 +278,19 @@ export default function DashboardMenuManagementPage() {
             </button>
             <button
               type="button"
+              onClick={() => setViewMode('WEEKLY_SCHEDULE')}
+              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                viewMode === 'WEEKLY_SCHEDULE'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>📅 Emploi du Temps Hebdo (Midi & Soir)</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setViewMode('COMBOS')}
               className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 viewMode === 'COMBOS'
@@ -293,7 +308,12 @@ export default function DashboardMenuManagementPage() {
           </div>
         </div>
 
-        {/* View 0: Combo Builder */}
+        {/* View 0: Weekly Menu Scheduler (Lundi au Dimanche - 2 à 3 plats par jour) */}
+        {viewMode === 'WEEKLY_SCHEDULE' && (
+          <WeeklyMenuScheduler categories={restaurant.categories} />
+        )}
+
+        {/* View 0.5: Combo Builder */}
         {viewMode === 'COMBOS' && (
           <ComboBuilder categories={restaurant.categories} />
         )}

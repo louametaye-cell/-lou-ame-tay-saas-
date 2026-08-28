@@ -152,6 +152,21 @@ export default function OperationalDashboardPage() {
     toast.success(`🥤 « ${drinkName} » marqué comme SERVI à la Table ${tableNumber} !`);
   };
 
+  const getAssignedServerForTable = (tableNum: number): string => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('louametay_table_server_shift');
+      if (saved) {
+        try {
+          const map = JSON.parse(saved);
+          if (map[tableNum]) return map[tableNum];
+        } catch (e) {}
+      }
+    }
+    if (tableNum <= 4) return 'Modou Faye';
+    if (tableNum <= 8) return 'Fatou Diop';
+    return 'Moussa Sall';
+  };
+
   // Initialize restaurant name & date
   useEffect(() => {
     const storedName = localStorage.getItem('current_restaurant_name');
@@ -542,8 +557,11 @@ export default function OperationalDashboardPage() {
                       >
                         {/* Table */}
                         <td className="py-3.5 px-4 sm:px-6 font-black text-slate-900">
-                          <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl font-bold border border-amber-200">
+                          <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl font-bold border border-amber-200 block w-fit">
                             Table {o.tableNumber}
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-bold block mt-1">
+                            👤 {getAssignedServerForTable(o.tableNumber)}
                           </span>
                         </td>
 
@@ -762,11 +780,14 @@ export default function OperationalDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-slate-900 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="p-2 bg-amber-100 text-amber-800 rounded-xl font-black text-sm">
                   Table {selectedOrder.tableNumber}
                 </span>
                 <span className="text-xs text-slate-500 font-mono">#{selectedOrder.id.slice(-5).toUpperCase()}</span>
+                <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
+                  👤 {getAssignedServerForTable(selectedOrder.tableNumber)}
+                </span>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
