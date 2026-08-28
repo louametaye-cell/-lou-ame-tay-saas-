@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { MenuItemType, CartItem, CartItemOption, OrderType } from '@/types';
 
-export type PaymentMethod = 'CASH_TPE' | 'WAVE' | 'ORANGE_MONEY';
+export type PaymentMethod = 'CASH_TPE' | 'WAVE' | 'ORANGE_MONEY' | 'CARD';
 
 export interface CartState {
   tableNumber: number;
@@ -11,6 +11,7 @@ export interface CartState {
   customerNote: string;
   customerName: string;
   paymentMethod: PaymentMethod;
+  cashChangeNote: string;
   activeOrder: OrderType | null;
 
   // Actions
@@ -19,6 +20,7 @@ export interface CartState {
   setCustomerNote: (note: string) => void;
   setCustomerName: (name: string) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
+  setCashChangeNote: (note: string) => void;
   
   addItem: (
     item: MenuItemType,
@@ -49,6 +51,7 @@ export const useCartStore = create<CartState>()(
       customerNote: '',
       customerName: '',
       paymentMethod: 'CASH_TPE',
+      cashChangeNote: '',
       activeOrder: null,
 
       setTableNumber: (tableNumber) => set({ tableNumber }),
@@ -56,6 +59,7 @@ export const useCartStore = create<CartState>()(
       setCustomerNote: (customerNote) => set({ customerNote }),
       setCustomerName: (customerName) => set({ customerName }),
       setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
+      setCashChangeNote: (cashChangeNote) => set({ cashChangeNote }),
 
       addItem: (
         item: MenuItemType,

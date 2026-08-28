@@ -1,9 +1,20 @@
 'use client';
 
-import React from 'react';
-import { X, Plus, Minus, Trash2, Send, ShoppingBag, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  X, 
+  Plus, 
+  Minus, 
+  Trash2, 
+  Send, 
+  ShoppingBag, 
+  CreditCard, 
+  Banknote, 
+  Smartphone, 
+  Coins 
+} from 'lucide-react';
 import { CartItem, Language, CurrencyCode, ExchangeRates } from '@/types';
-import { PaymentMethod } from '@/store/useCartStore';
+import { PaymentMethod, useCartStore } from '@/store/useCartStore';
 import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
 
@@ -50,101 +61,118 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
   currency = 'FCFA',
   exchangeRates,
 }) => {
-  if (!isOpen) return null;
-
+  const [cashNote, setCashNote] = useState('Montant exact');
   const t = getUIText(lang);
   const formattedTable = tableNumber < 10 ? `0${tableNumber}` : tableNumber;
+
+  if (!isOpen) return null;
 
   const totalPrice = items.reduce((sum, item) => {
     const extrasSum = (item.options?.extras || []).reduce((es, e) => es + e.price, 0);
     return sum + (item.menuItem.price + extrasSum) * item.quantity;
   }, 0);
 
-  const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const convertedTotalPrice = formatConvertedPrice(totalPrice, currency, lang, exchangeRates);
+  const convertedTotal =
+    currency !== 'FCFA' && exchangeRates
+      ? formatConvertedPrice(totalPrice, currency, exchangeRates)
+      : null;
+
+  const handleSelectCashPreset = (preset: string) => {
+    setCashNote(preset);
+    if (preset !== 'Montant exact') {
+      onCustomerNoteChange(
+        customerNote ? `${customerNote} (Appoint : ${preset})` : `Appoint : ${preset}`
+      );
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] max-h-[94vh] flex flex-col justify-between shadow-2xl border-t-4 border-emerald-600 animate-in slide-in-from-bottom duration-300">
-        {/* Pull Bar */}
-        <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 sm:hidden" />
-
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white w-full max-w-xl max-h-[92vh] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+        {/* Top Header */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-orange-500 to-amber-600 text-white flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-2xl">
-              <ShoppingBag className="w-6 h-6" />
+            <div className="p-2 bg-white/20 rounded-2xl">
+              <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-950">
-                {t.yourOrder}
+              <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2">
+                <span>{lang === 'WO' ? 'Sa Panie' : t.yourOrder}</span>
+                <span className="text-xs bg-white text-orange-600 px-2 py-0.5 rounded-lg font-black font-mono">
+                  Table {formattedTable}
+                </span>
               </h2>
-              <span className="text-xs sm:text-sm font-extrabold text-emerald-700">
-                📍 {t.table} N° {formattedTable} • {totalCount} {totalCount > 1 ? t.articles : t.article}
-              </span>
+              <p className="text-xs text-orange-100">
+                {items.length} {items.length > 1 ? t.articles : t.article}
+              </p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center active:scale-95 transition-transform"
-            aria-label={t.closeWindow}
+            className="min-h-[40px] min-w-[40px] bg-white/20 hover:bg-white/30 text-white rounded-2xl flex items-center justify-center transition-all"
+            aria-label="Fermer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Items List & Customization Details */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5">
           {items.length === 0 ? (
-            <div className="text-center py-12 space-y-3">
-              <span className="text-5xl block">🛒</span>
-              <p className="text-base font-bold text-slate-800">
-                {t.emptyCartTitle}
-              </p>
-              <p className="text-xs text-slate-500">
-                {t.emptyCartSubtitle}
-              </p>
+            <div className="py-12 text-center space-y-3">
+              <div className="text-4xl">🛒</div>
+              <p className="text-base font-bold text-slate-800">{t.emptyCartTitle}</p>
+              <p className="text-xs text-slate-500">{t.emptyCartSubtitle}</p>
             </div>
           ) : (
             <>
-              {/* List of Ordered Dishes */}
+              {/* Items List */}
               <div className="space-y-3">
                 {items.map((item) => {
-                  const extrasSum = (item.options?.extras || []).reduce((es, e) => es + e.price, 0);
-                  const itemUnitPrice = item.menuItem.price + extrasSum;
+                  const extrasPrice = (item.options?.extras || []).reduce(
+                    (sum, e) => sum + e.price,
+                    0
+                  );
+                  const itemUnitPrice = item.menuItem.price + extrasPrice;
+                  const itemTotalPrice = itemUnitPrice * item.quantity;
 
                   return (
                     <div
                       key={item.id}
-                      className="bg-[#FFFDFB] p-3.5 rounded-2xl border border-orange-100 shadow-2xs space-y-2.5"
+                      className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-black text-slate-950 truncate">
-                            {item.menuItem.name}
-                          </h4>
-                          <span className="text-xs font-black text-emerald-700 block mt-0.5">
-                            {formatFCFA(itemUnitPrice * item.quantity)}
-                          </span>
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h4 className="font-black text-sm text-slate-900 leading-snug truncate">
+                              {item.menuItem.name}
+                            </h4>
+                            <span className="text-xs font-black text-slate-900 shrink-0 font-mono">
+                              {formatFCFA(itemTotalPrice)}
+                            </span>
+                          </div>
 
-                          {/* Selected Options Badges */}
-                          {(item.options?.side || item.options?.spiceLevel || (item.options?.extras && item.options.extras.length > 0)) && (
-                            <div className="flex flex-wrap gap-1 mt-1.5">
+                          {/* Options badges */}
+                          {item.options && (
+                            <div className="flex flex-wrap gap-1 mt-1 text-[11px]">
                               {item.options.side && (
-                                <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                                  🍚 {item.options.side}
+                                <span className="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-md">
+                                  🍛 {item.options.side}
                                 </span>
                               )}
                               {item.options.spiceLevel && (
-                                <span className="bg-orange-50 text-orange-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                                <span className="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-md">
                                   🌶️ {item.options.spiceLevel}
                                 </span>
                               )}
-                              {(item.options.extras || []).map((ext, eIdx) => (
-                                <span key={eIdx} className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                                  + {ext.name}
+                              {item.options.extras?.map((ex) => (
+                                <span
+                                  key={ex.id}
+                                  className="bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded-md"
+                                >
+                                  +{ex.name}
                                 </span>
                               ))}
                             </div>
@@ -158,11 +186,11 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
                         </div>
 
                         {/* Quantity Stepper (min 44px) */}
-                        <div className="flex items-center bg-slate-100 rounded-2xl p-1 gap-1 shrink-0">
+                        <div className="flex items-center bg-white rounded-2xl p-1 gap-1 shrink-0 border border-slate-200 shadow-2xs">
                           <button
                             type="button"
                             onClick={() => onRemoveItem(item.id)}
-                            className="min-h-[40px] min-w-[40px] bg-white text-slate-800 rounded-xl flex items-center justify-center font-bold text-lg active:scale-95 transition-transform shadow-2xs hover:bg-rose-50 hover:text-rose-600"
+                            className="min-h-[38px] min-w-[38px] bg-slate-100 text-slate-800 rounded-xl flex items-center justify-center font-bold text-lg active:scale-95 transition-transform hover:bg-rose-50 hover:text-rose-600"
                             aria-label="Diminuer"
                           >
                             <Minus className="w-4 h-4 stroke-[3]" />
@@ -175,7 +203,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
                           <button
                             type="button"
                             onClick={() => onAddItem(item.menuItem)}
-                            className="min-h-[40px] min-w-[40px] bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-lg active:scale-95 transition-transform shadow-2xs hover:bg-emerald-700"
+                            className="min-h-[38px] min-w-[38px] bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-lg active:scale-95 transition-transform hover:bg-emerald-700"
                             aria-label="Ajouter"
                           >
                             <Plus className="w-4 h-4 stroke-[3]" />
@@ -188,113 +216,162 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
               </div>
 
               {/* Payment Method Selector */}
-              <div className="pt-2 border-t border-slate-200 space-y-2">
+              <div className="pt-2 border-t border-slate-200 space-y-2.5">
                 <label className="text-xs font-black text-slate-900 uppercase tracking-wider block">
-                  Mode de règlement souhaité :
+                  {lang === 'WO' ? 'Moyen de paiement :' : 'Moyen de paiement sur place :'}
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onPaymentMethodChange('CASH_TPE')}
-                    className={`min-h-[48px] p-2.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
-                      paymentMethod === 'CASH_TPE'
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-black shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <Banknote className="w-5 h-5 text-emerald-600" />
-                    <span className="text-[11px] leading-tight font-bold">Espèces / TPE</span>
-                  </button>
-
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => onPaymentMethodChange('WAVE')}
-                    className={`min-h-[48px] p-2.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
                       paymentMethod === 'WAVE'
-                        ? 'border-blue-500 bg-blue-50 text-blue-950 font-black shadow-xs'
+                        ? 'border-blue-500 bg-blue-50 text-blue-950 font-black shadow-xs ring-2 ring-blue-400/40'
                         : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <span className="text-base">🔵</span>
-                    <span className="text-[11px] leading-tight font-bold text-[#1DA1F2]">Wave</span>
+                    <span className="text-[11px] font-extrabold text-[#1DA1F2]">Wave</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onPaymentMethodChange('ORANGE_MONEY')}
-                    className={`min-h-[48px] p-2.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
                       paymentMethod === 'ORANGE_MONEY'
-                        ? 'border-orange-500 bg-orange-50 text-orange-950 font-black shadow-xs'
+                        ? 'border-orange-500 bg-orange-50 text-orange-950 font-black shadow-xs ring-2 ring-orange-400/40'
                         : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <span className="text-base">🟠</span>
-                    <span className="text-[11px] leading-tight font-bold text-[#FF6B00]">OM</span>
+                    <span className="text-[11px] font-extrabold text-[#FF6B00]">OM</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onPaymentMethodChange('CASH_TPE')}
+                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                      paymentMethod === 'CASH_TPE'
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-2 ring-emerald-400/40'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <Banknote className="w-5 h-5 text-emerald-600" />
+                    <span className="text-[11px] font-extrabold text-emerald-900">Espèces</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onPaymentMethodChange('CARD')}
+                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                      paymentMethod === 'CARD'
+                        ? 'border-purple-600 bg-purple-50 text-purple-950 font-black shadow-xs ring-2 ring-purple-400/40'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <CreditCard className="w-5 h-5 text-purple-600" />
+                    <span className="text-[11px] font-extrabold text-purple-900">Carte</span>
                   </button>
                 </div>
+
+                {/* Cash Appoint Suggestions */}
+                {paymentMethod === 'CASH_TPE' && (
+                  <div className="bg-emerald-50/80 p-3 rounded-2xl border border-emerald-200 space-y-2 animate-in fade-in">
+                    <span className="text-[11px] font-bold text-emerald-950 flex items-center gap-1">
+                      <Coins className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>{lang === 'WO' ? 'Am nga moné ?' : 'Prévoir la monnaie sur place :'}</span>
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+                      {['Montant exact', 'Billet 5 000 F', 'Billet 10 000 F', 'Billet 20 000 F'].map(
+                        (preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => handleSelectCashPreset(preset)}
+                            className={`p-2 rounded-xl font-bold transition-all border text-[11px] ${
+                              cashNote === preset
+                                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                                : 'bg-white text-slate-700 border-emerald-200 hover:bg-emerald-100/50'
+                            }`}
+                          >
+                            {preset}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Wave Info Banner */}
+                {paymentMethod === 'WAVE' && (
+                  <div className="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 space-y-1">
+                    <span className="font-bold block">🔵 Paiement Wave instantané</span>
+                    <p className="text-[11px] text-blue-800">
+                      Vous pourrez scanner le QR Code du serveur ou ouvrir directement l'application Wave à l'étape suivante.
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Optional Customer Name */}
-              <div className="pt-2 border-t border-slate-200 space-y-1.5">
-                <label className="text-xs font-black text-slate-900 block">
-                  Votre Prénom (Optionnel) :
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => onCustomerNameChange(e.target.value)}
-                  placeholder="Ex: Moussa, Fatou, Jean..."
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-2xl p-3 text-sm text-slate-900 outline-none shadow-xs"
-                />
-              </div>
+              {/* Customer Name & Kitchen Instructions */}
+              <div className="pt-2 border-t border-slate-200 space-y-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-900 block">
+                    {lang === 'WO' ? 'Sa Tur (Bëgg-bëgg) :' : 'Votre Prénom (Optionnel) :'}
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => onCustomerNameChange(e.target.value)}
+                    placeholder="Ex: Moussa, Fatou, Ibrahima..."
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl p-3 text-xs sm:text-sm text-slate-900 outline-none shadow-xs"
+                  />
+                </div>
 
-              {/* Kitchen Global Note */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-900 block">
-                  {t.kitchenNoteLabel}
-                </label>
-                <input
-                  type="text"
-                  value={customerNote}
-                  onChange={(e) => onCustomerNoteChange(e.target.value)}
-                  placeholder={t.kitchenNotePlaceholder}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-2xl p-3 text-sm text-slate-900 outline-none shadow-xs"
-                />
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-900 block">
+                    {t.kitchenNoteLabel}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={customerNote}
+                    onChange={(e) => onCustomerNoteChange(e.target.value)}
+                    placeholder={t.kitchenNotePlaceholder}
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl p-3 text-xs sm:text-sm text-slate-900 outline-none shadow-xs resize-none"
+                  />
+                </div>
               </div>
             </>
           )}
         </div>
 
-        {/* Footer with BIG GREEN BUTTON (56px) */}
+        {/* Footer with Total and CTA Button */}
         {items.length > 0 && (
-          <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-sm font-bold text-slate-600">{t.totalToPay}</span>
-              <div className="text-right">
-                <span className="text-2xl font-black text-slate-950 tracking-tight block">
-                  {formatFCFA(totalPrice)}
+          <div className="p-4 sm:p-5 bg-white border-t border-slate-200 space-y-3">
+            <div className="flex items-baseline justify-between">
+              <div>
+                <span className="text-xs text-slate-500 block uppercase font-bold">
+                  {t.totalToPay}
                 </span>
-                {convertedTotalPrice && (
-                  <span className="text-xs font-black text-emerald-700 block">
-                    {convertedTotalPrice}
+                {convertedTotal && (
+                  <span className="text-xs font-bold text-emerald-700 block">
+                    {convertedTotal}
                   </span>
                 )}
               </div>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+                {formatFCFA(totalPrice)}
+              </span>
             </div>
 
-            {/* The Big 56px Green Button */}
             <button
               type="button"
               disabled={isSubmitting}
               onClick={onSubmitOrder}
-              className="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white text-base font-black rounded-2xl shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              className="w-full min-h-[52px] bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 active:scale-[0.99] disabled:bg-slate-300 text-white font-black text-sm sm:text-base rounded-2xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all"
             >
-              <Send className="w-5 h-5 stroke-[2.5]" />
-              <span>
-                {isSubmitting
-                  ? 'Transmission en cours...'
-                  : `🚀 Envoyer en cuisine (Table ${formattedTable})`}
-              </span>
+              <Send className="w-4 h-4" />
+              <span>{isSubmitting ? 'Transmission...' : `🚀 Commander pour Table ${formattedTable}`}</span>
             </button>
           </div>
         )}

@@ -32,13 +32,31 @@ export function convertFCFATo(
 export function formatConvertedPrice(
   amountFCFA: number,
   currency: CurrencyCode,
-  lang: Language = 'FR',
-  rates: ExchangeRates = DEFAULT_EXCHANGE_RATES
+  langOrRates: Language | ExchangeRates = 'FR',
+  ratesArg?: ExchangeRates
 ): string | null {
   if (currency === 'FCFA') return null;
 
+  let lang: Language = 'FR';
+  let rates: ExchangeRates = DEFAULT_EXCHANGE_RATES;
+
+  if (typeof langOrRates === 'string') {
+    lang = langOrRates;
+    rates = ratesArg || DEFAULT_EXCHANGE_RATES;
+  } else if (langOrRates && typeof langOrRates === 'object') {
+    rates = langOrRates;
+    lang = 'FR';
+  }
+
   const converted = convertFCFATo(amountFCFA, currency, rates);
-  const locale = lang === 'EN' ? 'en-US' : lang === 'ES' ? 'es-ES' : lang === 'IT' ? 'it-IT' : 'fr-FR';
+  const locale =
+    lang === 'EN'
+      ? 'en-US'
+      : lang === 'ES'
+      ? 'es-ES'
+      : lang === 'IT'
+      ? 'it-IT'
+      : 'fr-FR';
 
   if (currency === 'EUR') {
     const formatted = new Intl.NumberFormat(locale, {

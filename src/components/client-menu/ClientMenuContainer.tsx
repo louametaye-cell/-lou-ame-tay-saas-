@@ -8,8 +8,18 @@ import { ItemDetailDrawer } from './ItemDetailDrawer';
 import { FloatingCartBar } from './FloatingCartBar';
 import { CartCheckoutDrawer } from './CartCheckoutDrawer';
 import { OrderSuccessTracker } from './OrderSuccessTracker';
+import { DailySpecialsSection } from './DailySpecialsSection';
+import { SplitBillDrawer } from './SplitBillDrawer';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
-import { RestaurantType, MenuItemType, CartItemOption, OrderType, Language, CurrencyCode, ExchangeRates } from '@/types';
+import { 
+  RestaurantType, 
+  MenuItemType, 
+  CartItemOption, 
+  OrderType, 
+  Language, 
+  CurrencyCode, 
+  ExchangeRates 
+} from '@/types';
 import { DEFAULT_EXCHANGE_RATES } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { getUIText, translateCategoryName } from '@/lib/translation-engine';
@@ -51,6 +61,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const [selectedDish, setSelectedDish] = useState<MenuItemType | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
@@ -99,195 +110,188 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     }
   }, [restaurant.subdomain, restaurant.id, tableNumber]);
 
-  // Language switcher with auto-currency adaptation
-  const handleLanguageChange = async (lang: Language) => {
-    setCurrentLang(lang);
-    
-    // Auto adapt currency for foreigners
-    if (lang === 'EN') {
-      setCurrentCurrency('USD');
-    } else if (lang === 'ES' || lang === 'IT') {
-      setCurrentCurrency('EUR');
-    } else {
-      setCurrentCurrency('FCFA');
-    }
+  // Dynamic translated menu categories
+  const translatedCategories = useMemo(() => {
+    return restaurant.categories.map((category) => {
+      const translatedItems = (category.items || []).map((item) => {
+        if (currentLang === 'FR') return item;
 
-    try {
-      const res = await fetch(`/api/menu?subdomain=${restaurant.subdomain}&lang=${lang}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.restaurant) {
-          setRestaurant(data.restaurant);
-        }
-      }
-    } catch (e) {
-      // Non-blocking
-    }
-  };
-
-  // Filtered categories & items
-  const filteredCategories = useMemo(() => {
-    return restaurant.categories
-      .map((category) => {
-        const matchingItems = (category.items || []).filter((item) => {
-          if (!searchQuery) return true;
-          const q = searchQuery.toLowerCase();
-          return (
-            item.name.toLowerCase().includes(q) ||
-            (item.nameWolof && item.nameWolof.toLowerCase().includes(q)) ||
-            (item.wolofName && item.wolofName.toLowerCase().includes(q)) ||
-            (item.description && item.description.toLowerCase().includes(q))
-          );
-        });
-
-        return {
-          ...category,
-          items: matchingItems,
-        };
-      })
-      .filter((category) => category.items.length > 0);
-  }, [restaurant.categories, searchQuery]);
-
-  // IntersectionObserver for auto-activating the category in view
-  useEffect(() => {
-    if (typeof window === 'undefined' || filteredCategories.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveCategoryId(entry.target.id);
+        if (Array.isArray(item.translations)) {
+          const dynamicTrans = item.translations.find((t: any) => t.language === currentLang);
+          if (dynamicTrans) {
+            return {
+              ...item,
+              name: dynamicTrans.name || item.name,
+              description: dynamicTrans.description || item.description,
+            };
           }
-        });
-      },
-      {
-        rootMargin: '-130px 0px -70% 0px',
-        threshold: 0.1,
-      }
-    );
+        } else if (item.translations && typeof item.translations === 'object') {
+          const dynamicTrans = (item.translations as any)[currentLang];
+          if (dynamicTrans) {
+            return {
+              ...item,
+              name: dynamicTrans.name || item.name,
+              description: dynamicTrans.description || item.description,
+            };
+          }
+        }
+        return item;
+      });
 
-    filteredCategories.forEach((cat) => {
-      const el = document.getElementById(cat.id);
-      if (el) observer.observe(el);
+      return {
+        ...category,
+        items: translatedItems,
+      };
     });
+  }, [restaurant.categories, currentLang]);
 
-    return () => observer.disconnect();
-  }, [filteredCategories]);
+  // Flattened items for daily specials & search
+  const allMenuItems = useMemo(() => {
+    return translatedCategories.flatMap((c) => c.items || []);
+  }, [translatedCategories]);
 
-  // Handle dish card click to open customization drawer
+  // Filtered categories based on search
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return translatedCategories;
+
+    const query = searchQuery.toLowerCase().trim();
+    return translatedCategories
+      .map((cat) => ({
+        ...cat,
+        items: (cat.items || []).filter(
+          (item) =>
+            item.name.toLowerCase().includes(query) ||
+            item.description.toLowerCase().includes(query)
+        ),
+      }))
+      .filter((cat) => cat.items.length > 0);
+  }, [translatedCategories, searchQuery]);
+
+  // Handlers
   const handleOpenDetails = (dish: MenuItemType) => {
     setSelectedDish(dish);
     setIsDetailDrawerOpen(true);
   };
 
-  // Quick direct add (+1)
   const handleQuickAdd = (dish: MenuItemType) => {
     addItem(dish);
-    toast.success(`+1 ${dish.name}`, { duration: 1200 });
+    const t = getUIText(currentLang);
+    toast.success(`✅ « ${dish.name} » ${t.added}`, {
+      duration: 1800,
+    });
   };
 
-  // Add from customization drawer
   const handleAddFromDrawer = (
-    dish: MenuItemType,
-    options: CartItemOption,
-    notes: string,
-    quantity: number
+    item: MenuItemType,
+    options?: CartItemOption,
+    customNotes?: string,
+    quantity: number = 1
   ) => {
-    addItem(dish, options, notes, quantity);
-    toast.success(`${quantity}x ${dish.name} ajouté(s) à la commande`);
+    addItem(item, options, customNotes, quantity);
+    setIsDetailDrawerOpen(false);
+    setSelectedDish(null);
+    const t = getUIText(currentLang);
+    toast.success(`✅ « ${item.name} » ${t.added} (${quantity}x)`, {
+      duration: 2000,
+    });
   };
 
-  // Submit Order to Kitchen
-  const handleSubmitOrder = async () => {
-    if (items.length === 0) return;
+  const handleLanguageChange = (lang: Language) => {
+    setCurrentLang(lang);
+    const langNames: Record<Language, string> = {
+      FR: 'Français 🇫🇷',
+      WO: 'Wolof 🇸🇳',
+      EN: 'English 🇬🇧',
+      ES: 'Español 🇪🇸',
+      IT: 'Italiano 🇮🇹',
+    };
+    toast.info(`Langue : ${langNames[lang]}`);
+  };
 
+  // Submit order action
+  const handleSubmitOrder = async () => {
+    if (items.length === 0) {
+      toast.error('Votre panier est vide.');
+      return;
+    }
+
+    setIsSubmittingOrder(true);
     try {
-      setIsSubmittingOrder(true);
-      const orderTotal = getTotalPrice();
-      const payload = {
-        tableNumber,
+      const orderPayload = {
         restaurantId: restaurant.id,
-        subdomain: restaurant.subdomain,
-        customerNote,
-        customerName,
+        tableNumber,
+        customerName: customerName.trim() || undefined,
+        customerNote: customerNote.trim() || undefined,
         paymentMethod,
-        total: orderTotal,
         items: items.map((i) => ({
           menuItemId: i.menuItem.id,
-          menuItem: i.menuItem,
+          name: i.menuItem.name,
+          price: i.menuItem.price,
           quantity: i.quantity,
-          price: i.menuItem.price + (i.options?.extras || []).reduce((es, e) => es + e.price, 0),
-          notes: i.customNotes,
-          options: i.options,
+          selectedSide: i.options?.side || null,
+          selectedSpiceLevel: i.options?.spiceLevel || null,
+          selectedExtras: i.options?.extras?.map((e) => e.name) || [],
+          customNotes: i.customNotes || null,
         })),
+        total: getTotalPrice(),
       };
 
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(orderPayload),
       });
 
-      if (!res.ok) {
-        throw new Error('Erreur de transmission de commande');
-      }
-
-      // Track order stats asynchronously
-      try {
-        fetch('/api/stats/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            restaurantId: restaurant.id,
-            subdomain: restaurant.subdomain,
-            total: orderTotal,
-            tableNumber,
-          }),
-        });
-      } catch (e) {
-        // Non-blocking
-      }
-
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erreur lors de la commande.');
+      }
+
       const placedOrder: OrderType = data.order || {
         id: `ord_${Date.now()}`,
-        tableNumber,
-        customerNote,
         restaurantId: restaurant.id,
+        tableNumber,
+        customerName: customerName.trim() || null,
+        customerNote: customerNote.trim() || null,
+        paymentMethod,
         status: 'PENDING',
-        total: orderTotal,
+        total: getTotalPrice(),
         createdAt: new Date().toISOString(),
         items: items.map((i) => ({
-          id: i.id,
+          id: `item_${Math.random()}`,
           menuItemId: i.menuItem.id,
-          menuItem: i.menuItem,
-          quantity: i.quantity,
+          name: i.menuItem.name,
           price: i.menuItem.price,
+          quantity: i.quantity,
+          options: i.options,
           notes: i.customNotes,
         })),
       };
 
       setActiveOrder(placedOrder);
-      clearCart();
       setIsCartOpen(false);
+      clearCart();
       setIsOrderSuccessOpen(true);
-    } catch (error) {
-      console.error(error);
-      toast.error('Impossible de transmettre la commande. Veuillez réessayer.');
+    } catch (err: any) {
+      toast.error(err.message || 'Impossible de transmettre la commande.');
     } finally {
       setIsSubmittingOrder(false);
     }
   };
 
-  if (restaurant.isActive === false) {
-    return <RestaurantClosedView restaurant={restaurant} tableNumber={tableNumber} />;
+  // If Restaurant is closed or suspended
+  if (restaurant.status === 'SUSPENDED' || restaurant.isOnline === false) {
+    return (
+      <RestaurantClosedView
+        restaurant={restaurant}
+        tableNumber={tableNumber}
+      />
+    );
   }
 
-  const t = getUIText(currentLang);
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-32 text-slate-900 font-sans selection:bg-orange-500 selection:text-white">
-      {/* 1. Sticky Header */}
+    <div className="min-h-screen bg-[#FFFDF9] text-slate-900 pb-36 font-sans antialiased selection:bg-orange-500 selection:text-white">
+      {/* 1. Fixed Header with Table Badge, Waiter Bell & Search */}
       <TableStickyHeader
         restaurantName={restaurant.name}
         logoUrl={restaurant.logoUrl}
@@ -298,12 +302,13 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       />
 
       {/* Multilingual & Currency Selector Bar */}
-      <div className="max-w-4xl mx-auto px-4 pt-3 space-y-2">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-3 space-y-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          {/* 1. Language Flags */}
-          <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-orange-200 shadow-2xs">
+          {/* 1. Language Flags with Wolof */}
+          <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-orange-200 shadow-2xs overflow-x-auto no-scrollbar">
             {[
               { code: 'FR', label: 'FR', flag: '🇫🇷' },
+              { code: 'WO', label: 'Wolof', flag: '🇸🇳' },
               { code: 'EN', label: 'EN', flag: '🇬🇧' },
               { code: 'ES', label: 'ES', flag: '🇪🇸' },
               { code: 'IT', label: 'IT', flag: '🇮🇹' },
@@ -312,7 +317,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                 key={l.code}
                 type="button"
                 onClick={() => handleLanguageChange(l.code as Language)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 shrink-0 ${
                   currentLang === l.code
                     ? 'bg-orange-500 text-white shadow-2xs scale-105'
                     : 'bg-transparent text-slate-700 hover:bg-orange-50'
@@ -326,7 +331,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
           {/* 2. Currency Switcher Pills */}
           <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-emerald-200/80 shadow-2xs">
-            <span className="text-[10px] font-black text-slate-400 px-1 uppercase tracking-wider">
+            <span className="text-[10px] font-black text-slate-400 px-1 uppercase tracking-wider hidden sm:inline">
               Devise :
             </span>
             {[
@@ -338,7 +343,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                 key={c.code}
                 type="button"
                 onClick={() => setCurrentCurrency(c.code as CurrencyCode)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                className={`px-2 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
                   currentCurrency === c.code
                     ? 'bg-emerald-600 text-white shadow-2xs scale-105'
                     : 'bg-transparent text-slate-700 hover:bg-emerald-50'
@@ -352,7 +357,21 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         </div>
       </div>
 
-      {/* 2. Scrollable Category Pills with IntersectionObserver */}
+      {/* 2. Daily Specials Carousel Section « Lou Ame Tay ? » */}
+      {!searchQuery && (
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-4">
+          <DailySpecialsSection
+            items={allMenuItems}
+            onQuickAdd={handleQuickAdd}
+            onOpenDetails={handleOpenDetails}
+            lang={currentLang}
+            currency={currentCurrency}
+            exchangeRates={exchangeRates}
+          />
+        </div>
+      )}
+
+      {/* 3. Scrollable Category Pills */}
       {filteredCategories.length > 0 && (
         <CategoryNavbar
           categories={filteredCategories}
@@ -370,7 +389,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         />
       )}
 
-      {/* 3. Main Dishes Grid by Category */}
+      {/* 4. Main Dishes Grid by Category */}
       <main className="max-w-4xl mx-auto px-3 sm:px-4 pt-6 space-y-10">
         {filteredCategories.length === 0 ? (
           <div className="bg-white rounded-3xl p-8 text-center shadow-xs border border-orange-100 mt-6">
@@ -403,7 +422,13 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                     <span className="text-xl">{icon}</span>
                     <span>{translatedCat}</span>
                   </h2>
-                  <div className={`flex-1 h-[2px] ${isSpecialCategory ? 'bg-gradient-to-r from-amber-400 via-orange-300 to-transparent' : 'bg-gradient-to-r from-emerald-300/80 via-slate-200 to-transparent'} ml-2`} />
+                  <div
+                    className={`flex-1 h-[2px] ${
+                      isSpecialCategory
+                        ? 'bg-gradient-to-r from-amber-400 via-orange-300 to-transparent'
+                        : 'bg-gradient-to-r from-emerald-300/80 via-slate-200 to-transparent'
+                    } ml-2`}
+                  />
                 </div>
 
                 {/* Cards Grid */}
@@ -428,18 +453,19 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         )}
       </main>
 
-      {/* 4. Bottom Floating Cart Bar */}
+      {/* 5. Bottom Floating Cart Bar with Split Bill Trigger */}
       <FloatingCartBar
         totalCount={getTotalCount()}
         totalPrice={getTotalPrice()}
         tableNumber={tableNumber}
         onOpenCart={() => setIsCartOpen(true)}
+        onOpenSplitBill={() => setIsSplitBillOpen(true)}
         lang={currentLang}
         currency={currentCurrency}
         exchangeRates={exchangeRates}
       />
 
-      {/* 5. Customization BottomSheet Drawer */}
+      {/* 6. Customization BottomSheet Drawer */}
       <ItemDetailDrawer
         item={selectedDish}
         isOpen={isDetailDrawerOpen}
@@ -450,7 +476,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         exchangeRates={exchangeRates}
       />
 
-      {/* 6. Checkout Drawer */}
+      {/* 7. Cart & Checkout Drawer with Wave / OM / Cash Change */}
       <CartCheckoutDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -462,7 +488,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onCustomerNoteChange={setCustomerNote}
         onCustomerNameChange={setCustomerName}
         onPaymentMethodChange={setPaymentMethod}
-        onAddItem={handleQuickAdd}
+        onAddItem={addItem}
         onRemoveItem={removeItem}
         onDeleteItem={deleteItem}
         onClearCart={clearCart}
@@ -473,7 +499,17 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         exchangeRates={exchangeRates}
       />
 
-      {/* 7. Order Confirmation & Live Tracker */}
+      {/* 8. Split Bill Drawer with WhatsApp Share */}
+      <SplitBillDrawer
+        isOpen={isSplitBillOpen}
+        onClose={() => setIsSplitBillOpen(false)}
+        totalAmount={getTotalPrice()}
+        tableNumber={tableNumber}
+        restaurantName={restaurant.name}
+        lang={currentLang}
+      />
+
+      {/* 9. Live Order Status Tracker */}
       <OrderSuccessTracker
         order={activeOrder}
         isOpen={isOrderSuccessOpen}

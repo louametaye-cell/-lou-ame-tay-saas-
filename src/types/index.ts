@@ -65,7 +65,7 @@ export interface SubscriptionType {
   endDate: string;
 }
 
-export type Language = 'FR' | 'EN' | 'ES' | 'IT';
+export type Language = 'FR' | 'WO' | 'EN' | 'ES' | 'IT';
 export type CurrencyCode = 'FCFA' | 'EUR' | 'USD';
 
 export interface ExchangeRates {
@@ -91,6 +91,7 @@ export interface MenuItemType {
   imageUrl: string;
   isAvailable: boolean;
   isSpecialOfTheDay?: boolean;
+  isDailySpecial?: boolean;
   isSpecial?: boolean;
   preparationTime?: number | null;
   rating?: number;
@@ -168,6 +169,8 @@ export interface RestaurantType {
   bannerUrl?: string | null;
   currency: string;
   isActive: boolean;
+  isOnline?: boolean;
+  status?: string | null;
   tableCount: number;
   tablesCount?: number;
 

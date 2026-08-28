@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Users } from 'lucide-react';
 import { Language, CurrencyCode, ExchangeRates } from '@/types';
 import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
@@ -11,6 +11,7 @@ interface FloatingCartBarProps {
   totalPrice: number;
   tableNumber: number;
   onOpenCart: () => void;
+  onOpenSplitBill?: () => void;
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
@@ -20,6 +21,7 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
   totalCount,
   totalPrice,
   onOpenCart,
+  onOpenSplitBill,
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
@@ -27,7 +29,10 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
   if (totalCount === 0) return null;
 
   const t = getUIText(lang);
-  const convertedTotal = formatConvertedPrice(totalPrice, currency, lang, exchangeRates);
+  const convertedTotal =
+    currency !== 'FCFA' && exchangeRates
+      ? formatConvertedPrice(totalPrice, currency, exchangeRates)
+      : null;
 
   return (
     <aside
@@ -49,7 +54,7 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
               {totalCount} {totalCount > 1 ? t.articles : t.article}
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight block">
+              <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight block font-mono">
                 {formatFCFA(totalPrice)}
               </span>
               {convertedTotal && (
@@ -61,15 +66,30 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
           </div>
         </div>
 
-        {/* Primary CTA Button (52px) */}
-        <button
-          type="button"
-          onClick={onOpenCart}
-          className="min-h-[52px] px-5 sm:px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all shrink-0"
-        >
-          <span>{t.viewCart}</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        {/* Right Actions: Split Bill Button + View Cart Button */}
+        <div className="flex items-center gap-2">
+          {onOpenSplitBill && (
+            <button
+              type="button"
+              onClick={onOpenSplitBill}
+              className="min-h-[46px] px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-2xs active:scale-95"
+              title="Partager l'addition"
+            >
+              <Users className="w-4 h-4 text-emerald-700" />
+              <span className="hidden sm:inline">Partager</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onOpenCart}
+            className="min-h-[46px] px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all"
+            aria-label="Voir mon panier"
+          >
+            <span>{lang === 'WO' ? 'Xool sa panie' : t.viewCart}</span>
+            <ArrowRight className="w-4 h-4 stroke-[3]" />
+          </button>
+        </div>
       </div>
     </aside>
   );

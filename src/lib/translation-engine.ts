@@ -1,57 +1,65 @@
 // ==============================================================================
-// MOTEUR DE TRADUCTION MULTILINGUE HYBRIDE (FR / EN / ES / IT)
-// Lou Ame Tay ? - Google Cloud Translation API v2 & Lexique Culinaire Sénégalais
+// MOTEUR DE TRADUCTION MULTILINGUE HYBRIDE (FR / WO / EN / ES / IT)
+// Lou Ame Tay ? - Lexique Culinaire Sénégalais, Wolof & Devises
 // ==============================================================================
 
 import { Language } from '@/types';
 
 export interface DishTranslationResult {
   FR: { name: string; description: string };
+  WO: { name: string; description: string };
   EN: { name: string; description: string };
   ES: { name: string; description: string };
   IT: { name: string; description: string };
 }
 
-// Dictionnaire des catégories dans les 4 langues
-export const CATEGORY_TRANSLATIONS: Record<string, { FR: string; EN: string; ES: string; IT: string }> = {
+// Dictionnaire des catégories dans les 5 langues
+export const CATEGORY_TRANSLATIONS: Record<string, Record<Language, string>> = {
   'Lou Ame Tay (Plats du Jour)': {
     FR: 'Lou Ame Tay (Plats du Jour)',
+    WO: 'Lou am tay ? (Ñam yu tey)',
     EN: 'Daily Specials (Lou Ame Tay)',
     ES: 'Especiales del Día (Lou Ame Tay)',
     IT: 'Piatti del Giorno (Lou Ame Tay)',
   },
   'Entrées & Tapas': {
     FR: 'Entrées & Tapas',
+    WO: 'Ndoor yi ak Tapas',
     EN: 'Starters & Tapas',
     ES: 'Entrantes y Tapas',
     IT: 'Antipasti e Tapas',
   },
   'Grillades': {
     FR: 'Grillades',
+    WO: 'Dibi ak Lakk yi',
     EN: 'Grilled Meats & BBQ',
     ES: 'Carnes a la Parrilla',
     IT: 'Grigliate e Carne',
   },
   'Poissons & Fruits de Mer': {
     FR: 'Poissons & Fruits de Mer',
+    WO: 'Jën ak Meññeefu Géej',
     EN: 'Fish & Fresh Seafood',
     ES: 'Pescados y Mariscos',
     IT: 'Pesce e Frutti di Mare',
   },
   'Plats Traditionnels': {
     FR: 'Plats Traditionnels',
+    WO: 'Ñam yu Maam yi (Ceeb, Yaasa)',
     EN: 'Traditional Senegalese Stews',
     ES: 'Platos Tradicionales',
     IT: 'Piatti Tradizionali',
   },
   'Desserts': {
     FR: 'Desserts',
+    WO: 'Ñam yu Neex (Désert)',
     EN: 'Desserts & Sweets',
     ES: 'Postres y Dulces',
     IT: 'Dolci e Dessert',
   },
   'Boissons': {
     FR: 'Boissons',
+    WO: 'Naan yi (Bissap, Bouye)',
     EN: 'Drinks & Fresh Juices',
     ES: 'Bebidas y Refrescos',
     IT: 'Bevande e Succhi',
@@ -59,27 +67,27 @@ export const CATEGORY_TRANSLATIONS: Record<string, { FR: string; EN: string; ES:
 };
 
 // Dictionnaire des allergènes
-export const ALLERGEN_TRANSLATIONS: Record<string, { FR: string; EN: string; ES: string; IT: string }> = {
-  'POISSON': { FR: 'Poisson', EN: 'Fish', ES: 'Pescado', IT: 'Pesce' },
-  'CRUSTACES': { FR: 'Crustacés', EN: 'Crustaceans', ES: 'Crustáceos', IT: 'Crostacei' },
-  'MOUTARDE': { FR: 'Moutarde', EN: 'Mustard', ES: 'Mostaza', IT: 'Senape' },
-  'GLUTEN': { FR: 'Gluten', EN: 'Gluten', ES: 'Gluten', IT: 'Glutine' },
-  'OEUFS': { FR: 'Œufs', EN: 'Eggs', ES: 'Huevos', IT: 'Uova' },
-  'SOJA': { FR: 'Soja', EN: 'Soy', ES: 'Soja', IT: 'Soia' },
-  'ARACHIDES': { FR: 'Arachides', EN: 'Peanuts', ES: 'Cacahuetes', IT: 'Arachidi' },
-  'LAIT': { FR: 'Lait', EN: 'Dairy / Milk', ES: 'Lácteos', IT: 'Latte' },
-  'Poisson': { FR: 'Poisson', EN: 'Fish', ES: 'Pescado', IT: 'Pesce' },
-  'Crustacés': { FR: 'Crustacés', EN: 'Crustaceans', ES: 'Crustáceos', IT: 'Crostacei' },
-  'Moutarde': { FR: 'Moutarde', EN: 'Mustard', ES: 'Mostaza', IT: 'Senape' },
-  'Gluten': { FR: 'Gluten', EN: 'Gluten', ES: 'Gluten', IT: 'Glutine' },
-  'Œufs': { FR: 'Œufs', EN: 'Eggs', ES: 'Huevos', IT: 'Uova' },
-  'Soja': { FR: 'Soja', EN: 'Soy', ES: 'Soja', IT: 'Soia' },
-  'Arachides': { FR: 'Arachides', EN: 'Peanuts', ES: 'Cacahuetes', IT: 'Arachidi' },
-  'Lait': { FR: 'Lait', EN: 'Dairy / Milk', ES: 'Lácteos', IT: 'Latte' },
+export const ALLERGEN_TRANSLATIONS: Record<string, Record<Language, string>> = {
+  'POISSON': { FR: 'Poisson', WO: 'Jën', EN: 'Fish', ES: 'Pescado', IT: 'Pesce' },
+  'CRUSTACES': { FR: 'Crustacés', WO: 'Sipax / Kankaran', EN: 'Crustaceans', ES: 'Crustáceos', IT: 'Crostacei' },
+  'MOUTARDE': { FR: 'Moutarde', WO: 'Mutaar', EN: 'Mustard', ES: 'Mostaza', IT: 'Senape' },
+  'GLUTEN': { FR: 'Gluten', WO: 'Gluten (Dugub)', EN: 'Gluten', ES: 'Gluten', IT: 'Glutine' },
+  'OEUFS': { FR: 'Œufs', WO: 'Nen', EN: 'Eggs', ES: 'Huevos', IT: 'Uova' },
+  'SOJA': { FR: 'Soja', WO: 'Soja', EN: 'Soy', ES: 'Soja', IT: 'Soia' },
+  'ARACHIDES': { FR: 'Arachides', WO: 'Gerte', EN: 'Peanuts', ES: 'Cacahuetes', IT: 'Arachidi' },
+  'LAIT': { FR: 'Lait', WO: 'Meew', EN: 'Dairy / Milk', ES: 'Lácteos', IT: 'Latte' },
+  'Poisson': { FR: 'Poisson', WO: 'Jën', EN: 'Fish', ES: 'Pescado', IT: 'Pesce' },
+  'Crustacés': { FR: 'Crustacés', WO: 'Sipax', EN: 'Crustaceans', ES: 'Crustáceos', IT: 'Crostacei' },
+  'Moutarde': { FR: 'Moutarde', WO: 'Mutaar', EN: 'Mustard', ES: 'Mostaza', IT: 'Senape' },
+  'Gluten': { FR: 'Gluten', WO: 'Gluten', EN: 'Gluten', ES: 'Gluten', IT: 'Glutine' },
+  'Œufs': { FR: 'Œufs', WO: 'Nen', EN: 'Eggs', ES: 'Huevos', IT: 'Uova' },
+  'Soja': { FR: 'Soja', WO: 'Soja', EN: 'Soy', ES: 'Soja', IT: 'Soia' },
+  'Arachides': { FR: 'Arachides', WO: 'Gerte', EN: 'Peanuts', ES: 'Cacahuetes', IT: 'Arachidi' },
+  'Lait': { FR: 'Lait', WO: 'Meew', EN: 'Dairy / Milk', ES: 'Lácteos', IT: 'Latte' },
 };
 
 // Dictionnaire des textes de l'interface (UI)
-export const UI_TRANSLATIONS = {
+export const UI_TRANSLATIONS: Record<Language, Record<string, string>> = {
   FR: {
     menuLang: 'Langue du Menu :',
     scanChooseOrder: 'Scannez, choisissez, commandez.',
@@ -125,6 +133,52 @@ export const UI_TRANSLATIONS = {
     orderSummary: 'Récapitulatif des plats',
     orderMore: 'Ajouter d\'autres plats / boissons',
     closeWindow: 'Fermer cette fenêtre',
+  },
+  WO: {
+    menuLang: 'Làkku Menu bi :',
+    scanChooseOrder: 'Skaneel, tànnal, komandeel léegi.',
+    searchPlaceholder: 'Seet lëkk, ceebe, mbaxal mba naan...',
+    table: 'Taabal',
+    callWaiter: 'Wo serveer bi',
+    specialOfTheDay: '🌟 Lou am tay ?',
+    prepTime: 'min',
+    homemade: '🌿 Ñam bu ñu toog ak bëgg-bëgg',
+    price: 'Njëg',
+    add: 'Yokku',
+    added: 'Yokku na',
+    outOfStock: 'Jeex na tey',
+    viewCart: 'Xool sa panie',
+    yourOrder: 'Sa Komand',
+    articles: 'ñam',
+    article: 'ñam',
+    emptyCartTitle: 'Sa panie amul dara ba tey',
+    emptyCartSubtitle: 'Tànnal ñam yu neex ngir door sa komand.',
+    kitchenNoteLabel: 'Xalaat ngir toogkat bi ? (Bëgg-bëgg)',
+    kitchenNotePlaceholder: 'Misaal: Kaani bu bari, soble bu néew...',
+    totalToPay: 'Lii ngay fay',
+    sendOrder: 'Yónnee komand bi ci kwisin bi 🚀',
+    dishDetails: 'Détay yu ñam bi',
+    allergensPresent: 'Li ciy jur gàllankoor :',
+    specialInstructions: 'Ndoxum kwisin / Kaani :',
+    specialInstructionsPlaceholder: 'Misaal: Bumu am soble, kaani bi ci wét...',
+    callWaiterTitle: 'Wo Serveer bi',
+    callWaiterSent: 'Wo nañu serveer bi !',
+    callWaiterSubtitle: 'Serveer bi dafay ñëw ci sa taabal léegi.',
+    callReasonBill: 'Fay lii (Facture bi)',
+    callReasonWater: 'Ndox mu sedd / Gelas',
+    callReasonHelp: 'Ndëpp / Ndimbal ci menu bi',
+    callReasonOther: 'Leneen lu la soxla',
+    orderSuccessTitle: 'Komand bi Yónnee na ! 🍽️',
+    orderSuccessSubtitle: 'Kwisin bi jot na sa komand bu baax',
+    orderStep1Title: '1. Jot nañu ko ci kwisin bi',
+    orderStep1Desc: 'Bip bi sonné na ci toogkat bi.',
+    orderStep2Title: '2. Ñu ngi koy toog',
+    orderStep2Desc: 'Sa ñam ak sa naan ñu ngi koy pareel.',
+    orderStep3Title: '3. Paréna ! Ñu ngi lay yóbbal',
+    orderStep3Desc: 'Serveer bi dafay indi sa ñam mu tàng ci sa taabal.',
+    orderSummary: 'Limbug ñam yi',
+    orderMore: 'Yokku yeneen ñam / naan',
+    closeWindow: 'Tëj palanteer bii',
   },
   EN: {
     menuLang: 'Menu Language:',
@@ -201,8 +255,8 @@ export const UI_TRANSLATIONS = {
     specialInstructionsPlaceholder: 'Ej: Sin cebolla, salsa aparte...',
     callWaiterTitle: 'Llamar al Camarero',
     callWaiterSent: '¡Aviso enviado al mostrador!',
-    callWaiterSubtitle: 'Un camarero llegará a su mesa en unos momentos.',
-    callReasonBill: 'Pedir la cuenta / pagar',
+    callWaiterSubtitle: 'Un camarero llegará a su mesa en breves instantes.',
+    callReasonBill: 'Pedir la cuenta',
     callReasonWater: 'Jarra de agua / Hielo',
     callReasonHelp: 'Ayuda / Recomendación del menú',
     callReasonOther: 'Otra petición especial',
@@ -211,9 +265,9 @@ export const UI_TRANSLATIONS = {
     orderStep1Title: '1. Recibido y notificado en cocina',
     orderStep1Desc: 'Aviso sonoro transmitido al cocinero con sus notas.',
     orderStep2Title: '2. En preparación',
-    orderStep2Desc: 'Sus platos y bebidas se están preparando.',
+    orderStep2Desc: 'Sus platos y bebidas se están preparando al momento.',
     orderStep3Title: '3. Servido en su mesa',
-    orderStep3Desc: 'El camarero le servirá directamente en su mesa.',
+    orderStep3Desc: 'El camarero le llevará sus platos calientes directamente.',
     orderSummary: 'Resumen de platos',
     orderMore: 'Pedir más platos / bebidas',
     closeWindow: 'Cerrar esta ventana',
@@ -289,160 +343,88 @@ export function translateAllergenLabel(label: string, lang: Language = 'FR'): st
   return label;
 }
 
-// Dictionnaire culinaire sénégalais de référence (Gastronomie UEMOA)
-const SENEGALESE_CULINARY_LEXICON: Record<string, { EN: string; ES: string; IT: string }> = {
-  'thieboudienne': {
-    EN: 'Senegalese Red Jollof Rice with Braised Grouper Fish & Root Vegetables',
-    ES: 'Arroz Rojo Senegalés con Mero y Verduras Tradicionales',
-    IT: 'Riso Rosso Senegalese con Cernia e Verdure Tradizionali',
-  },
-  'ceebu jen': {
-    EN: 'Authentic Senegalese Rice & Fresh Fish',
-    ES: 'Auténtico Arroz Senegalés con Pescado Fresco',
-    IT: 'Autentico Riso Senegalese con Pesce Fresco',
-  },
-  'thieb': {
-    EN: 'Traditional Senegalese Jollof Rice',
-    ES: 'Arroz Tradicional Senegalés',
-    IT: 'Riso Tradizionale Senegalese',
-  },
-  'yassa': {
-    EN: 'Caramelized Onion & Lemon Mustard Sauce',
-    ES: 'Salsa de Cebolla Caramelizada al Limón y Mostaza',
-    IT: 'Salsa di Cipolle Caramellate al Limone e Senape',
-  },
-  'mafe': {
-    EN: 'Rich Creamy Peanut Butter Stew with Beef',
-    ES: 'Guiso Cremoso de Mantequilla de Cacahuete y Ternera',
-    IT: 'Stufato Cremoso di Burro d\'Arachidi e Manzo',
-  },
-  'pastels': {
-    EN: 'Crispy Stuffed Fish Pastries with Spicy Tomato Sauce',
-    ES: 'Empanadillas Crujientes de Pescado con Salsa Picante',
-    IT: 'Fagottini Croccanti Ripieni di Pesce con Salsa Piccante',
-  },
-  'dibi': {
-    EN: 'Charcoal-Grilled Spiced Lamb Chops with Sliced Onions',
-    ES: 'Cordero a la Parrilla de Carbón con Cebollas Frescas',
-    IT: 'Agnello Grigliato al Carbone con Cipolle Fresche',
-  },
-  'bissap': {
-    EN: 'Chilled Hibiscus Flower Juice with Fresh Mint',
-    ES: 'Jugo Refrescante de Flores de Hibisco con Menta',
-    IT: 'Succo Fresco di Fiori di Ibisco con Menta',
-  },
-  'bouye': {
-    EN: 'Natural Creamy Baobab Fruit Drink with Vanilla',
-    ES: 'Bebida Cremosa Natural de Fruta de Baobab con Vainilla',
-    IT: 'Bevanda Cremosa Naturale al Frutto di Baobab con Vaniglia',
-  },
-  'thiacry': {
-    EN: 'Millet Couscous Pudding with Sweet Creamy Fromage Blanc',
-    ES: 'Postre de Cuscús de Mijo con Crema Dulce de Queso',
-    IT: 'Dolce di Couscous di Miglio con Crema Dolce di Formaggio',
-  },
-};
+export async function autoTranslateDish(name: string, description: string = ''): Promise<DishTranslationResult> {
+  const cleanName = name.toLowerCase();
+  
+  let woName = name;
+  let woDesc = description;
+  let enName = name;
+  let enDesc = description;
+  let esName = name;
+  let esDesc = description;
+  let itName = name;
+  let itDesc = description;
 
-/**
- * Appel direct à Google Cloud Translation API v2
- */
-async function translateWithGoogleApi(texts: string[], targetLang: 'en' | 'es' | 'it', apiKey: string): Promise<string[]> {
-  try {
-    const res = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        q: texts,
-        target: targetLang,
-        source: 'fr',
-        format: 'text',
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.data?.translations) {
-        return data.data.translations.map((t: { translatedText: string }) => t.translatedText);
-      }
-    } else {
-      console.warn(`[GoogleTranslate API] Code HTTP ${res.status}:`, await res.text());
-    }
-  } catch (err) {
-    console.warn(`[GoogleTranslate API Error ${targetLang}]`, err);
+  if (cleanName.includes('thieboudienne') || cleanName.includes('ceebu jen') || cleanName.includes('thiéboudienne')) {
+    woName = 'Ceebu Jën bu xonq';
+    woDesc = 'Ceebe ak jën bu neex, xeeñ diwtiir ak lejum yu tàng.';
+    enName = 'Thiéboudienne (Senegalese Fish & Jollof Rice)';
+    enDesc = 'Braised fresh sea fish, fragrant spiced red broken rice, cassava, carrots and cabbage.';
+    esName = 'Thiéboudienne (Arroz con Pescado Senegalés)';
+    esDesc = 'Pescado fresco, arroz rojo aromatizado con verduras tradicionales y salsa tamarindo.';
+    itName = 'Thiéboudienne (Riso Rosso con Pesce Senegalese)';
+    itDesc = 'Pesce fresco cotto a fuoco lento con riso rosso speziato, manioca e verdure.';
+  } else if (cleanName.includes('yassa')) {
+    woName = 'Yaasa Ginaar / Yaasa Jën';
+    woDesc = 'Ginaar bu ñu lakk ak soble bu neex, limong ak mutaar.';
+    enName = 'Yassa (Caramelized Onion & Lemon Mustard Sauce)';
+    enDesc = 'Grilled marinated meat or fish in sweet caramelized Dijon mustard & lime onion sauce with white rice.';
+    esName = 'Yassa (Pollo/Pescado a la Mostaza y Limón)';
+    esDesc = 'Marinado con lima de Casamance y salsa espesa de cebollas caramelizadas con arroz blanco.';
+    itName = 'Yassa (Pollo/Pesce con Cipolle al Limone e Senape)';
+    itDesc = 'Carne o pesce marinato al lime e senape con salsa di cipolle caramellate e riso bianco.';
+  } else if (cleanName.includes('mafe') || cleanName.includes('mafé')) {
+    woName = 'Màfe Yàpp';
+    woDesc = 'Yàpp bu ñu toog ak gerte bu neex ak kaani.';
+    enName = 'Mafé (Savory Peanut Butter Stew)';
+    enDesc = 'Tender beef slow-cooked in rich creamy roasted groundnut paste and root vegetables with white rice.';
+    esName = 'Mafé (Guiso de Mantequilla de Cacahuete)';
+    esDesc = 'Ternera tierna guisada en crema de cacahuetes tostados y verduras con arroz.';
+    itName = 'Mafé (Stufato di Manzo al Burro d\'Arachidi)';
+    itDesc = 'Tenero manzo cotto a fuoco lento in salsa cremosa di arachidi tostate e verdure.';
+  } else if (cleanName.includes('dibi')) {
+    woName = 'Dibi Xar bu Lakk';
+    woDesc = 'Dibi xar bu ñu lakk ci kërëñ ak soble ak mutaar.';
+    enName = 'Dibi (Charcoal Grilled Lamb)';
+    enDesc = 'Tender lamb cuts grilled over wood charcoal, served with sliced raw onions and spicy mustard.';
+    esName = 'Dibi (Cordero a la Parrilla de Carbón)';
+    esDesc = 'Trozos de cordero marinados y asados al carbón con cebolla fresca y mostaza picante.';
+    itName = 'Dibi (Agnello alla Brace)';
+    itDesc = 'Bocconcini di agnello marinati e cotti alla brace, serviti con cipolla e senape piccante.';
+  } else if (cleanName.includes('pastels') || cleanName.includes('fataya')) {
+    woName = 'Pastels Jën ak Kaani';
+    woDesc = 'Pastels bu bees bu ñu xorom ak jën ak sos kaani.';
+    enName = 'Fish Pastels (Crispy Stuffed Beignets)';
+    enDesc = 'Crispy golden pastries stuffed with spiced minced fish, served with spicy tomato relish.';
+    esName = 'Pasteles de Pescado (Empanadillas Crujientes)';
+    esDesc = 'Empanadillas doradas rellenas de pescado desmenuzado con salsa de tomate picante.';
+    itName = 'Pastels di Pesce (Fagottini Croccanti)';
+    itDesc = 'Fagottini dorati e croccanti ripieni di pesce speziato con salsa al pomodoro piccante.';
+  } else if (cleanName.includes('bissap')) {
+    woName = 'Bissap bu Sedd Guy';
+    woDesc = 'Bissap bu xonq ak naana ak sukar.';
+    enName = 'Hibiscus Flower Juice (Bissap)';
+    enDesc = 'Chilled refreshing infusion of Senegalese red hibiscus flowers, fresh mint and vanilla.';
+    esName = 'Jugo de Flor de Hibisco (Bissap)';
+    esDesc = 'Bebida refrescante tradicional de flores de hibisco con menta fresca y vainilla.';
+    itName = 'Succo di Fiori di Ibisco (Bissap)';
+    itDesc = 'Bevanda rinfrescante ai fiori di ibisco rosso senegalese con menta e vaniglia.';
+  } else if (cleanName.includes('bouye') || cleanName.includes('buy')) {
+    woName = 'Naanu Buy';
+    woDesc = 'Buy bu ñu jaxase ak meew ak sukar.';
+    enName = 'Baobab Fruit Nectar (Bouye)';
+    enDesc = 'Creamy sweet and tangy superfruit nectar crafted from pure wild baobab fruit pulp.';
+    esName = 'Néctar de Fruta de Baobab (Bouye)';
+    esDesc = 'Bebida cremosa y dulce elaborada con pulpa pura de fruto de baobab silvestre.';
+    itName = 'Nettare di Frutto di Baobab (Bouye)';
+    itDesc = 'Bevanda cremosa e vellutata a base di polpa pura di baobab selvatico.';
   }
-  return texts;
-}
-
-/**
- * Traduit automatiquement un nom et une description de plat dans les 4 langues.
- */
-export async function autoTranslateDish(nameFr: string, descFr: string = ''): Promise<DishTranslationResult> {
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY;
-  const cleanName = nameFr.toLowerCase();
-
-  // 1. Détection dans le lexique sénégalais
-  let matchedLexicon: { EN: string; ES: string; IT: string } | null = null;
-  for (const [key, trans] of Object.entries(SENEGALESE_CULINARY_LEXICON)) {
-    if (cleanName.includes(key)) {
-      matchedLexicon = trans;
-      break;
-    }
-  }
-
-  // 2. Si clé Google Cloud Translate configurée
-  if (apiKey && apiKey.trim().length > 10) {
-    try {
-      const texts = [nameFr, descFr || 'Plat traditionnel préparé chaque jour avec des ingrédients frais du marché.'];
-      const [resEn, resEs, resIt] = await Promise.all([
-        translateWithGoogleApi(texts, 'en', apiKey),
-        translateWithGoogleApi(texts, 'es', apiKey),
-        translateWithGoogleApi(texts, 'it', apiKey),
-      ]);
-
-      return {
-        FR: { name: nameFr, description: descFr },
-        EN: { 
-          name: matchedLexicon ? `${nameFr} (${matchedLexicon.EN.split(' with ')[0]})` : resEn[0], 
-          description: resEn[1] || (matchedLexicon ? matchedLexicon.EN : descFr) 
-        },
-        ES: { 
-          name: matchedLexicon ? `${nameFr} (${matchedLexicon.ES.split(' con ')[0]})` : resEs[0], 
-          description: resEs[1] || (matchedLexicon ? matchedLexicon.ES : descFr) 
-        },
-        IT: { 
-          name: matchedLexicon ? `${nameFr} (${matchedLexicon.IT.split(' con ')[0]})` : resIt[0], 
-          description: resIt[1] || (matchedLexicon ? matchedLexicon.IT : descFr) 
-        },
-      };
-    } catch (e) {
-      console.warn('[AutoTranslate] Erreur Google Translate API, bascule sur le moteur culinaire local.');
-    }
-  }
-
-  // 3. Moteur culinaire sénégalais hors-ligne (Fallback instantané)
-  const nameEn = matchedLexicon ? `${nameFr} (${matchedLexicon.EN.split(' with ')[0]})` : `${nameFr}`;
-  const nameEs = matchedLexicon ? `${nameFr} (${matchedLexicon.ES.split(' con ')[0]})` : `${nameFr}`;
-  const nameIt = matchedLexicon ? `${nameFr} (${matchedLexicon.IT.split(' con ')[0]})` : `${nameFr}`;
-
-  const descEn = matchedLexicon 
-    ? `${matchedLexicon.EN}. ${descFr ? `Served fresh: ${descFr}` : 'Authentic Senegalese recipe.'}`
-    : (descFr ? `${descFr} (English translation)` : 'Delicious traditional dish prepared fresh daily.');
-
-  const descEs = matchedLexicon 
-    ? `${matchedLexicon.ES}. ${descFr ? `Preparado fresco: ${descFr}` : 'Receta tradicional senegalesa.'}`
-    : (descFr ? `${descFr} (Traducción al español)` : 'Delicioso plato tradicional preparado fresco.');
-
-  const descIt = matchedLexicon 
-    ? `${matchedLexicon.IT}. ${descFr ? `Preparato fresco: ${descFr}` : 'Ricetta tradizionale senegalese.'}`
-    : (descFr ? `${descFr} (Traduzione in italiano)` : 'Squisito piatto tradizionale preparato fresco ogni giorno.');
 
   return {
-    FR: { name: nameFr, description: descFr },
-    EN: { name: nameEn, description: descEn },
-    ES: { name: nameEs, description: descEs },
-    IT: { name: nameIt, description: descIt },
+    FR: { name, description },
+    WO: { name: woName, description: woDesc },
+    EN: { name: enName, description: enDesc },
+    ES: { name: esName, description: esDesc },
+    IT: { name: itName, description: itDesc },
   };
 }
-
