@@ -28,6 +28,7 @@ import {
   KeyRound,
   FileText,
   Lock,
+  Zap,
   Unlock,
   ExternalLink,
   Copy,
@@ -400,8 +401,9 @@ export const CrmModal: React.FC<CrmModalProps> = ({ isOpen, onClose, initialAgen
 
               {/* Bottom Quick Test Selector */}
               <div className="pt-6 border-t border-gray-800 mt-6">
-                <span className="text-[11px] text-gray-400 block mb-2 font-bold uppercase tracking-wider">
-                  ⚡ Connexion Rapide Démo (1-clic) :
+                <span className="text-[11px] text-gray-400 flex items-center gap-1 mb-2 font-bold uppercase tracking-wider">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Connexion Rapide Démo (1-clic) :</span>
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   {commercials.map((agent) => (

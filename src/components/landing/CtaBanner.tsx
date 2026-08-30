@@ -39,7 +39,7 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ onOpenTrial }) => {
             onClick={onOpenTrial}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-3 text-base sm:text-lg font-black text-white bg-[#00A86B] hover:bg-[#00925d] active:scale-95 px-8 py-4 rounded-xl shadow-xl shadow-[#00A86B]/25 transition-all cursor-pointer"
           >
-            <span>🚀 Démarrer mon essai gratuit</span>
+            <span>Démarrer mon essai gratuit</span>
             <ArrowRight className="w-5 h-5 text-white" />
           </button>
 
@@ -51,7 +51,7 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ onOpenTrial }) => {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 text-base font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 px-7 py-4 rounded-xl transition-all text-center"
           >
             <PhoneCall className="w-5 h-5 text-[#25D366]" />
-            <span>📞 Échanger sur WhatsApp</span>
+            <span>Échanger sur WhatsApp</span>
           </a>
         </div>
 

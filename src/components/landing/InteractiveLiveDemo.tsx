@@ -174,19 +174,21 @@ export const InteractiveLiveDemo: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('client')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   activeTab === 'client' ? 'bg-white text-gray-900 shadow-xs' : 'hover:text-gray-900'
                 }`}
               >
-                📱 Vue Smartphone Client
+                <Smartphone className="w-3.5 h-3.5 text-amber-500" />
+                <span>Vue Smartphone Client</span>
               </button>
               <button
                 onClick={() => setActiveTab('kitchen')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   activeTab === 'kitchen' ? 'bg-white text-gray-900 shadow-xs' : 'hover:text-gray-900'
                 }`}
               >
-                👨‍🍳 Vue Écran Cuisine KDS
+                <ChefHat className="w-3.5 h-3.5 text-amber-500" />
+                <span>Vue Écran Cuisine KDS</span>
               </button>
             </div>
           </div>

@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   Printer,
   Clock,
-  Target
+  Target,
+  Lightbulb
 } from 'lucide-react';
 import { 
   SALES_PITCH_STEPS, 
@@ -242,8 +243,9 @@ export const SalesGuideModal: React.FC<SalesGuideModalProps> = ({ isOpen, onClos
                       {/* Professional Field Tips */}
                       <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-600">
                         {step.tips.map((tip, idx) => (
-                          <span key={idx} className="bg-emerald-50/70 text-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-100">
-                            💡 {tip}
+                          <span key={idx} className="bg-emerald-50/70 text-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-1">
+                            <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span>{tip}</span>
                           </span>
                         ))}
                       </div>

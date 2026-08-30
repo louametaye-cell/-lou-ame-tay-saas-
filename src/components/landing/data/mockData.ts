@@ -258,7 +258,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'pro',
     name: 'Formule PRO',
-    badge: 'Recommandée 🔥',
+    badge: 'Recommandée',
     priceMonthly: 25000,
     priceAnnualMonthly: 20833,
     popular: true,
@@ -278,7 +278,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'premium',
     name: 'Formule PREMIUM',
-    badge: 'Multi-espaces & Hôtels 🌟',
+    badge: 'Multi-espaces & Hôtels',
     priceMonthly: 45000,
     priceAnnualMonthly: 37500,
     popular: false,
@@ -304,7 +304,7 @@ export const PRICING_OPTIONS = {
     description: 'Idéal si vous avez une terrasse ou plus de 25 tables en salle.'
   },
   launchPack: {
-    title: '🔥 Pack Lancement Spécial',
+    title: 'Pack Lancement Spécial',
     discountPrice: 15000,
     normalPrice: 25000,
     spotsRemaining: 4,

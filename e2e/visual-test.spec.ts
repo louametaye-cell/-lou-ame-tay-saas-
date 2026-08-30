@@ -7,8 +7,8 @@ test.describe('Visual & Navigation E2E Tests - Lou Ame Tay ?', () => {
   });
 
   test('Client Menu renders table 1 and dishes', async ({ page }) => {
-    await page.goto('http://localhost:3000/r/chezfatou/table-1');
-    await expect(page.locator('body')).toBeVisible();
+    await page.goto('http://localhost:3000/r/chezfatou/table-1', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('main')).toBeVisible();
   });
 
   test('Login page displays authentication form', async ({ page }) => {

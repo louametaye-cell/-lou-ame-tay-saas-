@@ -62,7 +62,7 @@ export const FreeTrialModal: React.FC<FreeTrialModalProps> = ({ isOpen, onClose,
             </div>
             
             <h3 className="font-heading font-black text-2xl text-gray-900">
-              Félicitations ! 🚀
+              Félicitations !
             </h3>
             
             <p className="text-sm text-gray-600 leading-relaxed">
