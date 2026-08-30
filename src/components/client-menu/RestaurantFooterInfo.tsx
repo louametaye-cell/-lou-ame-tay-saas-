@@ -155,7 +155,7 @@ export const RestaurantFooterInfo: React.FC<RestaurantFooterInfoProps> = ({
         <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left text-[11px] text-slate-400">
           <p>© {new Date().getFullYear()} {restaurantName} • Tous droits réservés</p>
           <a
-            href="https://louametay.sn"
+            href="https://louametay.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-slate-500 hover:text-orange-600 font-bold transition-colors"

@@ -918,7 +918,7 @@ export default function SuperAdminDashboardPage() {
                     Sous-domaine / Identifiant unique *
                   </label>
                   <div className="flex items-center bg-slate-900 border border-slate-200 rounded-xl overflow-hidden px-3 py-2.5 focus-within:border-[#FF6B00]">
-                    <span className="text-slate-500 text-xs">louametay.sn/r/</span>
+                    <span className="text-slate-500 text-xs">louametay.com/r/</span>
                     <input
                       type="text"
                       required

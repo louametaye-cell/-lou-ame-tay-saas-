@@ -362,9 +362,10 @@ export const orderStorage = {
     if (!resto) return [];
 
     const count = resto.tableCount || 12;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://louametay.com';
     return Array.from({ length: count }, (_, i) => {
       const tableNumber = i + 1;
-      const menuUrl = `https://louametay.sn/r/${resto.subdomain}/table-${tableNumber}`;
+      const menuUrl = `${appUrl}/r/${resto.subdomain}/table-${tableNumber}`;
       const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(menuUrl)}`;
 
       return {

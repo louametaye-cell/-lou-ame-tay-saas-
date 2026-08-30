@@ -778,7 +778,7 @@ export default function SuperAdminRestaurantDetailPage() {
                       Scannez avec votre smartphone
                     </p>
                     <span className="text-[10px] text-gray-500 font-mono mt-1">
-                      louametay.sn/r/{restaurant.subdomain}/table-{tableNum}
+                      louametay.com/r/{restaurant.subdomain}/table-{tableNum}
                     </span>
                   </div>
                 ))}

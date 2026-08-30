@@ -132,12 +132,13 @@ export async function POST(req: Request) {
 
       // Create default tables
       const numTables = Number(tablesCount) || 10;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://louametay.com';
       for (let i = 1; i <= numTables; i++) {
         await (prisma as any).table?.create({
           data: {
             number: i,
             restaurantId: dbResto?.id || newRestaurant.id,
-            qrCodeUrl: `https://louametay.sn/r/${cleanSubdomain}/table-${i}`,
+            qrCodeUrl: `${appUrl}/r/${cleanSubdomain}/table-${i}`,
           },
         });
       }

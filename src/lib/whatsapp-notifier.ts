@@ -20,12 +20,13 @@ export async function sendWhatsAppOrderAlert(payload: OrderNotificationPayload):
   const { restaurantName, restaurantPhone, tableNumber, orderTotal, items, orderId } = payload;
 
   const itemsSummary = items.map((it) => `• ${it.quantity}x ${it.name}`).join('\n');
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://louametay.com';
   const textMessage = `🔔 *NOUVELLE COMMANDE REÇUE — ${restaurantName.toUpperCase()}*\n\n` +
     `📍 *Table :* N°${tableNumber}\n` +
     `💵 *Montant Total :* ${orderTotal.toLocaleString('fr-FR')} FCFA\n\n` +
     `🍽️ *Détail des Plats :*\n${itemsSummary}\n\n` +
     `⚡ *Réf Commande :* #${orderId}\n` +
-    `👉 Voir sur votre écran cuisine : https://louametay.sn/kitchen`;
+    `👉 Voir sur votre écran cuisine : ${appUrl}/kitchen`;
 
   console.log(`[WHATSAPP ALERT 📲] Notification envoyée au ${restaurantPhone} :\n${textMessage}`);
 

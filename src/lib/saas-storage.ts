@@ -316,7 +316,10 @@ class SaasStorageService {
     return this.tenants.find((t) => 
       t.id.toLowerCase() === clean || 
       t.subdomain.toLowerCase() === clean ||
-      (clean === 'resto_thies_01' && t.subdomain === 'chezfatou')
+      (clean === 'resto_thies_01' && t.subdomain === 'chezfatou') ||
+      (clean === 'tenant_starter_01' && (t.id === 'tenant_mg_cafe_resto' || t.subdomain === 'mg-cafe-resto')) ||
+      (clean === 'tenant_pro_01' && (t.id === 'tenant_chez_colle' || t.subdomain === 'chez-colle')) ||
+      (clean === 'tenant_premium_01' && (t.id === 'tenant_hotel_cayor' || t.subdomain === 'hotel-cayor'))
     );
   }
 

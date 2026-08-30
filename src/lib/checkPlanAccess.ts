@@ -58,8 +58,9 @@ export function canUseFeature(
   }
 
   // 2. Vérifier les limites numériques (ex: 20 photos, 1 table)
-  if (planFeature.limitValue !== null && planFeature.limitValue !== undefined && requestedCount !== undefined) {
-    if (requestedCount > planFeature.limitValue) {
+  const count = requestedCount !== undefined && requestedCount !== null ? Number(requestedCount) : undefined;
+  if (planFeature.limitValue !== null && planFeature.limitValue !== undefined && count !== undefined && !isNaN(count)) {
+    if (count > planFeature.limitValue) {
       return {
         allowed: false,
         reason: `Limite de quota atteinte : Votre pack ${plan.name} est plafonné à ${planFeature.limitValue} (${featureKey}).`,

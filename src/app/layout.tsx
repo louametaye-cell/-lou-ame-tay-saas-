@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Lou Ame Tay ? 🍽️ - Menu Digital & Commande à Table',
     description: 'Le menu digital QR code ultra-rapide conçu pour les restaurants du Sénégal.',
-    url: 'https://louametay.sn',
+    url: 'https://louametay.com',
     siteName: 'Lou Ame Tay',
     images: [
       {

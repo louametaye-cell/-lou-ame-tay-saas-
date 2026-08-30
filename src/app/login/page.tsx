@@ -130,23 +130,6 @@ export default function RestaurantLoginPage() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/kitchen"
-              className="hidden sm:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition-all"
-            >
-              <ChefHat className="w-3.5 h-3.5 text-orange-400" />
-              <span>Écran Cuisine</span>
-            </Link>
-
-            <Link
-              href="/super-admin"
-              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-slate-500 hover:text-amber-400 text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 transition-all"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Super Admin</span>
-            </Link>
-          </div>
         </div>
       </header>
 
@@ -180,8 +163,8 @@ export default function RestaurantLoginPage() {
 
           {/* Benefits Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-left">
-            <div className="bg-slate-900/60 border border-slate-200/80 rounded-2xl p-3.5 flex items-start gap-3">
-              <div className="p-2 bg-orange-500/10 text-orange-400 rounded-xl shrink-0">
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-3.5 flex items-start gap-3 shadow-xs hover:shadow-md transition-shadow">
+              <div className="p-2 bg-orange-500/10 text-orange-600 rounded-xl shrink-0">
                 <Volume2 className="w-4 h-4" />
               </div>
               <div>
@@ -190,8 +173,8 @@ export default function RestaurantLoginPage() {
               </div>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-200/80 rounded-2xl p-3.5 flex items-start gap-3">
-              <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl shrink-0">
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-3.5 flex items-start gap-3 shadow-xs hover:shadow-md transition-shadow">
+              <div className="p-2 bg-emerald-500/10 text-emerald-600 rounded-xl shrink-0">
                 <Zap className="w-4 h-4" />
               </div>
               <div>
@@ -200,8 +183,8 @@ export default function RestaurantLoginPage() {
               </div>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-200/80 rounded-2xl p-3.5 flex items-start gap-3">
-              <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl shrink-0">
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-3.5 flex items-start gap-3 shadow-xs hover:shadow-md transition-shadow">
+              <div className="p-2 bg-blue-500/10 text-blue-600 rounded-xl shrink-0">
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div>
@@ -210,8 +193,8 @@ export default function RestaurantLoginPage() {
               </div>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-200/80 rounded-2xl p-3.5 flex items-start gap-3">
-              <div className="p-2 bg-purple-500/10 text-purple-400 rounded-xl shrink-0">
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-3.5 flex items-start gap-3 shadow-xs hover:shadow-md transition-shadow">
+              <div className="p-2 bg-purple-500/10 text-purple-600 rounded-xl shrink-0">
                 <QrCode className="w-4 h-4" />
               </div>
               <div>
@@ -224,26 +207,26 @@ export default function RestaurantLoginPage() {
 
         {/* Right Column : Login Form Card (6 cols) */}
         <div className="lg:col-span-6">
-          <div className="backdrop-blur-2xl bg-slate-900/90 border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+          <div className="backdrop-blur-2xl bg-slate-900/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
             {/* Ambient Lighting */}
-            <div className="absolute -right-12 -top-12 w-48 h-48 bg-orange-600/25 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -right-12 -top-12 w-48 h-48 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none" />
 
             <div className="mb-6 relative z-10">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
                 <Store className="w-6 h-6 text-orange-400" />
                 <span>Connexion Restaurant</span>
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1 font-medium">
                 Accédez à la gestion de votre menu, commandes et QR codes
               </p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4 relative z-10">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5 flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-300 block mb-1.5 flex items-center justify-between">
                   <span>Identifiant ou Sous-domaine</span>
-                  <span className="text-[11px] text-slate-500 font-normal">Ex: chezfatou ou palmiersaly</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Ex: chezfatou ou palmiersaly</span>
                 </label>
                 <input
                   type="text"
@@ -251,18 +234,18 @@ export default function RestaurantLoginPage() {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="Nom de domaine ou téléphone..."
-                  className="w-full bg-slate-50/90 border border-slate-200/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 rounded-2xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-all"
+                  className="w-full bg-slate-800/80 border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-500 outline-none transition-all"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5 flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-300 block mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <KeyRound className="w-3.5 h-3.5 text-orange-400" />
                     <span>Code PIN / Mot de passe</span>
                   </span>
-                  <span className="text-[11px] text-slate-500 font-normal">Défaut : 1234</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Défaut : 1234</span>
                 </label>
                 <input
                   type="password"
@@ -270,14 +253,14 @@ export default function RestaurantLoginPage() {
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   placeholder="Code PIN d'accès..."
-                  className="w-full bg-slate-50/90 border border-slate-200/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 rounded-2xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-all"
+                  className="w-full bg-slate-800/80 border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-500 outline-none transition-all"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-[#FF6B00] via-orange-600 to-[#00A86B] hover:opacity-95 active:scale-[0.98] text-slate-900 font-black text-sm py-4 px-4 rounded-2xl shadow-xl shadow-orange-600/30 transition-all flex items-center justify-center gap-2 mt-2"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-[0.98] text-white font-black text-sm py-4 px-4 rounded-2xl shadow-xl shadow-orange-500/20 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -292,8 +275,8 @@ export default function RestaurantLoginPage() {
 
             {/* Quick Demo Access Pills */}
             {restaurantsList.length > 0 && (
-              <div className="mt-6 pt-5 border-t border-slate-200/80 relative z-10">
-                <span className="text-[11px] font-bold text-slate-500 block mb-2.5">
+              <div className="mt-6 pt-5 border-t border-white/10 relative z-10">
+                <span className="text-[11px] font-bold text-slate-400 block mb-2.5">
                   ⚡ Ou testez en 1 clic un établissement pilote :
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -302,7 +285,7 @@ export default function RestaurantLoginPage() {
                       key={r.id}
                       onClick={() => handleQuickLogin(r)}
                       disabled={isLoading}
-                      className="bg-slate-50 hover:bg-slate-100 border border-slate-200/80 hover:border-orange-500/50 text-slate-800 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 active:scale-95"
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-orange-500/50 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                     >
                       <Store className="w-3.5 h-3.5 text-orange-400" />
                       <span>{r.name}</span>
@@ -313,9 +296,9 @@ export default function RestaurantLoginPage() {
             )}
 
             {/* Support Contact */}
-            <div className="mt-6 pt-4 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500 relative z-10">
+            <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 relative z-10">
               <a
-                href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
+                href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
@@ -324,7 +307,7 @@ export default function RestaurantLoginPage() {
                 <span>Assistance WhatsApp 24/7</span>
               </a>
 
-              <span className="text-slate-600 text-[11px]">Sénégal 🇸🇳 2026</span>
+              <span className="text-slate-400 text-[11px]">Sénégal 🇸🇳 2026</span>
             </div>
           </div>
         </div>
@@ -333,6 +316,11 @@ export default function RestaurantLoginPage() {
       {/* Footer */}
       <footer className="border-t border-slate-200/60 py-4 px-4 text-center text-xs text-slate-500">
         <p>© 2026 Lou Ame Tay ? • Plateforme SaaS de Menu Digital pour Restaurants au Sénégal</p>
+        <div className="mt-1.5 flex items-center justify-center gap-3 text-[10px] text-slate-400 font-medium">
+          <Link href="/kitchen" className="hover:text-orange-500 transition-colors cursor-pointer">Portail Cuisine</Link>
+          <span>•</span>
+          <Link href="/super-admin" className="hover:text-orange-500 transition-colors cursor-pointer">Console Super-Admin</Link>
+        </div>
       </footer>
     </div>
   );

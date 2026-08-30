@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Clock, 
@@ -41,13 +41,22 @@ export const EditWaiterModal: React.FC<EditWaiterModalProps> = ({
   onDeleteMember,
   onTransferTables,
 }) => {
-  if (!isOpen || !member) return null;
-
-  const [name, setName] = useState(member.name);
-  const [phone, setPhone] = useState(member.phone || '');
-  const [shiftHours, setShiftHours] = useState(member.shiftHours);
-  const [status, setStatus] = useState<ServerShiftStatus>(member.status);
+  const [name, setName] = useState(member?.name || '');
+  const [phone, setPhone] = useState(member?.phone || '');
+  const [shiftHours, setShiftHours] = useState(member?.shiftHours || '');
+  const [status, setStatus] = useState<ServerShiftStatus>(member?.status || 'ACTIVE');
   const [transferTargetId, setTransferTargetId] = useState<string>('');
+
+  useEffect(() => {
+    if (member) {
+      setName(member.name);
+      setPhone(member.phone || '');
+      setShiftHours(member.shiftHours);
+      setStatus(member.status);
+    }
+  }, [member]);
+
+  if (!isOpen || !member) return null;
 
   const otherMembers = allMembers.filter((m) => m.id !== member.id);
 
@@ -87,6 +96,8 @@ export const EditWaiterModal: React.FC<EditWaiterModalProps> = ({
     toast.success(`Serveur ${member.name} retiré du shift.`);
     onClose();
   };
+
+  if (!isOpen || !member) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">

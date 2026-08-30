@@ -39,40 +39,40 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
   onItemDeleted,
   onItemDuplicated,
 }) => {
-  if (!isOpen || !item) return null;
-
-  const [name, setName] = useState(item.name || '');
-  const [wolofName, setWolofName] = useState(item.wolofName || item.nameWolof || '');
-  const [description, setDescription] = useState(item.description || '');
-  const [price, setPrice] = useState<number>(item.price || 0);
-  const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
-  const [preparationTime, setPreparationTime] = useState<number>(item.preparationTime || 15);
-  const [categoryId, setCategoryId] = useState(item.categoryId || categories[0]?.id || '');
-  const [spiceLevel, setSpiceLevel] = useState<number>(item.spiceLevel || 0);
-  const [allergens, setAllergens] = useState<string[]>(item.allergens || []);
-  const [isSpecialOfTheDay, setIsSpecialOfTheDay] = useState(Boolean(item.isSpecialOfTheDay || item.isSpecial));
-  const [isAvailable, setIsAvailable] = useState(item.isAvailable ?? true);
+  const [name, setName] = useState(item?.name || '');
+  const [wolofName, setWolofName] = useState(item?.wolofName || item?.nameWolof || '');
+  const [description, setDescription] = useState(item?.description || '');
+  const [price, setPrice] = useState<number>(item?.price || 0);
+  const [imageUrl, setImageUrl] = useState(item?.imageUrl || '');
+  const [preparationTime, setPreparationTime] = useState<number>(item?.preparationTime || 15);
+  const [categoryId, setCategoryId] = useState(item?.categoryId || categories[0]?.id || '');
+  const [spiceLevel, setSpiceLevel] = useState<number>(item?.spiceLevel || 0);
+  const [allergens, setAllergens] = useState<string[]>(item?.allergens || []);
+  const [isSpecialOfTheDay, setIsSpecialOfTheDay] = useState(Boolean(item?.isSpecialOfTheDay || item?.isSpecial));
+  const [isAvailable, setIsAvailable] = useState(item?.isAvailable ?? true);
 
   // Translations
   const [activeTab, setActiveTab] = useState<'DETAILS' | 'PHOTOS' | 'TRANSLATIONS'>('DETAILS');
-  const [translations, setTranslations] = useState<any>(item.translations || {});
+  const [translations, setTranslations] = useState<any>(item?.translations || {});
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    setName(item.name || '');
-    setWolofName(item.wolofName || item.nameWolof || '');
-    setDescription(item.description || '');
-    setPrice(item.price || 0);
-    setImageUrl(item.imageUrl || '');
-    setPreparationTime(item.preparationTime || 15);
-    setCategoryId(item.categoryId || categories[0]?.id || '');
-    setSpiceLevel(item.spiceLevel || 0);
-    setAllergens(item.allergens || []);
-    setIsSpecialOfTheDay(Boolean(item.isSpecialOfTheDay || item.isSpecial));
-    setIsAvailable(item.isAvailable ?? true);
-    setTranslations(item.translations || {});
+    const currentItem = item;
+    if (!currentItem) return;
+    setName(currentItem.name || '');
+    setWolofName(currentItem.wolofName || currentItem.nameWolof || '');
+    setDescription(currentItem.description || '');
+    setPrice(currentItem.price || 0);
+    setImageUrl(currentItem.imageUrl || '');
+    setPreparationTime(currentItem.preparationTime || 15);
+    setCategoryId(currentItem.categoryId || categories[0]?.id || '');
+    setSpiceLevel(currentItem.spiceLevel || 0);
+    setAllergens(currentItem.allergens || []);
+    setIsSpecialOfTheDay(Boolean(currentItem.isSpecialOfTheDay || currentItem.isSpecial));
+    setIsAvailable(currentItem.isAvailable ?? true);
+    setTranslations(currentItem.translations || {});
   }, [item, categories]);
 
   const handleToggleAllergen = (allergen: string) => {
@@ -120,6 +120,7 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!item) return;
     setIsSaving(true);
 
     const updated: MenuItemType = {
@@ -164,6 +165,7 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
   };
 
   const handleDelete = async () => {
+    if (!item) return;
     if (!confirm(`Supprimer définitivement le plat « ${item.name} » ?`)) return;
 
     setIsDeleting(true);
@@ -182,6 +184,7 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
   };
 
   const handleDuplicate = () => {
+    if (!item) return;
     const duplicated: MenuItemType = {
       ...item,
       id: `dish_${Date.now()}`,
@@ -203,6 +206,8 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
     toast.success(`📑 Plat « ${name} » dupliqué !`);
     onClose();
   };
+
+  if (!isOpen || !item) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">

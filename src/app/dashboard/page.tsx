@@ -73,6 +73,7 @@ export default function OperationalDashboardPage() {
   const router = useRouter();
 
   // State
+  const [restaurantId, setRestaurantId] = useState('resto_thies_01');
   const [restaurantName, setRestaurantName] = useState('Chez Fatou & Frères');
   const [restaurantSubdomain, setRestaurantSubdomain] = useState('chezfatou');
   const [currentDateString, setCurrentDateString] = useState('');
@@ -175,8 +176,10 @@ export default function OperationalDashboardPage() {
 
   // Initialize restaurant name & date
   useEffect(() => {
+    const storedId = localStorage.getItem('current_restaurant_id');
     const storedName = localStorage.getItem('current_restaurant_name');
     const storedSub = localStorage.getItem('current_restaurant_subdomain');
+    if (storedId) setRestaurantId(storedId);
     if (storedName) setRestaurantName(storedName);
     if (storedSub) setRestaurantSubdomain(storedSub);
 
@@ -194,8 +197,10 @@ export default function OperationalDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
+      const idToUse = localStorage.getItem('current_restaurant_id') || restaurantId || 'resto_thies_01';
+
       // 1. Stats
-      const resStats = await fetch('/api/dashboard/stats');
+      const resStats = await fetch(`/api/dashboard/stats?restaurantId=${idToUse}`);
       if (resStats.ok) {
         const dataStats = await resStats.json();
         setKpis((prev) => ({
@@ -208,7 +213,7 @@ export default function OperationalDashboardPage() {
       }
 
       // 2. Current Orders
-      const resOrders = await fetch('/api/dashboard/orders/current');
+      const resOrders = await fetch(`/api/dashboard/orders/current?restaurantId=${idToUse}`);
       if (resOrders.ok) {
         const dataOrders = await resOrders.json();
         if (dataOrders.orders) {
@@ -217,7 +222,7 @@ export default function OperationalDashboardPage() {
       }
 
       // 3. Weekly Trends
-      const resTrends = await fetch('/api/dashboard/weekly-trends');
+      const resTrends = await fetch(`/api/dashboard/weekly-trends?restaurantId=${idToUse}`);
       if (resTrends.ok) {
         const dataTrends = await resTrends.json();
         if (dataTrends.trends) {
@@ -226,7 +231,7 @@ export default function OperationalDashboardPage() {
       }
 
       // 4. Stock Alerts
-      const resAlerts = await fetch('/api/dashboard/alerts');
+      const resAlerts = await fetch(`/api/dashboard/alerts?restaurantId=${idToUse}`);
       if (resAlerts.ok) {
         const dataAlerts = await resAlerts.json();
         if (dataAlerts.alerts) {
@@ -235,7 +240,7 @@ export default function OperationalDashboardPage() {
       }
 
       // 5. Live Waiter Calls
-      const resCalls = await fetch('/api/dashboard/waiter-calls?restaurantId=resto_thies_01');
+      const resCalls = await fetch(`/api/dashboard/waiter-calls?restaurantId=${idToUse}`);
       if (resCalls.ok) {
         const dataCalls = await resCalls.json();
         if (dataCalls.calls) {
@@ -293,6 +298,10 @@ export default function OperationalDashboardPage() {
     localStorage.removeItem('current_restaurant_id');
     localStorage.removeItem('current_restaurant_name');
     localStorage.removeItem('current_restaurant_subdomain');
+    // Supprimer le cookie saas_token côté client
+    if (typeof document !== 'undefined') {
+      document.cookie = "saas_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    }
     toast.info('Session déconnectée');
     router.push('/login');
   };
@@ -304,7 +313,7 @@ export default function OperationalDashboardPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           {/* Logo + Nom du Restaurant */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="shrink-0 group">
+            <Link href="/dashboard" className="shrink-0 group">
               <img 
                 src="/logo.png" 
                 alt="Lou Ame Tay ?" 

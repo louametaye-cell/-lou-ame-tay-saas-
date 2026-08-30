@@ -18,7 +18,7 @@ const DEFAULT_BRANDING: RestaurantBranding = {
   whatsapp: '+221 77 458 74 74',
   address: 'Sénégal',
   googleMapsUrl: 'https://maps.google.com/?q=Dakar+Senegal',
-  website: 'https://louametay.sn',
+  website: 'https://louametay.com',
   instagram: 'https://instagram.com/louametay',
   facebook: 'https://facebook.com/louametay',
   tiktok: 'https://tiktok.com/@louametay',

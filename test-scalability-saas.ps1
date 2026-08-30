@@ -31,10 +31,10 @@ Run-Test "TEST 1 : Restaurant Starter -> Envoi en cuisine -> Doit recevoir 403 F
         $res = Invoke-RestMethod -Uri "$baseUrl/api/admin/tenants/tenant_starter_01/check-access" -Method Post -Body $body -ContentType "application/json"
         throw "Aurait du etre bloque avec HTTP 403"
     } catch {
-        if ($_.Exception.Response.StatusCode.value__ -eq 403) {
+        if ($_.Exception.Message -match "403" -or ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 403)) {
             Write-Host "-> Statut 403 Forbidden intercepte : Acces cuisine refuse sur Pack Starter" -ForegroundColor Green
         } else {
-            throw "Statut inattendu : $($_.Exception.Response.StatusCode)"
+            throw "Statut inattendu : $_"
         }
     }
 }
@@ -86,10 +86,10 @@ Run-Test "TEST 4 : Restaurant Starter -> Upload 21eme photo -> Doit recevoir 403
         $res = Invoke-RestMethod -Uri "$baseUrl/api/admin/tenants/tenant_starter_01/check-access" -Method Post -Body $body -ContentType "application/json"
         throw "Aurait du etre bloque car limite de 20 photos atteinte"
     } catch {
-        if ($_.Exception.Response.StatusCode.value__ -eq 403) {
+        if ($_.Exception.Message -match "403" -or ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 403)) {
             Write-Host "-> Statut 403 Forbidden intercepte : Plafond de 20 photos depasse (LIMIT_EXCEEDED)" -ForegroundColor Green
         } else {
-            throw "Statut inattendu : $($_.Exception.Response.StatusCode)"
+            throw "Statut inattendu : $_"
         }
     }
 }

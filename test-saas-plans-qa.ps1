@@ -80,6 +80,10 @@ Run-Test "Passerelle Wave/OM : Paiement et Deblocage Immediat des Fonctionnalite
     if ($resKds.allowed -ne $true) { throw "Le KDS devrait etre actif immediatement apres le paiement Wave" }
 
     Write-Host "-> Paiement Wave valide et KDS de bloque avec succes pour Le Petit Maquis !" -ForegroundColor Green
+
+    # Reset tenant_starter_01 back to plan_starter for test idempotency
+    $resetBody = @{ tenantId = "tenant_starter_01"; planId = "plan_starter"; provider = "WAVE"; periodMonths = 1 } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$baseUrl/api/payments/checkout" -Method Post -Body $resetBody -ContentType "application/json" | Out-Null
 }
 
 Write-Host "`n============================================================" -ForegroundColor Magenta

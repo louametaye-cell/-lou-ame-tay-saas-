@@ -79,3 +79,46 @@ self.addEventListener('sync', (event) => {
     );
   }
 });
+
+// 5. Réception & Affichage des Notifications Push (Cuisine KDS & Gérant)
+self.addEventListener('push', (event) => {
+  let data = { title: 'Lou Ame Tay ?', body: 'Nouvelle alerte de commande' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/logo.png',
+    badge: data.badge || '/favicon.ico',
+    tag: data.tag || 'general_notification',
+    data: data.data || {},
+    vibrate: [200, 100, 200],
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+// 6. Clic sur Notification -> Ouverture de l'écran Cuisine ou Dashboard
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/kitchen';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

@@ -159,7 +159,7 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
                 Réglages & Abonnement : {restaurant.name}
               </h2>
               <p className="text-xs text-slate-500">
-                Sous-domaine : <span className="font-mono text-emerald-400 font-bold">{restaurant.subdomain}.louametay.sn</span>
+                Sous-domaine : <span className="font-mono text-emerald-400 font-bold">{restaurant.subdomain}.louametay.com</span>
               </p>
             </div>
           </div>
