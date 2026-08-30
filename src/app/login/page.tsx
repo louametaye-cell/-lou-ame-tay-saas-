@@ -276,8 +276,9 @@ export default function RestaurantLoginPage() {
             {/* Quick Demo Access Pills */}
             {restaurantsList.length > 0 && (
               <div className="mt-6 pt-5 border-t border-white/10 relative z-10">
-                <span className="text-[11px] font-bold text-slate-400 block mb-2.5">
-                  ⚡ Ou testez en 1 clic un établissement pilote :
+                <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 mb-2.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Ou testez en 1 clic un établissement pilote :</span>
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {restaurantsList.slice(0, 3).map((r) => (

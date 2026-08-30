@@ -13,10 +13,14 @@ import {
   ShieldCheck, 
   ChefHat,
   Eye,
-  Plus
+  Plus,
+  LayoutDashboard,
+  Zap,
+  Rocket
 } from 'lucide-react';
 import { INITIAL_MENU_ITEMS } from '@/components/landing/data/mockData';
 import { OfficialLogo } from './OfficialLogo';
+import { IconBadge } from '@/components/ui/IconBadge';
 
 interface HeroSectionProps {
   onOpenTrial: () => void;
@@ -87,7 +91,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 href="#comment-ca-marche"
                 className="bg-[#00A86B] hover:bg-[#00925d] active:scale-95 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-green-900/10 transition-all text-center"
               >
-                <span>🚀 Découvrir la solution</span>
+                <Rocket className="w-5 h-5" />
+                <span>Découvrir la solution</span>
                 <ArrowRight className="w-5 h-5" />
               </a>
 
@@ -99,7 +104,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="bg-white border-2 border-[#FF6B00] text-[#FF6B00] hover:bg-orange-50 active:scale-95 px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-center"
               >
                 <PhoneCall className="w-5 h-5" />
-                <span>📞 Demander une démo</span>
+                <span>Demander une démo</span>
               </a>
             </div>
 
@@ -122,25 +127,33 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Split Feature Tiles Grid (Recipe 11 split pattern) */}
             <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-px bg-gray-200/80 border border-gray-200/80 rounded-2xl overflow-hidden shadow-xs mt-2">
               <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="text-2xl mb-2">📱</div>
+                <div className="mb-3">
+                  <IconBadge icon={Smartphone} size="md" />
+                </div>
                 <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Menu Client</h3>
                 <p className="text-xs text-gray-500 leading-relaxed">Scan, choix et commande en 3 clics par vos clients.</p>
               </div>
 
               <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="text-2xl mb-2">👨‍🍳</div>
+                <div className="mb-3">
+                  <IconBadge icon={ChefHat} size="md" />
+                </div>
                 <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Écran Cuisine</h3>
                 <p className="text-xs text-gray-500 leading-relaxed">Transmission instantanée pour zéro erreur de service.</p>
               </div>
 
               <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="text-2xl mb-2">📊</div>
+                <div className="mb-3">
+                  <IconBadge icon={LayoutDashboard} size="md" />
+                </div>
                 <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Dashboard</h3>
                 <p className="text-xs text-gray-500 leading-relaxed">Gérez vos prix et stocks en temps réel depuis Thiès.</p>
               </div>
 
               <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="text-2xl mb-2">⚡</div>
+                <div className="mb-3">
+                  <IconBadge icon={Zap} size="md" />
+                </div>
                 <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Gain de Temps</h3>
                 <p className="text-xs text-gray-500 leading-relaxed">Optimisez la rotation de vos tables jusqu'à +25%.</p>
               </div>
@@ -199,13 +212,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-3 py-1 rounded-full capitalize transition-all shrink-0 ${
+                      className={`px-3 py-1 rounded-full capitalize transition-all shrink-0 flex items-center gap-1 ${
                         selectedCategory === cat
                           ? 'bg-[#00A86B] text-white shadow-xs'
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                       }`}
                     >
-                      {cat === 'tous' ? '✨ Tous' : cat}
+                      {cat === 'tous' && <Sparkles className="w-3 h-3 text-amber-300" />}
+                      <span>{cat === 'tous' ? 'Tous' : cat}</span>
                     </button>
                   ))}
                 </div>
@@ -287,7 +301,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-gray-900 block">Écran Cuisine KDS</span>
-                  <span className="text-[9px] text-emerald-600 font-semibold">Temps réel ⚡</span>
+                  <span className="text-[9px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <span>Temps réel</span>
+                    <Zap className="w-2.5 h-2.5" />
+                  </span>
                 </div>
               </div>
 

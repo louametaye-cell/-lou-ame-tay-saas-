@@ -26,10 +26,10 @@ interface EditWaiterModalProps {
 }
 
 const PRESET_SHIFT_HOURS = [
-  { label: '☀️ Service Midi (11h00 - 16h30)', hours: '11h00 - 16h30 (Service Midi)', type: 'LUNCH' },
-  { label: '🌙 Service Soirée (17h00 - 00h30)', hours: '17h00 - 00h30 (Service Soirée)', type: 'DINNER' },
-  { label: '⚡ Journée Complète (11h00 - 23h30)', hours: '11h00 - 23h30 (Journée Complète)', type: 'FULL_DAY' },
-  { label: '✨ Renfort / Pause Décalée (12h00 - 20h00)', hours: '12h00 - 20h00 (Renfort)', type: 'CUSTOM' },
+  { label: 'Service Midi (11h00 - 16h30)', hours: '11h00 - 16h30 (Service Midi)', type: 'LUNCH' },
+  { label: 'Service Soirée (17h00 - 00h30)', hours: '17h00 - 00h30 (Service Soirée)', type: 'DINNER' },
+  { label: 'Journée Complète (11h00 - 23h30)', hours: '11h00 - 23h30 (Journée Complète)', type: 'FULL_DAY' },
+  { label: 'Renfort / Pause Décalée (12h00 - 20h00)', hours: '12h00 - 20h00 (Renfort)', type: 'CUSTOM' },
 ];
 
 export const EditWaiterModal: React.FC<EditWaiterModalProps> = ({
@@ -178,37 +178,40 @@ export const EditWaiterModal: React.FC<EditWaiterModalProps> = ({
               <button
                 type="button"
                 onClick={() => setStatus('ACTIVE')}
-                className={`p-2 rounded-xl text-center font-bold border transition-all ${
+                className={`p-2 rounded-xl text-center font-bold border transition-all flex items-center justify-center gap-1.5 ${
                   status === 'ACTIVE'
                     ? 'bg-emerald-100 text-emerald-900 border-emerald-400 ring-1 ring-emerald-400'
                     : 'bg-slate-50 text-slate-600 border-slate-200'
                 }`}
               >
-                🟢 En Service
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>En Service</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setStatus('BREAK')}
-                className={`p-2 rounded-xl text-center font-bold border transition-all ${
+                className={`p-2 rounded-xl text-center font-bold border transition-all flex items-center justify-center gap-1.5 ${
                   status === 'BREAK'
                     ? 'bg-amber-100 text-amber-900 border-amber-400 ring-1 ring-amber-400'
                     : 'bg-slate-50 text-slate-600 border-slate-200'
                 }`}
               >
-                ⏸️ En Pause
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span>En Pause</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setStatus('OFF')}
-                className={`p-2 rounded-xl text-center font-bold border transition-all ${
+                className={`p-2 rounded-xl text-center font-bold border transition-all flex items-center justify-center gap-1.5 ${
                   status === 'OFF'
                     ? 'bg-rose-100 text-rose-900 border-rose-400 ring-1 ring-rose-400'
                     : 'bg-slate-50 text-slate-600 border-slate-200'
                 }`}
               >
-                🔴 Terminé
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span>Terminé</span>
               </button>
             </div>
           </div>

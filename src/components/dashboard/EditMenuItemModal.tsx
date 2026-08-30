@@ -417,7 +417,17 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
                           : 'bg-rose-50 text-rose-800 border-rose-300'
                       }`}
                     >
-                      <span>{isAvailable ? '✅ En Stock' : '❌ Épuisé'}</span>
+                      {isAvailable ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>En Stock</span>
+                        </>
+                      ) : (
+                        <>
+                          <X className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Épuisé</span>
+                        </>
+                      )}
                     </button>
 
                     <button
@@ -429,8 +439,8 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
                           : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                     >
-                      <Sparkles className={`w-3.5 h-3.5 ${isSpecialOfTheDay ? 'fill-amber-500' : ''}`} />
-                      <span>{isSpecialOfTheDay ? 'Plat du Jour ⭐' : 'Standard'}</span>
+                      <Sparkles className={`w-3.5 h-3.5 ${isSpecialOfTheDay ? 'fill-amber-500 text-amber-500' : ''}`} />
+                      <span>{isSpecialOfTheDay ? 'Plat du Jour' : 'Standard'}</span>
                     </button>
                   </div>
                 </div>

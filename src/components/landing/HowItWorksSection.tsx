@@ -13,7 +13,11 @@ import {
   Flame,
   Layers,
   Settings,
-  DollarSign
+  DollarSign,
+  Check,
+  MapPin,
+  UtensilsCrossed,
+  Coffee
 } from 'lucide-react';
 
 export const HowItWorksSection: React.FC = () => {
@@ -23,7 +27,7 @@ export const HowItWorksSection: React.FC = () => {
     {
       id: 'client' as const,
       icon: Smartphone,
-      title: '📱 Menu Client',
+      title: 'Menu Client',
       badge: 'Expérience Client',
       shortDesc: 'Le client scanne, voit le menu, commande en 3 clics',
       fullDesc: 'Une application web ultra-fluide qui ne nécessite aucun téléchargement. Compatible avec tous les smartphones (iOS et Android), elle affiche les photos en haute définition, les ingrédients en français/wolof et les options personnalisées.',
@@ -38,7 +42,7 @@ export const HowItWorksSection: React.FC = () => {
     {
       id: 'dashboard' as const,
       icon: LayoutDashboard,
-      title: '🖥️ Dashboard Restaurateur',
+      title: 'Dashboard Restaurateur',
       badge: 'Gestion Simplifiée',
       shortDesc: 'Gérez votre menu, vos prix, vos promotions et le plat du jour',
       fullDesc: 'Votre espace de pilotage accessible depuis votre propre téléphone ou ordinateur. Changez le tarif d\'un plat en 2 secondes, activez le « Thieb du Jour », ajoutez une promotion spéciale Tabaski ou Korité, et suivez votre chiffre d\'affaires.',
@@ -53,7 +57,7 @@ export const HowItWorksSection: React.FC = () => {
     {
       id: 'cuisine' as const,
       icon: ChefHat,
-      title: '👨‍🍳 Écran Cuisine (KDS)',
+      title: 'Écran Cuisine (KDS)',
       badge: 'Cuisine & Fourneaux',
       shortDesc: 'Les commandes arrivent en temps réel avec la table et l\'heure',
       fullDesc: 'Installez une tablette ou un écran dans la cuisine ou au niveau du grill. Chaque nouvelle commande émet un signal sonore doux et s\'affiche avec le numéro de table bien lisible, les annotations du client et le décompte du temps.',
@@ -68,7 +72,7 @@ export const HowItWorksSection: React.FC = () => {
     {
       id: 'superadmin' as const,
       icon: Building2,
-      title: '🏢 Super Admin Multi-sites',
+      title: 'Super Admin Multi-sites',
       badge: 'Pour l\'Agence & Chaînes',
       shortDesc: 'Gérez tous vos points de vente en un seul lieu centralisé',
       fullDesc: 'Idéal pour les gérants possédant plusieurs restaurants (ex: Dakar Almadies + Thiès + Saly) ou pour notre équipe d\'accompagnement technique. Vue d\'ensemble de tous les établissements, permissions par serveur et exports comptables.',
@@ -110,7 +114,7 @@ export const HowItWorksSection: React.FC = () => {
           {/* Step 1 */}
           <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#00A86B] transition-all">
             <div className="w-12 h-12 rounded-xl bg-green-50 text-[#00A86B] flex items-center justify-center font-black text-xl mb-6">
-              1️⃣
+              1
             </div>
             <span className="text-xs font-extrabold text-[#00A86B] tracking-wider uppercase block mb-1">
               Étape 1 : Le client s'assoit
@@ -126,7 +130,7 @@ export const HowItWorksSection: React.FC = () => {
           {/* Step 2 */}
           <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#FF6B00] transition-all">
             <div className="w-12 h-12 rounded-xl bg-orange-50 text-[#FF6B00] flex items-center justify-center font-black text-xl mb-6">
-              2️⃣
+              2
             </div>
             <span className="text-xs font-extrabold text-[#FF6B00] tracking-wider uppercase block mb-1">
               Étape 2 : Il choisit avec envie
@@ -142,7 +146,7 @@ export const HowItWorksSection: React.FC = () => {
           {/* Step 3 */}
           <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#00A86B] transition-all">
             <div className="w-12 h-12 rounded-xl bg-green-50 text-[#00A86B] flex items-center justify-center font-black text-xl mb-6">
-              3️⃣
+              3
             </div>
             <span className="text-xs font-extrabold text-[#00A86B] tracking-wider uppercase block mb-1">
               Étape 3 : Le service démarre
@@ -276,7 +280,7 @@ export const HowItWorksSection: React.FC = () => {
                       <div className="space-y-2 pt-2">
                         <div className="bg-[#2D2D2D] p-2.5 rounded-lg flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">🥘</span>
+                            <UtensilsCrossed className="w-4 h-4 text-amber-500 shrink-0" />
                             <div>
                               <p className="text-xs font-bold">Thiéboudienne Rouge Penda Mbaye</p>
                               <p className="text-[10px] text-gray-400">Option: Piment traditionnel</p>
@@ -287,7 +291,7 @@ export const HowItWorksSection: React.FC = () => {
 
                         <div className="bg-[#2D2D2D] p-2.5 rounded-lg flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">🧃</span>
+                            <Coffee className="w-4 h-4 text-emerald-500 shrink-0" />
                             <div>
                               <p className="text-xs font-bold">Jus de Bissap Glacé Menthe</p>
                               <p className="text-[10px] text-gray-400">Grand format 50cl</p>
@@ -355,8 +359,9 @@ export const HowItWorksSection: React.FC = () => {
                       </div>
 
                       <div className="flex gap-2 text-xs">
-                        <button className="flex-1 bg-[#00A86B] text-white py-1.5 rounded-lg font-bold">
-                          ✓ Passer en Préparation
+                        <button className="flex-1 bg-[#00A86B] text-white py-1.5 rounded-lg font-bold flex items-center justify-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Passer en Préparation</span>
                         </button>
                         <button className="bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg font-bold">
                           Prêt
@@ -374,15 +379,24 @@ export const HowItWorksSection: React.FC = () => {
 
                       <div className="space-y-2 text-xs">
                         <div className="p-2 bg-[#2D2D2D] rounded-lg flex justify-between items-center">
-                          <span>📍 Restaurant Dakar Almadies</span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Restaurant Dakar Almadies</span>
+                          </span>
                           <span className="font-bold text-emerald-400">142 500 FCFA ajd</span>
                         </div>
                         <div className="p-2 bg-[#2D2D2D] rounded-lg flex justify-between items-center">
-                          <span>📍 Grill & Lounge Thiès</span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Grill & Lounge Thiès</span>
+                          </span>
                           <span className="font-bold text-emerald-400">98 000 FCFA ajd</span>
                         </div>
                         <div className="p-2 bg-[#2D2D2D] rounded-lg flex justify-between items-center">
-                          <span>📍 Paillote Saly Mbour</span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Paillote Saly Mbour</span>
+                          </span>
                           <span className="font-bold text-emerald-400">185 000 FCFA ajd</span>
                         </div>
                       </div>

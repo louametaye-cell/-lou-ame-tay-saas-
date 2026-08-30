@@ -86,19 +86,21 @@ export const ProblemsSection: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode('before')}
-                className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'before' ? 'bg-white text-rose-600 shadow-sm' : 'hover:text-slate-900'
                 }`}
               >
-                ❌ Les Problèmes
+                <XCircle className="w-4 h-4 text-rose-500" />
+                <span>Les Problèmes</span>
               </button>
               <button
                 onClick={() => setViewMode('after')}
-                className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'after' ? 'bg-white text-[#00A86B] shadow-sm' : 'hover:text-slate-900'
                 }`}
               >
-                ✅ Les Solutions
+                <CheckCircle2 className="w-4 h-4 text-[#00A86B]" />
+                <span>Les Solutions</span>
               </button>
             </div>
           </div>

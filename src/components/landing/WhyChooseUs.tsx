@@ -11,35 +11,41 @@ import {
   Smartphone,
   Check,
   X,
-  Building2
+  Building2,
+  Handshake
 } from 'lucide-react';
 import { COMPETITOR_COMPARISONS } from '@/components/landing/data/mockData';
+import { IconBadge } from '@/components/ui/IconBadge';
 
 export const WhyChooseUs: React.FC = () => {
   const pillars = [
     {
-      icon: '🇸🇳',
+      flag: '🇸🇳',
+      icon: null,
       title: '100% Conçu pour le Sénégal',
       subtitle: 'Adapté aux réalités du terrain',
       description: 'Optimisé pour les connexions mobiles Orange, Free et Expresso. Affichage des prix en FCFA, devises locales, et intégration des habitudes de commande sénégalaises.',
       accent: 'border-green-200 bg-white'
     },
     {
-      icon: '⏱️',
+      flag: null,
+      icon: Clock,
       title: 'Gain de temps spectaculaire',
       subtitle: 'Plus de va-et-vient inutiles',
       description: 'Vos serveurs ne passent plus leur temps à porter des menus physiques et à répéter les plats. Ils se concentrent sur un accueil chaleureux (Teranga) et le service.',
       accent: 'border-orange-200 bg-white'
     },
     {
-      icon: '📈',
+      flag: null,
+      icon: TrendingUp,
       title: 'Augmentation du ticket moyen',
       subtitle: '+25% de ventes additionnelles',
       description: 'Les clients sont tentés par les belles photos HD de vos grillades, pastels, jus de bissap et desserts maison. Ils commandent spontanément plus d\'extras.',
       accent: 'border-green-200 bg-white'
     },
     {
-      icon: '🤝',
+      flag: null,
+      icon: Handshake,
       title: 'Assistance locale & Proximité',
       subtitle: 'Basés à Thiès & Dakar',
       description: 'Pas de centre d\'appel à l\'autre bout du monde. Notre équipe se déplace dans votre restaurant pour former vos équipes et reste joignable 7j/7 sur WhatsApp.',
@@ -71,8 +77,8 @@ export const WhyChooseUs: React.FC = () => {
           <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-2xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center shrink-0 border border-white/20 text-3xl">
-              📍
+            <div className="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center shrink-0 border border-white/20">
+              <MapPin className="w-8 h-8 text-amber-400" />
             </div>
             
             <div className="flex-1 text-center md:text-left space-y-2">
@@ -105,7 +111,13 @@ export const WhyChooseUs: React.FC = () => {
               key={idx}
               className={`p-7 rounded-2xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${pillar.accent}`}
             >
-              <div className="text-3xl mb-4">{pillar.icon}</div>
+              <div className="mb-4">
+                {pillar.flag ? (
+                  <span className="text-3xl">{pillar.flag}</span>
+                ) : pillar.icon ? (
+                  <IconBadge icon={pillar.icon} size="lg" />
+                ) : null}
+              </div>
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">
                 {pillar.subtitle}
               </span>
@@ -147,11 +159,12 @@ export const WhyChooseUs: React.FC = () => {
                 {COMPETITOR_COMPARISONS.map((row, rIdx) => (
                   <tr key={rIdx} className={row.isHighlight ? 'bg-emerald-50/20 font-medium' : 'hover:bg-gray-50/50'}>
                     <td className="p-3.5 text-gray-900 font-semibold flex items-center gap-1.5">
-                      {row.isHighlight && <span className="text-[#00A86B]">★</span>}
+                      {row.isHighlight && <Sparkles className="w-3.5 h-3.5 text-[#00A86B]" />}
                       <span>{row.feature}</span>
                     </td>
-                    <td className="p-3.5 text-[#00A86B] font-bold bg-green-50/40 border-x border-green-100 text-center">
-                      ✓ {String(row.louAmeTay)}
+                    <td className="p-3.5 text-[#00A86B] font-bold bg-green-50/40 border-x border-green-100 text-center flex items-center justify-center gap-1">
+                      <Check className="w-4 h-4 text-[#00A86B]" />
+                      <span>{String(row.louAmeTay)}</span>
                     </td>
                     <td className="p-3.5 text-gray-600 text-center">
                       {String(row.scaniFood)}
