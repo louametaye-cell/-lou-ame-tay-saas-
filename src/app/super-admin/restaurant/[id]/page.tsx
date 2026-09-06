@@ -283,25 +283,25 @@ export default function SuperAdminRestaurantDetailPage() {
               {/* Bouton Relance WhatsApp */}
               <button
                 onClick={() => setIsWhatsAppModalOpen(true)}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95"
+                className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-4 h-4 text-[#FF6B00]" />
                 <span>Relance WhatsApp J-5</span>
               </button>
 
               {/* Bouton Réglages & Abonnement */}
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95"
+                className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95"
               >
-                <Settings className="w-4 h-4" />
-                <span>⚙️ Réglages & Tarif</span>
+                <Settings className="w-4 h-4 text-[#FF6B00]" />
+                <span>Réglages & Tarif</span>
               </button>
 
               <a
                 href={`/dashboard`}
                 target="_blank"
-                className="flex items-center gap-1.5 bg-[#FF6B00] hover:bg-orange-700 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition-all"
+                className="flex items-center gap-1.5 bg-[#FF6B00] hover:bg-orange-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-xs transition-all"
               >
                 <Store className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -310,7 +310,7 @@ export default function SuperAdminRestaurantDetailPage() {
               <a
                 href={`/r/${restaurant.subdomain}/table-1`}
                 target="_blank"
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-700 rounded-xl transition-all"
+                className="p-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl transition-all shadow-xs"
                 title="Voir le Menu Client"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -322,14 +322,14 @@ export default function SuperAdminRestaurantDetailPage() {
         {/* Content Container */}
         <main className="max-w-6xl mx-auto px-4 sm:px-8 pt-8 space-y-6">
           {/* Master Activation Banner */}
-          <div className={`p-5 sm:p-6 rounded-3xl border shadow-xl flex items-center justify-between flex-wrap gap-4 transition-all print:hidden ${
+          <div className={`p-5 sm:p-6 rounded-3xl border shadow-sm flex items-center justify-between flex-wrap gap-4 transition-all print:hidden ${
             restaurant.isActive
-              ? 'bg-gradient-to-r from-emerald-950/40 via-slate-950 to-slate-950 border-emerald-500/40'
-              : 'bg-gradient-to-r from-red-950/40 via-slate-950 to-slate-950 border-red-500/40'
+              ? 'bg-white border-slate-200'
+              : 'bg-amber-50/80 border-amber-200'
           }`}>
             <div className="flex items-center gap-4">
               <div className={`p-3.5 rounded-2xl ${
-                restaurant.isActive ? 'bg-emerald-600/20 text-[#00A86B] border border-emerald-500/30' : 'bg-red-600/20 text-red-400 border border-red-500/30'
+                restaurant.isActive ? 'bg-orange-50 text-[#FF6B00] border border-orange-200' : 'bg-amber-100 text-amber-900 border border-amber-300'
               }`}>
                 <Power className="w-7 h-7" />
               </div>
@@ -337,7 +337,7 @@ export default function SuperAdminRestaurantDetailPage() {
                 <h3 className="text-base sm:text-lg font-black text-slate-900">
                   {restaurant.isActive ? 'Restaurant Actif & Ouvert au Public' : 'Restaurant Désactivé & Fermé'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5 max-w-lg">
+                <p className="text-xs text-slate-600 mt-0.5 max-w-lg font-medium">
                   {restaurant.isActive
                     ? 'Les clients peuvent scanner les QR codes et commander en direct.'
                     : 'La page client affiche le message : "Ce restaurant est actuellement fermé. Revenez plus tard !".'}
@@ -348,19 +348,19 @@ export default function SuperAdminRestaurantDetailPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="px-4 py-3.5 bg-white hover:bg-slate-50 border border-slate-200 text-amber-300 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all"
+                className="px-4 py-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-2xs"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-4 h-4 text-[#FF6B00]" />
                 <span>Modifier Abonnement</span>
               </button>
 
               <button
                 onClick={handleToggleActive}
                 disabled={isUpdating}
-                className={`px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-xl transition-all active:scale-95 flex items-center gap-2 ${
+                className={`px-6 py-3 rounded-2xl font-extrabold text-xs sm:text-sm shadow-md transition-all active:scale-95 flex items-center gap-2 ${
                   restaurant.isActive
-                    ? 'bg-red-600 hover:bg-red-700 text-slate-900 shadow-red-600/30'
-                    : 'bg-[#00A86B] hover:bg-[#00915c] text-slate-900 shadow-emerald-600/30'
+                    ? 'bg-slate-900 hover:bg-slate-800 text-white'
+                    : 'bg-[#FF6B00] hover:bg-orange-600 text-white'
                 }`}
               >
                 <Power className="w-4 h-4 stroke-[3]" />
@@ -375,8 +375,8 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('overview')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'overview'
-                  ? 'bg-[#FF6B00] text-slate-900 shadow-md'
-                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
+                  ? 'bg-[#FF6B00] text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
               }`}
             >
               <Store className="w-4 h-4" />
@@ -387,11 +387,11 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('performance')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'performance'
-                  ? 'bg-[#00A86B] text-slate-900 shadow-md'
-                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
               }`}
             >
-              <BarChart3 className="w-4 h-4" />
+              <BarChart3 className="w-4 h-4 text-[#FF6B00]" />
               <span>📊 Performance 360°</span>
             </button>
 
@@ -399,8 +399,8 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('tables')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'tables'
-                  ? 'bg-[#FF6B00] text-slate-900 shadow-md'
-                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
+                  ? 'bg-[#FF6B00] text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
               }`}
             >
               <QrCode className="w-4 h-4" />
@@ -411,11 +411,11 @@ export default function SuperAdminRestaurantDetailPage() {
               onClick={() => setActiveTab('stats')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'stats'
-                  ? 'bg-[#FF6B00] text-slate-900 shadow-md'
-                  : 'bg-slate-50 text-slate-500 hover:text-slate-900'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
               }`}
             >
-              <Activity className="w-4 h-4" />
+              <Activity className="w-4 h-4 text-[#FF6B00]" />
               <span>Répartition par Table</span>
             </button>
           </div>

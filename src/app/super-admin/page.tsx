@@ -315,18 +315,18 @@ export default function SuperAdminDashboardPage() {
               {/* Button Gestion des Packs */}
               <Link
                 href="/super-admin/plans"
-                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-orange-400 border border-orange-500/30 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all shadow-xs"
+                className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all shadow-xs"
               >
-                <Layers className="w-4 h-4" />
+                <Layers className="w-4 h-4 text-[#FF6B00]" />
                 <span>Gestion des Packs</span>
               </Link>
 
               {/* Button Tenants QA */}
               <Link
                 href="/super-admin/tenants"
-                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all shadow-xs"
+                className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all shadow-xs"
               >
-                <Store className="w-4 h-4" />
+                <Store className="w-4 h-4 text-[#FF6B00]" />
                 <span>Restaurants & QA</span>
               </Link>
 
@@ -335,17 +335,17 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setIsSupportOpen(!isSupportOpen)}
                 className={`flex items-center gap-1.5 text-xs font-bold px-3.5 py-2.5 rounded-xl border transition-all ${
                   isSupportOpen
-                    ? 'bg-indigo-600 text-slate-900 border-indigo-500 shadow-lg shadow-indigo-600/30'
-                    : 'bg-slate-50 text-indigo-300 border-indigo-500/40 hover:bg-slate-50'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-900 border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                <Bot className="w-4 h-4" />
+                <Bot className="w-4 h-4 text-[#FF6B00]" />
                 <span>{isSupportOpen ? 'Fermer SAV IA' : '🤖 SAV IA 24/7'}</span>
               </button>
 
               <button
                 onClick={fetchRestaurants}
-                className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-700 rounded-xl transition-all"
+                className="p-2.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl transition-all"
                 title="Actualiser"
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -353,7 +353,7 @@ export default function SuperAdminDashboardPage() {
 
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#00A86B] hover:opacity-90 text-slate-900 text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-lg transition-all active:scale-95"
+                className="flex items-center gap-2 bg-[#FF6B00] hover:bg-orange-600 text-white text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>Nouveau Restaurant Client</span>
@@ -376,20 +376,20 @@ export default function SuperAdminDashboardPage() {
 
           {/* BANNIÈRE D'ALERTE : EXPIRATIONS DANS LES 5 JOURS (J-5 WHATSAPP AUTOMATISÉ) */}
           {expiringSoonRestaurants.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-950/70 via-orange-950/50 to-slate-950 border-2 border-amber-500/50 rounded-3xl p-5 shadow-2xl flex items-start gap-4">
-              <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/40 shrink-0">
+            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-5 shadow-xs flex items-start gap-4">
+              <div className="p-3 bg-amber-100 text-[#FF6B00] rounded-2xl border border-amber-300 shrink-0">
                 <Clock className="w-6 h-6 animate-pulse" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-amber-300 flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-black text-amber-950 flex items-center gap-2">
                     <span>⚡ Relances Paiement Requises ({expiringSoonRestaurants.length} abonnement(s) à &le; 5 jours)</span>
                   </h3>
-                  <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-2.5 py-1 rounded-full border border-amber-500/30">
+                  <span className="text-xs bg-amber-100 text-amber-950 font-bold px-2.5 py-1 rounded-full border border-amber-300">
                     Wave & Orange Money
                   </span>
                 </div>
-                <p className="text-xs text-slate-700 mt-1">
+                <p className="text-xs text-amber-900 mt-1 font-medium">
                   Ces restaurants arrivent à échéance très prochainement. Cliquez sur le bouton WhatsApp pour envoyer la relance personnalisée avec les coordonnées de paiement en 1 clic :
                 </p>
 
@@ -398,17 +398,17 @@ export default function SuperAdminDashboardPage() {
                     const end = new Date(r.subscription!.endDate);
                     const days = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                     return (
-                      <div key={r.id} className="bg-slate-900/90 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between gap-2">
+                      <div key={r.id} className="bg-white border border-amber-200 p-3 rounded-2xl flex items-center justify-between gap-2 shadow-2xs">
                         <div>
                           <span className="text-xs font-black text-slate-900 block">{r.name}</span>
-                          <span className={`text-[10px] font-bold ${days <= 0 ? 'text-red-400' : 'text-amber-400'}`}>
+                          <span className={`text-[10px] font-bold ${days <= 0 ? 'text-red-600' : 'text-amber-700'}`}>
                             {days <= 0 ? 'Expiré' : `Échéance dans ${days} jour(s)`} • {formatFCFA(r.subscription?.price || 25000)}
                           </span>
                         </div>
 
                         <button
                           onClick={() => setWhatsAppReminderRestaurant(r)}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-900 rounded-xl text-xs font-black flex items-center gap-1 shadow-md active:scale-95 transition-all shrink-0"
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all shrink-0"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           <span>💬 WhatsApp</span>
@@ -423,15 +423,15 @@ export default function SuperAdminDashboardPage() {
 
           {/* Inactivity Alert Notification (< 5 scans/semaine) */}
           {inactiveWarningRestos.length > 0 && (
-            <div className="bg-red-950/40 border border-red-500/50 rounded-3xl p-5 shadow-xl flex items-start gap-4">
-              <div className="p-2.5 bg-red-600/20 text-red-400 rounded-2xl border border-red-500/40 shrink-0">
+            <div className="bg-orange-50/80 border border-orange-200 rounded-3xl p-5 shadow-xs flex items-start gap-4">
+              <div className="p-2.5 bg-orange-100 text-[#FF6B00] rounded-2xl border border-orange-300 shrink-0">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-black text-red-300">
+                <h3 className="text-sm font-black text-slate-900">
                   ⚠️ Alerte Inactivité Détectée ({inactiveWarningRestos.length} restaurant(s) avec &lt; 5 scans)
                 </h3>
-                <p className="text-xs text-slate-700 mt-1">
+                <p className="text-xs text-slate-700 mt-1 font-medium">
                   Les établissements suivants enregistrent une très faible activité QR. Contactez leurs gérants pour vérifier le déploiement des chevalets de table :
                 </p>
                 <div className="flex items-center gap-2 flex-wrap mt-2.5">
@@ -439,10 +439,10 @@ export default function SuperAdminDashboardPage() {
                     <Link
                       key={r.id}
                       href={`/super-admin/restaurant/${r.id}`}
-                      className="bg-red-900/60 hover:bg-red-900 text-red-200 border border-red-700/80 text-xs px-3 py-1 rounded-xl font-bold transition-all flex items-center gap-1"
+                      className="bg-white hover:bg-orange-100 text-slate-900 border border-orange-200 text-xs px-3 py-1 rounded-xl font-bold transition-all flex items-center gap-1 shadow-2xs"
                     >
                       <span>{r.name} ({r.totalScans || 0} scan)</span>
-                      <ArrowUpRight className="w-3 h-3" />
+                      <ArrowUpRight className="w-3 h-3 text-[#FF6B00]" />
                     </Link>
                   ))}
                 </div>
@@ -793,20 +793,20 @@ export default function SuperAdminDashboardPage() {
                             {/* Bouton Relance WhatsApp */}
                             <button
                               onClick={() => setWhatsAppReminderRestaurant(resto)}
-                              className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                               title="Envoyer une relance WhatsApp"
                             >
-                              <MessageCircle className="w-3.5 h-3.5" />
+                              <MessageCircle className="w-3.5 h-3.5 text-[#FF6B00]" />
                               <span className="hidden sm:inline">WhatsApp</span>
                             </button>
 
                             {/* Bouton Réglages & Abonnement */}
                             <button
                               onClick={() => setEditingRestaurant(resto)}
-                              className="p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                               title="Modifier réglages & abonnement"
                             >
-                              <Settings className="w-3.5 h-3.5" />
+                              <Settings className="w-3.5 h-3.5 text-[#FF6B00]" />
                               <span className="hidden sm:inline">Réglages</span>
                             </button>
                           </div>
