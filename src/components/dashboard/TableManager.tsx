@@ -1,17 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   QrCode, 
-  Download, 
-  Printer, 
   ExternalLink, 
   Plus, 
   Minus, 
   Layers,
-  UtensilsCrossed
+  UtensilsCrossed,
+  ShieldCheck,
+  Package,
+  Phone
 } from 'lucide-react';
-import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { OrderType } from '@/types';
 import { TableServiceLiveStatus } from './TableServiceLiveStatus';
 import { toast } from 'sonner';
@@ -87,195 +89,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
     return `${baseUrl}/r/${subdomain}/${num}`;
   };
 
-  const handleDownloadPNG = (num: number) => {
-    const canvas = document.getElementById(`qr-canvas-${num}`) as HTMLCanvasElement;
-    if (!canvas) {
-      toast.error('Génération du QR Code en cours...');
-      return;
-    }
-
-    const pngUrl = canvas
-      .toDataURL('image/png')
-      .replace('image/png', 'image/octet-stream');
-
-    const downloadLink = document.createElement('a');
-    downloadLink.href = pngUrl;
-    downloadLink.download = `QR-Table-${num < 10 ? '0' + num : num}-${subdomain}.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    toast.success(`QR Code Table ${num} téléchargé (PNG Haute Définition) !`);
-  };
-
   const expressUrl = `${baseUrl}/r/${subdomain}/express`;
-
-  const handleDownloadExpressPNG = () => {
-    const canvas = document.getElementById('qr-canvas-express') as HTMLCanvasElement;
-    if (!canvas) {
-      toast.error('Génération du QR Code en cours...');
-      return;
-    }
-
-    const pngUrl = canvas
-      .toDataURL('image/png')
-      .replace('image/png', 'image/octet-stream');
-
-    const downloadLink = document.createElement('a');
-    downloadLink.href = pngUrl;
-    downloadLink.download = `QR-Comptoir-Express-${subdomain}.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    toast.success(`QR Code Comptoir Express téléchargé (PNG Haute Définition) !`);
-  };
-
-  const handlePrintExpressSticker = () => {
-    const printWindow = window.open('', '_blank', 'width=800,height=900');
-    if (!printWindow) return;
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Sticker QR Code Comptoir Express - ${restaurantName}</title>
-          <style>
-            @page { size: A5 portrait; margin: 10mm; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; margin: 0; padding: 20px; text-align: center; }
-            .sticker-card {
-              border: 3px solid #7c3aed;
-              border-radius: 24px;
-              padding: 24px;
-              max-width: 380px;
-              margin: 0 auto;
-              background: #faf5ff;
-            }
-            .sticker-header { font-size: 13px; font-weight: 900; color: #6b21a8; text-transform: uppercase; margin-bottom: 6px; }
-            .resto-name { font-size: 20px; font-weight: 900; color: #1e1b4b; margin-bottom: 16px; }
-            .qr-container img { width: 220px; height: 220px; border-radius: 16px; border: 2px solid #c084fc; background: #fff; padding: 8px; }
-            .express-badge { background: #7c3aed; color: #fff; font-weight: 900; font-size: 16px; padding: 8px 16px; border-radius: 12px; margin: 14px auto 8px; display: inline-block; }
-            .scan-cta { font-size: 12px; color: #4c1d95; font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <div class="sticker-card">
-            <div class="sticker-header">⚡ SERVICE COMPTOIR & BAR</div>
-            <div class="resto-name">${restaurantName}</div>
-            <div class="qr-container">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(expressUrl)}" />
-            </div>
-            <div class="express-badge">⚡ COMMANDE AU COMPTOIR</div>
-            <div class="scan-cta">Scannez pour commander et payer directement à la caisse</div>
-          </div>
-          <script>
-            window.onload = () => { window.print(); };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-  };
-
-  const handlePrintAllStickers = () => {
-    const printWindow = window.open('', '_blank', 'width=800,height=900');
-    if (!printWindow) return;
-
-    const stickersHtml = tables
-      .map((t) => {
-        const url = getTableUrl(t.number);
-        const formatted = t.number < 10 ? `0${t.number}` : `${t.number}`;
-        return `
-        <div class="sticker-card">
-          <div class="sticker-header">🍽️ LOU AME TAY ?</div>
-          <div class="resto-name">${restaurantName}</div>
-          <div class="qr-container">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" />
-          </div>
-          <div class="table-badge">TABLE ${formatted}</div>
-          <div class="scan-cta">Scannez pour commander sans attendre</div>
-        </div>
-      `;
-      })
-      .join('');
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Planche Stickers QR Codes - ${restaurantName}</title>
-          <style>
-            @page { size: A4 portrait; margin: 10mm; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; margin: 0; padding: 0; }
-            .grid-container {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 15mm;
-              justify-items: center;
-            }
-            .sticker-card {
-              width: 80mm;
-              height: 80mm;
-              border: 2px dashed #ff6b00;
-              border-radius: 12mm;
-              box-sizing: border-box;
-              padding: 4mm;
-              text-align: center;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: space-between;
-              page-break-inside: avoid;
-            }
-            .sticker-header {
-              font-size: 13px;
-              font-weight: 900;
-              color: #ff6b00;
-            }
-            .resto-name {
-              font-size: 10px;
-              font-weight: 700;
-              color: #333;
-            }
-            .qr-container img {
-              width: 44mm;
-              height: 44mm;
-              display: block;
-              margin: 0 auto;
-            }
-            .table-badge {
-              background: #00a86b;
-              color: #fff;
-              font-size: 12px;
-              font-weight: 900;
-              padding: 2px 10px;
-              border-radius: 6px;
-            }
-            .scan-cta {
-              font-size: 9px;
-              color: #666;
-              font-weight: 600;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="grid-container">
-            ${stickersHtml}
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-  };
 
   return (
     <div className="space-y-6">
@@ -320,6 +134,52 @@ export const TableManager: React.FC<TableManagerProps> = ({
       {/* TAB 2: QR CODES & FLOOR PLAN */}
       {activeTab === 'QRCODES' && (
         <div className="space-y-6">
+          {/* BANNIÈRE OFFICIELLE MDA ARTS WORK - IMPRESSION RÉSERVÉE */}
+          <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 border-2 border-amber-300/80 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center shadow-xs shrink-0">
+                <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 px-2.5 py-0.5 rounded-full">
+                    Atelier d&apos;Impression Officiel
+                  </span>
+                  <span className="text-xs text-slate-500 font-bold">
+                    Médias Graphisme / MDA Arts Work
+                  </span>
+                </div>
+                <h3 className="text-base font-black text-slate-900">
+                  Chevalets de Table A5/A6 &amp; Stickers Étanches Haute Définition
+                </h3>
+                <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                  L&apos;impression et le tirage physique des QR codes sont réservés et certifiés par nos ateliers pour garantir une plastification étanche lavable et un design premium anti-reflet.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
+              <Link
+                href="/dashboard/qrcodes"
+                className="flex-1 md:flex-initial py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-black text-xs rounded-xl shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <Package className="w-4 h-4" />
+                <span>Commander nos Packs Chevalets</span>
+              </Link>
+
+              <a
+                href="https://wa.me/221774587474?text=Bonjour%20MDA%20Arts%20Work%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">WhatsApp (+221 77 458 74 74)</span>
+                <span className="sm:hidden">WhatsApp</span>
+              </a>
+            </div>
+          </div>
+
           {/* QR Code Type Selector */}
           <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs flex-wrap">
             <button
@@ -347,26 +207,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
             </button>
           </div>
 
-          {/* Hidden Canvases for PNG downloads */}
-          <div className="hidden">
-            <QRCodeCanvas
-              id="qr-canvas-express"
-              value={expressUrl}
-              size={1024}
-              level="H"
-              marginSize={2}
-            />
-            {tables.map((t) => (
-              <QRCodeCanvas
-                key={t.number}
-                id={`qr-canvas-${t.number}`}
-                value={getTableUrl(t.number)}
-                size={512}
-                level="H"
-                marginSize={2}
-              />
-            ))}
-          </div>
+
 
           {/* IF QR MODE IS EXPRESS */}
           {qrMode === 'EXPRESS' ? (
@@ -401,32 +242,22 @@ export const TableManager: React.FC<TableManagerProps> = ({
               </div>
 
               <div className="pt-4 border-t border-white/15 flex items-center gap-3 flex-wrap">
-                <button
-                  type="button"
-                  onClick={handleDownloadExpressPNG}
-                  className="py-3 px-5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-black text-xs rounded-2xl shadow-lg shadow-purple-500/30 flex items-center gap-2 active:scale-95 transition-all"
+                <Link
+                  href="/dashboard/qrcodes"
+                  className="py-3 px-5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 font-black text-xs rounded-2xl shadow-lg flex items-center gap-2 active:scale-95 transition-all"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Télécharger Sticker HD 300 DPI</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handlePrintExpressSticker}
-                  className="py-3 px-5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl border border-white/20 flex items-center gap-2 transition-all"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Imprimer Format Chevalet A5</span>
-                </button>
+                  <Package className="w-4 h-4" />
+                  <span>Commander Chevalet Comptoir Officiel (MDA)</span>
+                </Link>
 
                 <a
                   href={expressUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-3 px-5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-2xl flex items-center gap-2 shadow-md ml-auto"
+                  className="py-3 px-5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl border border-white/20 flex items-center gap-2 transition-all ml-auto"
                 >
                   <span>Tester le Menu Express</span>
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-4 h-4 text-amber-400" />
                 </a>
               </div>
             </div>
@@ -476,15 +307,17 @@ export const TableManager: React.FC<TableManagerProps> = ({
                 </div>
 
                 <div className="bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-300 p-4 rounded-3xl flex flex-col justify-between shadow-xs">
-                  <span className="text-xs text-amber-900 font-bold">Impression Stickers</span>
-                  <button
-                    type="button"
-                    onClick={handlePrintAllStickers}
-                    className="w-full mt-2 py-2 px-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                  <span className="text-xs text-amber-950 font-black flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
+                    <span>Packs Chevalets MDA</span>
+                  </span>
+                  <Link
+                    href="/dashboard/qrcodes"
+                    className="w-full mt-2 py-2 px-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
                   >
-                    <Printer className="w-4 h-4" />
-                    <span>Planche Complète</span>
-                  </button>
+                    <Package className="w-3.5 h-3.5" />
+                    <span>Commander ({tableCount} tables)</span>
+                  </Link>
                 </div>
               </div>
 
@@ -572,35 +405,35 @@ export const TableManager: React.FC<TableManagerProps> = ({
                       <p className="text-xs text-slate-500 break-all font-mono">
                         {getTableUrl(selectedTable)}
                       </p>
-                      <div className="pt-1 flex items-center gap-2">
-                        <span className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-2 py-0.5 rounded-md">
-                          QR Haute Définition
+                      <div className="pt-1.5 flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3 text-amber-600" />
+                          Tirage physique certifié Super-Admin
                         </span>
                         <span className="text-[11px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200">
-                          Format Sticker 8x8 cm
+                          Format Sticker 8x8 cm ou Chevalet A5/A6
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2.5 flex-wrap w-full md:w-auto">
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadPNG(selectedTable)}
-                      className="flex-1 md:flex-initial py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 border border-slate-200 transition-all shadow-2xs"
+                    <Link
+                      href="/dashboard/qrcodes"
+                      className="flex-1 md:flex-initial py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
                     >
-                      <Download className="w-4 h-4 text-orange-600" />
-                      <span>Télécharger PNG</span>
-                    </button>
+                      <Package className="w-4 h-4" />
+                      <span>Commander nos Chevalets &amp; Stickers</span>
+                    </Link>
 
                     <a
                       href={getTableUrl(selectedTable)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 md:flex-initial py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
+                      className="flex-1 md:flex-initial py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 border border-slate-200 transition-all shadow-2xs"
                     >
-                      <span>Tester Menu Table</span>
-                      <ExternalLink className="w-4 h-4" />
+                      <span>Tester Menu Table {selectedTable < 10 ? '0' + selectedTable : selectedTable}</span>
+                      <ExternalLink className="w-4 h-4 text-orange-600" />
                     </a>
                   </div>
                 </div>
