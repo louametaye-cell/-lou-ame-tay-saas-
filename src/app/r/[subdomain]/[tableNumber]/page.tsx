@@ -6,26 +6,39 @@ import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
 interface PageProps {
-  params: {
+  params: Promise<{
+    subdomain: string;
+    tableNumber: string;
+  }> | {
     subdomain: string;
     tableNumber: string;
   };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
-export default async function FriendlyTableMenuPage({ params }: PageProps) {
-  // 1. Nettoyage du numéro de table (supporte "1", "01", "table-1", "table-04")
-  const rawTableStr = (params.tableNumber || '1').replace(/[^0-9]/g, '');
-  const tableNum = parseInt(rawTableStr, 10) || 1;
+export default async function FriendlyTableMenuPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
 
-  let restaurant: any =  SAMPLE_RESTAURANT;
+  // 1. Nettoyage du numéro de table (supporte "1", "01", "table-1", "table-04", etc.)
+  const rawTableStr = (
+    resolvedParams.tableNumber ||
+    (resolvedSearchParams.table as string) ||
+    (resolvedSearchParams.tableNumber as string) ||
+    '1'
+  );
+  const cleanDigits = rawTableStr.replace(/[^0-9]/g, '');
+  const tableNum = parseInt(cleanDigits, 10) || 1;
+
+  let restaurant: any = SAMPLE_RESTAURANT;
 
   try {
     // 2. Recherche directe dans la table Prisma `tenant`
     const dbTenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
-          { subdomain: params.subdomain },
-          { id: params.subdomain }
+          { subdomain: resolvedParams.subdomain },
+          { id: resolvedParams.subdomain }
         ]
       },
       include: {

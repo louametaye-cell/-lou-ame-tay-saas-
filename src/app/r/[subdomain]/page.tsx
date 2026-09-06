@@ -6,21 +6,30 @@ import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
 interface PageProps {
-  params: {
+  params: Promise<{
+    subdomain: string;
+  }> | {
     subdomain: string;
   };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
-export default async function FriendlySubdomainMenuPage({ params }: PageProps) {
-  const tableNum = 1;
-  let restaurant: any =  SAMPLE_RESTAURANT;
+export default async function FriendlySubdomainMenuPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
+
+  const rawTableParam = (resolvedSearchParams.table || resolvedSearchParams.tableNumber) as string;
+  const cleanDigits = (rawTableParam || '1').replace(/[^0-9]/g, '');
+  const tableNum = parseInt(cleanDigits, 10) || 1;
+
+  let restaurant: any = SAMPLE_RESTAURANT;
 
   try {
     const dbTenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
-          { subdomain: params.subdomain },
-          { id: params.subdomain }
+          { subdomain: resolvedParams.subdomain },
+          { id: resolvedParams.subdomain }
         ]
       },
       include: {

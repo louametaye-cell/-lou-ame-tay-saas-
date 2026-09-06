@@ -6,24 +6,37 @@ import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
 interface PageProps {
-  params: {
+  params: Promise<{
+    subdomain: string;
+    tableNumber: string;
+  }> | {
     subdomain: string;
     tableNumber: string;
   };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
-export default async function FriendlyTableMenuPage({ params }: PageProps) {
-  const rawTableStr = (params.tableNumber || '1').replace(/[^0-9]/g, '');
-  const tableNum = parseInt(rawTableStr, 10) || 1;
+export default async function FriendlyTableMenuPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
 
-  let restaurant: any =  SAMPLE_RESTAURANT;
+  const rawTableStr = (
+    resolvedParams.tableNumber ||
+    (resolvedSearchParams.table as string) ||
+    (resolvedSearchParams.tableNumber as string) ||
+    '1'
+  );
+  const cleanDigits = rawTableStr.replace(/[^0-9]/g, '');
+  const tableNum = parseInt(cleanDigits, 10) || 1;
+
+  let restaurant: any = SAMPLE_RESTAURANT;
 
   try {
     const dbTenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
-          { subdomain: params.subdomain },
-          { id: params.subdomain }
+          { subdomain: resolvedParams.subdomain },
+          { id: resolvedParams.subdomain }
         ]
       },
       include: {

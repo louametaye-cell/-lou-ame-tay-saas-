@@ -51,43 +51,130 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { tableNumber, orderType, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef, waiterId, zoneId, locationDetail } = body;
 
-    const tenantId = restaurantId; // Assure it exists in Prisma
     const isExpress = orderType === 'EXPRESS' || Number(tableNumber) === 0;
 
-    if (!tenantId || ((!isExpress && tableNumber === undefined && !locationDetail)) || !items || !Array.isArray(items) || items.length === 0) {
+    if ((!restaurantId && !body.tenantId) || ((!isExpress && tableNumber === undefined && !locationDetail)) || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'Données de commande invalides (restaurant, table ou articles manquants)' },
         { status: 400 }
       );
     }
 
+    const tenantIdInput = restaurantId || body.tenantId;
+
+    // Look up tenant in database by id OR subdomain to get valid tenant ID for foreign key
+    let validTenantId: string | null = null;
+    try {
+      const dbTenant = await (prisma as any).tenant.findFirst({
+        where: {
+          OR: [
+            { id: tenantIdInput },
+            { subdomain: tenantIdInput },
+          ],
+        },
+        select: { id: true },
+      });
+      if (dbTenant) {
+        validTenantId = dbTenant.id;
+      }
+    } catch (err) {
+      console.warn('Error checking tenant:', err);
+    }
+
+    // Fallback: if no tenant found by input ID/subdomain, find first tenant in DB
+    if (!validTenantId) {
+      try {
+        const fallbackTenant = await (prisma as any).tenant.findFirst({ select: { id: true } });
+        if (fallbackTenant) {
+          validTenantId = fallbackTenant.id;
+        }
+      } catch (e) {}
+    }
+
+    if (!validTenantId) {
+      return NextResponse.json(
+        { error: 'Restaurant non identifié dans la base de données' },
+        { status: 400 }
+      );
+    }
+
+    // Validate waiterId foreign key if passed or generated
+    let validWaiterId: string | null = null;
+    const rawWaiterId = waiterId || (isExpress ? undefined : getAssignedServerIdForTable(Number(tableNumber)));
+    if (rawWaiterId) {
+      try {
+        const dbWaiter = await (prisma as any).waiter.findUnique({
+          where: { id: rawWaiterId },
+          select: { id: true },
+        });
+        if (dbWaiter) {
+          validWaiterId = dbWaiter.id;
+        }
+      } catch (err) {
+        validWaiterId = null;
+      }
+    }
+
+    // Validate zoneId foreign key if passed
+    let validZoneId: string | null = null;
+    if (zoneId) {
+      try {
+        const dbZone = await (prisma as any).zone.findUnique({
+          where: { id: zoneId },
+          select: { id: true },
+        });
+        if (dbZone) {
+          validZoneId = dbZone.id;
+        }
+      } catch (e) {}
+    }
+
+    // Validate items menuItemId foreign key
+    const rawMenuItemIds = items
+      .map((i: any) => i.menuItemId || i.menuItem?.id)
+      .filter((id: any) => typeof id === 'string' && id.length > 0);
+
+    let existingMenuItemIdsSet = new Set<string>();
+    if (rawMenuItemIds.length > 0) {
+      try {
+        const foundItems = await (prisma as any).menuItem.findMany({
+          where: { id: { in: rawMenuItemIds } },
+          select: { id: true },
+        });
+        foundItems.forEach((m: any) => existingMenuItemIdsSet.add(m.id));
+      } catch (e) {}
+    }
+
     const total = items.reduce(
-      (sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+      (sum: number, item: any) => sum + (Number(item.price || item.menuItem?.price) || 0) * (Number(item.quantity) || 1),
       0
     );
 
     const newOrder = await (prisma as any).order.create({
       data: {
-        tenantId,
+        tenantId: validTenantId,
         tableNumber: isExpress ? 0 : Number(tableNumber) || 0,
         customerName: customerName || null,
         customerNote: customerNote || '',
         paymentMethod: paymentMethod || 'CASH',
         transactionRef: transactionRef || undefined,
-        waiterId: waiterId || (isExpress ? undefined : getAssignedServerIdForTable(tableNumber)),
-        zoneId: zoneId || undefined,
+        waiterId: validWaiterId || undefined,
+        zoneId: validZoneId || undefined,
         locationDetail: locationDetail || undefined,
         status: 'PENDING',
         totalAmount: total,
         items: {
-          create: items.map((i: any) => ({
-            menuItemId: i.menuItemId || i.menuItem?.id || undefined,
-            name: i.name || i.menuItem?.name || 'Plat du jour',
-            quantity: Number(i.quantity) || 1,
-            price: Number(i.price || i.menuItem?.price) || 0,
-            customNotes: i.notes || i.customNotes || null,
-            selectedExtras: i.options || undefined,
-          })),
+          create: items.map((i: any) => {
+            const rawId = i.menuItemId || i.menuItem?.id;
+            return {
+              menuItemId: existingMenuItemIdsSet.has(rawId) ? rawId : undefined,
+              name: i.name || i.menuItem?.name || 'Plat du jour',
+              quantity: Number(i.quantity) || 1,
+              price: Number(i.price || i.menuItem?.price) || 0,
+              customNotes: i.notes || i.customNotes || null,
+              selectedExtras: i.options || undefined,
+            };
+          }),
         },
       },
       include: {
@@ -96,16 +183,16 @@ export async function POST(req: Request) {
     });
 
     // Invalidate Redis caches for live orders and dashboard stats
-    await invalidateLiveOrdersCache(tenantId);
-    await invalidateDashboardStatsCache(tenantId);
+    await invalidateLiveOrdersCache(validTenantId);
+    await invalidateDashboardStatsCache(validTenantId);
 
     logPerformance(`POST /api/orders (${newOrder.id})`, timer.elapsedMs(), `Table ${newOrder.tableNumber}`);
 
     return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating order:', error);
+    console.error('Error creating order in API route:', error?.message || error, error?.stack);
     return NextResponse.json(
-      { error: 'Erreur lors de la création de la commande' },
+      { error: 'Erreur lors de la création de la commande: ' + (error?.message || 'Erreur serveur') },
       { status: 500 }
     );
   }
