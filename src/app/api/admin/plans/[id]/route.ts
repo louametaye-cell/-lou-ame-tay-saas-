@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { saasStorage } from '@/lib/saas-storage';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/plans/[id]
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const plan = saasStorage.getPlanById(params.id);
+    const plan = await (prisma as any).plan.findFirst({
+      where: {
+        OR: [{ id: params.id }, { slug: params.id }],
+      },
+    });
     if (!plan) {
       return NextResponse.json({ error: 'Pack introuvable' }, { status: 404 });
     }
@@ -15,22 +19,38 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // PUT /api/admin/plans/[id]
-// Modifier le prix, la description, et cocher/décocher les fonctionnalités / limites
+// Modifier le prix, la description, le nom et les métadonnées du pack dans PostgreSQL Supabase
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
-    const updated = saasStorage.updatePlan(params.id, body);
+    const { price, description, colorTheme, isRecommended, name } = body;
 
-    if (!updated) {
+    const existing = await (prisma as any).plan.findFirst({
+      where: { OR: [{ id: params.id }, { slug: params.id }] },
+    });
+
+    if (!existing) {
       return NextResponse.json({ error: 'Pack introuvable' }, { status: 404 });
     }
+
+    const updated = await (prisma as any).plan.update({
+      where: { id: existing.id },
+      data: {
+        price: price !== undefined ? Number(price) : undefined,
+        name: name || undefined,
+        description: description !== undefined ? description : undefined,
+        colorTheme: colorTheme || undefined,
+        isRecommended: isRecommended !== undefined ? Boolean(isRecommended) : undefined,
+      },
+    });
 
     return NextResponse.json({
       success: true,
       plan: updated,
-      message: `Pack "${updated.name}" mis à jour avec succès !`,
+      message: `Pack "${updated.name}" mis à jour avec succès dans la BDD !`,
     });
-  } catch (error) {
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour du pack' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Erreur update plan:', error);
+    return NextResponse.json({ error: error?.message || 'Erreur lors de la mise à jour du pack' }, { status: 500 });
   }
 }

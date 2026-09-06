@@ -32,7 +32,8 @@ import {
   Settings,
   MessageCircle,
   Headphones,
-  Bot
+  Bot,
+  Trash2
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -124,6 +125,28 @@ export default function SuperAdminDashboardPage() {
     } catch (e) {
       toast.error('Erreur lors du changement d\'état');
       fetchRestaurants();
+    }
+  };
+
+  const handleDeleteRestaurant = async (id: string, name: string) => {
+    if (!window.confirm(`⚠️ ATTENTION : Êtes-vous sûr de vouloir SUPPRIMER DÉFINITIVEMENT le restaurant "${name}" ? Cette action est irréversible et supprimera toutes ses tables et données.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/super-admin/restaurants/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        toast.success(`Le restaurant "${name}" a été supprimé définitivement.`);
+        fetchRestaurants();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Erreur lors de la suppression');
+      }
+    } catch (e) {
+      toast.error('Erreur de communication');
     }
   };
 
@@ -826,10 +849,18 @@ export default function SuperAdminDashboardPage() {
                             href={`/r/${resto.subdomain}/table-1`}
                             target="_blank"
                             className="p-2 bg-orange-50 hover:bg-orange-100 text-[#FF6B00] border border-orange-200 rounded-xl transition-all"
-                            title="Tester le menu client"
+                            title="Voir le menu client"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
+
+                          <button
+                            onClick={() => handleDeleteRestaurant(resto.id, resto.name)}
+                            className="p-2 bg-white hover:bg-red-600 hover:text-white text-slate-500 border border-slate-300 rounded-xl transition-all shadow-2xs"
+                            title="Supprimer définitivement ce restaurant"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>

@@ -32,7 +32,8 @@ import {
   Activity,
   Settings,
   MessageCircle,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -144,6 +145,29 @@ export default function SuperAdminRestaurantDetailPage() {
       toast.error('Erreur de communication');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteRestaurant = async () => {
+    if (!restaurant) return;
+    if (!window.confirm(`⚠️ ATTENTION : Êtes-vous sûr de vouloir SUPPRIMER DÉFINITIVEMENT le restaurant "${restaurant.name}" ? Cette action est irréversible et supprimera toutes ses tables et données.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/super-admin/restaurants/${restaurant.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        toast.success(`Le restaurant "${restaurant.name}" a été supprimé définitivement.`);
+        window.location.href = '/super-admin';
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Erreur lors de la suppression');
+      }
+    } catch (e) {
+      toast.error('Erreur de communication');
     }
   };
 
@@ -315,6 +339,14 @@ export default function SuperAdminRestaurantDetailPage() {
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
+
+              <button
+                onClick={handleDeleteRestaurant}
+                className="p-2 bg-white hover:bg-red-600 hover:text-white text-slate-600 border border-slate-300 rounded-xl transition-all shadow-xs"
+                title="Supprimer définitivement ce restaurant"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </header>
