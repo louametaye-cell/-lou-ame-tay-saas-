@@ -30,7 +30,7 @@ async function handleUpdate(
   try {
     const body = await req.json();
 
-    let subscriptionUpdateData: any = undefined;
+    let subscriptionUpdateData: any = {};
 
     if (body.action === 'extend-subscription' && body.additionalMonths) {
       const currentResto = await (prisma as any).tenant.findUnique({
@@ -42,21 +42,47 @@ async function handleUpdate(
           : new Date();
         const baseDate = currentEnd.getTime() > Date.now() ? currentEnd : new Date();
         baseDate.setMonth(baseDate.getMonth() + Number(body.additionalMonths));
-        subscriptionUpdateData = {
-          subscriptionExpiresAt: baseDate,
-          subscriptionStatus: 'ACTIVE'
-        };
+        subscriptionUpdateData.subscriptionExpiresAt = baseDate;
+        subscriptionUpdateData.subscriptionStatus = 'ACTIVE';
       }
+    } else if (body.endDate) {
+      subscriptionUpdateData.subscriptionExpiresAt = new Date(body.endDate);
+    }
+
+    if (body.plan) {
+      const targetPlan = await (prisma as any).plan.findFirst({
+        where: {
+          OR: [
+            { id: body.plan },
+            { slug: body.plan.toLowerCase().replace(/_/g, '-') },
+            { name: { contains: body.plan, mode: 'insensitive' } }
+          ]
+        }
+      });
+      if (targetPlan) {
+        subscriptionUpdateData.currentPlanId = targetPlan.id;
+      }
+    }
+
+    if (body.price !== undefined && body.price !== null) {
+      subscriptionUpdateData.monthlyFee = Number(body.price);
+    }
+
+    if (body.status) {
+      subscriptionUpdateData.subscriptionStatus = body.status;
+    }
+
+    if (body.isActive === false) {
+      subscriptionUpdateData.subscriptionStatus = 'SUSPENDED';
     }
 
     const updated = await (prisma as any).tenant.update({
       where: { id: params.id },
       data: {
-        businessName: body.name,
-        ownerName: body.ownerName,
-        phone: body.phone,
-        address: body.address,
-        subscriptionStatus: body.isActive === false ? 'SUSPENDED' : (body.status || undefined),
+        businessName: body.name || undefined,
+        ownerName: body.ownerName !== undefined ? body.ownerName : undefined,
+        phone: body.phone || undefined,
+        address: body.address !== undefined ? body.address : undefined,
         ...subscriptionUpdateData,
       },
       include: {
@@ -64,9 +90,10 @@ async function handleUpdate(
       }
     });
 
-    return NextResponse.json({ restaurant: updated, message: 'Restaurant mis à jour avec succès' });
-  } catch (error) {
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour' }, { status: 500 });
+    return NextResponse.json({ restaurant: updated, message: 'Restaurant mis à jour avec succès dans la BDD' });
+  } catch (error: any) {
+    console.error('Erreur update restaurant:', error);
+    return NextResponse.json({ error: error?.message || 'Erreur lors de la mise à jour' }, { status: 500 });
   }
 }
 

@@ -30,7 +30,8 @@ export async function GET() {
       subscription: {
         plan: t.plan?.name || 'Inconnu',
         status: t.subscriptionStatus,
-        price: t.monthlyFee,
+        price: Number(t.monthlyFee || t.plan?.price || 25000),
+        endDate: t.subscriptionExpiresAt ? t.subscriptionExpiresAt.toISOString() : undefined,
       }
     }));
 
