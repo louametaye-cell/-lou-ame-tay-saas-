@@ -3,22 +3,39 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: Request,
-  { params }: { params: { tableNumber: string } }
+  { params }: { params: Promise<{ tableNumber: string }> | { tableNumber: string } }
 ) {
   try {
-    const tableNum = Number(params.tableNumber);
-    const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('restaurantId');
+    const resolvedParams = await Promise.resolve(params);
+    const rawTable = (resolvedParams?.tableNumber || '0').replace(/[^0-9]/g, '');
+    const tableNum = parseInt(rawTable, 10) || 0;
 
-    if (!tenantId) {
-      return NextResponse.json({ error: 'restaurantId is required' }, { status: 400 });
+    const { searchParams } = new URL(req.url);
+    const restaurantIdInput = searchParams.get('restaurantId') || searchParams.get('tenantId');
+
+    let validTenantId: string | null = null;
+    if (restaurantIdInput) {
+      const dbTenant = await (prisma as any).tenant.findFirst({
+        where: {
+          OR: [
+            { id: restaurantIdInput },
+            { subdomain: restaurantIdInput },
+          ],
+        },
+        select: { id: true },
+      });
+      if (dbTenant) {
+        validTenantId = dbTenant.id;
+      }
+    }
+
+    const whereClause: any = { tableNumber: tableNum };
+    if (validTenantId) {
+      whereClause.tenantId = validTenantId;
     }
 
     const dbOrders = await (prisma as any).order.findMany({
-      where: {
-        tenantId,
-        tableNumber: tableNum,
-      },
+      where: whereClause,
       include: {
         items: true,
       },
@@ -28,6 +45,7 @@ export async function GET(
 
     return NextResponse.json({ orders: dbOrders || [] });
   } catch (error) {
+    console.error('Erreur récupération commandes table:', error);
     return NextResponse.json({ error: 'Erreur récupération commandes table' }, { status: 500 });
   }
 }

@@ -3,10 +3,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: Request,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> | { orderId: string } }
 ) {
   try {
-    const { orderId } = params;
+    const resolvedParams = await Promise.resolve(params);
+    const { orderId } = resolvedParams;
 
     const dbOrder = await (prisma as any).order.findUnique({
       where: { id: orderId },
@@ -27,10 +28,11 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> | { orderId: string } }
 ) {
   try {
-    const { orderId } = params;
+    const resolvedParams = await Promise.resolve(params);
+    const { orderId } = resolvedParams;
     const body = await req.json();
     const { status } = body;
 

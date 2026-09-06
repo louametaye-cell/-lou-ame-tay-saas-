@@ -84,7 +84,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED').length;
 
   const getTableUrl = (num: number) => {
-    return `${baseUrl}/menu/${subdomain}/${num}`;
+    return `${baseUrl}/r/${subdomain}/${num}`;
   };
 
   const handleDownloadPNG = (num: number) => {

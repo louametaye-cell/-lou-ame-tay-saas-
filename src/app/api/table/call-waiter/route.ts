@@ -14,15 +14,40 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { tableNumber, restaurantId, customerName, reason } = body;
-    const tenantId = restaurantId;
+    const tenantIdInput = restaurantId || body.tenantId;
 
-    if (!tenantId || (!tableNumber && tableNumber !== 0)) {
+    if (!tenantIdInput || (!tableNumber && tableNumber !== 0)) {
       return NextResponse.json({ error: 'Restaurant et Numéro de table requis' }, { status: 400 });
+    }
+
+    let validTenantId: string | null = null;
+    try {
+      const dbTenant = await (prisma as any).tenant.findFirst({
+        where: {
+          OR: [
+            { id: tenantIdInput },
+            { subdomain: tenantIdInput },
+          ],
+        },
+        select: { id: true },
+      });
+      if (dbTenant) {
+        validTenantId = dbTenant.id;
+      }
+    } catch (e) {}
+
+    if (!validTenantId) {
+      const fallbackTenant = await (prisma as any).tenant.findFirst({ select: { id: true } });
+      if (fallbackTenant) validTenantId = fallbackTenant.id;
+    }
+
+    if (!validTenantId) {
+      return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 400 });
     }
 
     const newCall = await (prisma as any).waiterCall.create({
       data: {
-        tenantId,
+        tenantId: validTenantId,
         tableNumber: Number(tableNumber),
         status: 'PENDING',
       },

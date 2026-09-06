@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma';
 // GET /api/super-admin/restaurants/[id]
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(params);
     const restaurant = await (prisma as any).tenant.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         plan: true,
       }
@@ -25,16 +26,17 @@ export async function GET(
 // PUT / PATCH /api/super-admin/restaurants/[id] - Modification complète
 async function handleUpdate(
   req: Request,
-  params: { id: string }
+  paramsInput: Promise<{ id: string }> | { id: string }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(paramsInput);
     const body = await req.json();
 
     let subscriptionUpdateData: any = {};
 
     if (body.action === 'extend-subscription' && body.additionalMonths) {
       const currentResto = await (prisma as any).tenant.findUnique({
-        where: { id: params.id }
+        where: { id: resolvedParams.id }
       });
       if (currentResto) {
         const currentEnd = currentResto.subscriptionExpiresAt
@@ -77,7 +79,7 @@ async function handleUpdate(
     }
 
     const updated = await (prisma as any).tenant.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         businessName: body.name || undefined,
         ownerName: body.ownerName !== undefined ? body.ownerName : undefined,
@@ -97,22 +99,23 @@ async function handleUpdate(
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   return handleUpdate(req, params);
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   return handleUpdate(req, params);
 }
 
 // DELETE /api/super-admin/restaurants/[id] - Suppression
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(params);
     await (prisma as any).tenant.delete({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     });
     return NextResponse.json({ success: true, message: 'Restaurant supprimé définitivement' });
   } catch (error) {
