@@ -1,8 +1,8 @@
 # 🔐 LOU AME TAY ? — FICHE OFFICIELLE DES ACCÈS & MOTS DE PASSE
 **Plateforme SaaS de Menus Digitaux QR Code & Écrans TV**  
-*Éditée par Médias Graphisme Sénégal / MDA Arts Work*  
+*Éditée par Médias Graphisme Sénégal / MG Digital Arts Work*  
 *Support & Direction Technique : +221 77 458 74 74*  
-*Date de mise à jour : 28 Août 2026*
+*Date de mise à jour : Février 2026*
 
 ---
 
@@ -20,7 +20,7 @@
 | Rôle | URL de Connexion | Identifiant / Email | Mot de Passe |
 | :--- | :--- | :--- | :--- |
 | **Super Admin Principal** | `/super-admin` ou `/login` | `admin@louametay.sn` | `SuperAdmin2024!` *(ou `admin123`)* |
-| **Support Commercial MDA** | `/super-admin` | `support@mda.sn` | `Mda2024!` |
+| **Support Commercial MGD** | `/super-admin` | `support@mg-digital.sn` | `Mgd2024!` *(ou `Mda2024!`)* |
 
 ---
 
@@ -101,7 +101,7 @@ Ces comptes permettent à votre force commerciale de présenter l'application en
 
 ---
 
-## 📞 5. CONTACT SUPPORT MDA ARTS WORK
+## 📞 5. CONTACT SUPPORT MG DIGITAL ARTS WORK
 * **Assistance Technique** : +221 77 458 74 74
-* **Email** : contact@mda.sn
+* **Email** : contact@mg-digital.sn / support@louametay.sn
 * **Dakar / Thiès — Sénégal**

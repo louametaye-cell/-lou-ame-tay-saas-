@@ -60,7 +60,7 @@ export function generateDirectPaymentLinks(params: {
     `💰 *Montant :* ${formattedAmount}\n` +
     `📱 *Règlement direct en 1 clic :*\n` +
     `👉 ${publicPaymentUrl}\n\n` +
-    `_Lien sécurisé Wave & Orange Money officiel MDA Arts Work (+221 77 458 74 74)._`;
+    `_Lien sécurisé Wave & Orange Money officiel MG Digital Arts Work (+221 77 458 74 74)._`;
 
   return {
     tenantId,

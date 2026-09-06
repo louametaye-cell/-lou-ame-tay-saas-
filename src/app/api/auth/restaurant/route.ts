@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       isValid = await bcrypt.compare(pin.trim(), dbTenant.passwordHash);
     } else {
       // Fallback temporaire pour les anciens comptes non migrés
-      const validPasswords = ['Pass1234!', 'Demo123!', 'Mda2024!', '1234', 'resto123', 'admin123'];
+      const validPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
       isValid = validPasswords.includes(pin.trim());
     }
 

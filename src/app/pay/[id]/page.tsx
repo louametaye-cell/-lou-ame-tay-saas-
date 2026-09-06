@@ -153,7 +153,7 @@ export default function PublicPaymentPage() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           Lou Ame Tay <span className="text-orange-500">?</span>
         </h1>
-        <p className="text-slate-500 text-xs mt-1">Plateforme Officielle MDA Arts Work Sénégal</p>
+        <p className="text-slate-500 text-xs mt-1">Plateforme Officielle MG Digital Arts Work Sénégal</p>
       </div>
 
       <div className="max-w-md w-full bg-white border border-slate-200 shadow-xl rounded-3xl p-6 sm:p-8 shadow-2xl">
@@ -268,7 +268,7 @@ export default function PublicPaymentPage() {
 
       {/* Support Line */}
       <div className="mt-6 text-center text-xs text-slate-500">
-        Besoin d'assistance ? Contactez le support MDA Arts Work au{' '}
+        Besoin d&apos;assistance ? Contactez le support MG Digital Arts Work au{' '}
         <a href="tel:+221774587474" className="text-orange-400 font-semibold hover:underline">
           +221 77 458 74 74
         </a>

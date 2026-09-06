@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- 🇸🇳 LOU AME TAY ? - SCRIPT SQL DE PURGE & IMPLANTATION DES 3 COMPTES DÉMO
--- Éditeur : MDA Arts Work / Médias Graphisme Sénégal (+221 77 458 74 74)
+-- Éditeur : MG Digital Arts Work / Médias Graphisme Sénégal (+221 77 458 74 74)
 -- ==============================================================================
 
 BEGIN;

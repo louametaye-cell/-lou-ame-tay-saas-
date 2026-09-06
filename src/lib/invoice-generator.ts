@@ -51,10 +51,10 @@ export function generateInvoiceHtml(data: InvoiceData): string {
           <p style="font-size: 12px; color: #64748b;">Plateforme de Menu Digital & Caisse SaaS</p>
         </div>
         <div class="agency-info">
-          <strong>MDA ARTS WORK SÉNÉGAL</strong><br>
+          <strong>MG DIGITAL ARTS WORK SÉNÉGAL</strong><br>
           NINEA : 007845612 / RCCM : SN-DKR-2026-B-1234<br>
           Avenue Cheikh Anta Diop, Dakar, Sénégal<br>
-          WhatsApp : +221 76 231 20 03
+          WhatsApp : +221 77 458 74 74
         </div>
       </div>
 

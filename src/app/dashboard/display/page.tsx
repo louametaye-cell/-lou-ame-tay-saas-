@@ -187,7 +187,7 @@ export default function DisplaySettingsPage() {
                 Option Écran TV Non Activée
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-                L&apos;option de diffusion dynamique sur Écran TV (Digital Signage) n&apos;est pas activée sur votre formule actuelle ou est en attente d&apos;attribution par votre agence MDA Arts Work.
+                L&apos;option de diffusion dynamique sur Écran TV (Digital Signage) n&apos;est pas activée sur votre formule actuelle ou est en attente d&apos;attribution par votre agence MG Digital Arts Work.
               </p>
             </div>
 
@@ -205,7 +205,7 @@ export default function DisplaySettingsPage() {
             </div>
 
             <a
-              href="https://wa.me/221774587474?text=Bonjour%20MDA%20Arts%20Work%20je%20souhaite%20activer%20l'option%20Ecran%20TV%20pour%20mon%20restaurant"
+              href="https://wa.me/221774587474?text=Bonjour%20MG%20Digital%20Arts%20Work%20je%20souhaite%20activer%20l'option%20Ecran%20TV%20pour%20mon%20restaurant"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-sm rounded-2xl shadow-md transition-all"
@@ -230,7 +230,7 @@ export default function DisplaySettingsPage() {
                         <span>Style Certifié par Super-Admin</span>
                       </span>
                       <span className="text-xs text-slate-500 font-bold">
-                        MDA Arts Work
+                        MG Digital Arts Work
                       </span>
                     </div>
                     <h3 className="text-lg font-black text-slate-900 mt-0.5">
@@ -264,7 +264,7 @@ export default function DisplaySettingsPage() {
                     </p>
                   </div>
                   <p className="text-[11px] text-slate-500 pt-2 border-t border-slate-200/60">
-                    🔒 <em>Le style et la vitesse de transition sont administrés par MDA Arts Work pour garantir une visibilité optimale sur écran géant.</em>
+                    🔒 <em>Le style et la vitesse de transition sont administrés par MG Digital Arts Work pour garantir une visibilité optimale sur écran géant.</em>
                   </p>
                 </div>
               </div>
@@ -385,12 +385,12 @@ export default function DisplaySettingsPage() {
                     <span>Besoin d&apos;écrans supplémentaires (Terrasse, Vitrine, Salle VIP) ?</span>
                   </span>
                   <p className="text-slate-500 text-[11px]">
-                    Commandez des licences d&apos;écrans additionnelles auprès de MDA Arts Work.
+                    Commandez des licences d&apos;écrans additionnelles auprès de MG Digital Arts Work.
                   </p>
                 </div>
 
                 <a
-                  href="https://wa.me/221774587474?text=Bonjour%20MDA%20Arts%20Work%20je%20souhaite%20ajouter%20un%20ecran%20TV%20supplementaire%20a%20mon%20restaurant"
+                  href="https://wa.me/221774587474?text=Bonjour%20MG%20Digital%20Arts%20Work%20je%20souhaite%20ajouter%20un%20ecran%20TV%20supplementaire%20a%20mon%20restaurant"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0"

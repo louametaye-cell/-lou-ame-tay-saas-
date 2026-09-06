@@ -1,5 +1,5 @@
 # 🇸🇳 Lou Ame Tay ? — Fiche Officielle des Logins de Démonstration Commerciale
-**Éditeur** : MDA Arts Work / Médias Graphisme Sénégal  
+**Éditeur** : MG Digital Arts Work / Médias Graphisme Sénégal  
 **Contact Direction & Support** : +221 77 458 74 74 | support@louametay.sn  
 **Mise à jour** : Février 2026
 
@@ -23,7 +23,7 @@
 * **Écran Cuisine KDS en Direct (Bip Sonore)** : [`/kitchen`](http://localhost:3000/kitchen)
 * **Écran TV Digital Signage (3 Modes)** : [`/display/tenant_hotel_lat_dior`](http://localhost:3000/display/tenant_hotel_lat_dior)
 * **Guichet Caisse Express (Mode Bar / 80mm)** : [`/cashier`](http://localhost:3000/cashier)
-* **Portail Super Admin MDA** *(Direction uniquement)* : [`/super-admin`](http://localhost:3000/super-admin)
+* **Portail Super Admin MGD** *(Direction uniquement)* : [`/super-admin`](http://localhost:3000/super-admin)
   * *Code d'accès Super Admin* : `admin123`
 
 ---
@@ -59,8 +59,8 @@
 
 ---
 
-## 📞 4. Support Technique & Commercial MDA
+## 📞 4. Support Technique & Commercial MGD
 
 * **WhatsApp Commercial** : [+221 77 458 74 74](https://wa.me/221774587474)
-* **Email Assistance** : contact@mda-artswork.sn / support@louametay.sn
+* **Email Assistance** : contact@mg-digital.sn / support@louametay.sn
 * **Lieu** : Thiès & Dakar, Sénégal

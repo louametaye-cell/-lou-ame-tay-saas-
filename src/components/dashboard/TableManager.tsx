@@ -134,7 +134,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
       {/* TAB 2: QR CODES & FLOOR PLAN */}
       {activeTab === 'QRCODES' && (
         <div className="space-y-6">
-          {/* BANNIÈRE OFFICIELLE MDA ARTS WORK - IMPRESSION RÉSERVÉE */}
+          {/* BANNIÈRE OFFICIELLE MG DIGITAL ARTS WORK - IMPRESSION RÉSERVÉE */}
           <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 border-2 border-amber-300/80 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center shadow-xs shrink-0">
@@ -146,7 +146,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
                     Atelier d&apos;Impression Officiel
                   </span>
                   <span className="text-xs text-slate-500 font-bold">
-                    Médias Graphisme / MDA Arts Work
+                    Médias Graphisme / MG Digital Arts Work
                   </span>
                 </div>
                 <h3 className="text-base font-black text-slate-900">
@@ -168,7 +168,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
               </Link>
 
               <a
-                href="https://wa.me/221774587474?text=Bonjour%20MDA%20Arts%20Work%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code"
+                href="https://wa.me/221774587474?text=Bonjour%20MG%20Digital%20Arts%20Work%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
@@ -247,7 +247,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
                   className="py-3 px-5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 font-black text-xs rounded-2xl shadow-lg flex items-center gap-2 active:scale-95 transition-all"
                 >
                   <Package className="w-4 h-4" />
-                  <span>Commander Chevalet Comptoir Officiel (MDA)</span>
+                  <span>Commander Chevalet Comptoir Officiel (MGD)</span>
                 </Link>
 
                 <a
@@ -309,7 +309,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
                 <div className="bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-300 p-4 rounded-3xl flex flex-col justify-between shadow-xs">
                   <span className="text-xs text-amber-950 font-black flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
-                    <span>Packs Chevalets MDA</span>
+                    <span>Packs Chevalets MGD</span>
                   </span>
                   <Link
                     href="/dashboard/qrcodes"

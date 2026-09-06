@@ -943,7 +943,7 @@ export default function SuperAdminRestaurantDetailPage() {
                         Contrôle Strictement Réservé Super-Admin
                       </span>
                       <span className="text-xs text-slate-500 font-bold">
-                        Médias Graphisme / MDA Arts Work
+                        Médias Graphisme / MG Digital Arts Work
                       </span>
                     </div>
                     <h3 className="text-lg font-black text-slate-900">

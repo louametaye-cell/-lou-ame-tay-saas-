@@ -28,7 +28,7 @@ import {
 import { toast } from 'sonner';
 import { RestaurantBranding } from '@/types';
 
-// Palettes prédéfinies conçues par MDA Arts Work
+// Palettes prédéfinies conçues par MG Digital Arts Work
 const COLOR_PRESETS = [
   {
     name: 'Teranga Soleil (Défaut)',
@@ -304,7 +304,7 @@ export default function BrandStudioPage() {
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Palettes Prédéfinies (1 Clic)</span>
               </h3>
-              <span className="text-[11px] text-slate-400 font-medium">Design Graphique MDA</span>
+              <span className="text-[11px] text-slate-400 font-medium">Design Graphique MGD</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">

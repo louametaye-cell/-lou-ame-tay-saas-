@@ -97,13 +97,13 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
           </div>
 
           <a
-            href="https://wa.me/221762312003?text=Bonjour,%20je%20souhaite%20r%C3%A9activer%20mon%20abonnement%20Lou%20Ame%20Tay"
+            href="https://wa.me/221774587474?text=Bonjour,%20je%20souhaite%20r%C3%A9activer%20mon%20abonnement%20Lou%20Ame%20Tay"
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
           >
             <Phone className="w-4 h-4" />
-            <span>Support MDA (+221 77 458 74 74)</span>
+            <span>Support MG Digital Arts Work (+221 77 458 74 74)</span>
           </a>
         </div>
       )}
