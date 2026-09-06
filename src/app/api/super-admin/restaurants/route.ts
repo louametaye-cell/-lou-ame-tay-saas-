@@ -102,10 +102,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, restaurant: newTenant }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating restaurant:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création du restaurant' },
+      { error: error?.message || 'Erreur lors de la création du restaurant' },
       { status: 500 }
     );
   }
