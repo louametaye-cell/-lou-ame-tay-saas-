@@ -31,12 +31,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 3. ROUTES DU SUPER-ADMIN
-  if (pathname.startsWith('/super-admin') && !pathname.startsWith('/super-admin/login')) {
-    const adminToken = request.cookies.get('super_admin_token')?.value;
-    if (!adminToken) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // 3. ROUTES DU SUPER-ADMIN (Géré par SuperAdminAuthGuard côté client via localStorage)
+  // On laisse passer la route /super-admin pour que le composant client puisse afficher le login.
+  if (pathname.startsWith('/super-admin') && !pathname.startsWith('/super-admin/login') && !pathname.startsWith('/api/super-admin')) {
+      // Pass
   }
 
   return NextResponse.next();
