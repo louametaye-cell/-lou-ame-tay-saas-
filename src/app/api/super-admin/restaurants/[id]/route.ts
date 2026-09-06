@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { redis } from '@/lib/redis';
 
 // GET /api/super-admin/restaurants/[id]
 export async function GET(
@@ -78,6 +79,19 @@ async function handleUpdate(
       subscriptionUpdateData.subscriptionStatus = 'SUSPENDED';
     }
 
+    let brandingUpdateData: any = {};
+    if (body.displaySettings !== undefined) {
+      const currentResto = await (prisma as any).tenant.findUnique({
+        where: { id: resolvedParams.id },
+        select: { branding: true, subdomain: true }
+      });
+      const currentBranding = (currentResto?.branding as any) || {};
+      brandingUpdateData.branding = {
+        ...currentBranding,
+        displaySettings: body.displaySettings,
+      };
+    }
+
     const updated = await (prisma as any).tenant.update({
       where: { id: resolvedParams.id },
       data: {
@@ -86,11 +100,19 @@ async function handleUpdate(
         phone: body.phone || undefined,
         address: body.address !== undefined ? body.address : undefined,
         ...subscriptionUpdateData,
+        ...brandingUpdateData,
       },
       include: {
         plan: true
       }
     });
+
+    if (body.displaySettings !== undefined) {
+      try {
+        await redis.del(`display:${updated.subdomain.toLowerCase()}`);
+        await redis.del(`display:${updated.id.toLowerCase()}`);
+      } catch (e) {}
+    }
 
     return NextResponse.json({ restaurant: updated, message: 'Restaurant mis à jour avec succès dans la BDD' });
   } catch (error: any) {

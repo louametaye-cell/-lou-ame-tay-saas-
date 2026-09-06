@@ -210,6 +210,15 @@ export interface RestaurantBranding {
   tiktok?: string | null;      // Lien compte TikTok
   googleReviewUrl?: string | null; // Lien direct vers la fiche Google Maps pour avis ⭐
   tagline?: string | null;     // Slogan personnalisé
+  displaySettings?: DisplaySettings; // Paramètres de l'écran TV gérés exclusivement par Super-Admin
+}
+
+export interface DisplaySettings {
+  isEnabled: boolean;             // Option activée par le Super-Admin
+  mode: 'classic' | 'slideshow' | 'quadrant'; // Mode fixé par le Super-Admin
+  slideDuration?: number;         // Durée d'affichage (secondes, ex: 6s diaporama, 10s quadrant)
+  maxScreens: number;             // Quota d'écrans autorisés par l'admin (défaut: 1)
+  customTitle?: string;           // Titre ou message personnalisé sur TV
 }
 
 export interface CartItemExtra {

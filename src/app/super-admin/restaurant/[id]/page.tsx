@@ -33,7 +33,15 @@ import {
   Settings,
   MessageCircle,
   FileText,
-  Trash2
+  Trash2,
+  Tv,
+  Monitor,
+  Film,
+  LayoutGrid,
+  Check,
+  Copy,
+  ShieldCheck,
+  Eye
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -60,7 +68,7 @@ export default function SuperAdminRestaurantDetailPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance' | 'display'>('overview');
   const [appUrl, setAppUrl] = useState<string>('http://localhost:3000');
   
   // Modals state
@@ -70,6 +78,14 @@ export default function SuperAdminRestaurantDetailPage() {
   // Orders & Performance
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
+  // Display TV settings state (Super-Admin exclusive)
+  const [tvEnabled, setTvEnabled] = useState(true);
+  const [tvMode, setTvMode] = useState<'classic' | 'slideshow' | 'quadrant'>('slideshow');
+  const [tvDuration, setTvDuration] = useState(6);
+  const [tvMaxScreens, setTvMaxScreens] = useState(1);
+  const [isSavingTv, setIsSavingTv] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -115,6 +131,60 @@ export default function SuperAdminRestaurantDetailPage() {
       fetchOrders();
     }
   }, [id, fetchRestaurant, fetchOrders]);
+
+  useEffect(() => {
+    if (restaurant) {
+      const ds = (restaurant.branding as any)?.displaySettings;
+      if (ds) {
+        setTvEnabled(ds.isEnabled ?? true);
+        setTvMode(ds.mode || 'slideshow');
+        setTvDuration(ds.slideDuration || (ds.mode === 'quadrant' ? 10 : 6));
+        setTvMaxScreens(ds.maxScreens || 1);
+      } else {
+        setTvEnabled(true);
+        setTvMode('slideshow');
+        setTvDuration(6);
+        setTvMaxScreens(1);
+      }
+    }
+  }, [restaurant]);
+
+  const handleSaveDisplaySettings = async () => {
+    if (!restaurant) return;
+    try {
+      setIsSavingTv(true);
+      const res = await fetch(`/api/super-admin/restaurants/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displaySettings: {
+            isEnabled: tvEnabled,
+            mode: tvMode,
+            slideDuration: Number(tvDuration),
+            maxScreens: Number(tvMaxScreens),
+          },
+        }),
+      });
+      if (res.ok) {
+        toast.success("Paramètres de l'Écran TV enregistrés avec succès dans la BDD !");
+        fetchRestaurant();
+      } else {
+        const err = await res.json();
+        throw new Error(err.error || 'Erreur lors de la sauvegarde');
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erreur lors de l'enregistrement");
+    } finally {
+      setIsSavingTv(false);
+    }
+  };
+
+  const copyDisplayUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    toast.success('Lien de projection TV copié !');
+    setTimeout(() => setCopiedUrl(null), 2000);
+  };
 
   const handleToggleActive = async () => {
     if (!restaurant) return;
@@ -440,6 +510,18 @@ export default function SuperAdminRestaurantDetailPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('display')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === 'display'
+                  ? 'bg-[#FF6B00] text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              <Tv className="w-4 h-4" />
+              <span>📺 Écrans TV & Diaporama</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('stats')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'stats'
@@ -513,6 +595,34 @@ export default function SuperAdminRestaurantDetailPage() {
                         <span>/r/{restaurant.subdomain}/table-1</span>
                         <ExternalLink className="w-3 h-3" />
                       </a>
+                    </div>
+
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
+                        Écran TV Signage
+                      </span>
+                      <p className={`font-black text-xs flex items-center gap-1.5 ${tvEnabled ? 'text-[#00A86B]' : 'text-slate-500'}`}>
+                        <Tv className="w-3.5 h-3.5" />
+                        <span>{tvEnabled ? `● ACTIF (${tvMode.toUpperCase()})` : '✕ DÉSACTIVÉ'}</span>
+                      </p>
+                    </div>
+
+                    <div className="bg-white/80 p-3.5 rounded-2xl border border-slate-200">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
+                        Écrans Autorisés
+                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 text-xs">
+                          {tvMaxScreens} écran(s) max
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('display')}
+                          className="text-[10px] font-black text-[#FF6B00] hover:underline"
+                        >
+                          Gérer TV →
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -814,6 +924,319 @@ export default function SuperAdminRestaurantDetailPage() {
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CONFIGURATION ÉCRANS TV & DIGITAL SIGNAGE (SUPER-ADMIN EXCLUSIF) */}
+          {activeTab === 'display' && (
+            <div className="space-y-6">
+              {/* Bannière d'autorité Super-Admin */}
+              <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 border-2 border-amber-300 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                    <Tv className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 px-3 py-0.5 rounded-full">
+                        Contrôle Strictement Réservé Super-Admin
+                      </span>
+                      <span className="text-xs text-slate-500 font-bold">
+                        Médias Graphisme / MDA Arts Work
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900">
+                      Gestion des Écrans TV &amp; Style de Diaporama ({restaurant.name})
+                    </h3>
+                    <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                      L&apos;activation, le style visuel de défilement et le quota d&apos;écrans autorisés sont administrés exclusivement ici. Le restaurateur ne peut pas altérer le style et dispose uniquement des liens d&apos;affichage validés.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveDisplaySettings}
+                  disabled={isSavingTv}
+                  className="w-full md:w-auto py-3.5 px-6 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all shrink-0"
+                >
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>{isSavingTv ? 'Enregistrement...' : 'Enregistrer la Configuration TV'}</span>
+                </button>
+              </div>
+
+              {/* 1. ACTIVATION GLOBALE & QUOTA ÉCRANS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Carte 1: Interrupteur Activation TV */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <Power className="w-5 h-5 text-orange-600" />
+                      <h4 className="text-base font-black text-slate-900">Diffusion Écran TV</h4>
+                    </div>
+                    <span className={`text-xs font-black uppercase px-3 py-1 rounded-full ${
+                      tvEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      {tvEnabled ? '● Activée' : '✕ Désactivée'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Si désactivée, toute tentative de projection affichera un écran d&apos;attente certifiant que l&apos;option n&apos;est pas souscrite ou est en attente d&apos;activation.
+                  </p>
+
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setTvEnabled(true)}
+                      className={`flex-1 py-3 px-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all border ${
+                        tvEnabled
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Activer le Service TV</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTvEnabled(false)}
+                      className={`flex-1 py-3 px-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all border ${
+                        !tvEnabled
+                          ? 'bg-rose-600 text-white border-rose-700 shadow-sm'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>Couper / Désactiver</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Carte 2: Quota d'Écrans Autorisés */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <Monitor className="w-5 h-5 text-indigo-600" />
+                      <h4 className="text-base font-black text-slate-900">Écrans Connectés Autorisés</h4>
+                    </div>
+                    <span className="text-xs font-black bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
+                      {tvMaxScreens} écran(s) max
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Nombre de postes TV ou vidéoprojecteurs que le restaurateur a le droit de brancher dans son établissement (Salle, Bar, Vitrine).
+                  </p>
+
+                  <div className="pt-2 flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((count) => (
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => setTvMaxScreens(count)}
+                        className={`flex-1 py-2.5 rounded-xl font-black text-xs transition-all border ${
+                          tvMaxScreens === count
+                            ? 'bg-slate-900 text-white border-slate-950 shadow-sm'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {count} {count === 1 ? 'écran' : 'écrans'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. STYLE DE DIAPORAMA IMPOSÉ PAR SUPER-ADMIN */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                      <Film className="w-5 h-5 text-amber-500" />
+                      <span>Style &amp; Rythme de Diaporama Imposé</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Ce réglage détermine le rendu visuel sur tous les téléviseurs du restaurant.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500">Durée par diapositive :</span>
+                    <select
+                      value={tvDuration}
+                      onChange={(e) => setTvDuration(Number(e.target.value))}
+                      className="bg-slate-50 border border-slate-300 font-bold text-xs rounded-xl px-3 py-1.5 text-slate-900 outline-none"
+                    >
+                      <option value={4}>4 secondes (Rapide)</option>
+                      <option value={6}>6 secondes (Recommandé)</option>
+                      <option value={8}>8 secondes</option>
+                      <option value={10}>10 secondes (Quadrant)</option>
+                      <option value={15}>15 secondes (Tranquille)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Mode 1 : Diaporama 1 Plat */}
+                  <div
+                    onClick={() => setTvMode('slideshow')}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                      tvMode === 'slideshow'
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-400'
+                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">🎬</span>
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                          tvMode === 'slideshow' ? 'bg-amber-200 text-amber-950' : 'bg-slate-200 text-slate-700'
+                        }`}>
+                          Cinématique
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-black text-slate-900">Diaporama 1 Plat (Plein Écran)</h5>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Met en avant chaque spécialité une par une en grand format avec photo HD, nom wolof, prix et allergènes.
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-slate-200/60 mt-3 text-[11px] font-bold text-amber-800">
+                      Idéal : Lounges, bars et spécialités signature
+                    </div>
+                  </div>
+
+                  {/* Mode 2 : Quadrant 2x2 */}
+                  <div
+                    onClick={() => setTvMode('quadrant')}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                      tvMode === 'quadrant'
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-400'
+                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">🖼️</span>
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                          tvMode === 'quadrant' ? 'bg-amber-200 text-amber-950' : 'bg-slate-200 text-slate-700'
+                        }`}>
+                          Dynamique 2x2
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-black text-slate-900">Mode Quadrant (4 Plats)</h5>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Affiche 4 plats en simultané dans une grille 2x2 animée avec rotation automatique par page.
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-slate-200/60 mt-3 text-[11px] font-bold text-amber-800">
+                      Idéal : Food courts, buffets, vitrines extérieures
+                    </div>
+                  </div>
+
+                  {/* Mode 3 : Grille Classique */}
+                  <div
+                    onClick={() => setTvMode('classic')}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                      tvMode === 'classic'
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-400'
+                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">📋</span>
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                          tvMode === 'classic' ? 'bg-amber-200 text-amber-950' : 'bg-slate-200 text-slate-700'
+                        }`}>
+                          Exhaustif
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-black text-slate-900">Mode Grille Classique</h5>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Présentation structurée de la carte par catégories avec prix, photos et gestion des ruptures en temps réel.
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-slate-200/60 mt-3 text-[11px] font-bold text-amber-800">
+                      Idéal : Grands écrans 4K et restaurants avec menu fixe
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. LIENS DE DIFFUSION & PROJECTION EN DIRECT */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+                  <div>
+                    <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                      <ExternalLink className="w-5 h-5 text-[#FF6B00]" />
+                      <span>Liens de Projection TV Déployés ({tvMaxScreens} flux autorisé{tvMaxScreens > 1 ? 's' : ''})</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Ces URLs sont à saisir dans le navigateur de la Smart TV ou de l&apos;ordinateur de diffusion.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveDisplaySettings}
+                    disabled={isSavingTv}
+                    className="py-2.5 px-5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Enregistrer</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 pt-2">
+                  {Array.from({ length: tvMaxScreens }, (_, i) => i + 1).map((screenNum) => {
+                    const screenUrl = `${appUrl}/display/${restaurant.subdomain}?mode=${tvMode}${tvMaxScreens > 1 ? `&screen=${screenNum}` : ''}`;
+                    const isCopied = copiedUrl === screenUrl;
+
+                    return (
+                      <div
+                        key={screenNum}
+                        className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-black text-sm border border-amber-500/20 shrink-0">
+                            #{screenNum}
+                          </div>
+                          <div>
+                            <span className="text-xs font-black text-slate-900 block">
+                              Écran {screenNum} {screenNum === 1 ? '(Salle Principale)' : screenNum === 2 ? '(Bar / Comptoir)' : `(Zone ${screenNum})`}
+                            </span>
+                            <span className="text-xs font-mono text-slate-500 break-all">
+                              {screenUrl}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                          <button
+                            type="button"
+                            onClick={() => copyDisplayUrl(screenUrl)}
+                            className="flex-1 sm:flex-initial py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                          >
+                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{isCopied ? 'Copié !' : 'Copier'}</span>
+                          </button>
+
+                          <a
+                            href={screenUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-initial py-2 px-4 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Tester Plein Écran</span>
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
