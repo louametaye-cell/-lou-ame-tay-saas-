@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ClassicDisplay } from '@/components/display/ClassicDisplay';
 import { SlideshowDisplay } from '@/components/display/SlideshowDisplay';
 import { QuadrantDisplay } from '@/components/display/QuadrantDisplay';
@@ -23,8 +23,10 @@ interface DisplayMenuData {
 export default function DisplayMenuPage({
   params,
 }: {
-  params: { restaurantId: string };
+  params?: { restaurantId: string } | Promise<{ restaurantId: string }>;
 }) {
+  const routeParams = useParams();
+  const restaurantId = (routeParams?.restaurantId as string) || (params as any)?.restaurantId;
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode') || 'classic'; // 'classic' | 'slideshow' | 'quadrant'
 
@@ -60,7 +62,8 @@ export default function DisplayMenuPage({
 
     const fetchMenu = async () => {
       try {
-        const res = await fetch(`/api/display/${params.restaurantId}`);
+        if (!restaurantId) return;
+        const res = await fetch(`/api/display/${restaurantId}`);
         if (res.ok) {
           const json = await res.json();
           setData(json);
@@ -75,7 +78,7 @@ export default function DisplayMenuPage({
     fetchMenu();
     const interval = setInterval(fetchMenu, 30000);
     return () => clearInterval(interval);
-  }, [params.restaurantId]);
+  }, [restaurantId]);
 
   // Fullscreen toggle handler
   const toggleFullscreen = () => {
@@ -115,7 +118,7 @@ export default function DisplayMenuPage({
     );
   }
 
-  const orderMenuUrl = `${baseUrl}/r/${data.subdomain || params.restaurantId}`;
+  const orderMenuUrl = `${baseUrl}/r/${data.subdomain || restaurantId}`;
 
   // Mode 2 : Diaporama (Slideshow 1 plat 6s)
   if (mode === 'slideshow') {

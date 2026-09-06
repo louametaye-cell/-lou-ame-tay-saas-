@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -11,6 +11,17 @@ import {
 import { TableManager } from '@/components/dashboard/TableManager';
 
 export default function DashboardTablesPage() {
+  const [subdomain, setSubdomain] = useState('mg-cafe-resto');
+  const [restaurantName, setRestaurantName] = useState('Mon Restaurant');
+  const [tableCount, setTableCount] = useState(12);
+
+  useEffect(() => {
+    const storedSub = localStorage.getItem('current_restaurant_subdomain');
+    const storedName = localStorage.getItem('current_restaurant_name');
+    if (storedSub) setSubdomain(storedSub);
+    if (storedName) setRestaurantName(storedName);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* Header */}
@@ -35,7 +46,7 @@ export default function DashboardTablesPage() {
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
                   <span>Plan de Salle &amp; QR Codes</span>
                   <span className="text-xs text-amber-800 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-200 hidden sm:inline">
-                    Chez Fatou &amp; Frères
+                    {restaurantName}
                   </span>
                 </h1>
                 <p className="text-xs text-slate-500">
@@ -68,9 +79,10 @@ export default function DashboardTablesPage() {
       {/* Main Table Manager */}
       <main className="max-w-7xl mx-auto px-4 pt-6">
         <TableManager
-          subdomain="chezfatou"
-          restaurantName="Chez Fatou & Frères"
-          initialTableCount={12}
+          key={subdomain}
+          subdomain={subdomain}
+          restaurantName={restaurantName}
+          initialTableCount={tableCount}
         />
       </main>
     </div>

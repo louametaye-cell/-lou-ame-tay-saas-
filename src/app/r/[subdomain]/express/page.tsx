@@ -6,47 +6,56 @@ import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
 interface PageProps {
-  params: {
+  params: Promise<{
+    subdomain: string;
+  }> | {
     subdomain: string;
   };
 }
 
 export default async function ExpressCounterMenuPage({ params }: PageProps) {
-  let restaurant: any =  SAMPLE_RESTAURANT;
+  const resolvedParams = await Promise.resolve(params);
+  let restaurant: any = SAMPLE_RESTAURANT;
 
   try {
-    const dbRestaurant = await (prisma as any).restaurant?.findFirst({
+    const dbTenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
-          { subdomain: params.subdomain },
-          { id: params.subdomain }
+          { subdomain: resolvedParams.subdomain },
+          { id: resolvedParams.subdomain }
         ]
       },
       include: {
         categories: {
           orderBy: { displayOrder: 'asc' },
           include: {
-            items: true,
+            items: {
+              orderBy: { createdAt: 'asc' },
+            },
           },
         },
+        tables: true,
       },
     });
 
-    if (dbRestaurant) {
+    if (dbTenant) {
+      const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
+
       restaurant = {
-        id: dbRestaurant.id,
-        name: dbRestaurant.name,
-        tagline: 'Service Express au Comptoir & Bar',
-        subdomain: dbRestaurant.subdomain,
-        phone: dbRestaurant.phone,
-        address: dbRestaurant.address,
-        logoUrl: dbRestaurant.logoUrl,
-        bannerUrl: dbRestaurant.bannerUrl,
-        currency: dbRestaurant.currency,
-        isActive: dbRestaurant.isActive ?? true,
-        tableCount: dbRestaurant.tableCount ?? 12,
-        tablesCount: dbRestaurant.tableCount ?? 12,
-        categories: (dbRestaurant.categories || []).map((c: any) => ({
+        id: dbTenant.id,
+        name: dbTenant.businessName,
+        tagline: brandingObj.tagline || 'Service Express au Comptoir & Bar',
+        subdomain: dbTenant.subdomain,
+        phone: dbTenant.phone,
+        address: dbTenant.address,
+        logoUrl: dbTenant.logoUrl,
+        bannerUrl: dbTenant.bannerUrl,
+        currency: dbTenant.currency || 'FCFA',
+        isActive: dbTenant.subscriptionStatus === 'ACTIVE' || dbTenant.subscriptionStatus === 'TRIAL',
+        tableCount: dbTenant.tables?.length || 12,
+        tablesCount: dbTenant.tables?.length || 12,
+        branding: brandingObj,
+        categories: (dbTenant.categories || []).map((c: any) => ({
           id: c.id,
           name: c.name,
           icon: c.icon,
@@ -56,18 +65,20 @@ export default async function ExpressCounterMenuPage({ params }: PageProps) {
             name: i.name,
             wolofName: undefined,
             description: i.description || '',
-            price: i.price,
+            price: Number(i.price),
             imageUrl: i.imageUrl || '',
-            isAvailable: i.isAvailable,
-            isSpecialOfTheDay: i.isSpecialOfTheDay,
-            preparationTime: i.preparationTime || 10,
-            allergens: i.allergens || [],
-            categoryId: i.categoryId,
+            isAvailable: i.isAvailable ?? true,
+            isSpecialOfTheDay: i.isDailySpecial ?? false,
+            preparationTime: 10,
+            allergens: [],
+            categoryId: c.id,
           })),
         })),
       };
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error('Erreur chargement menu express :', error);
+  }
 
   return (
     <ClientMenuView

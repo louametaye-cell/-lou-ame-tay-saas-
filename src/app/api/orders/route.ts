@@ -150,29 +150,35 @@ export async function POST(req: Request) {
       0
     );
 
+    const allowedPaymentMethods = ['CASH', 'WAVE', 'ORANGE_MONEY', 'CARD', 'CASH_TPE'];
+    const cleanPaymentMethod = allowedPaymentMethods.includes(paymentMethod) ? paymentMethod : 'CASH';
+
+    const cleanTableNum = isExpress ? 0 : parseInt(String(tableNumber).replace(/[^0-9]/g, ''), 10) || 0;
+
     const newOrder = await (prisma as any).order.create({
       data: {
         tenantId: validTenantId,
-        tableNumber: isExpress ? 0 : Number(tableNumber) || 0,
-        customerName: customerName || null,
-        customerNote: customerNote || '',
-        paymentMethod: paymentMethod || 'CASH',
-        transactionRef: transactionRef || undefined,
+        tableNumber: cleanTableNum,
+        customerName: customerName ? String(customerName).trim() : null,
+        customerNote: customerNote ? String(customerNote).trim() : '',
+        paymentMethod: cleanPaymentMethod,
+        transactionRef: transactionRef ? String(transactionRef).trim() : undefined,
         waiterId: validWaiterId || undefined,
         zoneId: validZoneId || undefined,
         locationDetail: locationDetail || undefined,
         status: 'PENDING',
-        totalAmount: total,
+        totalAmount: total > 0 ? total : 0,
         items: {
           create: items.map((i: any) => {
             const rawId = i.menuItemId || i.menuItem?.id;
+            const safeOptions = i.options ? JSON.parse(JSON.stringify(i.options)) : undefined;
             return {
               menuItemId: existingMenuItemIdsSet.has(rawId) ? rawId : undefined,
               name: i.name || i.menuItem?.name || 'Plat du jour',
               quantity: Number(i.quantity) || 1,
               price: Number(i.price || i.menuItem?.price) || 0,
               customNotes: i.notes || i.customNotes || null,
-              selectedExtras: i.options || undefined,
+              selectedExtras: safeOptions,
             };
           }),
         },
@@ -182,9 +188,13 @@ export async function POST(req: Request) {
       }
     });
 
-    // Invalidate Redis caches for live orders and dashboard stats
-    await invalidateLiveOrdersCache(validTenantId);
-    await invalidateDashboardStatsCache(validTenantId);
+    // Invalidate Redis caches non-blockingly
+    try {
+      await invalidateLiveOrdersCache(validTenantId);
+      await invalidateDashboardStatsCache(validTenantId);
+    } catch (cacheErr) {
+      console.warn('Cache invalidation non-blocking error:', cacheErr);
+    }
 
     logPerformance(`POST /api/orders (${newOrder.id})`, timer.elapsedMs(), `Table ${newOrder.tableNumber}`);
 

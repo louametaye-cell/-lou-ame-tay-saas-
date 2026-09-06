@@ -100,7 +100,22 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     setCustomerName,
     paymentMethod,
     setPaymentMethod,
+    setTableNumber,
+    setRestaurantId,
   } = useCartStore();
+
+  useEffect(() => {
+    const currentStoreRestoId = useCartStore.getState().restaurantId;
+    if (restaurant?.id && currentStoreRestoId && currentStoreRestoId !== restaurant.id) {
+      clearCart();
+    }
+    if (tableNumber !== undefined) {
+      setTableNumber(tableNumber);
+    }
+    if (restaurant?.id) {
+      setRestaurantId(restaurant.id);
+    }
+  }, [tableNumber, restaurant?.id, setTableNumber, setRestaurantId, clearCart]);
 
   // UI state for drawers/modals
   const [selectedItemForDetail, setSelectedItemForDetail] = useState<MenuItemType | null>(null);

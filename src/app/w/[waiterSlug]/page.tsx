@@ -4,15 +4,18 @@ import { notFound } from 'next/navigation';
 import { WaiterScanClient } from './WaiterScanClient';
 
 interface PageProps {
-  params: {
+  params: Promise<{
+    waiterSlug: string;
+  }> | {
     waiterSlug: string;
   };
 }
 
 export default async function WaiterScanPage({ params }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
   // 1. Récupérer le serveur
   const waiter = await prisma.waiter.findUnique({
-    where: { qrCodeSlug: params.waiterSlug },
+    where: { qrCodeSlug: resolvedParams.waiterSlug },
     include: {
       tenant: {
         include: {
