@@ -32,6 +32,7 @@ interface OrderSuccessTrackerProps {
   onOrderMore: () => void;
   onPayOnline?: (totalAmount: number) => void;
   onCallWaiter?: () => void;
+  onStartNewMeal?: () => void;
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
@@ -46,6 +47,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   onOrderMore,
   onPayOnline,
   onCallWaiter,
+  onStartNewMeal,
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
@@ -122,9 +124,23 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   const seconds = secondsRemaining % 60;
   const formattedTimeRemaining = `${minutes} min ${seconds < 10 ? '0' + seconds : seconds} s`;
 
-  const handleRequestBill = () => {
+  const handleRequestBill = async () => {
     setBillRequested(true);
-    toast.success(`🧾 Addition de la Table ${formattedTable} demandée ! Un serveur arrive avec votre note.`);
+    toast.success(`🧾 Addition de la Table ${formattedTable} demandée ! Votre serveur et la caisse préparent votre note.`);
+    try {
+      await fetch('/api/table/call-waiter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableNumber: order.tableNumber,
+          restaurantId: order.restaurantId,
+          customerName: order.customerName,
+          reason: 'BILL',
+        }),
+      });
+    } catch (e) {
+      // Ignorer si offline
+    }
   };
 
   return (
@@ -221,16 +237,22 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
           
           {/* 1. CELEBRATION BANNER WHEN SERVED */}
           {currentStep === 4 ? (
-            <div className="p-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 text-white rounded-2xl flex items-start gap-3.5 shadow-md animate-in zoom-in-95">
+            <div className="p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl flex items-start gap-3.5 shadow-lg animate-in zoom-in-95">
               <div className="p-2.5 bg-white text-emerald-700 rounded-2xl shrink-0 shadow-sm">
-                <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
               </div>
               <div className="space-y-1 min-w-0">
-                <h4 className="text-sm font-black tracking-tight">
-                  🎉 Votre commande a été servie à votre table !
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/40 text-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300/30">
+                    Plats Servis à Table
+                  </span>
+                  <span className="text-xs font-bold text-emerald-200">Table {formattedTable}</span>
+                </div>
+                <h4 className="text-base font-black tracking-tight">
+                  🎉 Bon Appétit {order.customerName ? `à vous ${order.customerName}` : ''} !
                 </h4>
                 <p className="text-xs text-emerald-100 font-medium leading-relaxed">
-                  Bon appétit {order.customerName ? `à vous ${order.customerName}` : ''} ! Servi par <strong>{serverName}</strong>. N'hésitez pas à demander l'addition ou appeler le serveur si vous avez besoin d'autre chose.
+                  Vos plats ont été servis par <strong>{serverName}</strong>. Régalez-vous en toute sérénité !
                 </p>
               </div>
             </div>
@@ -374,34 +396,73 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
           </div>
 
           {/* 4. PAYMENT & BILL OPTIONS */}
-          <div className="space-y-2 pt-1">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Règlement &amp; Services :
-            </h4>
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Règlement &amp; Services :
+              </h4>
+              <span className="text-sm font-black text-emerald-700 font-mono">
+                Total : {formatFCFA(totalBalance)}
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={handleRequestBill}
                 disabled={billRequested}
-                className={`py-2.5 px-3 rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all ${
+                className={`py-3 px-3 rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all ${
                   billRequested
-                    ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                    : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 shadow-2xs'
+                    ? 'bg-emerald-100 text-emerald-900 border-emerald-400 shadow-xs'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-md active:scale-95'
                 }`}
               >
-                <Receipt className="w-4 h-4 text-orange-600" />
-                <span>{billRequested ? '✅ Addition Demandée' : '🧾 Demander l\'Addition'}</span>
+                <Receipt className="w-4 h-4" />
+                <span>{billRequested ? '✅ Addition Demandée (Serveur prévenu)' : '🧾 Demander l\'Addition'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => onPayOnline?.(totalBalance)}
-                className="py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
+                className="py-3 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
               >
                 <Smartphone className="w-4 h-4" />
-                <span>Payer par Wave / Orange Money</span>
+                <span>Payer par Wave / OM</span>
               </button>
+            </div>
+
+            {/* 5. NOUVELLE COMMANDE OU NOUVEAU REPAS */}
+            <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50/60 border-2 border-amber-200/80 rounded-2xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h5 className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span>Souhaitez-vous effectuer une nouvelle commande à cette table ?</span>
+                </h5>
+              </div>
+              <p className="text-[11px] text-amber-900/80 leading-relaxed font-medium">
+                Vous pouvez ajouter des desserts et boissons sur votre note actuelle, ou réinitialiser la table si un nouveau client s&apos;installe.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={onOrderMore}
+                  className="py-2.5 px-3 bg-white hover:bg-amber-50 text-amber-950 border border-amber-300 font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-2xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5 text-amber-600 stroke-[3]" />
+                  <span>🍰 + Desserts &amp; Cafés</span>
+                </button>
+
+                {onStartNewMeal && (
+                  <button
+                    type="button"
+                    onClick={onStartNewMeal}
+                    className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-2xs active:scale-95 transition-all"
+                  >
+                    <span>🔄 Nouveau Repas Vierge</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -429,14 +490,26 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={onOrderMore}
-            className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-1.5 transition-all"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ Ajouter d'autres Plats</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onStartNewMeal && currentStep === 4 && (
+              <button
+                type="button"
+                onClick={onStartNewMeal}
+                className="py-2.5 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition-all"
+              >
+                Nouveau Repas
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onOrderMore}
+              className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-1.5 transition-all"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>+ Ajouter d&apos;autres Plats</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -29,7 +29,12 @@ export async function GET(
       }
     }
 
-    const whereClause: any = { tableNumber: tableNum };
+    // Seules les commandes du repas actuel (moins de 2 heures) sont retournées
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const whereClause: any = {
+      tableNumber: tableNum,
+      createdAt: { gte: twoHoursAgo },
+    };
     if (validTenantId) {
       whereClause.tenantId = validTenantId;
     }

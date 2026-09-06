@@ -53,10 +53,15 @@ export async function POST(req: Request) {
       },
     });
 
+    const isBill = reason === 'BILL' || reason === 'ADDITION';
+    const message = isBill
+      ? `🧾 Demande d'addition transmise pour la Table ${tableNumber} ! Votre serveur et la caisse préparent votre note.`
+      : `🛎️ Serveur appelé pour la Table ${tableNumber} ! Un membre de l'équipe arrive tout de suite.`;
+
     return NextResponse.json({
       success: true,
       call: newCall,
-      message: `🛎️ Serveur appelé pour la Table ${tableNumber} ! Un membre de l'équipe arrive tout de suite.`,
+      message,
     });
   } catch (error) {
     return NextResponse.json({ error: "Erreur lors de l'appel serveur" }, { status: 500 });

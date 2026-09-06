@@ -128,9 +128,20 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const [activeOrder, setActiveOrder] = useState<OrderType | null>(null);
   const [isCallWaiterOpen, setIsCallWaiterOpen] = useState(false);
 
-  // Table session accumulated orders
+  // Table session accumulated orders with 2-Hour TTL Auto-Reset
   const [sessionOrders, setSessionOrders] = useState<OrderType[]>(() => {
     if (typeof window !== 'undefined') {
+      const savedTime = localStorage.getItem(`louametay_meal_timestamp_${tableNumber}`);
+      if (savedTime) {
+        const elapsed = Date.now() - parseInt(savedTime, 10);
+        // Si la session date de plus de 2 heures, réinitialisation automatique pour le nouveau repas
+        if (elapsed > 2 * 60 * 60 * 1000) {
+          localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
+          localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+          return [];
+        }
+      }
+
       const saved = localStorage.getItem(`louametay_session_orders_${tableNumber}`);
       if (saved) {
         try {
@@ -158,6 +169,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                 if (prevOrd && prevOrd.status !== 'SERVED' && updatedOrd.status === 'SERVED') {
                   const tableDisplay = isExpress ? 'Comptoir' : `Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber}`;
                   toast.success(`🎉 Votre commande ${tableDisplay} a été servie ! Bon appétit ! 😋`);
+                  // 🔒 Verrouillage automatique sur l'écran "Bon Appétit !"
+                  setIsOrderSuccessOpen(true);
                 }
               });
 
@@ -170,6 +183,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
               const matched = data.orders.find((o: OrderType) => o.id === activeOrder.id);
               if (matched && matched.status !== activeOrder.status) {
                 setActiveOrder(matched);
+                if (matched.status === 'SERVED') {
+                  setIsOrderSuccessOpen(true);
+                }
               }
             }
           }
@@ -342,6 +358,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         const updated = [...prev, placedOrder];
         if (typeof window !== 'undefined') {
           localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(updated));
+          localStorage.setItem(`louametay_meal_timestamp_${tableNumber}`, Date.now().toString());
         }
         return updated;
       });
@@ -355,6 +372,19 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     } finally {
       setIsSubmittingOrder(false);
     }
+  };
+
+  // Start fresh meal session (resets table orders & storage for next customer/meal)
+  const handleStartNewMeal = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
+      localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+    }
+    clearCart();
+    setActiveOrder(null);
+    setSessionOrders([]);
+    setIsOrderSuccessOpen(false);
+    toast.success('✨ Nouvelle session de table démarrée ! Votre panier est vierge.');
   };
 
   // If Restaurant is closed or suspended
@@ -702,6 +732,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         isOpen={isOrderSuccessOpen}
         onClose={() => setIsOrderSuccessOpen(false)}
         onOrderMore={() => setIsOrderSuccessOpen(false)}
+        onStartNewMeal={handleStartNewMeal}
         onCallWaiter={() => setIsCallWaiterOpen(true)}
         onPayOnline={(amount) => {
           setIsOrderSuccessOpen(false);
