@@ -28,7 +28,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
 
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay"
+                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-[#25D366]/20 text-[#25D366] hover:bg-[#25D366] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
@@ -112,7 +112,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
               </p>
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#FF6B00] shrink-0" />
-                <span>+221 77 654 32 10</span>
+                <span>+221 77 45 87 47 4</span>
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#00A86B] shrink-0" />
@@ -188,7 +188,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
                   <p><strong>Éditeur du service :</strong> Agence Digitale Lou Ame Tay, Thiès, Sénégal.</p>
                   <p><strong>Directeur de publication :</strong> Équipe Lou Ame Tay Sénégal.</p>
                   <p><strong>Hébergement :</strong> Serveurs Cloud haute disponibilité certifiés SSL/HTTPS avec redondance.</p>
-                  <p><strong>Contact :</strong> contact@louametay.sn | +221 77 654 32 10.</p>
+                  <p><strong>Contact :</strong> contact@louametay.sn | +221 77 45 87 47 4.</p>
                 </>
               )}
               {legalModalContent === 'cgv' && (

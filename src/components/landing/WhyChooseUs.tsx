@@ -5,14 +5,14 @@ import {
   Clock, 
   TrendingUp, 
   Headphones, 
-  ShieldCheck, 
-  Sparkles,
+  ShieldCheck,
   Zap,
   Smartphone,
   Check,
   X,
   Building2,
-  Handshake
+  Handshake,
+  Leaf
 } from 'lucide-react';
 import { COMPETITOR_COMPARISONS } from '@/components/landing/data/mockData';
 import { IconBadge } from '@/components/ui/IconBadge';
@@ -50,6 +50,14 @@ export const WhyChooseUs: React.FC = () => {
       subtitle: 'Basés à Thiès & Dakar',
       description: 'Pas de centre d\'appel à l\'autre bout du monde. Notre équipe se déplace dans votre restaurant pour former vos équipes et reste joignable 7j/7 sur WhatsApp.',
       accent: 'border-gray-200 bg-white'
+    },
+    {
+      flag: null,
+      icon: Leaf,
+      title: 'Impact RSE & Éco-Responsable',
+      subtitle: 'Zéro déchet papier & 0 rature',
+      description: 'Supprimez le gaspillage récurrent de menus papier jetés. Un engagement écologique concret qui valorise la marque de votre restaurant.',
+      accent: 'border-[#00A86B]/30 bg-emerald-50/20'
     }
   ];
 
@@ -94,7 +102,7 @@ export const WhyChooseUs: React.FC = () => {
             </div>
 
             <a
-              href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20j'aimerais%20une%20visite%20dans%20mon%20restaurant."
+              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'aimerais%20une%20visite%20dans%20mon%20restaurant."
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 bg-[#FF6B00] hover:bg-[#e05e00] active:scale-95 text-white font-bold text-sm px-6 py-4 rounded-xl shadow-lg transition-all text-center cursor-pointer"
@@ -104,8 +112,8 @@ export const WhyChooseUs: React.FC = () => {
           </div>
         </div>
 
-        {/* 4 Pillars Grid */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 5 Pillars Grid */}
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {pillars.map((pillar, idx) => (
             <div
               key={idx}
@@ -159,7 +167,7 @@ export const WhyChooseUs: React.FC = () => {
                 {COMPETITOR_COMPARISONS.map((row, rIdx) => (
                   <tr key={rIdx} className={row.isHighlight ? 'bg-emerald-50/20 font-medium' : 'hover:bg-gray-50/50'}>
                     <td className="p-3.5 text-gray-900 font-semibold flex items-center gap-1.5">
-                      {row.isHighlight && <Sparkles className="w-3.5 h-3.5 text-[#00A86B]" />}
+                      
                       <span>{row.feature}</span>
                     </td>
                     <td className="p-3.5 text-[#00A86B] font-bold bg-green-50/40 border-x border-green-100 text-center flex items-center justify-center gap-1">

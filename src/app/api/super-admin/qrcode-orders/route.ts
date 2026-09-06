@@ -1,13 +1,31 @@
 import { NextResponse } from 'next/server';
-import { orderStorage } from '@/lib/order-storage';
+import { prisma } from '@/lib/prisma';
 import { QRCodeOrderStatus } from '@/types';
 
 // GET /api/super-admin/qrcode-orders
 // Récupérer toutes les commandes de chevalets QR codes physiques
 export async function GET() {
   try {
-    const orders = orderStorage.getQRCodeOrders();
-    return NextResponse.json({ orders });
+    const orders = await (prisma as any).qRCodeOrder.findMany({
+      include: {
+        tenant: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Map to the format expected by the frontend
+    const formattedOrders = orders.map((o: any) => ({
+      id: o.id,
+      restaurantId: o.tenantId,
+      restaurantName: o.tenant?.businessName || 'Inconnu',
+      quantity: o.quantity,
+      status: o.status,
+      address: o.address,
+      createdAt: o.createdAt.toISOString(),
+      updatedAt: o.updatedAt.toISOString(),
+    }));
+
+    return NextResponse.json({ orders: formattedOrders });
   } catch (error) {
     return NextResponse.json({ error: 'Erreur récupération commandes' }, { status: 500 });
   }
@@ -24,10 +42,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'orderId et status requis' }, { status: 400 });
     }
 
-    const updated = orderStorage.updateQRCodeOrderStatus(orderId, status as QRCodeOrderStatus);
-    if (!updated) {
-      return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
-    }
+    const updated = await (prisma as any).qRCodeOrder.update({
+      where: { id: orderId },
+      data: { status }
+    });
 
     return NextResponse.json({
       success: true,

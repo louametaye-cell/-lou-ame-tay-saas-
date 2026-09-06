@@ -54,7 +54,7 @@ export function generateInvoiceHtml(data: InvoiceData): string {
           <strong>MDA ARTS WORK SÉNÉGAL</strong><br>
           NINEA : 007845612 / RCCM : SN-DKR-2026-B-1234<br>
           Avenue Cheikh Anta Diop, Dakar, Sénégal<br>
-          WhatsApp : +221 77 458 74 74
+          WhatsApp : +221 76 231 20 03
         </div>
       </div>
 

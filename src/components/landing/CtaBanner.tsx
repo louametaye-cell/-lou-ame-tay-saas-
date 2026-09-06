@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, PhoneCall, ArrowRight, ShieldCheck, Clock, CheckCircle2 } from 'lucide-react';
+import { PhoneCall, ArrowRight, ShieldCheck, Clock, CheckCircle2 } from 'lucide-react';
 
 interface CtaBannerProps {
   onOpenTrial: () => void;
@@ -17,7 +17,7 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ onOpenTrial }) => {
         
         {/* Top Mini Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-white/10 text-white text-xs sm:text-sm font-bold border border-white/20">
-          <Sparkles className="w-4 h-4 text-[#FF6B00]" />
+          
           <span>Offre de lancement au Sénégal : 14 jours d'essai offerts</span>
         </div>
 
@@ -45,7 +45,7 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ onOpenTrial }) => {
 
           <a
             id="giant-cta-whatsapp-btn"
-            href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20d%C3%A9marrer%20mon%20essai%20gratuit%20de%2014%20jours%20pour%20mon%20restaurant."
+            href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20d%C3%A9marrer%20mon%20essai%20gratuit%20de%2014%20jours%20pour%20mon%20restaurant."
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 text-base font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 px-7 py-4 rounded-xl transition-all text-center"

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { orderStorage } from '@/lib/order-storage';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
+import { prisma } from '@/lib/prisma';
 import { getCachedDashboardStats, setCachedDashboardStats } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
 
@@ -10,57 +9,58 @@ export async function GET(req: Request) {
   const timer = startTimer();
   try {
     const { searchParams } = new URL(req.url);
-    const restaurantId = searchParams.get('restaurantId') || 'resto_thies_01';
+    const tenantId = searchParams.get('restaurantId');
+    if (!tenantId) return NextResponse.json({ error: 'restaurantId missing' }, { status: 400 });
 
     // 1. Check Redis Cache (TTL 60s)
-    const cachedStats = await getCachedDashboardStats(restaurantId);
+    const cachedStats = await getCachedDashboardStats(tenantId);
     if (cachedStats) {
-      logPerformance(`GET /api/dashboard/stats (${restaurantId})`, timer.elapsedMs(), 'CACHE_HIT');
+      logPerformance(`GET /api/dashboard/stats (${tenantId})`, timer.elapsedMs(), 'CACHE_HIT');
       return NextResponse.json(cachedStats, { headers: { 'X-Cache': 'HIT' } });
     }
 
-    const orders = orderStorage.getOrdersByRestaurantId(restaurantId);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todayOrders = orders.filter((o) => new Date(o.createdAt).getTime() >= today.getTime());
+    const todayOrders = await (prisma as any).order.findMany({
+      where: {
+        tenantId,
+        createdAt: { gte: today }
+      },
+      include: { items: true }
+    });
 
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + (Number(o.totalAmount) || 0), 0);
     const todayOrdersCount = todayOrders.length;
     
     // Calculate covers (sum of item quantities or estimation)
-    const todayCovers = todayOrders.reduce((sum, o) => {
-      const itemsCount = o.items.reduce((s, i) => s + (i.quantity || 1), 0);
+    const todayCovers = todayOrders.reduce((sum: number, o: any) => {
+      const itemsCount = o.items.reduce((s: number, i: any) => s + (i.quantity || 1), 0);
       return sum + Math.max(itemsCount, 1);
     }, 0);
 
     // Count out of stock items
-    const restaurant = orderStorage.getRestaurantById(restaurantId) || SAMPLE_RESTAURANT;
-    const categories = restaurant.categories || SAMPLE_RESTAURANT.categories;
-    let outOfStock = 0;
-    categories.forEach((cat) => {
-      cat.items?.forEach((i) => {
-        const avail = orderStorage.getItemAvailability(i.id);
-        if (avail === false) {
-          outOfStock++;
-        }
-      });
+    const outOfStockItems = await (prisma as any).menuItem.count({
+      where: {
+        category: { tenantId },
+        isAvailable: false
+      }
     });
 
     const statsPayload = {
-      todayRevenue: todayRevenue > 0 ? todayRevenue : 125000,
-      todayOrders: todayOrdersCount > 0 ? todayOrdersCount : 18,
-      todayCovers: todayCovers > 0 ? todayCovers : 42,
-      outOfStock,
-      revenueChange: 12.5, // % vs hier
-      ordersChange: 5.2,   // % vs hier
-      coversChange: 8.0,   // % vs hier
+      todayRevenue: todayRevenue > 0 ? todayRevenue : 0,
+      todayOrders: todayOrdersCount > 0 ? todayOrdersCount : 0,
+      todayCovers: todayCovers > 0 ? todayCovers : 0,
+      outOfStock: outOfStockItems,
+      revenueChange: 0,
+      ordersChange: 0,
+      coversChange: 0,
     };
 
     // Save into Redis (TTL 60s)
-    await setCachedDashboardStats(restaurantId, statsPayload);
+    await setCachedDashboardStats(tenantId, statsPayload);
 
-    logPerformance(`GET /api/dashboard/stats (${restaurantId})`, timer.elapsedMs(), 'CACHE_MISS');
+    logPerformance(`GET /api/dashboard/stats (${tenantId})`, timer.elapsedMs(), 'CACHE_MISS');
 
     return NextResponse.json(statsPayload, { headers: { 'X-Cache': 'MISS' } });
   } catch (error) {

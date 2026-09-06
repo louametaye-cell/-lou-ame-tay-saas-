@@ -1,7 +1,7 @@
 import React from 'react';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
-import { orderStorage } from '@/lib/order-storage';
+
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
@@ -12,7 +12,7 @@ interface PageProps {
 }
 
 export default async function ExpressCounterMenuPageAlt({ params }: PageProps) {
-  let restaurant: RestaurantType = orderStorage.getRestaurantById(params.subdomain) || SAMPLE_RESTAURANT;
+  let restaurant: any =  SAMPLE_RESTAURANT;
 
   try {
     const dbRestaurant = await (prisma as any).restaurant?.findFirst({

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, QrCode, Download, Printer, Utensils, Sparkles, Check } from 'lucide-react';
+import { X, QrCode, Download, Printer, Utensils, Check } from 'lucide-react';
 
 interface QrGeneratorModalProps {
   isOpen: boolean;
@@ -166,7 +166,7 @@ export const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ isOpen, onCl
           </button>
 
           <a
-            href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code%20pour%20mon%20restaurant."
+            href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code%20pour%20mon%20restaurant."
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 bg-[#00A86B] hover:bg-[#00925d] text-white py-3 rounded-xl text-xs font-bold transition-colors shadow-md"

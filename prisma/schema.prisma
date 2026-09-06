@@ -15,41 +15,41 @@ enum Language {
   IT
 }
 
-enum ValueType { 
-  BOOLEAN 
-  NUMERIC 
-  TEXT 
+enum ValueType {
+  BOOLEAN
+  NUMERIC
+  TEXT
 }
 
-enum SubscriptionStatus { 
-  TRIAL 
-  ACTIVE 
-  PAST_DUE 
-  CANCELED 
-  SUSPENDED 
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  SUSPENDED
 }
 
 enum MealPeriod {
   ALL_DAY
-  LUNCH       // 12h00 - 16h00
-  DINNER      // 18h00 - 00h00
+  LUNCH // 12h00 - 16h00
+  DINNER // 18h00 - 00h00
   NIGHT_SNACK // 00h00 - 06h00
 }
 
-enum PaymentProvider { 
-  WAVE 
-  ORANGE_MONEY 
-  CASH 
+enum PaymentProvider {
+  WAVE
+  ORANGE_MONEY
+  CASH
   CARD
-  MANUAL_AGENCY 
+  MANUAL_AGENCY
 }
 
-enum PaymentMethod { 
-  CASH 
-  WAVE 
-  ORANGE_MONEY 
-  CARD 
-  CASH_TPE 
+enum PaymentMethod {
+  CASH
+  WAVE
+  ORANGE_MONEY
+  CARD
+  CASH_TPE
 }
 
 enum OrderStatus {
@@ -60,41 +60,46 @@ enum OrderStatus {
   CANCELLED
 }
 
-enum PaymentStatus { 
-  PENDING 
-  SUCCESS 
-  FAILED 
-  REFUNDED 
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ZoneType {
+  TABLES
+  FREE_ZONE
 }
 
 model Plan {
-  id            String         @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  slug          String         @unique
-  price         Decimal        @db.Decimal(10, 2)
-  currency      String         @default("FCFA")
-  description   String?        @db.Text
-  colorTheme    String         @default("#FF6B00") @map("color_theme")
-  isRecommended Boolean        @default(false) @map("is_recommended")
-  isActive      Boolean        @default(true) @map("is_active")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
+  slug          String   @unique
+  price         Decimal  @db.Decimal(10, 2)
+  currency      String   @default("FCFA")
+  description   String?  @db.Text
+  colorTheme    String   @default("#FF6B00") @map("color_theme")
+  isRecommended Boolean  @default(false) @map("is_recommended")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  planFeatures  PlanFeature[]
-  tenants       Tenant[]
-  transactions  PaymentTransaction[]
+  planFeatures PlanFeature[]
+  tenants      Tenant[]
+  transactions PaymentTransaction[]
 
   @@map("plans")
 }
 
 model Feature {
-  id          String        @id @default(cuid())
-  keyName     String        @unique @map("key_name")
+  id          String    @id @default(cuid())
+  keyName     String    @unique @map("key_name")
   label       String
-  description String?       @db.Text
-  category    String        @default("CORE")
-  valueType   ValueType     @default(BOOLEAN) @map("value_type")
-  createdAt   DateTime      @default(now()) @map("created_at")
+  description String?   @db.Text
+  category    String    @default("CORE")
+  valueType   ValueType @default(BOOLEAN) @map("value_type")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   planFeatures PlanFeature[]
 
@@ -121,12 +126,14 @@ model Tenant {
   id                    String             @id @default(cuid())
   businessName          String             @map("business_name")
   subdomain             String             @unique
+  email                 String?            @unique
+  passwordHash          String?            @map("password_hash")
   ownerName             String?            @map("owner_name")
   phone                 String
   address               String?
   city                  String             @default("Dakar")
-  logoUrl               String?            @db.Text @map("logo_url")
-  bannerUrl             String?            @db.Text @map("banner_url")
+  logoUrl               String?            @map("logo_url") @db.Text
+  bannerUrl             String?            @map("banner_url") @db.Text
   currency              String             @default("FCFA")
   currentPlanId         String             @map("current_plan_id")
   subscriptionStatus    SubscriptionStatus @default(TRIAL) @map("subscription_status")
@@ -139,90 +146,126 @@ model Tenant {
   qrScansToday          Int                @default(0) @map("qr_scans_today")
   ordersToday           Int                @default(0) @map("orders_today")
   storageUsedMb         Int                @default(0) @map("storage_used_mb")
-  branding              Json?              // Personnalisation graphique (couleurs, polices, logo, réseaux, Google Avis)
+  branding              Json? // Personnalisation graphique (couleurs, polices, logo, réseaux, Google Avis)
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
 
   plan         Plan                 @relation(fields: [currentPlanId], references: [id])
   transactions PaymentTransaction[]
   categories   Category[]
+  zones        Zone[]
+  waiters      Waiter[]
   tables       Table[]
   orders       Order[]
   combos       ComboDeal[]
   upsellRules  UpsellRule[]
   menuItems    MenuItem[]
+  tickets      SupportTicket[]
+  waiterCalls  WaiterCall[]
+  QRCodeOrder  QRCodeOrder[]
 
   @@map("tenants")
 }
 
 model Category {
-  id           String     @id @default(cuid())
-  tenantId     String     @map("tenant_id")
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
   name         String
   icon         String?
-  displayOrder Int        @default(0) @map("display_order")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items        MenuItem[]
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items  MenuItem[]
 
   @@index([tenantId, displayOrder])
   @@map("categories")
 }
 
+model Zone {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  type      ZoneType @default(TABLES)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tables Table[]
+  orders Order[]
+
+  @@map("zones")
+}
+
+model Waiter {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  name       String
+  phone      String?
+  qrCodeSlug String   @unique @map("qr_code_slug")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("waiters")
+}
+
 model Table {
-  id           String         @id @default(cuid())
-  tenantId     String         @map("tenant_id")
-  tableNumber  Int            @map("table_number")
-  label        String?
-  isActive     Boolean        @default(true) @map("is_active")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  zoneId      String?  @map("zone_id")
+  tableNumber Int      @map("table_number")
+  label       String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  sessions     TableSession[]
-  orders       Order[]
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  zone     Zone?          @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  sessions TableSession[]
+  orders   Order[]
 
-  @@unique([tenantId, tableNumber], name: "uq_tenant_table")
+  @@unique([tenantId, zoneId, tableNumber], name: "uq_tenant_zone_table")
   @@index([tenantId, isActive])
   @@map("tables")
 }
 
 model TableSession {
-  id          String      @id @default(cuid())
-  tableId     String      @map("table_id")
-  isActive    Boolean     @default(true) @map("is_active")
-  sharedCart  Json?       @map("shared_cart")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id         String   @id @default(cuid())
+  tableId    String   @map("table_id")
+  isActive   Boolean  @default(true) @map("is_active")
+  sharedCart Json?    @map("shared_cart")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  table       Table       @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  table Table @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   @@map("table_sessions")
 }
 
 model MenuItem {
-  id             String       @id @default(cuid())
-  tenantId       String       @map("tenant_id")
-  categoryId     String?      @map("category_id")
+  id             String     @id @default(cuid())
+  tenantId       String     @map("tenant_id")
+  categoryId     String?    @map("category_id")
   name           String
-  description    String?      @db.Text
-  price          Decimal      @db.Decimal(10, 2)
-  period         MealPeriod   @default(ALL_DAY)
-  viewsCount     Int          @default(0)   @map("views_count")
-  salesCount     Int          @default(0)   @map("sales_count")
-  isDailySpecial Boolean      @default(false) @map("is_daily_special")
-  imageUrl       String?      @db.Text @map("image_url")
-  isAvailable    Boolean      @default(true) @map("is_available")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  description    String?    @db.Text
+  price          Decimal    @db.Decimal(10, 2)
+  period         MealPeriod @default(ALL_DAY)
+  viewsCount     Int        @default(0) @map("views_count")
+  salesCount     Int        @default(0) @map("sales_count")
+  isDailySpecial Boolean    @default(false) @map("is_daily_special")
+  imageUrl       String?    @map("image_url") @db.Text
+  isAvailable    Boolean    @default(true) @map("is_available")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  tenant         Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  category       Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  translations   MenuItemTranslation[]
-  upsellRules    UpsellRule[]          @relation("SuggestedItems")
-  orderItems     OrderItem[]
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category     Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  translations MenuItemTranslation[]
+  upsellRules  UpsellRule[]          @relation("SuggestedItems")
+  orderItems   OrderItem[]
 
   @@index([tenantId])
   @@index([categoryId])
@@ -233,34 +276,34 @@ model MenuItem {
 }
 
 model UpsellRule {
-  id              String      @id @default(cuid())
-  tenantId        String      @map("tenant_id")
-  triggerItemId   String?     @map("trigger_item_id")
-  suggestedItemId String      @map("suggested_item_id")
-  discountPrice   Decimal?    @map("discount_price") @db.Decimal(10, 2)
-  isActive        Boolean     @default(true) @map("is_active")
-  createdAt       DateTime    @default(now()) @map("created_at")
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  triggerItemId   String?  @map("trigger_item_id")
+  suggestedItemId String   @map("suggested_item_id")
+  discountPrice   Decimal? @map("discount_price") @db.Decimal(10, 2)
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  suggestedItem   MenuItem    @relation("SuggestedItems", fields: [suggestedItemId], references: [id], onDelete: Cascade)
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  suggestedItem MenuItem @relation("SuggestedItems", fields: [suggestedItemId], references: [id], onDelete: Cascade)
 
   @@map("upsell_rules")
 }
 
 model ComboDeal {
-  id             String      @id @default(cuid())
-  tenantId       String      @map("tenant_id")
-  name           String      // ex: "Formule Midi Teranga"
-  description    String?     @db.Text
-  fixedPrice     Decimal     @map("fixed_price") @db.Decimal(10, 2)
-  period         MealPeriod  @default(LUNCH)
-  availableFrom  String      @default("12:00") @map("available_from")
-  availableTo    String      @default("16:00") @map("available_to")
-  isActive       Boolean     @default(true) @map("is_active")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  id            String     @id @default(cuid())
+  tenantId      String     @map("tenant_id")
+  name          String // ex: "Formule Midi Teranga"
+  description   String?    @db.Text
+  fixedPrice    Decimal    @map("fixed_price") @db.Decimal(10, 2)
+  period        MealPeriod @default(LUNCH)
+  availableFrom String     @default("12:00") @map("available_from")
+  availableTo   String     @default("16:00") @map("available_to")
+  isActive      Boolean    @default(true) @map("is_active")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
 
-  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("combo_deals")
 }
@@ -281,24 +324,31 @@ model MenuItemTranslation {
 }
 
 model Order {
-  id               String        @id @default(cuid())
-  tenantId         String        @map("tenant_id")
-  tableId          String?       @map("table_id")
-  tableNumber      Int           @map("table_number")
-  status           OrderStatus   @default(PENDING)
-  paymentMethod    PaymentMethod @default(CASH) @map("payment_method")
-  paymentStatus    String        @default("UNPAID") @map("payment_status")
-  transactionRef   String?       @map("transaction_ref")
-  customerName     String?       @map("customer_name")
-  customerNote     String?       @db.Text @map("customer_note")
-  totalAmount      Decimal       @map("total_amount") @db.Decimal(10, 2)
-  acknowledgedAt   DateTime?     @map("acknowledged_at")
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
+  id             String        @id @default(cuid())
+  tenantId       String        @map("tenant_id")
+  zoneId         String?       @map("zone_id")
+  tableId        String?       @map("table_id")
+  tableNumber    Int?          @map("table_number")
+  waiterId       String?       @map("waiter_id")
+  locationDetail String?       @map("location_detail")
+  status         OrderStatus   @default(PENDING)
+  paymentMethod  PaymentMethod @default(CASH) @map("payment_method")
+  paymentStatus  String        @default("UNPAID") @map("payment_status")
+  transactionRef String?       @map("transaction_ref")
+  customerName   String?       @map("customer_name")
+  customerNote   String?       @map("customer_note") @db.Text
+  totalAmount    Decimal       @map("total_amount") @db.Decimal(10, 2)
+  acknowledgedAt DateTime?     @map("acknowledged_at")
+  preparedAt     DateTime?     @map("prepared_at")
+  servedAt       DateTime?     @map("served_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  table            Table?        @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  items            OrderItem[]
+  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  zone   Zone?       @relation(fields: [zoneId], references: [id])
+  table  Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  waiter Waiter?     @relation(fields: [waiterId], references: [id])
+  items  OrderItem[]
 
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
@@ -307,19 +357,19 @@ model Order {
 }
 
 model OrderItem {
-  id             String    @id @default(cuid())
-  orderId        String    @map("order_id")
-  menuItemId     String?   @map("menu_item_id")
+  id             String  @id @default(cuid())
+  orderId        String  @map("order_id")
+  menuItemId     String? @map("menu_item_id")
   name           String
-  price          Decimal   @db.Decimal(10, 2)
-  quantity       Int       @default(1)
-  selectedSide   String?   @map("selected_side")
-  selectedSpice  String?   @map("selected_spice")
-  selectedExtras Json?     @map("selected_extras")
-  customNotes    String?   @map("custom_notes")
+  price          Decimal @db.Decimal(10, 2)
+  quantity       Int     @default(1)
+  selectedSide   String? @map("selected_side")
+  selectedSpice  String? @map("selected_spice")
+  selectedExtras Json?   @map("selected_extras")
+  customNotes    String? @map("custom_notes")
 
-  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItem       MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([menuItemId])
@@ -345,4 +395,66 @@ model PaymentTransaction {
   @@index([tenantId, status])
   @@index([createdAt])
   @@map("payment_transactions")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model SupportTicket {
+  id        String       @id @default(cuid())
+  tenantId  String       @map("tenant_id")
+  subject   String
+  status    TicketStatus @default(OPEN)
+  priority  String       @default("NORMAL")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages TicketMessage[]
+
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id         String   @id @default(cuid())
+  ticketId   String   @map("ticket_id")
+  senderType String
+  senderName String?  @map("sender_name")
+  content    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_messages")
+}
+
+model WaiterCall {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  tableNumber Int       @map("table_number")
+  status      String    @default("PENDING")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  resolvedAt  DateTime? @map("resolved_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("waiter_calls")
+}
+
+model QRCodeOrder {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  quantity  Int
+  status    String   @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("qrcode_orders")
 }

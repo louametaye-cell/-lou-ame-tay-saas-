@@ -10,7 +10,6 @@ import {
   Clock, 
   Volume2, 
   AlertTriangle, 
-  Sparkles, 
   QrCode,
   DollarSign,
   UtensilsCrossed,
@@ -148,7 +147,7 @@ export const InteractiveLiveDemo: React.FC = () => {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00A86B]/10 text-[#00A86B] text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
+            
             <span>Simulateur Interactif Live</span>
           </div>
 

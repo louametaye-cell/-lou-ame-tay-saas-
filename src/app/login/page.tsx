@@ -9,7 +9,6 @@ import {
   ArrowRight, 
   CheckCircle2, 
   Zap, 
-  Sparkles, 
   ShieldCheck, 
   ChefHat, 
   Phone, 
@@ -138,7 +137,7 @@ export default function RestaurantLoginPage() {
         {/* Left Column : Branding & Slogan (5 cols) */}
         <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 text-orange-400 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
+            
             <span>Espace Professionnel Abonnés</span>
           </div>
 
@@ -299,7 +298,7 @@ export default function RestaurantLoginPage() {
             {/* Support Contact */}
             <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 relative z-10">
               <a
-                href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
+                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"

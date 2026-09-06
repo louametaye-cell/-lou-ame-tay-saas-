@@ -5,7 +5,7 @@ export const COMMERCIAL_AGENTS: CommercialAgent[] = [
     id: 'comm-1',
     name: 'Moussa Diop',
     email: 'moussa.diop@louametay.sn',
-    phone: '+221 77 654 32 10',
+    phone: '+221 76 231 20 03',
     zone: 'Thiès & Environs (Centre, Dixième, Randoulène)',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     role: 'commercial',
@@ -47,7 +47,7 @@ export const COMMERCIAL_AGENTS: CommercialAgent[] = [
     id: 'admin-1',
     name: 'Super Administrateur',
     email: 'direction@louametay.sn',
-    phone: '+221 77 654 32 10',
+    phone: '+221 76 231 20 03',
     zone: 'National (Sénégal)',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
     role: 'admin',
@@ -203,7 +203,8 @@ export const PROBLEMS_AND_SOLUTIONS: ProblemSolution[] = [
     problem: 'Vos menus papier se salissent avec les sauces, se déchirent et coûtent une fortune à chaque fois que vous réimprimez pour ajuster un prix.',
     solution: 'Votre menu digital se met à jour en 10 secondes depuis votre téléphone. Vos prix sont toujours nets, sans rature ni réimpression.',
     iconName: 'FileX',
-    impactMetric: '0 FCFA de frais d\'impression'
+    impactMetric: '0 FCFA de frais d\'impression',
+    rseBadge: 'Éco-Responsabilité RSE (0 papier jeté)'
   },
   {
     id: 'prob-2',
@@ -212,7 +213,8 @@ export const PROBLEMS_AND_SOLUTIONS: ProblemSolution[] = [
     problem: 'En plein rush du midi, les serveurs courent, inversent les assiettes entre tables ou oublient les précisions (sans piment, sauce à part).',
     solution: 'Chaque table possède son QR code dédié. La commande arrive numérotée en cuisine avec les préférences exactes saisies par le client.',
     iconName: 'Users',
-    impactMetric: '-85% d\'erreurs de service'
+    impactMetric: '-85% d\'erreurs de service',
+    rseBadge: 'Service Éthique & RSE (-85% d\'erreurs)'
   },
   {
     id: 'prob-3',
@@ -221,7 +223,8 @@ export const PROBLEMS_AND_SOLUTIONS: ProblemSolution[] = [
     problem: 'Les clients poireautent 15 minutes avant que quelqu\'un vienne apporter la carte, ce qui fait fuir les plus pressés et bloque vos tables.',
     solution: 'Dès qu\'ils s\'assoient, ils scannent le QR code, bavent devant les photos de vos grillades et passent commande en 3 clics chrono.',
     iconName: 'Clock',
-    impactMetric: 'Gain de 15 min par table'
+    impactMetric: 'Gain de 15 min par table',
+    rseBadge: 'Fluidité & Bien-être Client'
   },
   {
     id: 'prob-4',
@@ -230,68 +233,128 @@ export const PROBLEMS_AND_SOLUTIONS: ProblemSolution[] = [
     problem: 'Un client commande le Thiéboudienne, attend 10 minutes, puis le serveur revient penaud annoncer qu\'il n\'y a plus de mérou.',
     solution: 'D\'un simple clic sur votre téléphone, marquez le plat épuisé. Il disparaît instantanément de la carte de tous les clients assis.',
     iconName: 'AlertCircle',
-    impactMetric: 'Zéro déception client'
+    impactMetric: 'Zéro déception client',
+    rseBadge: 'Anti-Gaspillage Alimentaire (RSE)'
   }
 ];
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'starter',
-    name: 'Formule STARTER',
-    badge: 'Menu Consultation',
+    wolofName: 'TÀMBALI',
+    name: 'Commencer',
     priceMonthly: 15000,
-    priceAnnualMonthly: 12500,
     popular: false,
-    description: 'Idéal pour cafés, glaciers, petits maquis et fast-foods de quartier.',
+    description: 'Établissement avec caisse existante, veut juste un menu digital',
     features: [
-      { text: 'Menu digital interactif HD accessible par QR Code', included: true, highlight: true },
-      { text: 'Photos illimitées des plats en haute définition', included: true },
-      { text: 'Bouton gestion des ruptures de stock en 1 clic (5s)', included: true, highlight: true },
-      { text: 'QR codes uniques par table ou comptoir', included: true },
-      { text: 'Assistance technique et support 7j/7', included: true },
-      { text: 'Envoi direct des commandes en cuisine / bar', included: false },
-      { text: 'Gestion multi-zones (salle, terrasse, piscine)', included: false }
+      { text: 'Menu digital avec photos illimitées', included: true },
+      { text: 'Gestion des stocks en 1 clic', included: true },
+      { text: 'Personnalisation logo/couleurs (Studio)', included: true },
+      { text: 'Statistiques de consultation', included: true },
+      { text: 'Prise de commande intégrée', included: false },
     ],
-    ctaText: 'Choisir la Formule Starter',
+    ctaText: 'Choisir Tàmbali',
     ctaType: 'trial'
   },
   {
-    id: 'pro',
-    name: 'Formule PRO',
-    badge: 'Recommandée',
+    id: 'nio-far',
+    wolofName: 'NIO FAR',
+    name: 'On est ensemble',
     priceMonthly: 25000,
-    priceAnnualMonthly: 20833,
-    popular: true,
-    description: 'Idéal pour restaurants traditionnels, grillades, dibiteries et pizzerias.',
+    popular: false,
+    description: 'Petit maquis/café sans système de caisse',
     features: [
-      { text: 'Tout le contenu de la formule Starter', included: true, highlight: true },
-      { text: 'Envoi des commandes directes à la cuisine & au bar', included: true, highlight: true },
-      { text: 'Écran Cuisine (KDS) avec alertes sonores de commande', included: true, highlight: true },
-      { text: 'Gestion dynamique des tables et du plan de salle', included: true, highlight: true },
-      { text: 'Statistiques de vente et de fréquentation en temps réel', included: true },
-      { text: 'Affichage Wave & Orange Money direct pour encaissement', included: true },
-      { text: 'Gestion multi-zones (salle, terrasse, piscine)', included: false }
+      { text: 'Tout le pack Tàmbali', included: true, highlight: true },
+      { text: 'Commande via QR Code Table', included: true },
+      { text: 'Caisse Express (au comptoir/à emporter)', included: true },
+      { text: 'Statistiques de ventes de base', included: true }
     ],
-    ctaText: 'Choisir la Formule Pro (Recommandée)',
+    ctaText: 'Choisir Nio Far',
     ctaType: 'trial'
   },
   {
-    id: 'premium',
-    name: 'Formule PREMIUM',
-    badge: 'Multi-espaces & Hôtels',
-    priceMonthly: 45000,
-    priceAnnualMonthly: 37500,
-    popular: false,
-    description: 'Idéal pour hôtels, complexes touristiques, lounges VIP et plages.',
+    id: 'xeweul',
+    wolofName: 'XÉWEUL',
+    name: 'Bonne affaire',
+    badge: 'Recommandé',
+    priceMonthly: 35000,
+    popular: true,
+    description: 'Restaurant, pizzeria, fastfood (Le meilleur rapport qualité-prix)',
     features: [
-      { text: 'Tout le contenu de la formule Pro', included: true, highlight: true },
-      { text: 'Gestion multi-zones (Salle, Terrasse, Piscine, Room-Service)', included: true, highlight: true },
-      { text: 'Menu bilingue automatique (Français / Anglais)', included: true, highlight: true },
-      { text: 'Statistiques avancées par zone et export comptable', included: true, highlight: true },
-      { text: 'Accompagnement VIP dédié & shooting photo saisonnier', included: true, highlight: true },
-      { text: 'Assistance prioritaire 7j/7 avec déplacement sur place', included: true }
+      { text: 'Tout le pack Nio Far', included: true, highlight: true },
+      { text: 'Écran Cuisine (KDS) complet avec alertes', included: true, highlight: true },
+      { text: 'Traduction multilingue automatique (5 langues)', included: true },
+      { text: 'Impression tickets Bluetooth 80mm', included: true },
+      { text: 'Écran Menu (affichage TV) — mode simple', included: true },
+      { text: 'Statistiques de ventes complètes', included: true }
     ],
-    ctaText: 'Choisir la Formule Premium',
+    ctaText: 'Choisir Xéweul',
+    ctaType: 'trial'
+  },
+  {
+    id: 'baobab',
+    wolofName: 'BAOBAB',
+    name: 'L\'arbre majestueux',
+    priceMonthly: 46800,
+    popular: false,
+    description: 'Fastfood à forte affluence, établissements multi-comptoirs',
+    features: [
+      { text: 'Tout le pack Xéweul', included: true, highlight: true },
+      { text: 'Gestion multi-guichets/multi-points de commande', included: true },
+      { text: 'Écran Menu multi-écrans', included: true },
+      { text: 'Export de données avancé', included: true }
+    ],
+    ctaText: 'Choisir Baobab',
+    ctaType: 'trial'
+  },
+  {
+    id: 'teranga',
+    wolofName: 'TERANGA',
+    name: 'Hospitalité',
+    priceMonthly: 65000,
+    popular: false,
+    description: 'Hôtels, lounges et grandes terrasses',
+    features: [
+      { text: 'Tout le pack Baobab', included: true, highlight: true },
+      { text: 'QR personnel par serveur avec traçabilité', included: true, highlight: true },
+      { text: 'Gestion multi-zones (piscine, plage, room-service)', included: true },
+      { text: 'Écran Menu par zone', included: true }
+    ],
+    ctaText: 'Choisir Teranga',
+    ctaType: 'trial'
+  },
+  {
+    id: 'buur',
+    wolofName: 'BUUR',
+    name: 'Roi',
+    priceMonthly: 80000,
+    popular: false,
+    description: 'Grands hôtels, complexes multi-restaurants',
+    features: [
+      { text: 'Tout le pack Teranga', included: true, highlight: true },
+      { text: 'Gestion multi-sites (plusieurs points de restauration)', included: true },
+      { text: 'Export des performances staff avancé', included: true },
+      { text: 'Support VIP dédié', included: true }
+    ],
+    ctaText: 'Choisir Buur',
+    ctaType: 'quote'
+  },
+  {
+    id: 'ndaje',
+    wolofName: 'NDAJÉ',
+    name: 'Rendez-vous',
+    priceMonthly: 'Sur devis',
+    isEvent: true,
+    popular: false,
+    description: 'Prestation événementielle ponctuelle, pas un abonnement',
+    features: [
+      { text: 'Menu digital dédié à l\'événement', included: true, highlight: true },
+      { text: 'Commande à table en temps réel', included: true },
+      { text: 'Écran cuisine pour coordonner le service', included: true },
+      { text: 'Écran Menu affiché à l\'entrée/sur scène', included: true },
+      { text: 'Désactivation automatique après l\'événement', included: true }
+    ],
+    ctaText: 'Demander un devis',
     ctaType: 'quote'
   }
 ];

@@ -7,7 +7,6 @@ import {
   MessageCircle, 
   CheckCircle2, 
   Clock, 
-  Sparkles, 
   ShieldCheck 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -54,7 +53,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
     const text = encodeURIComponent(
       `Bonjour Lou Ame Tay ! Je m'appelle ${formData.fullName || 'Restaurateur'}, gérant de ${formData.restaurantName || 'mon restaurant'} à ${formData.city}. Je souhaite des informations pour la formule ${formData.plan.toUpperCase()}.`
     );
-    window.open(`https://wa.me/221776543210?text=${text}`, '_blank');
+    window.open(`https://wa.me/221762312003?text=${text}`, '_blank');
   };
 
   return (
@@ -83,7 +82,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
               
               {/* WhatsApp direct card */}
               <a
-                href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9monstration%20du%20menu%20digital."
+                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9monstration%20du%20menu%20digital."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-4 rounded-xl bg-green-50/70 border border-green-200/80 flex items-center gap-4 hover:bg-green-100/80 transition-colors group"
@@ -96,7 +95,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                     WhatsApp Direct (Réponse en 5 min)
                   </span>
                   <span className="font-heading font-black text-base text-gray-900 group-hover:text-[#00A86B]">
-                    +221 77 654 32 10
+                    +221 76 231 20 03
                   </span>
                 </div>
               </a>
@@ -111,7 +110,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                     Téléphone Fixe / Mobile
                   </span>
                   <span className="font-bold text-sm sm:text-base text-gray-900">
-                    +221 33 951 00 00 / +221 77 654 32 10
+                    +221 77 130 36 78 / +221 77 45 87 47 4
                   </span>
                 </div>
               </div>
@@ -284,9 +283,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                         onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00A86B] cursor-pointer"
                       >
-                        <option value="starter">Starter (15 000 FCFA/mois)</option>
-                        <option value="pro">Pro (25 000 FCFA/mois) - Recommandé</option>
-                        <option value="enterprise">Enterprise (Sur mesure)</option>
+                        <option value="tambali">TÀMBALI - Commencer (15 000 FCFA/mois)</option>
+                        <option value="nio_far">NIO FAR - On est ensemble (25 000 FCFA/mois)</option>
+                        <option value="xeweul">XÉWEUL - Bonne affaire (35 000 FCFA/mois)</option>
+                        <option value="baobab">BAOBAB (46 800 FCFA/mois)</option>
+                        <option value="teranga">TERANGA - Hospitalité (65 000 FCFA/mois)</option>
+                        <option value="buur">BUUR - Roi (80 000 FCFA/mois)</option>
+                        <option value="ndaje">NDAJÉ - Événementiel (Sur devis)</option>
                         <option value="demo">Simple demande de démonstration</option>
                       </select>
                     </div>

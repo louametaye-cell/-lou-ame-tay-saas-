@@ -67,7 +67,7 @@ export default function SuperAdminTicketsPage() {
 
             <div className="flex items-center gap-2.5">
               <a
-                href="https://wa.me/221774587474"
+                href="https://wa.me/221762312003"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#1ebd5b] text-black text-xs font-black px-3.5 py-2.5 rounded-xl shadow-lg transition-all"
@@ -148,7 +148,7 @@ export default function SuperAdminTicketsPage() {
 
                   <div className="space-y-2 pt-2">
                     <a
-                      href={`https://wa.me/221774587474?text=${encodeURIComponent(`Bonjour, concernant votre ticket #${selectedTicket.id} (${selectedTicket.subject}) sur Lou Ame Tay ? : `)}`}
+                      href={`https://wa.me/221762312003?text=${encodeURIComponent(`Bonjour, concernant votre ticket #${selectedTicket.id} (${selectedTicket.subject}) sur Lou Ame Tay ? : `)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5b] text-black font-black text-xs py-3 rounded-xl shadow-lg transition-all"

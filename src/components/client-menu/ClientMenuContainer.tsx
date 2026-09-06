@@ -44,12 +44,19 @@ interface ClientMenuContainerProps {
   initialRestaurant: RestaurantType;
   tableNumber: number;
   isExpress?: boolean;
+  orderContext?: {
+    waiterId?: string;
+    waiterName?: string;
+    zoneId?: string;
+    locationDetail?: string;
+  };
 }
 
 export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   initialRestaurant,
   tableNumber,
   isExpress = false,
+  orderContext,
 }) => {
   const [restaurant, setRestaurant] = useState<RestaurantType>(initialRestaurant);
   const [currentLang, setCurrentLang] = useState<Language>('FR');
@@ -269,6 +276,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         paymentMethod,
         transactionRef,
         total: getTotalPrice(),
+        waiterId: orderContext?.waiterId,
+        zoneId: orderContext?.zoneId,
+        locationDetail: orderContext?.locationDetail,
         items: items.map((i) => ({
           menuItemId: i.menuItem.id,
           name: i.menuItem.name,

@@ -94,8 +94,9 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
         }`}
       >
         <div className="flex items-center gap-2">
-          <span className="text-xl sm:text-2xl font-black tracking-tight">
-            {isExpressOrder ? '⚡ EXPRESS' : `TABLE ${formattedTable}`}
+          <span className="text-xl sm:text-2xl font-black tracking-tight flex flex-col leading-tight">
+            <span>{isExpressOrder ? '⚡ EXPRESS' : (order.locationDetail ? order.locationDetail : `TABLE ${formattedTable}`)}</span>
+            {order.zoneId && <span className="text-[10px] text-white/80 font-normal mt-0.5">ZONE ID: {order.zoneId}</span>}
           </span>
           <span className="text-xs font-mono font-bold bg-black/15 px-2 py-0.5 rounded-md">
             #{order.id.slice(-5).toUpperCase()}
@@ -125,7 +126,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
               ? 'bg-purple-100 text-purple-900 border-purple-300'
               : 'bg-amber-100/90 text-slate-800 border-amber-300'
           }`}>
-            {isExpressOrder ? '⚡ Guichet Caisse' : `👤 ${getAssignedServerForTable(order.tableNumber)}`}
+            {isExpressOrder ? '⚡ Guichet Caisse' : `👤 ${order.waiter?.name || getAssignedServerForTable(order.tableNumber)}`}
           </span>
         </div>
 

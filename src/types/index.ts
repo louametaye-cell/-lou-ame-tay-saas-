@@ -256,11 +256,16 @@ export interface OrderType {
   customerNote?: string | null;
   paymentMethod?: string | null;
   transactionRef?: string | null;
+  waiterId?: string | null;
+  waiter?: { id: string; name: string } | null;
+  zoneId?: string | null;
+  locationDetail?: string | null;
   note?: string | null;
   restaurantId: string;
   restaurantName?: string | null;
   status: OrderStatus;
   total: number;
+  preparedAt?: string | null;
   servedAt?: string | null;
   createdAt: string;
   updatedAt?: string;

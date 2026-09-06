@@ -24,7 +24,7 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
 
   useEffect(() => {
     if (restaurant && isOpen) {
-      setPhone(restaurant.phone || '+221 77 654 32 10');
+      setPhone(restaurant.phone || '+221 76 231 20 03');
       fetchReminderText(5);
     }
   }, [restaurant, isOpen]);

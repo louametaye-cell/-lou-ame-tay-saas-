@@ -7,10 +7,10 @@ import {
   XCircle, 
   ArrowRight,
   TrendingUp,
-  Sparkles,
   Zap,
   HelpCircle,
-  TrendingDown
+  TrendingDown,
+  Leaf
 } from 'lucide-react';
 import { PROBLEMS_AND_SOLUTIONS } from '@/components/landing/data/mockData';
 
@@ -45,7 +45,7 @@ export const ProblemsSection: React.FC = () => {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-5">
           <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-[#FF6B00] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
+            
             <span>Problème → Solution concrète</span>
           </div>
           
@@ -139,10 +139,18 @@ export const ProblemsSection: React.FC = () => {
                       </div>
                     </div>
 
-                    <span className="shrink-0 text-[11px] font-bold text-[#00A86B] bg-[#00A86B]/10 border border-[#00A86B]/20 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-2xs">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      {item.impactMetric}
-                    </span>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <span className="text-[11px] font-bold text-[#00A86B] bg-[#00A86B]/10 border border-[#00A86B]/20 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-2xs">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        {item.impactMetric}
+                      </span>
+                      {item.rseBadge && (
+                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                          <Leaf className="w-3 h-3 text-emerald-600 fill-emerald-600/20" />
+                          {item.rseBadge}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Problem / Solution comparative layout (Responsive Grid columns) */}

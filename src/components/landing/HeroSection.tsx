@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, 
   PhoneCall, 
   ArrowRight, 
   QrCode, 
@@ -98,7 +97,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <a
                 id="hero-cta-demo-btn"
-                href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20r%C3%A9server%20une%20d%C3%A9mo%20de%2010%20minutes."
+                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20r%C3%A9server%20une%20d%C3%A9mo%20de%2010%20minutes."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white border-2 border-[#FF6B00] text-[#FF6B00] hover:bg-orange-50 active:scale-95 px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-center"
@@ -218,7 +217,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                       }`}
                     >
-                      {cat === 'tous' && <Sparkles className="w-3 h-3 text-amber-300" />}
+                      
                       <span>{cat === 'tous' ? 'Tous' : cat}</span>
                     </button>
                   ))}

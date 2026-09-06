@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Sparkles, MessageCircle, ArrowRight, ShieldCheck, Plus, Flame, Smartphone } from 'lucide-react';
+import { Check, X, MessageCircle, ArrowRight, ShieldCheck, Plus, Flame, Smartphone } from 'lucide-react';
 import { PRICING_PLANS, PRICING_OPTIONS } from '@/components/landing/data/mockData';
 
 interface PricingSectionProps {
@@ -86,11 +86,14 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
           </div>
         </div>
 
-        {/* Pricing Cards Grid (3 official formulas: Starter, Pro, Premium) */}
-        <div className="mt-12 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+        {/* Pricing Cards Grid (7 formulas) */}
+        <div className="mt-12 max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 items-stretch">
           {PRICING_PLANS.map((plan) => {
             const isPremium = plan.popular;
-            const price = billingCycle === 'annual' ? plan.priceAnnualMonthly : plan.priceMonthly;
+            const isEvent = plan.isEvent;
+            const price = typeof plan.priceMonthly === 'number' && billingCycle === 'annual' && plan.priceAnnualMonthly 
+              ? plan.priceAnnualMonthly 
+              : plan.priceMonthly;
 
             return (
               <div
@@ -98,39 +101,58 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                 className={`rounded-2xl p-8 flex flex-col justify-between transition-all duration-200 relative ${
                   isPremium
                     ? 'bg-white border-2 border-[#00A86B] shadow-xl ring-4 ring-[#00A86B]/10 md:-translate-y-2'
+                    : isEvent
+                    ? 'bg-gray-900 border-2 border-gray-800 text-white shadow-lg'
                     : 'bg-[#F8F9FA] border border-gray-200 hover:bg-white hover:border-gray-300'
                 }`}
               >
                 {/* Badge */}
-                <div className={`absolute -top-3.5 left-8 text-white text-[10px] font-extrabold px-3.5 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1 ${
-                  isPremium ? 'bg-[#00A86B]' : 'bg-gray-800'
-                }`}>
-                  <Sparkles className="w-3 h-3" />
-                  <span>{plan.badge || plan.name}</span>
-                </div>
+                {(plan.badge || isPremium || isEvent) && (
+                  <div className={`absolute -top-3.5 left-8 text-[10px] font-extrabold px-3.5 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1 ${
+                    isPremium ? 'bg-[#00A86B] text-white' : isEvent ? 'bg-[#FF6B00] text-white' : 'bg-gray-800 text-white'
+                  }`}>
+                    
+                    <span>{plan.badge || plan.name}</span>
+                  </div>
+                )}
 
-                <div>
+                <div className={isEvent ? 'text-gray-100' : 'text-gray-900'}>
                   {/* Plan Name & Desc */}
                   <div className="mb-6 pt-2">
-                    <h3 className="font-heading font-extrabold text-2xl text-gray-900 mb-1">
+                    {plan.wolofName && (
+                      <h3 className="font-heading font-extrabold text-2xl mb-1">
+                        {plan.wolofName}
+                      </h3>
+                    )}
+                    <p className={`font-semibold text-sm mb-2 ${isEvent ? 'text-gray-300' : 'text-[#00A86B]'}`}>
                       {plan.name}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed min-h-[38px]">
+                    </p>
+                    <p className={`text-xs sm:text-sm leading-relaxed min-h-[50px] ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
                       {plan.description}
                     </p>
                   </div>
 
                   {/* Price Tag */}
-                  <div className="mb-8 pb-6 border-b border-gray-200/80">
+                  <div className={`mb-6 pb-6 border-b ${isEvent ? 'border-gray-700' : 'border-gray-200/80'}`}>
                     <div className="flex items-baseline gap-1">
-                      <span className="font-heading font-black text-4xl text-gray-900">
-                        {price.toLocaleString('fr-FR')}
+                      <span className="font-heading font-black text-4xl">
+                        {typeof price === 'number' ? price.toLocaleString('fr-FR') : price}
                       </span>
-                      <span className="text-sm font-extrabold text-[#00A86B]">FCFA</span>
-                      <span className="text-xs text-gray-500 ml-1">/ mois</span>
+                      {typeof price === 'number' && (
+                        <>
+                          <span className={`text-sm font-extrabold ${isEvent ? 'text-gray-300' : 'text-[#00A86B]'}`}>FCFA</span>
+                          <span className={`text-xs ml-1 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>/ mois</span>
+                        </>
+                      )}
                     </div>
 
-                    {billingCycle === 'annual' && (
+                    {!isEvent && (
+                      <span className={`text-[11px] font-semibold block mt-1 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
+                        + 50 000 FCFA (Frais d'installation uniques)
+                      </span>
+                    )}
+
+                    {typeof price === 'number' && billingCycle === 'annual' && !isEvent && (
                       <span className="text-[11px] text-[#00A86B] font-semibold block mt-1">
                         Facturé {(price * 12).toLocaleString('fr-FR')} FCFA / an (2 mois offerts)
                       </span>
@@ -139,21 +161,25 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
                   {/* Features List */}
                   <div className="space-y-3.5 mb-8">
-                    <span className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider block">
+                    <span className={`text-[11px] font-extrabold uppercase tracking-wider block ${isEvent ? 'text-gray-400' : 'text-gray-400'}`}>
                       Détails de la formule :
                     </span>
                     {plan.features.map((feature, fIdx) => (
                       <div key={fIdx} className="flex items-start gap-3 text-xs sm:text-sm">
                         {feature.included ? (
-                          <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${feature.highlight ? 'bg-[#00A86B] text-white' : 'bg-green-50 text-[#00A86B]'}`}>
+                          <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${
+                            feature.highlight 
+                              ? (isEvent ? 'bg-[#FF6B00] text-white' : 'bg-[#00A86B] text-white') 
+                              : (isEvent ? 'bg-gray-800 text-gray-300' : 'bg-green-50 text-[#00A86B]')
+                          }`}>
                             <Check className="w-3.5 h-3.5" />
                           </div>
                         ) : (
-                          <div className="p-0.5 rounded-full mt-0.5 shrink-0 bg-red-100 text-red-500">
+                          <div className="p-0.5 rounded-full mt-0.5 shrink-0 bg-red-100/20 text-red-400">
                             <X className="w-3.5 h-3.5" />
                           </div>
                         )}
-                        <span className={`${feature.included ? 'text-gray-800' : 'text-gray-400 line-through'} ${feature.highlight ? 'font-bold text-gray-950' : 'font-normal'}`}>
+                        <span className={`${feature.included ? (isEvent ? 'text-gray-200' : 'text-gray-800') : (isEvent ? 'text-gray-500 line-through' : 'text-gray-400 line-through')} ${feature.highlight ? (isEvent ? 'font-bold text-white' : 'font-bold text-gray-950') : 'font-normal'}`}>
                           {feature.text}
                         </span>
                       </div>
@@ -167,7 +193,9 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                     id={`pricing-btn-${plan.id}`}
                     onClick={() => onSelectPlan(plan.id)}
                     className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      isPremium
+                      isEvent
+                        ? 'bg-white hover:bg-gray-100 active:scale-98 text-gray-900 shadow-white/20'
+                        : isPremium
                         ? 'bg-[#00A86B] hover:bg-[#00925d] active:scale-98 text-white shadow-[#00A86B]/25'
                         : 'bg-gray-900 hover:bg-black active:scale-98 text-white'
                     }`}
@@ -176,9 +204,11 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
-                  <p className="text-[11px] text-center text-gray-500 mt-2.5">
-                    14 jours d'essai gratuit • Sans carte bancaire
-                  </p>
+                  {!isEvent && (
+                    <p className={`text-[11px] text-center mt-2.5 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
+                      14 jours d'essai gratuit • Sans carte bancaire
+                    </p>
+                  )}
                 </div>
 
               </div>

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { orderStorage } from '@/lib/order-storage';
-import { OrderStatus } from '@/types';
 
 export async function GET(
   req: Request,
@@ -10,24 +8,16 @@ export async function GET(
   try {
     const { orderId } = params;
 
-    // 1. Search in orderStorage
-    const order = orderStorage.getOrderById(orderId);
-    if (order) {
-      return NextResponse.json({ order });
-    }
+    const dbOrder = await (prisma as any).order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: true,
+      },
+    });
 
-    // 2. Fallback to Prisma DB
-    try {
-      const dbOrder = await (prisma as any).order?.findUnique({
-        where: { id: orderId },
-        include: {
-          items: true,
-        },
-      });
-      if (dbOrder) {
-        return NextResponse.json({ order: dbOrder });
-      }
-    } catch {}
+    if (dbOrder) {
+      return NextResponse.json({ order: dbOrder });
+    }
 
     return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 });
   } catch (error) {
@@ -50,28 +40,16 @@ export async function PATCH(
 
     const servedAtDate = status === 'SERVED' ? new Date() : null;
 
-    // 1. Update in-memory storage
-    const updatedOrder = orderStorage.updateOrderStatus(orderId, status as OrderStatus);
-
-    // 2. Try DB update
-    try {
-      await (prisma as any).order?.update({
-        where: { id: orderId },
-        data: {
-          status: status as any,
-          servedAt: servedAtDate,
-        },
-      });
-    } catch (e) {
-      // Fallback
-    }
-
-    if (!updatedOrder) {
-      return NextResponse.json(
-        { message: 'Statut mis à jour', status, servedAt: servedAtDate?.toISOString() },
-        { status: 200 }
-      );
-    }
+    const updatedOrder = await (prisma as any).order.update({
+      where: { id: orderId },
+      data: {
+        status: status as any,
+        servedAt: servedAtDate,
+      },
+      include: {
+        items: true,
+      }
+    });
 
     return NextResponse.json({ order: updatedOrder });
   } catch (error) {

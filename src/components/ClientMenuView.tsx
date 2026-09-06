@@ -8,18 +8,26 @@ interface ClientMenuViewProps {
   initialRestaurant: RestaurantType;
   tableNumber: number;
   isExpress?: boolean;
+  orderContext?: {
+    waiterId?: string;
+    waiterName?: string;
+    zoneId?: string;
+    locationDetail?: string;
+  };
 }
 
 export const ClientMenuView: React.FC<ClientMenuViewProps> = ({
   initialRestaurant,
   tableNumber,
   isExpress = false,
+  orderContext,
 }) => {
   return (
     <ClientMenuContainer
       initialRestaurant={initialRestaurant}
       tableNumber={tableNumber}
       isExpress={isExpress}
+      orderContext={orderContext}
     />
   );
 };

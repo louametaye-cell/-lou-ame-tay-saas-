@@ -1,7 +1,7 @@
 import React from 'react';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
-import { orderStorage } from '@/lib/order-storage';
+
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
@@ -13,7 +13,7 @@ interface PageProps {
 
 export default async function FriendlySubdomainMenuPage({ params }: PageProps) {
   const tableNum = 1;
-  let restaurant: RestaurantType = orderStorage.getRestaurantById(params.subdomain) || SAMPLE_RESTAURANT;
+  let restaurant: any =  SAMPLE_RESTAURANT;
 
   try {
     const dbTenant = await (prisma as any).tenant.findFirst({

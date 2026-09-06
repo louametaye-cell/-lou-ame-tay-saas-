@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Utensils, MessageCircle, Menu as MenuIcon, X, Sparkles, QrCode } from 'lucide-react';
+import { Utensils, MessageCircle, Menu as MenuIcon, X, QrCode } from 'lucide-react';
 import { OfficialLogo } from './OfficialLogo';
 
 interface HeaderProps {
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
 
             <a
               id="header-whatsapp-btn"
-              href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20renseignements%20sur%20votre%20menu%20digital."
+              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20renseignements%20sur%20votre%20menu%20digital."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00A86B] hover:text-[#008957] bg-green-50 hover:bg-green-100 px-3 py-2 rounded-xl transition-all"
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
               onClick={onOpenTrial}
               className="bg-[#00A86B] hover:bg-[#00925d] active:scale-95 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-lg shadow-[#00A86B]/20 transition-all cursor-pointer inline-flex items-center gap-1.5"
             >
-              <Sparkles className="w-4 h-4 text-emerald-100" />
+              
               <span>Essai Gratuit</span>
             </button>
           </div>
@@ -147,13 +147,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
               Générateur de QR code de table
             </button>
             <a
-              href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9mo%20pour%20mon%20restaurant."
+              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9mo%20pour%20mon%20restaurant."
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-[#25D366] text-white rounded-xl shadow-sm"
             >
               <MessageCircle className="w-4 h-4" />
-              Échanger sur WhatsApp (+221 77 654 32 10)
+              Échanger sur WhatsApp (+221 76 231 20 03)
             </a>
             <button
               onClick={() => {
@@ -162,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
               }}
               className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold bg-[#00A86B] text-white rounded-xl shadow-md"
             >
-              <Sparkles className="w-4 h-4" />
+              
               Démarrer mon essai gratuit (14 jours)
             </button>
           </div>

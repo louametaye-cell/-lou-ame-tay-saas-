@@ -15,7 +15,7 @@ export async function GET(req: Request) {
       invoiceNumber: `FACT-SN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       issueDate: new Date().toISOString(),
       tenantName: tenant?.businessName || 'Chez Fatou & Frères',
-      tenantPhone: tenant?.phone || '+221 77 654 32 10',
+      tenantPhone: tenant?.phone || '+221 76 231 20 03',
       tenantAddress: `${tenant?.address || 'Avenue Lamine Guèye'}, ${tenant?.city || 'Thiès'}`,
       planName: plan?.name || 'Pro',
       periodMonths: 1,

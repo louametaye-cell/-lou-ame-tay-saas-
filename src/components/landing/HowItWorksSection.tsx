@@ -9,7 +9,6 @@ import {
   ArrowRight, 
   Clock, 
   Bell, 
-  Sparkles, 
   Flame,
   Layers,
   Settings,
@@ -215,7 +214,7 @@ export const HowItWorksSection: React.FC = () => {
               <div className="lg:col-span-6 space-y-6">
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-green-50 text-[#00A86B] text-xs font-bold border border-green-200">
-                    <Sparkles className="w-3.5 h-3.5" />
+                    
                     <span>{activeScreen.badge}</span>
                   </div>
                   <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-gray-900">

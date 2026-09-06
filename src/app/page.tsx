@@ -125,11 +125,11 @@ export default function HomePage() {
       <aside aria-label="Bouton WhatsApp flottant" className="fixed bottom-6 right-6 z-40">
         <a
           id="floating-whatsapp-btn"
-          href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20informations."
+          href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20informations."
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all group"
-          title="Échanger sur WhatsApp (+221 77 458 74 74)"
+          title="Échanger sur WhatsApp (+221 76 231 20 03)"
         >
           <MessageCircle className="w-6 h-6 fill-current" />
           <span className="hidden sm:inline font-bold text-xs">

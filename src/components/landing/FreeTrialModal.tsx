@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, MessageCircle } from 'lucide-react';
+import { X, CheckCircle2, ShieldCheck, ArrowRight, MessageCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface FreeTrialModalProps {
@@ -39,7 +39,7 @@ export const FreeTrialModal: React.FC<FreeTrialModalProps> = ({ isOpen, onClose,
     const msg = encodeURIComponent(
       `Bonjour Lou Ame Tay ! J'ai activé mon essai gratuit pour mon restaurant "${formData.restaurant || 'Mon Resto'}" à ${formData.city} (Formule ${formData.plan.toUpperCase()}, ${formData.tableCount} tables). Mon téléphone est le ${formData.phone}.`
     );
-    window.open(`https://wa.me/221776543210?text=${msg}`, '_blank');
+    window.open(`https://wa.me/221762312003?text=${msg}`, '_blank');
   };
 
   return (
@@ -97,7 +97,7 @@ export const FreeTrialModal: React.FC<FreeTrialModalProps> = ({ isOpen, onClose,
             {/* Header */}
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00A86B]/10 text-[#00A86B] text-xs font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5" />
+                
                 <span>14 jours 100% gratuits • Sans carte bancaire</span>
               </div>
               <h3 className="font-heading font-black text-2xl text-gray-900">

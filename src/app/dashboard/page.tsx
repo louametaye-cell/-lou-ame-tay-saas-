@@ -11,6 +11,7 @@ import {
   Bell, 
   LogOut, 
   Clock, 
+  MapPin,
   AlertTriangle, 
   CheckCircle2, 
   AlertCircle, 
@@ -875,6 +876,28 @@ export default function OperationalDashboardPage() {
             </div>
             <h4 className="text-sm font-black text-slate-900">Plan de Salle</h4>
             <p className="text-xs text-slate-500 mt-1">Tables et QR codes HD prêts à imprimer</p>
+          </Link>
+
+          <Link
+            href="/dashboard/zones"
+            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-400 hover:shadow-sm transition-all group"
+          >
+            <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+              <MapPin className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Zones & Espaces</h4>
+            <p className="text-xs text-slate-500 mt-1">Configuration des zones libres ou tables</p>
+          </Link>
+
+          <Link
+            href="/dashboard/waiters"
+            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-indigo-400 hover:shadow-sm transition-all group"
+          >
+            <div className="p-3 bg-indigo-100 text-indigo-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+              <Users className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Serveurs & Staff</h4>
+            <p className="text-xs text-slate-500 mt-1">Badges QR personnels pour vos serveurs</p>
           </Link>
 
           <Link

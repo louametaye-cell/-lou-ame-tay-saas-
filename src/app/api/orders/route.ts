@@ -1,35 +1,33 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { orderStorage } from '@/lib/order-storage';
-import { OrderType } from '@/types';
+import { getAssignedServerIdForTable } from '@/lib/server-shift';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Try querying Prisma DB if accessible
-    const dbOrders = await (prisma as any).order?.findMany({
+    const { searchParams } = new URL(req.url);
+    const tenantId = searchParams.get('tenantId');
+
+    const whereClause = tenantId ? { tenantId } : {};
+
+    const dbOrders = await (prisma as any).order.findMany({
+      where: whereClause,
       include: {
-        items: {
-          include: {
-            menuItem: true,
-          },
-        },
+        items: true,
+        waiter: true,
+        zone: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
 
-    if (dbOrders && dbOrders.length > 0) {
-      return NextResponse.json({ orders: dbOrders, source: 'database' });
-    }
+    return NextResponse.json({ orders: dbOrders, source: 'database' });
   } catch (error) {
-    // Database may not be configured yet, fallback to in-memory store
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   }
-
-  const memoryOrders = orderStorage.getOrders();
-  return NextResponse.json({ orders: memoryOrders, source: 'memory' });
 }
 
 export async function POST(req: Request) {
@@ -51,13 +49,14 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { tableNumber, orderType, customerName, customerNote, restaurantId = 'resto_thies_01', items, paymentMethod, transactionRef } = body;
+    const { tableNumber, orderType, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef, waiterId, zoneId, locationDetail } = body;
 
+    const tenantId = restaurantId; // Assure it exists in Prisma
     const isExpress = orderType === 'EXPRESS' || Number(tableNumber) === 0;
 
-    if ((!isExpress && !tableNumber) || !items || !Array.isArray(items) || items.length === 0) {
+    if (!tenantId || ((!isExpress && tableNumber === undefined && !locationDetail)) || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
-        { error: 'Données de commande invalides (table ou articles manquants)' },
+        { error: 'Données de commande invalides (restaurant, table ou articles manquants)' },
         { status: 400 }
       );
     }
@@ -67,71 +66,38 @@ export async function POST(req: Request) {
       0
     );
 
-    const orderId = `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const newOrder: OrderType = {
-      id: orderId,
-      tableNumber: isExpress ? 0 : Number(tableNumber),
-      orderType: isExpress ? 'EXPRESS' : 'TABLE',
-      customerName: customerName || null,
-      customerNote: customerNote || '',
-      restaurantId: restaurantId || 'resto_thies_01',
-      restaurantName: 'Chez Fatou & Frères',
-      paymentMethod: paymentMethod || 'CASH',
-      transactionRef: transactionRef || undefined,
-      status: 'PENDING',
-      total,
-      createdAt: new Date().toISOString(),
-      items: items.map((i: any) => {
-        const dishName = i.name || i.menuItem?.name || 'Plat du jour';
-        const dishPrice = Number(i.price || i.menuItem?.price) || 0;
-        const dishQty = Number(i.quantity) || 1;
-
-        return {
-          id: i.id || `item_${Math.random().toString(36).substring(2, 7)}`,
-          menuItemId: i.menuItemId || i.menuItem?.id || i.id,
-          name: dishName,
-          menuItem: i.menuItem || undefined,
-          quantity: dishQty,
-          price: dishPrice,
-          notes: i.notes || i.customNotes || null,
-          options: i.options,
-        };
-      }),
-    };
-
-    // Store in memory first
-    orderStorage.addOrder(newOrder);
-
-    // Also attempt to save in Prisma DB if available
-    try {
-      await (prisma as any).order?.create({
-        data: {
-          id: newOrder.id,
-          tableNumber: newOrder.tableNumber,
-          customerName: newOrder.customerName,
-          customerNote: newOrder.customerNote,
-          restaurantId: newOrder.restaurantId,
-          total: newOrder.total,
-          status: 'PENDING',
-          items: {
-            create: newOrder.items.map((it) => ({
-              id: it.id,
-              menuItemId: it.menuItemId,
-              quantity: it.quantity,
-              price: it.price,
-              notes: it.notes,
-            })),
-          },
+    const newOrder = await (prisma as any).order.create({
+      data: {
+        tenantId,
+        tableNumber: isExpress ? 0 : Number(tableNumber) || 0,
+        customerName: customerName || null,
+        customerNote: customerNote || '',
+        paymentMethod: paymentMethod || 'CASH',
+        transactionRef: transactionRef || undefined,
+        waiterId: waiterId || (isExpress ? undefined : getAssignedServerIdForTable(tableNumber)),
+        zoneId: zoneId || undefined,
+        locationDetail: locationDetail || undefined,
+        status: 'PENDING',
+        totalAmount: total,
+        items: {
+          create: items.map((i: any) => ({
+            menuItemId: i.menuItemId || i.menuItem?.id || undefined,
+            name: i.name || i.menuItem?.name || 'Plat du jour',
+            quantity: Number(i.quantity) || 1,
+            price: Number(i.price || i.menuItem?.price) || 0,
+            customNotes: i.notes || i.customNotes || null,
+            selectedExtras: i.options || undefined,
+          })),
         },
-      });
-    } catch (dbErr) {
-      // Non-blocking database write error
-      console.warn('Prisma DB write bypassed:', dbErr);
-    }
+      },
+      include: {
+        items: true,
+      }
+    });
 
     // Invalidate Redis caches for live orders and dashboard stats
-    await invalidateLiveOrdersCache(newOrder.restaurantId);
-    await invalidateDashboardStatsCache(newOrder.restaurantId);
+    await invalidateLiveOrdersCache(tenantId);
+    await invalidateDashboardStatsCache(tenantId);
 
     logPerformance(`POST /api/orders (${newOrder.id})`, timer.elapsedMs(), `Table ${newOrder.tableNumber}`);
 

@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
-import { orderStorage } from '@/lib/order-storage';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/super-admin/support/tickets
 export async function GET() {
   try {
-    const tickets = orderStorage.getSupportTickets();
+    const tickets = await (prisma as any).supportTicket.findMany({
+      include: {
+        tenant: true,
+        messages: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
     return NextResponse.json({ tickets });
   } catch (error) {
     return NextResponse.json({ error: 'Erreur récupération tickets' }, { status: 500 });
@@ -15,18 +21,29 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { restaurantId, restaurantName, subject, message, priority } = body;
+    const { restaurantId, subject, message, priority } = body;
+    const tenantId = restaurantId;
 
-    if (!restaurantId || !subject || !message) {
+    if (!tenantId || !subject || !message) {
       return NextResponse.json({ error: 'Champs obligatoires manquants' }, { status: 400 });
     }
 
-    const newTicket = orderStorage.createSupportTicket({
-      restaurantId,
-      restaurantName: restaurantName || 'Restaurant Client',
-      subject,
-      message,
-      priority,
+    const newTicket = await (prisma as any).supportTicket.create({
+      data: {
+        tenantId,
+        subject,
+        priority: priority || 'NORMAL',
+        status: 'OPEN',
+        messages: {
+          create: {
+            senderType: 'TENANT',
+            content: message,
+          }
+        }
+      },
+      include: {
+        messages: true
+      }
     });
 
     return NextResponse.json({ ticket: newTicket, message: 'Ticket créé avec succès' }, { status: 201 });
@@ -45,10 +62,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'ticketId et status requis' }, { status: 400 });
     }
 
-    const updated = orderStorage.updateSupportTicketStatus(ticketId, status);
-    if (!updated) {
-      return NextResponse.json({ error: 'Ticket non trouvé' }, { status: 404 });
-    }
+    const updated = await (prisma as any).supportTicket.update({
+      where: { id: ticketId },
+      data: { status }
+    });
 
     return NextResponse.json({ ticket: updated, message: 'Statut du ticket mis à jour' });
   } catch (error) {

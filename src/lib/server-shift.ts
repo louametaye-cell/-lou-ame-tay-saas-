@@ -139,3 +139,19 @@ export function assignTableToServer(tableNumber: number, serverName: string) {
     localStorage.setItem(STORAGE_KEY_TABLE_MAP, JSON.stringify(map));
   } catch (e) {}
 }
+
+/**
+ * Récupère l'ID du serveur attribué à une table spécifique
+ */
+export function getAssignedServerIdForTable(tableNumber: number): string {
+  const serverName = getAssignedServerForTable(tableNumber);
+  const members = getServerShiftMembers();
+  const member = members.find(m => m.name === serverName);
+  
+  if (member) return member.id;
+  
+  // IDs par défaut correspondant aux noms
+  if (tableNumber <= 4) return 'srv_1';
+  if (tableNumber <= 8) return 'srv_2';
+  return 'srv_3';
+}

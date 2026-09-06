@@ -195,7 +195,7 @@ export const CONTRACT_ORDER_FORM_FIELDS = {
   documentTitle: 'FICHE D\'INSCRIPTION & BON DE COMMANDE « LOU AME TAY ? »',
   editor: 'MÉDIAS GRAPHISME SÉNÉGAL',
   headquarters: 'Liberté 6 Extension VDN, Dakar',
-  contactPhones: '+221 77 458 74 74 / +221 77 130 36 78',
+  contactPhones: '+221 77 45 87 47 4 / +221 77 130 36 78',
   contactEmail: 'contact@mgartswork.site',
   website: 'www.mgartswork.site',
   initialSetupFee: 50000,

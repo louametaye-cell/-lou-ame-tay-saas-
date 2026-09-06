@@ -3,7 +3,6 @@ import {
   CheckCircle2, 
   Clock, 
   MessageCircle, 
-  Sparkles, 
   Phone, 
   MapPin, 
   Copy, 
@@ -206,7 +205,7 @@ export const CustomerJourneySection: React.FC = () => {
                 </button>
 
                 <a
-                  href={`https://wa.me/221776543210?text=${encodeURIComponent(
+                  href={`https://wa.me/221762312003?text=${encodeURIComponent(
                     selectedStep.messageTemplate
                       .replace(/\[Nom_Gerant\]/g, customGerant)
                       .replace(/\[Nom_Restaurant\]/g, customRestaurant)

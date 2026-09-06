@@ -110,7 +110,7 @@ export default function QRCodeOrderPage() {
   } | null>(null);
 
   const [restaurantName, setRestaurantName] = useState('Chez Fatou & Frères');
-  const [phone, setPhone] = useState('+221 77 654 32 10');
+  const [phone, setPhone] = useState('+221 76 231 20 03');
   const [city, setCity] = useState('Thiès');
   const [isSubmitting, setIsSubmitting] = useState(false);
 

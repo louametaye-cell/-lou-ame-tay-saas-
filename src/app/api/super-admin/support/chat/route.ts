@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     } else {
       reply = `🤖 **Assistance Technique 24/7 :**\n\nJ'ai bien analysé votre demande concernant : *"${message}"*.\n\n` +
         `• **Action recommandée :** Un ticket de support prioritaire a été pré-enregistré dans l'onglet SAV.\n` +
-        `• **Conseil immédiat :** Si vous rencontrez un blocage réseau ou matériel, assurez-vous que le serveur de caisse est connecté au Wi-Fi du restaurant. Pour toute assistance urgente en direct, contactez le support d'astreinte au **+221 77 654 32 10**.`;
+        `• **Conseil immédiat :** Si vous rencontrez un blocage réseau ou matériel, assurez-vous que le serveur de caisse est connecté au Wi-Fi du restaurant. Pour toute assistance urgente en direct, contactez le support d'astreinte au **+221 76 231 20 03**.`;
     }
 
     return NextResponse.json({

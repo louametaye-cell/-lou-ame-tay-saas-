@@ -52,11 +52,13 @@ export interface Testimonial {
 
 export interface PricingPlan {
   id: string;
-  name: string;
+  name: string; // Utilisé pour le sous-titre en français maintenant
+  wolofName?: string; // Nom en wolof en grand
   badge?: string;
-  priceMonthly: number; // in FCFA
-  priceAnnualMonthly: number; // in FCFA
+  priceMonthly: number | string; // in FCFA ou texte "Sur devis"
+  priceAnnualMonthly?: number; // in FCFA
   popular?: boolean;
+  isEvent?: boolean; // Pour l'offre Ndajé
   description: string;
   features: {
     text: string;
@@ -75,6 +77,7 @@ export interface ProblemSolution {
   iconName: string;
   impactMetric: string;
   punchline?: string;
+  rseBadge?: string;
 }
 
 export interface FaqItem {

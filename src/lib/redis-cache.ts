@@ -1,4 +1,4 @@
-import { orderStorage } from '@/lib/order-storage';
+import { prisma } from '@/lib/prisma';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType } from '@/types';
 
@@ -16,7 +16,7 @@ const TTL_SECONDS = 300; // 5 minutes
  * Récupère le menu d'un restaurant depuis le cache Redis (TTL 5 minutes).
  * Si absent ou expiré, interroge la base de données / stockage et met en cache.
  */
-export async function getCachedMenu(tenantId: string): Promise<RestaurantType> {
+export async function getCachedMenu(tenantId: string): Promise<any> {
   const cacheKey = `menu:tenant:${tenantId}`;
   const now = Date.now();
 
@@ -28,7 +28,22 @@ export async function getCachedMenu(tenantId: string): Promise<RestaurantType> {
   }
 
   // 2. Cache MISS : Récupération depuis la base de données
-  const restaurant = orderStorage.getRestaurantById(tenantId) || SAMPLE_RESTAURANT;
+  const dbTenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId },
+    include: {
+      categories: {
+        include: { items: true }
+      }
+    }
+  });
+
+  const restaurant = dbTenant ? {
+    id: dbTenant.id,
+    name: dbTenant.businessName,
+    subdomain: dbTenant.subdomain,
+    categories: dbTenant.categories,
+    tableCount: 12,
+  } : SAMPLE_RESTAURANT;
 
   // 3. Sauvegarder dans Redis avec expiration à 5 minutes (TTL 300s)
   redisMemoryStore.set(cacheKey, {

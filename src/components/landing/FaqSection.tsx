@@ -73,7 +73,7 @@ export const FaqSection: React.FC = () => {
           </div>
 
           <a
-            href="https://wa.me/221776543210?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20une%20question%20sp%C3%A9cifique%20sur%20votre%20menu%20digital."
+            href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20une%20question%20sp%C3%A9cifique%20sur%20votre%20menu%20digital."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors shrink-0"

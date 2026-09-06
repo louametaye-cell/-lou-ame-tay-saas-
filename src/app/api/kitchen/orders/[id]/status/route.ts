@@ -1,10 +1,6 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { orderStorage } from '@/lib/order-storage';
-import { OrderStatus } from '@/types';
 
-// PATCH /api/kitchen/orders/[id]/status
-// Met à jour le statut d'une commande
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
@@ -16,31 +12,17 @@ export async function PATCH(
       return NextResponse.json({ error: 'Statut manquant' }, { status: 400 });
     }
 
-    const servedAtDate = status === 'SERVED' ? new Date() : null;
+    const updated = await (prisma as any).order.update({
+      where: { id: params.id },
+      data: {
+        status: status as any,
+        preparedAt: status === 'PREPARING' ? new Date() : undefined,
+        servedAt: status === 'SERVED' ? new Date() : undefined,
+      },
+    });
 
-    // 1. Update in-memory storage
-    const updatedOrder = orderStorage.updateOrderStatus(params.id, status as OrderStatus);
-
-    // 2. Try DB update
-    try {
-      await (prisma as any).order?.update({
-        where: { id: params.id },
-        data: {
-          status: status as any,
-          servedAt: status === 'SERVED' ? new Date() : undefined,
-        },
-      });
-    } catch (e) {
-      // Fallback
-    }
-
-    return NextResponse.json(
-      updatedOrder || { id: params.id, status, servedAt: servedAtDate }
-    );
+    return NextResponse.json({ success: true, order: updated });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour du statut' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
 }
