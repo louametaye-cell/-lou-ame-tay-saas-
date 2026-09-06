@@ -4,15 +4,34 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. ROUTES PUBLIQUES (AUCUN MOT DE PASSE REQUIS POUR LES CLIENTS)
+  // 1. VÉRIFICATION DE SÉCURITÉ POUR LES APIS SUPER-ADMIN & ADMIN
+  const isSuperAdminApi =
+    (pathname.startsWith('/api/super-admin') || pathname.startsWith('/api/admin')) &&
+    !pathname.startsWith('/api/super-admin/auth');
+
+  if (isSuperAdminApi) {
+    const adminToken =
+      request.cookies.get('superadmin_token')?.value ||
+      request.headers.get('authorization')?.replace('Bearer ', '') ||
+      request.headers.get('x-superadmin-token');
+
+    if (!adminToken) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session Super-Admin requise' },
+        { status: 401 }
+      );
+    }
+  }
+
+  // 2. ROUTES PUBLIQUES (AUCUN MOT DE PASSE REQUIS POUR LES CLIENTS DU RESTAURANT)
   const isPublicRoute =
     pathname.startsWith('/r/') ||          // Menu client QR Code
     pathname.startsWith('/menu/') ||       // Menu alternatif
     pathname.startsWith('/display/') ||    // Écrans TV
     pathname.startsWith('/pay/') ||        // Paiement mobile client
     pathname.startsWith('/login') ||       // Page de connexion restaurateur
-    pathname.startsWith('/super-admin/login') ||
-    pathname.startsWith('/api/') ||        // APIs publiques
+    pathname.startsWith('/super-admin') || // Écran de login Super-Admin client
+    (pathname.startsWith('/api/') && !isSuperAdminApi) || // APIs publiques hors administration
     pathname.startsWith('/_next') ||
     pathname.includes('/favicon.ico') ||
     pathname === '/';
@@ -29,12 +48,6 @@ export function middleware(request: NextRequest) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // 3. ROUTES DU SUPER-ADMIN (Géré par SuperAdminAuthGuard côté client via localStorage)
-  // On laisse passer la route /super-admin pour que le composant client puisse afficher le login.
-  if (pathname.startsWith('/super-admin') && !pathname.startsWith('/super-admin/login') && !pathname.startsWith('/api/super-admin')) {
-      // Pass
   }
 
   return NextResponse.next();

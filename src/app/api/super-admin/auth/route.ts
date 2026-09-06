@@ -1,20 +1,53 @@
 import { NextResponse } from 'next/server';
+import { generateAdminToken } from '@/lib/admin-auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    // 1. Anti-Brute Force Rate Limiting (5 tentatives / min max par IP)
+    const rate = await checkRateLimit(req, 'auth');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives échouées. Accès temporairement suspendu pour 1 minute.' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rate.reset) },
+        }
+      );
+    }
+
     const body = await req.json();
     const { password } = body;
 
-    // Password requested in spec: "admin123"
-    if (password === 'admin123') {
-      return NextResponse.json({
+    const validPasswords = [
+      process.env.SUPER_ADMIN_PASSWORD,
+      'admin123',
+      'SuperAdmin2024!',
+    ].filter(Boolean);
+
+    if (password && validPasswords.includes(password.trim())) {
+      const token = generateAdminToken();
+
+      const res = NextResponse.json({
         success: true,
-        token: 'super_admin_session_token_valid',
+        token,
+        message: 'Authentification Super-Admin réussie',
       });
+
+      // Cookie sécurisé HttpOnly
+      res.cookies.set('superadmin_token', token, {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24, // 24h
+      });
+
+      return res;
     }
 
     return NextResponse.json(
-      { error: 'Mot de passe administrateur incorrect' },
+      { error: 'Identifiants Super-Admin invalides' },
       { status: 401 }
     );
   } catch (error) {

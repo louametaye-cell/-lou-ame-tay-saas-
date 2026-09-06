@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 
 // GET /api/admin/tenants
 // Récupération de tous les restaurants clients directement depuis la BDD PostgreSQL Supabase avec Prisma
 export async function GET(req: Request) {
   try {
+    if (!isAuthorizedSuperAdmin(req)) {
+      return NextResponse.json({ error: 'Accès non autorisé : Droits Super-Admin requis' }, { status: 401 });
+    }
+
     const tenants = await (prisma as any).tenant.findMany({
       include: {
         plan: true,

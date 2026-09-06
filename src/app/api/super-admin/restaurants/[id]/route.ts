@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
+import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 
 // GET /api/super-admin/restaurants/[id]
 export async function GET(
@@ -8,6 +9,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    if (!isAuthorizedSuperAdmin(req)) {
+      return NextResponse.json({ error: 'Accès non autorisé : Droits Super-Admin requis' }, { status: 401 });
+    }
+
     const resolvedParams = await Promise.resolve(params);
     const restaurant = await (prisma as any).tenant.findUnique({
       where: { id: resolvedParams.id },
@@ -30,6 +35,10 @@ async function handleUpdate(
   paramsInput: Promise<{ id: string }> | { id: string }
 ) {
   try {
+    if (!isAuthorizedSuperAdmin(req)) {
+      return NextResponse.json({ error: 'Accès non autorisé : Droits Super-Admin requis' }, { status: 401 });
+    }
+
     const resolvedParams = await Promise.resolve(paramsInput);
     const body = await req.json();
 
@@ -135,6 +144,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    if (!isAuthorizedSuperAdmin(req)) {
+      return NextResponse.json({ error: 'Accès non autorisé : Droits Super-Admin requis' }, { status: 401 });
+    }
+
     const resolvedParams = await Promise.resolve(params);
     await (prisma as any).tenant.delete({
       where: { id: resolvedParams.id },

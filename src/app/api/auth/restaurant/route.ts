@@ -1,11 +1,24 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST /api/auth/restaurant
 // Authentification d'un restaurateur 
 export async function POST(req: Request) {
   try {
+    // 1. Protection Anti-Brute-Force (Max 5 tentatives / min par IP)
+    const rate = await checkRateLimit(req, 'auth');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives de connexion échouées. Par mesure de sécurité, veuillez patienter 1 minute.' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rate.reset) },
+        }
+      );
+    }
+
     const body = await req.json();
     const { identifier, pin } = body;
 
@@ -72,7 +85,9 @@ export async function POST(req: Request) {
 
     response.cookies.set('saas_token', `resto_session_${dbTenant.id}`, {
       path: '/',
-      httpOnly: false,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     });
 
@@ -84,7 +99,7 @@ export async function POST(req: Request) {
   }
 }
 
-// GET /api/auth/restaurant
+// GET /api/auth/restaurant (Retourne uniquement la liste publique pour démo sans fuite de PII)
 export async function GET() {
   try {
     const tenants = await (prisma as any).tenant.findMany({
@@ -92,16 +107,13 @@ export async function GET() {
         id: true,
         businessName: true,
         subdomain: true,
-        ownerName: true,
-        address: true,
         logoUrl: true,
-        currentPlanId: true,
-        subscriptionStatus: true,
-      }
+      },
+      take: 10,
     });
 
-    return NextResponse.json(tenants);
+    return NextResponse.json({ restaurants: tenants });
   } catch (e) {
-    return NextResponse.json([]);
+    return NextResponse.json({ restaurants: [] });
   }
 }

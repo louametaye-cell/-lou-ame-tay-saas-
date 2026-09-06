@@ -61,7 +61,16 @@ const upstashDisplayLimiter = isRedisRemote
     })
   : null;
 
-export type RateLimitType = 'public' | 'orders' | 'display' | 'dashboard';
+const upstashAuthLimiter = isRedisRemote
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(5, '1 m'),
+      analytics: true,
+      prefix: 'ratelimit:auth',
+    })
+  : null;
+
+export type RateLimitType = 'public' | 'orders' | 'display' | 'dashboard' | 'auth';
 
 export async function checkRateLimit(
   req: Request,
@@ -78,7 +87,9 @@ export async function checkRateLimit(
   if (isRedisRemote) {
     try {
       const limiter =
-        type === 'orders'
+        type === 'auth'
+          ? upstashAuthLimiter
+          : type === 'orders'
           ? upstashOrdersLimiter
           : type === 'display'
           ? upstashDisplayLimiter
@@ -99,6 +110,6 @@ export async function checkRateLimit(
   }
 
   // Local In-Memory Fallback
-  const maxReq = type === 'orders' ? 25 : type === 'display' ? 200 : 100;
+  const maxReq = type === 'auth' ? 5 : type === 'orders' ? 25 : type === 'display' ? 200 : 100;
   return memoryLimiter.limit(identifier, maxReq, 60000);
 }

@@ -5,10 +5,22 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
 
+import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tenantId = searchParams.get('tenantId');
+
+    if (!tenantId) {
+      // Seul le Super-Admin a le droit de requêter toutes les commandes globales
+      if (!isAuthorizedSuperAdmin(req)) {
+        return NextResponse.json(
+          { error: 'Accès refusé : tenantId obligatoire pour consulter les commandes' },
+          { status: 400 }
+        );
+      }
+    }
 
     const whereClause = tenantId ? { tenantId } : {};
 

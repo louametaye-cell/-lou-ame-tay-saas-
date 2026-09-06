@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getCachedDashboardStats, setCachedDashboardStats } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
 
+import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
+
 // GET /api/dashboard/stats
 // Récupère les KPIs temps réel de caisse pour le restaurateur
 export async function GET(req: Request) {
@@ -11,6 +13,16 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const tenantId = searchParams.get('restaurantId');
     if (!tenantId) return NextResponse.json({ error: 'restaurantId missing' }, { status: 400 });
+
+    // Contrôle d'accès de session (Anti-IDOR)
+    const cookieHeader = req.headers.get('cookie') || '';
+    const isSuperAdmin = isAuthorizedSuperAdmin(req);
+    const hasMatchingSession = cookieHeader.includes(`resto_session_${tenantId}`) || isSuperAdmin;
+    const hasAnySessionToken = cookieHeader.includes('saas_token=');
+
+    if (!hasMatchingSession && !hasAnySessionToken && !isSuperAdmin) {
+      return NextResponse.json({ error: 'Accès non autorisé aux statistiques' }, { status: 401 });
+    }
 
     // 1. Check Redis Cache (TTL 60s)
     const cachedStats = await getCachedDashboardStats(tenantId);

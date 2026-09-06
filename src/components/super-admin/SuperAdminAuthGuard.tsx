@@ -33,13 +33,13 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: password.trim() }),
       });
-
-      if (res.ok) {
-        localStorage.setItem('lou_ame_tay_superadmin_auth', 'admin_authorized_token');
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('lou_ame_tay_superadmin_auth', data.token);
         setIsAuthenticated(true);
-        toast.success('Bienvenue dans l\'espace Super Admin Agence !');
+        toast.success("Bienvenue dans l'espace Super Admin Agence !");
       } else {
-        toast.error('Mot de passe incorrect (Indice: admin123)');
+        toast.error(data.error || 'Mot de passe administrateur incorrect');
       }
     } catch (err) {
       toast.error('Erreur de connexion');
