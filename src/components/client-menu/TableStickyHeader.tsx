@@ -76,7 +76,7 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
             {/* Right Action: Table / Express Badge & Waiter Bell Button */}
             <div className="flex items-center gap-2 shrink-0">
               {isExpress ? (
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 animate-pulse">
+                <div className="bg-amber-500 text-slate-950 text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 animate-pulse border border-amber-600">
                   <span>⚡ Comptoir / Bar</span>
                 </div>
               ) : (

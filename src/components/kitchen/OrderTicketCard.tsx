@@ -83,7 +83,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
       <div
         className={`p-4 flex items-center justify-between gap-2 ${
           isExpressOrder
-            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
+            ? 'bg-slate-900 text-amber-400'
             : is100PercentBar
             ? 'bg-blue-600 text-white'
             : order.status === 'PENDING'
