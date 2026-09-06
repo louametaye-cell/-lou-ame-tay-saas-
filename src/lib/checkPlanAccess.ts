@@ -48,12 +48,19 @@ export function canUseFeature(
 
   // 1. Vérifier si la fonctionnalité est active dans le pack
   if (!planFeature || !planFeature.isActive) {
+    let required = 'Xéweul (35 000 FCFA)';
+    if (['TABLE_ORDERING', 'EXPRESS_POS', 'BASIC_SALES_STATS'].includes(featureKey)) required = 'Nio Far (25 000 FCFA)';
+    else if (['KITCHEN_DISPLAY_KDS', 'MULTI_LANGUAGE_MENU', 'BLUETOOTH_PRINTING', 'SINGLE_TV_SCREEN'].includes(featureKey)) required = 'Xéweul (35 000 FCFA)';
+    else if (['MULTI_COUNTERS', 'MULTI_TV_SCREENS', 'ADVANCED_EXPORT'].includes(featureKey)) required = 'Baobab (46 800 FCFA)';
+    else if (['WAITER_QR', 'MULTI_ZONE', 'ZONE_TV_SCREENS'].includes(featureKey)) required = 'Teranga (65 000 FCFA)';
+    else if (['MULTI_SITES', 'STAFF_PERFORMANCE_ANALYTICS', 'VIP_SUPPORT'].includes(featureKey)) required = 'Buur (80 000 FCFA)';
+
     return {
       allowed: false,
-      reason: `La fonctionnalité "${featureKey}" n'est pas incluse dans votre pack ${plan.name}. Upgradez votre pack pour y accéder.`,
+      reason: `La fonctionnalité "${featureKey}" n'est pas incluse dans votre pack ${plan.name}. Veuillez souscrire à la formule ${required} pour la débloquer.`,
       code: 'FEATURE_NOT_INCLUDED',
       currentPlanName: plan.name,
-      requiredPlanName: featureKey === 'MULTI_ZONE' || featureKey === 'BILINGUAL_MENU' ? 'Premium' : 'Pro',
+      requiredPlanName: required,
     };
   }
 

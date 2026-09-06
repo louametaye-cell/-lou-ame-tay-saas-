@@ -200,8 +200,8 @@ export default function SuperAdminPlansPage() {
         </header>
 
         <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
-          {/* Plan Selector Tabs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Plan Selector Tabs (7 Formules) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {plans.map((p) => {
               const isSelected = p.id === activePlan?.id;
               return (

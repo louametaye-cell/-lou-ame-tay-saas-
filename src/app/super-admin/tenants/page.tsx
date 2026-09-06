@@ -315,10 +315,10 @@ export default function SuperAdminTenantsListPage() {
                     </tr>
                   ) : (
                     filteredTenants.map((t) => {
-                      const planName = t.plan?.name || 'Starter';
-                      const isStarter = planName.toLowerCase().includes('starter');
-                      const isPro = planName.toLowerCase().includes('pro');
-                      const isPremium = planName.toLowerCase().includes('premium');
+                      const planName = t.plan?.name || 'Tàmbali';
+                      const lower = planName.toLowerCase();
+                      const isRecommended = lower.includes('xeweul') || lower.includes('pro');
+                      const isVip = lower.includes('buur') || lower.includes('teranga') || lower.includes('baobab');
                       const isSuspended = t.subscriptionStatus === 'SUSPENDED';
                       const isPastDue = t.subscriptionStatus === 'PAST_DUE';
 
@@ -350,10 +350,10 @@ export default function SuperAdminTenantsListPage() {
                           <td className="py-3.5 px-4">
                             <span
                               className={`px-3 py-1 rounded-xl text-xs font-black inline-flex items-center gap-1.5 border ${
-                                isPremium
+                                isVip
+                                  ? 'bg-purple-100 text-purple-950 border-purple-300'
+                                  : isRecommended
                                   ? 'bg-amber-100 text-amber-950 border-amber-300'
-                                  : isPro
-                                  ? 'bg-orange-100 text-orange-950 border-orange-300'
                                   : 'bg-slate-100 text-slate-800 border-slate-300'
                               }`}
                             >
@@ -405,7 +405,7 @@ export default function SuperAdminTenantsListPage() {
                               <button
                                 onClick={() => {
                                   setUpgradingTenant(t);
-                                  setSelectedNewPlanId(isStarter ? 'plan_pro' : 'plan_premium');
+                                  setSelectedNewPlanId(t.currentPlanId || 'plan_xeweul');
                                 }}
                                 className="bg-[#FF6B00] hover:bg-orange-600 text-white font-extrabold text-xs px-3 py-1.5 rounded-xl transition-all shadow-2xs"
                                 title="Modifier le pack du restaurant"

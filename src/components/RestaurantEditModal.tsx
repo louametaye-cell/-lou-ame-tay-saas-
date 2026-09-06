@@ -276,9 +276,13 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
                   onChange={(e) => setPlan(e.target.value as SubscriptionPlan)}
                   className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-900 focus:border-emerald-400 outline-none text-sm font-semibold"
                 >
-                  <option value="STARTER">STARTER (15 000 FCFA)</option>
-                  <option value="PRO">PRO (25 000 FCFA)</option>
-                  <option value="ENTERPRISE">ENTERPRISE (50 000 FCFA)</option>
+                  <option value="TAMBALI">TÀMBALI (15 000 FCFA)</option>
+                  <option value="NIO_FAR">NIO FAR (25 000 FCFA)</option>
+                  <option value="XEWEUL">XÉWEUL (35 000 FCFA)</option>
+                  <option value="BAOBAB">BAOBAB (46 800 FCFA)</option>
+                  <option value="TERANGA">TERANGA (65 000 FCFA)</option>
+                  <option value="BUUR">BUUR (80 000 FCFA)</option>
+                  <option value="NDAJE">NDAJÉ (Événementiel - Sur Devis)</option>
                 </select>
               </div>
 
