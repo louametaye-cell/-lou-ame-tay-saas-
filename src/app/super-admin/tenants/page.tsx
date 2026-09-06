@@ -357,7 +357,6 @@ export default function SuperAdminTenantsListPage() {
                                   : 'bg-slate-100 text-slate-800 border-slate-300'
                               }`}
                             >
-                              <Sparkles className="w-3 h-3 text-[#FF6B00]" />
                               <span>{planName}</span>
                             </span>
                           </td>

@@ -764,7 +764,7 @@ export default function SuperAdminRestaurantDetailPage() {
                   {/* BOUTON EXPORT CSV QR CODES POUR IMPRIMEUR */}
                   <button
                     onClick={handleExportQRCodesCSV}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95"
                   >
                     <Download className="w-4 h-4" />
                     <span>📥 Exporter la liste CSV des QR Codes (Imprimeur)</span>
@@ -772,7 +772,7 @@ export default function SuperAdminRestaurantDetailPage() {
 
                   <button
                     onClick={handlePrintAllQRs}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-slate-900 text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-[#FF6B00] hover:bg-orange-600 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Imprimer les planches A5</span>
@@ -787,7 +787,7 @@ export default function SuperAdminRestaurantDetailPage() {
                     key={tableNum}
                     className="bg-white text-gray-900 rounded-3xl p-6 border-2 border-orange-200 shadow-xl text-center flex flex-col items-center justify-between page-break-inside-avoid"
                   >
-                    <div className="w-full bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-slate-900 py-2.5 px-3 rounded-2xl mb-4">
+                    <div className="w-full bg-[#FF6B00] text-white py-2.5 px-3 rounded-2xl mb-4">
                       <h4 className="font-black text-base">{restaurant.name}</h4>
                       <p className="text-xs text-orange-100 font-medium">Menu Digital • Lou Ame Tay ?</p>
                     </div>

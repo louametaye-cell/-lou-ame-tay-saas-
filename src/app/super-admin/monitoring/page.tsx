@@ -324,15 +324,11 @@ export default function SuperAdminMonitoringPage() {
                           {t.storageUsedMb || 10} MB
                         </td>
 
-                        {/* Test Connection Button */}
+                        {/* Diagnostics & Info */}
                         <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <button
-                            onClick={() => handleTestConnection(t)}
-                            className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 hover:text-slate-900 px-3 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 active:scale-95"
-                          >
-                            <Play className="w-3 h-3 text-orange-400" />
-                            <span>Tester Connexion</span>
-                          </button>
+                          <span className="text-xs font-mono font-bold text-slate-600">
+                            {t.subdomain}
+                          </span>
                         </td>
                       </tr>
                     );
