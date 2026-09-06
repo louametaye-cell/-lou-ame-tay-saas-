@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   Layers, 
@@ -36,7 +36,7 @@ export default function SuperAdminPlansPage() {
   // Active editable plan
   const activePlan = plans.find((p) => p.id === selectedPlanId) || plans[0];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [resPlans, resFeats] = await Promise.all([
         fetch('/api/admin/plans'),
@@ -57,11 +57,11 @@ export default function SuperAdminPlansPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPlanId]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handlePriceChange = (newPrice: number) => {
     if (!activePlan) return;

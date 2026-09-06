@@ -493,7 +493,7 @@ export default function SuperAdminDashboardPage() {
               </div>
             </div>
 
-            {/* Classement Top 5 des Restaurants (5 Cols) */}
+{/* Classement Top 5 des Restaurants (5 Cols) */}
             <div className="lg:col-span-5 bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
@@ -502,11 +502,11 @@ export default function SuperAdminDashboardPage() {
                 </h3>
 
                 {/* Tabs Top 5 */}
-                <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-200 text-[11px] font-bold">
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-[11px] font-bold">
                   <button
                     onClick={() => setActiveRankingTab('scans')}
                     className={`px-2.5 py-1 rounded-lg transition-all ${
-                      activeRankingTab === 'scans' ? 'bg-[#FF6B00] text-slate-900 shadow' : 'text-slate-500 hover:text-slate-900'
+                      activeRankingTab === 'scans' ? 'bg-[#FF6B00] text-white shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Scans
@@ -514,7 +514,7 @@ export default function SuperAdminDashboardPage() {
                   <button
                     onClick={() => setActiveRankingTab('orders')}
                     className={`px-2.5 py-1 rounded-lg transition-all ${
-                      activeRankingTab === 'orders' ? 'bg-[#00A86B] text-slate-900 shadow' : 'text-slate-500 hover:text-slate-900'
+                      activeRankingTab === 'orders' ? 'bg-[#00A86B] text-white shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Cmds
@@ -522,7 +522,7 @@ export default function SuperAdminDashboardPage() {
                   <button
                     onClick={() => setActiveRankingTab('revenue')}
                     className={`px-2.5 py-1 rounded-lg transition-all ${
-                      activeRankingTab === 'revenue' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-500 hover:text-slate-900'
+                      activeRankingTab === 'revenue' ? 'bg-amber-500 text-slate-950 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     CA
@@ -540,10 +540,10 @@ export default function SuperAdminDashboardPage() {
                     : formatFCFA(resto.totalRevenue || resto.stats?.totalRevenue || 0);
 
                   return (
-                    <div key={resto.id} className="flex items-center justify-between bg-slate-900/80 p-3 rounded-2xl border border-slate-200/80">
+                    <div key={resto.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200/80 hover:bg-slate-100/60 transition-all">
                       <div className="flex items-center gap-3">
                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
-                          idx === 0 ? 'bg-amber-400 text-slate-950' : idx === 1 ? 'bg-slate-300 text-slate-950' : idx === 2 ? 'bg-amber-700 text-slate-900' : 'bg-slate-800 text-slate-500'
+                          idx === 0 ? 'bg-amber-400 text-slate-950 shadow-xs' : idx === 1 ? 'bg-slate-300 text-slate-950' : idx === 2 ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-600'
                         }`}>
                           {idx + 1}
                         </span>
@@ -557,11 +557,11 @@ export default function SuperAdminDashboardPage() {
 
                       <div className="text-right">
                         <span className={`text-xs font-black ${
-                          activeRankingTab === 'scans' ? 'text-[#FF6B00]' : activeRankingTab === 'orders' ? 'text-[#00A86B]' : 'text-amber-400'
+                          activeRankingTab === 'scans' ? 'text-[#FF6B00]' : activeRankingTab === 'orders' ? 'text-[#00A86B]' : 'text-amber-600'
                         }`}>
                           {val}
                         </span>
-                        <Link href={`/super-admin/restaurant/${resto.id}`} className="block text-[10px] text-slate-500 hover:text-slate-900">
+                        <Link href={`/super-admin/restaurant/${resto.id}`} className="block text-[10px] text-slate-500 hover:text-slate-900 font-medium">
                           Détails →
                         </Link>
                       </div>
@@ -574,7 +574,7 @@ export default function SuperAdminDashboardPage() {
 
           {/* KPI Dashboard Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            <div className="bg-slate-50 border border-slate-200/80 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between text-slate-500 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Restaurants Actifs</span>
                 <Store className="w-4 h-4 text-[#FF6B00]" />
@@ -585,25 +585,25 @@ export default function SuperAdminDashboardPage() {
               </span>
             </div>
 
-            <div className="bg-slate-50 border border-blue-500/30 rounded-3xl p-5 shadow-lg">
-              <div className="flex items-center justify-between text-blue-400 mb-2">
+            <div className="bg-white border border-blue-500/20 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all">
+              <div className="flex items-center justify-between text-blue-600 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Total Scans QR</span>
                 <QrCode className="w-4 h-4" />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-blue-400">{totalScansPlatform}</p>
-              <span className="text-[11px] text-blue-300/80 mt-1 block font-medium">Scans de clients en table</span>
+              <p className="text-2xl sm:text-3xl font-black text-blue-600">{totalScansPlatform}</p>
+              <span className="text-[11px] text-slate-500 mt-1 block font-medium">Scans de clients en table</span>
             </div>
 
-            <div className="bg-slate-50 border border-emerald-500/30 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-emerald-500/20 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between text-[#00A86B] mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Taux de Conversion</span>
                 <TrendingUp className="w-4 h-4" />
               </div>
               <p className="text-2xl sm:text-3xl font-black text-[#00A86B]">{avgConversionRate}%</p>
-              <span className="text-[11px] text-emerald-300/80 mt-1 block font-medium">{totalOrdersPlatform} commandes au total</span>
+              <span className="text-[11px] text-slate-500 mt-1 block font-medium">{totalOrdersPlatform} commandes au total</span>
             </div>
 
-            <div className="bg-slate-50 border border-orange-500/30 rounded-3xl p-5 shadow-lg">
+            <div className="bg-white border border-orange-500/20 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between text-[#FF6B00] mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider">Chiffre d&apos;Affaires Global</span>
                 <DollarSign className="w-4 h-4" />
@@ -614,15 +614,15 @@ export default function SuperAdminDashboardPage() {
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="flex items-center justify-between gap-4 flex-wrap bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div className="flex items-center justify-between gap-4 flex-wrap bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
             <div className="relative flex-1 min-w-[240px]">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un restaurant, gérant, ville ou téléphone..."
-                className="w-full bg-slate-900 border border-slate-200/80 focus:border-[#FF6B00] rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-100 outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-300 focus:border-[#FF6B00] focus:bg-white focus:ring-4 focus:ring-[#FF6B00]/15 rounded-xl pl-9 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none font-semibold transition-all shadow-xs"
               />
             </div>
 
@@ -632,10 +632,10 @@ export default function SuperAdminDashboardPage() {
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`text-xs px-3 py-1.5 rounded-xl font-bold transition-all ${
+                  className={`text-xs px-3.5 py-2 rounded-xl font-bold transition-all ${
                     statusFilter === st
-                      ? 'bg-[#FF6B00] text-slate-900 shadow-md'
-                      : 'bg-slate-900 text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-[#FF6B00] text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
                   }`}
                 >
                   {st === 'ALL' && `Tous (${totalCount})`}
@@ -656,7 +656,7 @@ export default function SuperAdminDashboardPage() {
             </div>
 
             {filteredRestaurants.length === 0 ? (
-              <div className="bg-slate-50 rounded-3xl p-12 text-center border border-slate-200 max-w-md mx-auto">
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 max-w-md mx-auto shadow-xs">
                 <div className="text-4xl mb-3">🏢</div>
                 <h3 className="text-base font-bold text-slate-800">Aucun restaurant trouvé</h3>
                 <p className="text-xs text-slate-500 mt-1">
@@ -688,14 +688,14 @@ export default function SuperAdminDashboardPage() {
                   return (
                     <div
                       key={resto.id}
-                      className={`bg-slate-50 rounded-3xl p-5 border transition-all hover:border-[#FF6B00] shadow-xl flex flex-col justify-between group ${
+                      className={`bg-white rounded-3xl p-5 border transition-all hover:border-[#FF6B00] hover:shadow-lg flex flex-col justify-between group ${
                         !resto.isActive
-                          ? 'border-gray-700 opacity-80'
+                          ? 'border-gray-300 opacity-80'
                           : isExpired
-                          ? 'border-red-500/40 bg-red-950/10'
+                          ? 'border-red-500/40 bg-red-50/20'
                           : isTrial
                           ? 'border-amber-500/40'
-                          : 'border-slate-200'
+                          : 'border-slate-200/90'
                       }`}
                     >
                       <div>
@@ -715,12 +715,12 @@ export default function SuperAdminDashboardPage() {
                             <button
                               onClick={() => handleToggleActive(resto)}
                               className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${
-                                resto.isActive ? 'bg-[#00A86B]' : 'bg-slate-700'
+                                resto.isActive ? 'bg-[#00A86B]' : 'bg-slate-300'
                               }`}
                               title={resto.isActive ? 'Désactiver (fermer)' : 'Activer (ouvrir)'}
                             >
                               <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-xs ${
                                   resto.isActive ? 'translate-x-7' : 'translate-x-1'
                                 }`}
                               />
@@ -734,75 +734,57 @@ export default function SuperAdminDashboardPage() {
                         </div>
 
                         {/* Owner & Location Info */}
-                        <div className="space-y-1.5 text-xs text-slate-500 mb-4 bg-slate-900/60 p-3 rounded-2xl border border-slate-200/60">
+                        <div className="space-y-1.5 text-xs text-slate-600 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
                           {resto.ownerName && (
                             <p className="font-medium text-slate-700">
                               👤 Gérant : <span className="font-bold text-slate-900">{resto.ownerName}</span>
                             </p>
                           )}
                           {resto.phone && (
-                            <p className="flex items-center gap-1.5">
-                              <Phone className="w-3 h-3 text-[#FF6B00]" />
-                              <span>{resto.phone}</span>
+                            <p className="font-medium text-slate-700 font-mono">
+                              📞 WhatsApp : <span className="font-bold text-slate-900">{resto.phone}</span>
                             </p>
                           )}
                           {resto.address && (
-                            <p className="flex items-center gap-1.5 truncate">
-                              <MapPin className="w-3 h-3 text-[#FF6B00] shrink-0" />
-                              <span className="truncate">{resto.address}</span>
+                            <p className="font-medium text-slate-700">
+                              📍 Adresse : <span className="font-bold text-slate-900">{resto.address}</span>
                             </p>
                           )}
                         </div>
 
-                        {/* Quick Scans & Performance metrics */}
-                        <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-                          <div className="bg-slate-900 p-2 rounded-xl border border-slate-200/80">
-                            <span className="text-[9px] text-slate-500 block uppercase font-bold">Scans</span>
-                            <span className="text-xs font-black text-[#FF6B00]">{resto.totalScans || resto.stats?.totalScans || 0}</span>
+                        {/* Subscription details badge */}
+                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 mb-4 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">Formule Souscrite :</span>
+                            <span className="font-extrabold text-[#FF6B00]">{sub?.plan || 'PRO'}</span>
                           </div>
-                          <div className="bg-slate-900 p-2 rounded-xl border border-slate-200/80">
-                            <span className="text-[9px] text-slate-500 block uppercase font-bold">Commandes</span>
-                            <span className="text-xs font-black text-[#00A86B]">{resto.totalOrders || resto.stats?.totalOrders || 0}</span>
-                          </div>
-                          <div className="bg-slate-900 p-2 rounded-xl border border-slate-200/80">
-                            <span className="text-[9px] text-slate-500 block uppercase font-bold">CA</span>
-                            <span className="text-xs font-black text-amber-400">{formatFCFA(resto.totalRevenue || resto.stats?.totalRevenue || 0)}</span>
-                          </div>
-                        </div>
-
-                        {/* Subscription Expiry Badge */}
-                        <div className="bg-slate-900 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs mb-4">
-                          <div>
-                            <span className="text-[10px] text-slate-500 uppercase font-bold block">
-                              Formule {sub?.plan || 'PRO'} • {formatFCFA(sub?.price || 25000)}/m
-                            </span>
-                            <span className="font-bold text-slate-800">
-                              Exp : {endDateFormatted}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">Statut Abonnement :</span>
+                            <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${
+                              isExpired 
+                                ? 'bg-red-100 text-red-700 border border-red-200' 
+                                : isTrial 
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                                : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            }`}>
+                              {sub?.status || 'ACTIF'}
                             </span>
                           </div>
-
-                          <div className="text-right">
-                            <span
-                              className={`text-[11px] font-black block ${
-                                daysRemaining > 10
-                                  ? 'text-[#00A86B]'
-                                  : daysRemaining > 0
-                                  ? 'text-amber-400'
-                                  : 'text-red-400'
-                              }`}
-                            >
-                              {daysRemaining > 0
-                                ? `${daysRemaining}j restants`
-                                : `Expiré il y a ${Math.abs(daysRemaining)}j`}
-                            </span>
-                          </div>
+                          {sub?.endDate && (
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
+                              <span className="text-slate-500 font-semibold">Échéance :</span>
+                              <span className={`font-mono text-[11px] font-bold ${daysRemaining <= 5 ? 'text-amber-600 font-extrabold' : 'text-slate-700'}`}>
+                                {endDateFormatted} ({daysRemaining}j restants)
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Card Footer: Table count + Action Buttons (Réglages, WhatsApp, Vue 360) */}
+                      {/* Card Footer: Table count + Action Buttons */}
                       <div className="pt-3 border-t border-slate-200/80 space-y-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#FF6B00] bg-orange-600/10 px-2.5 py-1.5 rounded-xl border border-orange-500/20">
+                          <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#FF6B00] bg-orange-50 px-2.5 py-1.5 rounded-xl border border-orange-200">
                             <QrCode className="w-3.5 h-3.5" />
                             <span>{tableNumberDisplay} tables</span>
                           </div>
@@ -811,7 +793,7 @@ export default function SuperAdminDashboardPage() {
                             {/* Bouton Relance WhatsApp */}
                             <button
                               onClick={() => setWhatsAppReminderRestaurant(resto)}
-                              className="p-2 bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                               title="Envoyer une relance WhatsApp"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
@@ -821,7 +803,7 @@ export default function SuperAdminDashboardPage() {
                             {/* Bouton Réglages & Abonnement */}
                             <button
                               onClick={() => setEditingRestaurant(resto)}
-                              className="p-2 bg-slate-900 hover:bg-slate-50 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              className="p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                               title="Modifier réglages & abonnement"
                             >
                               <Settings className="w-3.5 h-3.5" />
@@ -834,7 +816,7 @@ export default function SuperAdminDashboardPage() {
                         <div className="flex items-center justify-between gap-2 pt-1">
                           <Link
                             href={`/super-admin/restaurant/${resto.id}`}
-                            className="flex-1 bg-slate-900 hover:bg-slate-50 text-slate-900 text-xs font-bold py-2 px-3 rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1 text-center"
+                            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1 text-center shadow-xs"
                           >
                             <span>Vue 360° & Performance</span>
                             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -843,7 +825,7 @@ export default function SuperAdminDashboardPage() {
                           <a
                             href={`/r/${resto.subdomain}/table-1`}
                             target="_blank"
-                            className="p-2 bg-orange-600/20 hover:bg-orange-600/30 text-[#FF6B00] rounded-xl transition-all"
+                            className="p-2 bg-orange-50 hover:bg-orange-100 text-[#FF6B00] border border-orange-200 rounded-xl transition-all"
                             title="Tester le menu client"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
@@ -876,16 +858,16 @@ export default function SuperAdminDashboardPage() {
         {/* MODAL 3 : CRÉER UN NOUVEAU RESTAURANT CLIENT */}
         {isAddModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-slate-50 border border-slate-200 text-slate-900 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative animate-in zoom-in-95 duration-200">
+            <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative animate-in zoom-in-95 duration-200">
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-50 text-slate-500 hover:text-slate-900"
+                className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-200">
-                <div className="p-2.5 bg-orange-600/20 border border-orange-500/30 rounded-2xl text-[#FF6B00]">
+              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div className="p-2.5 bg-orange-500/10 border border-orange-500/30 rounded-2xl text-[#FF6B00]">
                   <Store className="w-5 h-5" />
                 </div>
                 <div>
@@ -909,7 +891,7 @@ export default function SuperAdminDashboardPage() {
                     value={newRestoName}
                     onChange={(e) => handleNameChange(e.target.value)}
                     placeholder="Ex: Le Relais des Saveurs"
-                    className="w-full bg-slate-900 border border-slate-200 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 outline-none"
+                    className="w-full bg-white border border-slate-300 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 placeholder-slate-400 outline-none font-medium shadow-xs"
                   />
                 </div>
 
@@ -917,15 +899,15 @@ export default function SuperAdminDashboardPage() {
                   <label className="font-bold text-slate-700 block mb-1">
                     Sous-domaine / Identifiant unique *
                   </label>
-                  <div className="flex items-center bg-slate-900 border border-slate-200 rounded-xl overflow-hidden px-3 py-2.5 focus-within:border-[#FF6B00]">
-                    <span className="text-slate-500 text-xs">louametay.com/r/</span>
+                  <div className="flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden px-3 py-2.5 focus-within:border-[#FF6B00] shadow-xs">
+                    <span className="text-slate-500 text-xs font-semibold">louametay.com/r/</span>
                     <input
                       type="text"
                       required
                       value={newRestoSubdomain}
                       onChange={(e) => setNewRestoSubdomain(e.target.value.toLowerCase())}
                       placeholder="lerelais"
-                      className="bg-transparent text-[#FF6B00] font-bold outline-none flex-1 ml-1"
+                      className="bg-transparent text-[#FF6B00] font-bold outline-none flex-1 ml-1 placeholder-orange-300"
                     />
                   </div>
                 </div>
@@ -940,7 +922,7 @@ export default function SuperAdminDashboardPage() {
                       value={newRestoOwner}
                       onChange={(e) => setNewRestoOwner(e.target.value)}
                       placeholder="Ex: Moussa Diallo"
-                      className="w-full bg-slate-900 border border-slate-200 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 outline-none"
+                      className="w-full bg-white border border-slate-300 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 placeholder-slate-400 outline-none font-medium shadow-xs"
                     />
                   </div>
 
@@ -953,7 +935,7 @@ export default function SuperAdminDashboardPage() {
                       value={newRestoPhone}
                       onChange={(e) => setNewRestoPhone(e.target.value)}
                       placeholder="+221 77 000 00 00"
-                      className="w-full bg-slate-900 border border-slate-200 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 outline-none"
+                      className="w-full bg-white border border-slate-300 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 placeholder-slate-400 outline-none font-medium shadow-xs"
                     />
                   </div>
                 </div>
@@ -967,12 +949,12 @@ export default function SuperAdminDashboardPage() {
                     value={newRestoAddress}
                     onChange={(e) => setNewRestoAddress(e.target.value)}
                     placeholder="Ex: Thiès, Dakar Plateau, Saly..."
-                    className="w-full bg-slate-900 border border-slate-200 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 outline-none"
+                    className="w-full bg-white border border-slate-300 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 placeholder-slate-400 outline-none font-medium shadow-xs"
                   />
                 </div>
 
                 {/* Subscription configuration */}
-                <div className="bg-slate-900 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3 shadow-inner">
                   <span className="text-xs font-black text-[#FF6B00] uppercase tracking-wider block">
                     Configuration de l&apos;Abonnement
                   </span>
@@ -986,7 +968,7 @@ export default function SuperAdminDashboardPage() {
                         className={`p-2.5 rounded-xl border text-center font-bold text-xs transition-all ${
                           newRestoPlan === plan
                             ? 'bg-[#FF6B00] text-slate-900 border-[#FF6B00] shadow-md'
-                            : 'bg-slate-50 text-slate-500 border-slate-200 hover:text-slate-900'
+                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white hover:bg-slate-700'
                         }`}
                       >
                         <div>{plan}</div>
@@ -999,13 +981,13 @@ export default function SuperAdminDashboardPage() {
 
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <div>
-                      <label className="font-bold text-slate-500 block mb-1">
+                      <label className="font-bold text-slate-300 block mb-1">
                         Durée initiale
                       </label>
                       <select
                         value={newRestoMonths}
                         onChange={(e) => setNewRestoMonths(Number(e.target.value))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 outline-none"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white outline-none font-medium"
                       >
                         <option value={1}>1 mois</option>
                         <option value={3}>3 mois (Recommandé)</option>
@@ -1015,7 +997,7 @@ export default function SuperAdminDashboardPage() {
                     </div>
 
                     <div>
-                      <label className="font-bold text-slate-500 block mb-1">
+                      <label className="font-bold text-slate-300 block mb-1">
                         Nombre de tables
                       </label>
                       <input
@@ -1024,13 +1006,13 @@ export default function SuperAdminDashboardPage() {
                         max={100}
                         value={newRestoTables}
                         onChange={(e) => setNewRestoTables(Number(e.target.value))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 outline-none"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white outline-none font-medium"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}

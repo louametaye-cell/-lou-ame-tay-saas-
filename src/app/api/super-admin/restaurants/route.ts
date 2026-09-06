@@ -53,10 +53,42 @@ export async function POST(req: Request) {
       );
     }
 
-    const cleanSubdomain = subdomain.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+    let targetSubdomain = subdomain.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+    if (!targetSubdomain) {
+      targetSubdomain = `resto-${Date.now().toString().slice(-6)}`;
+    }
 
-    // Récupérer le plan par défaut (créer un plan si inexistant dans la BDD pour éviter les erreurs de clé étrangère)
-    let dbPlan = await (prisma as any).plan.findFirst();
+    // Résolution automatique de l'unicité du sous-domaine
+    let uniqueSubdomain = targetSubdomain;
+    let counter = 1;
+    while (await (prisma as any).tenant.findFirst({ where: { subdomain: uniqueSubdomain } })) {
+      uniqueSubdomain = `${targetSubdomain}-${counter}`;
+      counter++;
+    }
+
+    // Résolution automatique de l'unicité de l'email
+    let uniqueEmail = `contact@${uniqueSubdomain}.sn`;
+    let emailCounter = 1;
+    while (await (prisma as any).tenant.findFirst({ where: { email: uniqueEmail } })) {
+      uniqueEmail = `contact-${emailCounter}@${uniqueSubdomain}.sn`;
+      emailCounter++;
+    }
+
+    // Recherche du plan adapté (Starter, Pro, Premium/Enterprise)
+    const planSearchSlug = (plan || 'pro').toLowerCase().replace('enterprise', 'premium');
+    let dbPlan = await (prisma as any).plan.findFirst({
+      where: {
+        OR: [
+          { slug: { contains: planSearchSlug } },
+          { name: { contains: planSearchSlug } }
+        ]
+      }
+    });
+
+    if (!dbPlan) {
+      dbPlan = await (prisma as any).plan.findFirst();
+    }
+
     if (!dbPlan) {
       dbPlan = await (prisma as any).plan.create({
         data: {
@@ -67,25 +99,28 @@ export async function POST(req: Request) {
       });
     }
 
-    const defaultEmail = `contact@${cleanSubdomain}.sn`;
     const hashedPassword = await bcrypt.hash('Pass1234!', 10);
+    const durationMonths = Number(months) || 3;
+    const expiryDate = new Date();
+    expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
 
     const newTenant = await (prisma as any).tenant.create({
       data: {
         businessName: name,
-        subdomain: cleanSubdomain,
-        email: defaultEmail,
+        subdomain: uniqueSubdomain,
+        email: uniqueEmail,
         passwordHash: hashedPassword,
-        ownerName: ownerName || '',
-        phone: phone || '',
-        address: address || '',
+        ownerName: ownerName || 'Gérant non renseigné',
+        phone: phone || '+221 77 000 00 00',
+        address: address || 'Dakar / Sénégal',
         currentPlanId: dbPlan.id,
         subscriptionStatus: 'ACTIVE',
+        monthlyFee: dbPlan.price || 25000,
       }
     });
 
-    // Create default tables
-    const numTables = Number(tablesCount) || 10;
+    // Création autonome des tables
+    const numTables = Number(tablesCount) || 12;
     const tablesToCreate = [];
     for (let i = 1; i <= numTables; i++) {
       tablesToCreate.push({
@@ -101,7 +136,26 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, restaurant: newTenant }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      restaurant: {
+        id: newTenant.id,
+        name: newTenant.businessName,
+        subdomain: newTenant.subdomain,
+        ownerName: newTenant.ownerName,
+        phone: newTenant.phone,
+        address: newTenant.address,
+        isActive: true,
+        tablesCount: numTables,
+        ordersCount: 0,
+        createdAt: newTenant.createdAt.toISOString(),
+        subscription: {
+          plan: dbPlan.name,
+          status: 'ACTIVE',
+          price: dbPlan.price,
+        }
+      } 
+    }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating restaurant:', error);
     return NextResponse.json(

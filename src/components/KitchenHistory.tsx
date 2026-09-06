@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Download, CheckCircle2, RefreshCw, Clock, DollarSign, RotateCcw } from 'lucide-react';
 import { OrderType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
@@ -21,7 +21,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const url = `/api/kitchen/history?restaurantId=${encodeURIComponent(restaurantId)}`;
       const res = await fetch(url);
@@ -35,13 +35,13 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [restaurantId]);
 
   useEffect(() => {
     fetchHistory();
     const interval = setInterval(fetchHistory, 5000);
     return () => clearInterval(interval);
-  }, [restaurantId, refreshTrigger]);
+  }, [fetchHistory, refreshTrigger]);
 
   const handleExportCSV = () => {
     const url = `/api/kitchen/history?restaurantId=${encodeURIComponent(restaurantId)}&format=csv`;

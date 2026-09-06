@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   Headphones, 
@@ -86,7 +86,7 @@ export default function TicketsPage() {
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await fetch('/api/dashboard/tickets?restaurantId=resto_thies_01');
@@ -103,11 +103,11 @@ export default function TicketsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedTicket]);
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [fetchTickets]);
 
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();

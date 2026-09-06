@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -195,7 +195,7 @@ export default function OperationalDashboardPage() {
   }, []);
 
   // Fetch Dashboard Live Data
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
       const idToUse = localStorage.getItem('current_restaurant_id') || restaurantId || 'resto_thies_01';
@@ -255,7 +255,7 @@ export default function OperationalDashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [restaurantId]);
 
   const handleResolveWaiterCall = async (callId: string, tableNumber: number) => {
     try {
@@ -274,7 +274,7 @@ export default function OperationalDashboardPage() {
     fetchDashboardData();
     const interval = setInterval(fetchDashboardData, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchDashboardData]);
 
   // Restock item action
   const handleRestock = async (alertItem: StockAlert) => {

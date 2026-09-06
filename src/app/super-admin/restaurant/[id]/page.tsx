@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
@@ -76,7 +76,7 @@ export default function SuperAdminRestaurantDetailPage() {
     }
   }, []);
 
-  const fetchRestaurant = async () => {
+  const fetchRestaurant = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await fetch(`/api/super-admin/restaurants/${id}`);
@@ -91,9 +91,9 @@ export default function SuperAdminRestaurantDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setIsLoadingOrders(true);
       const res = await fetch(`/api/super-admin/restaurants/${id}/orders`);
@@ -106,14 +106,14 @@ export default function SuperAdminRestaurantDetailPage() {
     } finally {
       setIsLoadingOrders(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (id) {
       fetchRestaurant();
       fetchOrders();
     }
-  }, [id]);
+  }, [id, fetchRestaurant, fetchOrders]);
 
   const handleToggleActive = async () => {
     if (!restaurant) return;

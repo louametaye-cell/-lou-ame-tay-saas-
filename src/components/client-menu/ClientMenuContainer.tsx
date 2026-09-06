@@ -165,7 +165,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     pollLiveOrders();
     const interval = setInterval(pollLiveOrders, 3500);
     return () => clearInterval(interval);
-  }, [tableNumber, restaurant.id, activeOrder?.id, sessionOrders.length, isExpress]);
+  }, [tableNumber, restaurant.id, activeOrder, sessionOrders.length, isExpress]);
 
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 

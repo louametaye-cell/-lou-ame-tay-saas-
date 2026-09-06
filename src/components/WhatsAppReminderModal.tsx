@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, MessageCircle, Send, Check, Copy, AlertCircle, Phone, DollarSign } from 'lucide-react';
 import { RestaurantType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
@@ -22,14 +22,7 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
   const [daysOffset, setDaysOffset] = useState<number>(5);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (restaurant && isOpen) {
-      setPhone(restaurant.phone || '+221 76 231 20 03');
-      fetchReminderText(5);
-    }
-  }, [restaurant, isOpen]);
-
-  const fetchReminderText = async (offset: number) => {
+  const fetchReminderText = useCallback(async (offset: number) => {
     if (!restaurant) return;
     setIsLoading(true);
     try {
@@ -47,6 +40,9 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
         if (data.reminder) {
           setMessage(data.reminder.message);
           setDaysOffset(offset);
+        } else if (data.messageText) {
+          setMessage(data.messageText);
+          setDaysOffset(offset);
         }
       }
     } catch (e) {
@@ -54,7 +50,14 @@ export const WhatsAppReminderModal: React.FC<WhatsAppReminderModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [restaurant]);
+
+  useEffect(() => {
+    if (restaurant && isOpen) {
+      setPhone(restaurant.phone || '+221 76 231 20 03');
+      fetchReminderText(5);
+    }
+  }, [restaurant, isOpen, fetchReminderText]);
 
   if (!isOpen || !restaurant) return null;
 
