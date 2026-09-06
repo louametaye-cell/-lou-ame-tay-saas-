@@ -52,7 +52,28 @@ export default function CashierCounterPage() {
   useEffect(() => {
     fetchOrders();
     const interval = setInterval(fetchOrders, 8000);
-    return () => clearInterval(interval);
+
+    // Keyboard shortcuts listener for cashier POS
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in an input
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
+
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        fetchOrders();
+        toast.info('🔄 Liste des commandes actualisée (Touche R)');
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        setActiveFilter((prev) => (prev === 'ALL' ? 'EXPRESS' : prev === 'EXPRESS' ? 'TABLE' : 'ALL'));
+        toast.info('🔍 Filtre modifié (Touche F)');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Update order status
@@ -146,8 +167,13 @@ export default function CashierCounterPage() {
           </div>
         </div>
 
-        {/* Quick KPI stats */}
+        {/* Quick KPI stats & Keyboard shortcuts badge */}
         <div className="flex items-center gap-3 flex-wrap">
+          <div className="hidden lg:flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-2xl text-[11px] font-mono text-slate-400">
+            <span className="bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded font-black">[R]</span> Actualiser
+            <span className="bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded font-black ml-1">[F]</span> Filtrer
+          </div>
+
           <div className="bg-slate-800/80 border border-slate-700/80 px-3.5 py-2 rounded-2xl flex items-center gap-2.5">
             <DollarSign className="w-4 h-4 text-emerald-400" />
             <div>

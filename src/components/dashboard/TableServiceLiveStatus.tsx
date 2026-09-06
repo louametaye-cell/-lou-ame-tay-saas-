@@ -56,6 +56,9 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   // Modale d'édition d'un serveur
   const [editingMember, setEditingMember] = useState<ServerShiftMember | null>(null);
 
+  // Filtre par Zone / Salle (Toutes, Salle, Terrasse, VIP)
+  const [activeZoneFilter, setActiveZoneFilter] = useState<'ALL' | 'SALLE' | 'TERRASSE' | 'VIP'>('ALL');
+
   // Formulaire d'ajout rapide
   const [isAddWaiterOpen, setIsAddWaiterOpen] = useState(false);
   const [newWaiterName, setNewWaiterName] = useState('');
@@ -379,9 +382,78 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
         )}
       </div>
 
-      {/* 2. Tables Grid with Waiter Assignment & Live Service Status */}
+      {/* 2. Zone / Floor Plan Filter Tabs */}
+      <div className="flex items-center justify-between gap-2 flex-wrap bg-white p-2 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setActiveZoneFilter('ALL')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              activeZoneFilter === 'ALL'
+                ? 'bg-amber-500 text-slate-950 shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            🍽️ Toutes les Tables ({tableCount})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveZoneFilter('SALLE')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              activeZoneFilter === 'SALLE'
+                ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            🛋️ Salle Principale (T1 - T4)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveZoneFilter('TERRASSE')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              activeZoneFilter === 'TERRASSE'
+                ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            🌿 Terrasse Extérieure (T5 - T8)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveZoneFilter('VIP')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              activeZoneFilter === 'VIP'
+                ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            👑 Salons VIP (T9 - T12)
+          </button>
+        </div>
+
+        <span className="text-xs font-bold text-slate-500 hidden sm:inline px-2">
+          {activeTablesList.filter((t) => {
+            if (activeZoneFilter === 'SALLE') return t.tableNum >= 1 && t.tableNum <= 4;
+            if (activeZoneFilter === 'TERRASSE') return t.tableNum >= 5 && t.tableNum <= 8;
+            if (activeZoneFilter === 'VIP') return t.tableNum >= 9;
+            return true;
+          }).length} tables affichées
+        </span>
+      </div>
+
+      {/* 3. Tables Grid with Waiter Assignment & Live Service Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-        {activeTablesList.map((t) => {
+        {activeTablesList
+          .filter((t) => {
+            if (activeZoneFilter === 'SALLE') return t.tableNum >= 1 && t.tableNum <= 4;
+            if (activeZoneFilter === 'TERRASSE') return t.tableNum >= 5 && t.tableNum <= 8;
+            if (activeZoneFilter === 'VIP') return t.tableNum >= 9;
+            return true;
+          })
+          .map((t) => {
           const hasOrder = Boolean(t.activeOrder);
 
           return (
