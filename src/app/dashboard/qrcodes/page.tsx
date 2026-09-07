@@ -117,7 +117,8 @@ export default function QRCodeOrderPage() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/dashboard/qrcodes/order?restaurantId=resto_thies_01');
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
+      const res = await fetch(`/api/dashboard/qrcodes/order?restaurantId=${activeId}`);
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -144,11 +145,12 @@ export default function QRCodeOrderPage() {
 
     setIsSubmitting(true);
     try {
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
       const res = await fetch('/api/dashboard/qrcodes/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          restaurantId: 'resto_thies_01',
+          restaurantId: activeId,
           restaurantName,
           packTitle: selectedPack.title,
           tableCount: selectedPack.tables,

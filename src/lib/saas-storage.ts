@@ -155,66 +155,87 @@ export const DEFAULT_PLANS: SaaSPlan[] = [
   },
 ];
 
-// Initial Seed Tenants (3 Restaurants Fictifs Démo Commerciale)
+// Initial Seed Tenants (4 Établissements Partenaires Réels Sénégal)
 export const DEFAULT_TENANTS: SaaSTenant[] = [
-  // 1. MG CAFÉ RESTO (Dakar - Pack STARTER) -> demo.starter@louametay.sn
+  // 1. MG CAFÉ RESTO (Madiba - Thiès - Formule STARTER)
   {
-    id: 'tenant_mg_cafe_resto',
-    businessName: 'MG Café Resto',
+    id: 'tenant_madiba_restau',
+    businessName: 'MG Café Resto (Madiba)',
     subdomain: 'mg-cafe-resto',
-    ownerName: 'Moussa Guèye',
+    ownerName: 'Direction MG Café',
     phone: '+221 77 458 74 74',
-    address: 'Plateau',
-    city: 'Dakar',
+    address: 'HLM Route de Mbour',
+    city: 'Thiès',
     currentPlanId: 'plan_starter',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
-    lastSeenAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
-    qrScansToday: 28,
-    ordersToday: 12,
-    storageUsedMb: 15,
-    photosCount: 10,
-    tablesCount: 6,
+    lastSeenAt: new Date().toISOString(),
+    qrScansToday: 0,
+    ordersToday: 0,
+    storageUsedMb: 18,
+    photosCount: 39,
+    tablesCount: 12,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 2. CHEZ COLLÉ RESTAURANT (Thiès - Pack PRO) -> demo.pro@louametay.sn
+  // 2. CHEZ COLLÉ (Sam's - Thiès - Formule PRO)
   {
-    id: 'tenant_chez_colle',
-    businessName: 'Chez Collé Restaurant',
+    id: 'tenant_sams_restaurant',
+    businessName: "Chez Collé (Sam's)",
     subdomain: 'chez-colle',
-    ownerName: 'Collé Cissé',
+    ownerName: 'Direction Chez Collé',
     phone: '+221 77 458 74 74',
     address: 'Avenue Lamine Guèye',
     city: 'Thiès',
     currentPlanId: 'plan_pro',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
-    lastSeenAt: new Date(Date.now() - 1000 * 45).toISOString(),
-    qrScansToday: 110,
-    ordersToday: 55,
-    storageUsedMb: 40,
-    photosCount: 22,
+    lastSeenAt: new Date().toISOString(),
+    qrScansToday: 0,
+    ordersToday: 0,
+    storageUsedMb: 35,
+    photosCount: 39,
     tablesCount: 14,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 3. HÔTEL RESTAURANT CAYOR (Saly / Mbour - Pack PREMIUM Multi-Zones) -> demo.premium@louametay.sn
+  // 3. ANIMA PIZZERIA (Dakar Plage BCEAO - Formule PREMIUM VIP)
   {
-    id: 'tenant_hotel_cayor',
-    businessName: 'Hôtel Restaurant Cayor',
-    subdomain: 'hotel-cayor',
-    ownerName: 'Direction Hôtel Cayor',
+    id: 'tenant_anima_pizzeria',
+    businessName: 'Anima Pizzeria',
+    subdomain: 'anima-pizzeria',
+    ownerName: 'Direction Anima Pizzeria',
     phone: '+221 77 458 74 74',
-    address: 'Zone Balnéaire, Saly Portudal',
-    city: 'Saly Portudal',
+    address: 'Plage BCEAO, Yoff',
+    city: 'Dakar',
     currentPlanId: 'plan_premium',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
-    lastSeenAt: new Date(Date.now() - 1000 * 15).toISOString(),
-    qrScansToday: 240,
-    ordersToday: 118,
-    storageUsedMb: 68,
+    lastSeenAt: new Date().toISOString(),
+    qrScansToday: 0,
+    ordersToday: 0,
+    storageUsedMb: 45,
+    photosCount: 44,
+    tablesCount: 20,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  // 4. HÔTEL RESTAURANT CAYOR (Lat-Dior - Thiès - Formule PREMIUM VIP)
+  {
+    id: 'tenant_hotel_lat_dior',
+    businessName: 'Hôtel Restaurant Cayor (Lat-Dior)',
+    subdomain: 'hotel-cayor',
+    ownerName: 'Direction Hôtel Cayor',
+    phone: '+221 77 458 74 74',
+    address: 'Quartier Lat-Dior',
+    city: 'Thiès',
+    currentPlanId: 'plan_premium',
+    subscriptionStatus: 'ACTIVE',
+    subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
+    lastSeenAt: new Date().toISOString(),
+    qrScansToday: 0,
+    ordersToday: 0,
+    storageUsedMb: 50,
     photosCount: 25,
     tablesCount: 24,
     createdAt: new Date().toISOString(),
@@ -309,10 +330,9 @@ class SaasStorageService {
     return this.tenants.find((t) => 
       t.id.toLowerCase() === clean || 
       t.subdomain.toLowerCase() === clean ||
-      (clean === 'resto_thies_01' && t.subdomain === 'chezfatou') ||
-      (clean === 'tenant_starter_01' && (t.id === 'tenant_mg_cafe_resto' || t.subdomain === 'mg-cafe-resto')) ||
-      (clean === 'tenant_pro_01' && (t.id === 'tenant_chez_colle' || t.subdomain === 'chez-colle')) ||
-      (clean === 'tenant_premium_01' && (t.id === 'tenant_hotel_cayor' || t.subdomain === 'hotel-cayor'))
+      ((clean === 'resto_thies_01' || clean === 'chezfatou' || clean === 'tenant_starter_01') && (t.id === 'tenant_madiba_restau' || t.subdomain === 'mg-cafe-resto')) ||
+      (clean === 'tenant_pro_01' && (t.id === 'tenant_sams_restaurant' || t.subdomain === 'chez-colle')) ||
+      (clean === 'tenant_premium_01' && (t.id === 'tenant_hotel_lat_dior' || t.subdomain === 'hotel-cayor'))
     );
   }
 

@@ -5,30 +5,30 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId') || 'resto_thies_01'; // Fallback for dev
-
-    const zones = await prisma.zone.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: { tables: true, orders: true }
-        }
-      }
-    });
-
-    return NextResponse.json({ zones });
-  } catch (error) {
-    console.error('Erreur récupération des zones:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
-  }
-}
-
-// POST /api/tenant/zones
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { name, type, tenantId = 'resto_thies_01' } = body;
+    const tenantId = searchParams.get('tenantId') || 'tenant_madiba_restau'; // Fallback officiel
+ 
+     const zones = await prisma.zone.findMany({
+       where: { tenantId },
+       orderBy: { createdAt: 'desc' },
+       include: {
+         _count: {
+           select: { tables: true, orders: true }
+         }
+       }
+     });
+ 
+     return NextResponse.json({ zones });
+   } catch (error) {
+     console.error('Erreur récupération des zones:', error);
+     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+   }
+ }
+ 
+ // POST /api/tenant/zones
+ export async function POST(req: Request) {
+   try {
+     const body = await req.json();
+     const { name, type, tenantId = 'tenant_madiba_restau' } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Le nom de la zone est requis' }, { status: 400 });

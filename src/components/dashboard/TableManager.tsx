@@ -31,8 +31,8 @@ interface TableManagerProps {
 }
 
 export const TableManager: React.FC<TableManagerProps> = ({
-  subdomain = 'chezfatou',
-  restaurantName = 'Chez Fatou & Frères',
+  subdomain = 'mg-cafe-resto',
+  restaurantName = 'MG Café Resto (Madiba)',
   initialTableCount = 12,
 }) => {
   const [activeTab, setActiveTab] = useState<'SERVICE' | 'QRCODES'>('SERVICE');

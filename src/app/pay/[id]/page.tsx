@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 export default function PublicPaymentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const tenantId = (params?.id as string) || 'resto_thies_01';
+  const tenantId = (params?.id as string) || 'tenant_madiba_restau';
   const planId = searchParams?.get('plan') || 'plan_pro';
   const months = parseInt(searchParams?.get('months') || '1', 10);
 

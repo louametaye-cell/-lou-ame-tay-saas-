@@ -74,9 +74,9 @@ export default function OperationalDashboardPage() {
   const router = useRouter();
 
   // State
-  const [restaurantId, setRestaurantId] = useState('resto_thies_01');
-  const [restaurantName, setRestaurantName] = useState('Chez Fatou & Frères');
-  const [restaurantSubdomain, setRestaurantSubdomain] = useState('chezfatou');
+  const [restaurantId, setRestaurantId] = useState('tenant_madiba_restau');
+  const [restaurantName, setRestaurantName] = useState('MG Café Resto (Madiba)');
+  const [restaurantSubdomain, setRestaurantSubdomain] = useState('mg-cafe-resto');
   const [currentDateString, setCurrentDateString] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -198,7 +198,7 @@ export default function OperationalDashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const idToUse = localStorage.getItem('current_restaurant_id') || restaurantId || 'resto_thies_01';
+      const idToUse = localStorage.getItem('current_restaurant_id') || restaurantId || 'tenant_madiba_restau';
 
       // 1. Stats
       const resStats = await fetch(`/api/dashboard/stats?restaurantId=${idToUse}`);

@@ -158,7 +158,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
     const pollLiveOrders = async () => {
       try {
-        const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id || 'resto_thies_01'}`);
+        const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id || 'tenant_madiba_restau'}`);
         if (res.ok) {
           const data = await res.json();
           if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
@@ -427,6 +427,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       {/* 1. Fixed Header with Table Badge, Waiter Bell, 5-Flag Language Switcher & Search */}
       <TableStickyHeader
         restaurantName={restaurant.name}
+        restaurantId={restaurant.id}
         logoUrl={logoUrl}
         tableNumber={tableNumber}
         isExpress={isExpress}

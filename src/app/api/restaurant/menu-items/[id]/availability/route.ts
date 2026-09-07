@@ -10,7 +10,7 @@ export async function PATCH(
   try {
     const { id } = params;
     const body = await request.json();
-    const { isAvailable, isSpecialOfTheDay, restaurantId = 'chezfatou' } = body;
+    const { isAvailable, isSpecialOfTheDay, restaurantId = 'mg-cafe-resto' } = body;
 
     // 1. Update in-memory SAMPLE_RESTAURANT for instant UI reflection
     SAMPLE_RESTAURANT.categories.forEach((cat) => {

@@ -20,6 +20,7 @@ interface ServiceCallModalProps {
   isOpen: boolean;
   onClose: () => void;
   tableNumber: number;
+  restaurantId?: string;
   lang?: Language;
 }
 
@@ -27,6 +28,7 @@ export const ServiceCallModal: React.FC<ServiceCallModalProps> = ({
   isOpen,
   onClose,
   tableNumber,
+  restaurantId = 'tenant_madiba_restau',
   lang = 'FR',
 }) => {
   const t = getUIText(lang);
@@ -86,7 +88,7 @@ export const ServiceCallModal: React.FC<ServiceCallModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tableNumber,
-          restaurantId: 'resto_thies_01',
+          restaurantId,
           reason: fullMessage,
         }),
       });

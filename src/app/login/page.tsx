@@ -225,7 +225,7 @@ export default function RestaurantLoginPage() {
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1.5 flex items-center justify-between">
                   <span>Identifiant ou Sous-domaine</span>
-                  <span className="text-[11px] text-slate-400 font-normal">Ex: chezfatou ou palmiersaly</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Ex: mg-cafe-resto ou anima-pizzeria</span>
                 </label>
                 <input
                   type="text"
@@ -272,23 +272,25 @@ export default function RestaurantLoginPage() {
               </button>
             </form>
 
-            {/* Quick Demo Access Pills */}
+            {/* Quick Access for Official Partner Establishments */}
             {restaurantsList.length > 0 && (
               <div className="mt-6 pt-5 border-t border-white/10 relative z-10">
-                <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 mb-2.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Ou testez en 1 clic un établissement pilote :</span>
+                <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 mb-2.5">
+                  <Store className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Accès Gérants — Établissements Partenaires Officiels 🇸🇳 :</span>
                 </span>
-                <div className="flex flex-wrap gap-2">
-                  {restaurantsList.slice(0, 3).map((r) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {restaurantsList.map((r) => (
                     <button
                       key={r.id}
+                      type="button"
                       onClick={() => handleQuickLogin(r)}
                       disabled={isLoading}
-                      className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-orange-500/50 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-500/60 text-white text-xs font-bold p-2.5 rounded-xl transition-all flex items-center gap-2 active:scale-95 text-left truncate cursor-pointer group"
+                      title={`Connexion à l'espace gérant ${r.name}`}
                     >
-                      <Store className="w-3.5 h-3.5 text-orange-400" />
-                      <span>{r.name}</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 group-hover:scale-125 transition-transform" />
+                      <span className="truncate">{r.name}</span>
                     </button>
                   ))}
                 </div>

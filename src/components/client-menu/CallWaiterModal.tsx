@@ -25,7 +25,7 @@ export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
   isOpen,
   onClose,
   tableNumber,
-  restaurantId = 'resto_thies_01',
+  restaurantId = 'tenant_madiba_restau',
   customerName,
   isExpress = false,
 }) => {

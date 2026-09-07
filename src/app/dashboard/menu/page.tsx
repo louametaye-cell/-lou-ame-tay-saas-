@@ -257,7 +257,7 @@ export default function DashboardMenuManagementPage() {
 
           <div className="flex items-center gap-2">
             <Link
-              href={`/display/${restaurant.subdomain || 'chezfatou'}`}
+              href={`/display/${restaurant.subdomain || 'mg-cafe-resto'}`}
               target="_blank"
               className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
             >

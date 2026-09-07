@@ -9,6 +9,7 @@ import { ServiceCallModal } from './ServiceCallModal';
 
 interface TableStickyHeaderProps {
   restaurantName: string;
+  restaurantId?: string;
   logoUrl?: string | null;
   tableNumber: number;
   isExpress?: boolean;
@@ -28,6 +29,7 @@ const LANGUAGES: { code: Language; label: string; flag: string }[] = [
 
 export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   restaurantName,
+  restaurantId,
   logoUrl,
   tableNumber,
   isExpress = false,
@@ -161,6 +163,7 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
         isOpen={isServiceModalOpen}
         onClose={() => setIsServiceModalOpen(false)}
         tableNumber={tableNumber}
+        restaurantId={restaurantId}
         lang={lang}
       />
     </>

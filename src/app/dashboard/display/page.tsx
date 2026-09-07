@@ -67,7 +67,7 @@ const DISPLAY_MODES_INFO = {
 };
 
 export default function DisplaySettingsPage() {
-  const [restaurantId, setRestaurantId] = useState('chezfatou');
+  const [restaurantId, setRestaurantId] = useState('mg-cafe-resto');
   const [data, setData] = useState<DisplayData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedScreen, setSelectedScreen] = useState(1);
@@ -77,7 +77,7 @@ export default function DisplaySettingsPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setBaseUrl(window.location.origin);
-      const savedResto = localStorage.getItem('louametay_resto_subdomain') || 'chezfatou';
+      const savedResto = localStorage.getItem('current_restaurant_subdomain') || localStorage.getItem('louametay_resto_subdomain') || 'mg-cafe-resto';
       setRestaurantId(savedResto);
 
       fetch(`/api/display/${savedResto}`)

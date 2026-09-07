@@ -89,7 +89,8 @@ export default function TicketsPage() {
   const fetchTickets = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/dashboard/tickets?restaurantId=resto_thies_01');
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
+      const res = await fetch(`/api/dashboard/tickets?restaurantId=${activeId}`);
       if (res.ok) {
         const data = await res.json();
         setTickets(data.tickets || []);
@@ -115,12 +116,14 @@ export default function TicketsPage() {
 
     setIsSubmitting(true);
     try {
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
+      const activeName = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null) || 'MG Café Resto (Madiba)';
       const res = await fetch('/api/dashboard/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          restaurantId: 'resto_thies_01',
-          restaurantName: 'Chez Fatou & Frères',
+          restaurantId: activeId,
+          restaurantName: activeName,
           subject: newSubject,
           message: newMessage,
           priority: newPriority,

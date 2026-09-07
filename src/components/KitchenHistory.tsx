@@ -13,7 +13,7 @@ interface KitchenHistoryProps {
 }
 
 export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
-  restaurantId = 'resto_thies_01',
+  restaurantId = 'tenant_madiba_restau',
   onRestoreOrder,
   refreshTrigger = 0,
 }) => {

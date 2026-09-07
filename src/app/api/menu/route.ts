@@ -30,7 +30,7 @@ export async function GET(req: Request) {
        if (token && token.startsWith('resto_session_')) {
           subdomain = token.replace('resto_session_', '');
        } else {
-          subdomain = 'chezfatou';
+          subdomain = 'mg-cafe-resto';
        }
     }
 
