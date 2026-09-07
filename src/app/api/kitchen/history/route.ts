@@ -16,7 +16,6 @@ export async function GET(req: Request) {
           OR: [
             { id: tenantIdParam },
             { subdomain: tenantIdParam },
-            { slug: tenantIdParam },
           ],
         },
         select: { id: true },

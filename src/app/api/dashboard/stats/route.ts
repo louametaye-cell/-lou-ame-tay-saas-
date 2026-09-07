@@ -20,7 +20,6 @@ export async function GET(req: Request) {
         OR: [
           { id: rawInput },
           { subdomain: rawInput },
-          { slug: rawInput },
         ],
       },
       select: { id: true },

@@ -17,7 +17,6 @@ export async function GET(req: Request) {
           OR: [
             { id: candidate },
             { subdomain: candidate },
-            { slug: candidate },
           ],
         },
         select: { id: true, businessName: true },
