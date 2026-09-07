@@ -4,8 +4,8 @@
   "description": "Menu Digital QR Code & Écran Cuisine Temps Réel pour Restaurants au Sénégal",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0B132B",
-  "theme_color": "#FF6B00",
+  "background_color": "#0F172A",
+  "theme_color": "#FACC15",
   "orientation": "portrait-primary",
   "icons": [
     {

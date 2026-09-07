@@ -3,12 +3,13 @@
 // Permet la prise de commande continue même en cas de coupure 4G/3G/WiFi en salle
 // ==============================================================================
 
-const CACHE_NAME = 'louametay-offline-v2';
+const CACHE_NAME = 'louametay-offline-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/login',
   '/dashboard',
   '/kitchen',
+  '/cashier',
   '/logo.png',
   '/favicon.ico',
 ];

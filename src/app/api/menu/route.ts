@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { autoTranslateDish } from '@/lib/translation-engine';
 import { Language } from '@/types';
 import { getCachedMenu, setCachedMenu, invalidateMenuCache } from '@/lib/cache';
@@ -22,8 +21,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const lang = (searchParams.get('lang') || 'FR').toUpperCase() as Language;
     
-    // Infer tenant from subdomain in query or session cookie
-    let subdomain = searchParams.get('subdomain') || searchParams.get('tenantId');
+    // Infer tenant from subdomain, tenantId, restaurantId in query or session cookie
+    let subdomain = searchParams.get('subdomain') || searchParams.get('tenantId') || searchParams.get('restaurantId');
     if (!subdomain) {
        const cookieStore = cookies();
        const token = cookieStore.get('saas_token')?.value;
@@ -49,18 +48,26 @@ export async function GET(req: Request) {
       },
       include: {
         categories: {
+          orderBy: { displayOrder: 'asc' },
           include: { items: true }
         }
       }
     });
 
-    const restaurant = dbTenant ? {
+    if (!dbTenant) {
+      return NextResponse.json(
+        { error: 'Restaurant introuvable ou sous-domaine invalide' },
+        { status: 404 }
+      );
+    }
+
+    const restaurant = {
       id: dbTenant.id,
       name: dbTenant.businessName,
       subdomain: dbTenant.subdomain,
       categories: dbTenant.categories,
       tableCount: 12,
-    } : JSON.parse(JSON.stringify(SAMPLE_RESTAURANT));
+    };
 
     for (const cat of restaurant.categories) {
       for (const item of cat.items) {
