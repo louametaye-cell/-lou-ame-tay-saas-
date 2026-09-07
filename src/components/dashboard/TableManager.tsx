@@ -31,8 +31,8 @@ interface TableManagerProps {
 }
 
 export const TableManager: React.FC<TableManagerProps> = ({
-  subdomain = 'mg-cafe-resto',
-  restaurantName = 'MG Café Resto (Madiba)',
+  subdomain: propSubdomain,
+  restaurantName: propRestaurantName,
   initialTableCount = 12,
 }) => {
   const [activeTab, setActiveTab] = useState<'SERVICE' | 'QRCODES'>('SERVICE');
@@ -42,9 +42,14 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [baseUrl, setBaseUrl] = useState('');
 
+  const effectiveSubdomain = propSubdomain || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_subdomain') : '') || '';
+  const effectiveRestaurantName = propRestaurantName || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : '') || 'Mon Restaurant';
+
   const fetchLiveOrders = async () => {
     try {
-      const res = await fetch('/api/orders');
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '';
+      const url = storedId ? `/api/orders?restaurantId=${encodeURIComponent(storedId)}` : '/api/orders';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -86,10 +91,10 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED').length;
 
   const getTableUrl = (num: number) => {
-    return `${baseUrl}/r/${subdomain}/${num}`;
+    return `${baseUrl}/r/${effectiveSubdomain || 'menu'}/${num}`;
   };
 
-  const expressUrl = `${baseUrl}/r/${subdomain}/express`;
+  const expressUrl = `${baseUrl}/r/${effectiveSubdomain || 'menu'}/express`;
 
   return (
     <div className="space-y-6">

@@ -21,7 +21,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Payload IPN invalide' }, { status: 400 });
     }
 
-    const tenantId = order_id || 'tenant_pro_01';
+    const tenantId = order_id;
+    if (!tenantId) {
+      console.warn('⚠️ Webhook Orange Money reçu sans order_id/tenantId valide');
+      return NextResponse.json({ error: 'order_id requis' }, { status: 400 });
+    }
     const planId = 'plan_pro';
 
     // Enregistrement de la transaction Orange Money

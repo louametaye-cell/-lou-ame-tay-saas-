@@ -28,7 +28,7 @@ export const ServiceCallModal: React.FC<ServiceCallModalProps> = ({
   isOpen,
   onClose,
   tableNumber,
-  restaurantId = 'tenant_madiba_restau',
+  restaurantId = '',
   lang = 'FR',
 }) => {
   const t = getUIText(lang);

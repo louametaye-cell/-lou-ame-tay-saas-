@@ -110,8 +110,8 @@ export const SupportAIAssistant: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          restaurantId: (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau',
-          restaurantName: (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null) || 'MG Café Resto (Madiba)',
+          restaurantId: (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || '',
+          restaurantName: (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null) || 'Mon Restaurant',
           subject: newSubject,
           message: newMessage,
           priority: newPriority,

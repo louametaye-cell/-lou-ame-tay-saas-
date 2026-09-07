@@ -106,7 +106,14 @@ export function checkPlanAccessMiddleware(
   const tenantId = req.headers.get('x-tenant-id') || 
                    url.searchParams.get('tenantId') || 
                    url.searchParams.get('restaurantId') || 
-                   'tenant_pro_01';
+                   '';
+
+  if (!tenantId) {
+    return NextResponse.json(
+      { error: 'Identifiant de restaurant (tenantId) manquant pour vérifier les droits d\'accès.' },
+      { status: 400 }
+    );
+  }
 
   const check = canUseFeature(tenantId, featureKey, requestedCount);
   if (!check.allowed) {

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "node prisma/seed.mjs"
+    "prisma:seed": "node prisma/seed.mjs",
+    "audit:tenant": "node scripts/audit-multi-tenancy.js"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"

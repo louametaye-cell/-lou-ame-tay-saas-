@@ -5,7 +5,10 @@ import crypto from 'crypto';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId') || 'tenant_madiba_restau';
+    const tenantId = searchParams.get('tenantId');
+    if (!tenantId) {
+      return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
+    }
 
     const waiters = await prisma.waiter.findMany({
       where: { tenantId, isActive: true },
@@ -27,7 +30,11 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, phone, tenantId = 'tenant_madiba_restau' } = body;
+    const { name, phone, tenantId } = body;
+
+    if (!tenantId) {
+      return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
+    }
 
     if (!name) {
       return NextResponse.json({ error: 'Le nom du serveur est requis' }, { status: 400 });

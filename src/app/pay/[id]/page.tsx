@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 export default function PublicPaymentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const tenantId = (params?.id as string) || 'tenant_madiba_restau';
+  const tenantId = (params?.id as string) || '';
   const planId = searchParams?.get('plan') || 'plan_pro';
   const months = parseInt(searchParams?.get('months') || '1', 10);
 
@@ -31,6 +31,10 @@ export default function PublicPaymentPage() {
 
   useEffect(() => {
     async function loadPaymentDetails() {
+      if (!tenantId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const res = await fetch('/api/payments/generate-link', {

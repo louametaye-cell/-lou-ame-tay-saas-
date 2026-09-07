@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
     const newTicket: SupportTicket = {
       id: `tkt_${Date.now()}`,
-      tenantId: tenantId || 'tenant_starter_01',
+      tenantId: tenantId || '',
       restaurantName: restaurantName || 'Restaurant Client',
       subject: subject || 'Demande d\'assistance',
       category: category || 'TECHNIQUE',

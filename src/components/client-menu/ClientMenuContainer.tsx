@@ -158,7 +158,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
     const pollLiveOrders = async () => {
       try {
-        const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id || 'tenant_madiba_restau'}`);
+        if (!restaurant.id) return;
+        const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id}`);
         if (res.ok) {
           const data = await res.json();
           if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {

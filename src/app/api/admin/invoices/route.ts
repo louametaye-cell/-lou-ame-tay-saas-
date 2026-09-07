@@ -7,22 +7,25 @@ import { saasStorage } from '@/lib/saas-storage';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId') || 'tenant_pro_01';
+    const tenantId = searchParams.get('tenantId');
+    if (!tenantId) {
+      return NextResponse.json({ error: 'tenantId requis' }, { status: 400 });
+    }
     const tenant = saasStorage.getTenantById(tenantId);
     const plan = tenant ? saasStorage.getPlanById(tenant.currentPlanId) : null;
 
     const invoiceData: InvoiceData = {
       invoiceNumber: `FACT-SN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       issueDate: new Date().toISOString(),
-      tenantName: tenant?.businessName || 'Chez Fatou & Frères',
-      tenantPhone: tenant?.phone || '+221 76 231 20 03',
-      tenantAddress: `${tenant?.address || 'Avenue Lamine Guèye'}, ${tenant?.city || 'Thiès'}`,
-      planName: plan?.name || 'Pro',
+      tenantName: tenant?.businessName || 'Restaurant Partenaire',
+      tenantPhone: tenant?.phone || '',
+      tenantAddress: tenant?.address ? `${tenant.address}, ${tenant.city || ''}` : 'Sénégal',
+      planName: plan?.name || 'Standard',
       periodMonths: 1,
-      subtotalAmount: plan?.price || 25000,
+      subtotalAmount: plan?.price || 0,
       vatRatePercent: 0,
       vatAmount: 0,
-      totalAmount: plan?.price || 25000,
+      totalAmount: plan?.price || 0,
       paymentMethod: 'WAVE',
       transactionRef: `WAVE_TX_${Date.now()}`,
     };

@@ -24,12 +24,12 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const getEffectiveId = useCallback(() => {
-    if (propRestaurantId && propRestaurantId !== 'tenant_madiba_restau') return propRestaurantId;
+    if (propRestaurantId) return propRestaurantId;
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('current_restaurant_id');
       if (stored) return stored;
     }
-    return propRestaurantId || '';
+    return '';
   }, [propRestaurantId]);
 
   const fetchHistory = useCallback(async () => {

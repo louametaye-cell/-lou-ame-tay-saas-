@@ -64,8 +64,13 @@ export default function AddPlatPage() {
     try {
       const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
       const storedName = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null;
-      const activeRestoId = storedId || 'tenant_madiba_restau';
-      const activeRestoName = storedName || 'MG Café Resto';
+      if (!storedId) {
+        toast.error('Session expirée ou restaurant non sélectionné. Veuillez vous reconnecter.');
+        setIsSubmitting(false);
+        return;
+      }
+      const activeRestoId = storedId;
+      const activeRestoName = storedName || 'Mon Restaurant';
 
       // 1. Ajout direct dans le menu actif via l'API menu-items
       await fetch('/api/restaurant/menu-items', {

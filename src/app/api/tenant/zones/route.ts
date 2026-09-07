@@ -5,7 +5,10 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId') || 'tenant_madiba_restau'; // Fallback officiel
+    const tenantId = searchParams.get('tenantId');
+    if (!tenantId) {
+      return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
+    }
  
      const zones = await prisma.zone.findMany({
        where: { tenantId },
@@ -28,7 +31,11 @@ export async function GET(req: Request) {
  export async function POST(req: Request) {
    try {
      const body = await req.json();
-     const { name, type, tenantId = 'tenant_madiba_restau' } = body;
+     const { name, type, tenantId } = body;
+
+    if (!tenantId) {
+      return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
+    }
 
     if (!name) {
       return NextResponse.json({ error: 'Le nom de la zone est requis' }, { status: 400 });

@@ -162,9 +162,14 @@ export default function QRCodeOrderPage() {
     e.preventDefault();
     if (!selectedPack) return;
 
+    const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || '';
+    if (!activeId) {
+      toast.error('Session expirée ou restaurant non identifié.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
       const res = await fetch('/api/dashboard/qrcodes/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

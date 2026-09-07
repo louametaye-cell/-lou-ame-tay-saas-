@@ -30,7 +30,11 @@ export async function POST(req: Request) {
     } = body;
 
     // Récupération des informations de la transaction
-    const tenantId = metadata?.tenant_id || client_reference || 'tenant_pro_01';
+    const tenantId = metadata?.tenant_id || client_reference;
+    if (!tenantId) {
+      console.warn('⚠️ Webhook Wave reçu sans tenant_id valide');
+      return NextResponse.json({ error: 'tenant_id requis' }, { status: 400 });
+    }
     const planId = metadata?.plan_id || 'plan_pro';
     const periodMonths = metadata?.period_months || 1;
 

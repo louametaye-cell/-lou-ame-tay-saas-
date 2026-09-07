@@ -75,9 +75,9 @@ export default function OperationalDashboardPage() {
   const router = useRouter();
 
   // State
-  const [restaurantId, setRestaurantId] = useState('tenant_madiba_restau');
-  const [restaurantName, setRestaurantName] = useState('MG Café Resto (Madiba)');
-  const [restaurantSubdomain, setRestaurantSubdomain] = useState('mg-cafe-resto');
+  const [restaurantId, setRestaurantId] = useState('');
+  const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantSubdomain, setRestaurantSubdomain] = useState('');
   const [currentDateString, setCurrentDateString] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -85,13 +85,13 @@ export default function OperationalDashboardPage() {
 
   // KPIs
   const [kpis, setKpis] = useState({
-    todayRevenue: 125000,
-    todayOrders: 18,
-    todayCovers: 42,
+    todayRevenue: 0,
+    todayOrders: 0,
+    todayCovers: 0,
     outOfStock: 0,
-    revenueChange: 12.5,
-    ordersChange: 5.2,
-    coversChange: 8.0,
+    revenueChange: 0,
+    ordersChange: 0,
+    coversChange: 0,
   });
 
   // Current Live Orders
@@ -223,8 +223,11 @@ export default function OperationalDashboardPage() {
   // Fetch Dashboard Live Data
   const fetchDashboardData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const idToUse = localStorage.getItem('current_restaurant_id') || restaurantId || 'tenant_madiba_restau';
+      const idToUse = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || restaurantId;
+      if (!idToUse) {
+        setIsLoading(false);
+        return;
+      }
 
       // 1. Stats
       const resStats = await fetch(`/api/dashboard/stats?restaurantId=${idToUse}`);

@@ -89,7 +89,12 @@ export default function TicketsPage() {
   const fetchTickets = useCallback(async () => {
     try {
       setIsLoading(true);
-      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || '';
+      if (!activeId) {
+        setTickets([]);
+        setIsLoading(false);
+        return;
+      }
       const res = await fetch(`/api/dashboard/tickets?restaurantId=${activeId}`);
       if (res.ok) {
         const data = await res.json();
@@ -114,10 +119,15 @@ export default function TicketsPage() {
     e.preventDefault();
     if (!newSubject.trim() || !newMessage.trim()) return;
 
+    const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || '';
+    const activeName = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null) || 'Restaurant';
+    if (!activeId) {
+      toast.error('Session expirée ou restaurant non identifié.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
-      const activeName = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null) || 'MG Café Resto (Madiba)';
       const res = await fetch('/api/dashboard/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

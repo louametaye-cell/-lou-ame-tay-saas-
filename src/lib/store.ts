@@ -46,7 +46,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       tableNumber: 1,
-      restaurantId: 'tenant_madiba_restau',
+      restaurantId: '',
       items: [],
       customerNote: '',
       customerName: '',
