@@ -12,7 +12,11 @@ import {
   Sparkles,
   Phone,
   MapPin,
-  Users
+  Users,
+  Upload,
+  Key,
+  Lock,
+  Image as ImageIcon
 } from 'lucide-react';
 import { RestaurantType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
@@ -39,6 +43,14 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
   const [tableCount, setTableCount] = useState(12);
   const [isActive, setIsActive] = useState(true);
 
+  // Logo & Type d'établissement
+  const [logoUrl, setLogoUrl] = useState('');
+  const [establishmentType, setEstablishmentType] = useState('Restaurant');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  // Sécurité & Réinitialisation Mot de passe
+  const [newPassword, setNewPassword] = useState('');
+
   const [selectedPlanSlug, setSelectedPlanSlug] = useState('xeweul');
   const [price, setPrice] = useState(35000);
   const [status, setStatus] = useState<string>('ACTIVE');
@@ -59,12 +71,17 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
 
   useEffect(() => {
     if (restaurant) {
-      setName(restaurant.name || '');
+      setName(restaurant.name || (restaurant as any).businessName || '');
       setOwnerName(restaurant.ownerName || '');
       setPhone(restaurant.phone || '');
       setAddress(restaurant.address || '');
       setTableCount(restaurant.tableCount || restaurant.tablesCount || 12);
       setIsActive(restaurant.isActive ?? true);
+
+      const branding = (restaurant as any).branding || {};
+      setLogoUrl(restaurant.logoUrl || branding.logoUrl || '');
+      setEstablishmentType(branding.establishmentType || 'Restaurant');
+      setNewPassword('');
 
       const planObj = (restaurant as any).plan;
       const currentPlanSlug = planObj?.slug || restaurant.subscription?.plan?.toLowerCase() || 'xeweul';
@@ -104,6 +121,42 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
     });
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingLogo(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'louametay/logos');
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.image?.url) {
+        setLogoUrl(data.image.url);
+        toast.success('Logo officiel téléchargé avec succès !');
+      } else {
+        toast.error(data.error || "Erreur lors de l'upload du logo");
+      }
+    } catch (err) {
+      toast.error('Erreur réseau lors de l\'upload du logo');
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleGeneratePassword = () => {
+    const randomPin = Math.floor(1000 + Math.random() * 9000);
+    const generated = `Pass${randomPin}!`;
+    setNewPassword(generated);
+    toast.info(`Nouveau mot de passe généré : ${generated}`);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -119,6 +172,9 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
           address,
           tableCount: Number(tableCount),
           isActive,
+          establishmentType,
+          logoUrl: logoUrl.trim() || undefined,
+          newPassword: newPassword.trim() || undefined,
           plan: selectedPlanSlug,
           price: Number(price),
           status,
@@ -251,6 +307,69 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
                 />
               </div>
 
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Type d&apos;Établissement</label>
+                <select
+                  value={establishmentType}
+                  onChange={(e) => setEstablishmentType(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 focus:border-[#FF6B00] outline-none text-sm font-semibold shadow-2xs"
+                >
+                  <option value="Restaurant">🍽️ Restaurant Traditionnel / Grillades</option>
+                  <option value="Fastfood">⚡ Fastfood / Burger / Tacos</option>
+                  <option value="Hôtel Restaurant">🏨 Hôtel Restaurant / Resort</option>
+                  <option value="Pizzeria">🍕 Pizzeria / Trattoria</option>
+                  <option value="Café">☕ Café / Salon de thé / Pâtisserie</option>
+                  <option value="Bar / Lounge">🌴 Bar / Lounge / Maquis</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 block mb-1.5 flex items-center justify-between">
+                  <span>Logo Officiel de l&apos;Établissement</span>
+                  <span className="text-[11px] text-slate-400 font-normal">JPG, PNG ou WebP</span>
+                </label>
+                <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-300">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-orange-200 bg-slate-50 shrink-0 relative flex items-center justify-center">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-slate-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={logoUrl}
+                      onChange={(e) => setLogoUrl(e.target.value)}
+                      placeholder="URL du logo ou téléchargez un fichier..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 outline-none"
+                    />
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-2xs">
+                        <Upload className="w-3.5 h-3.5 text-[#FF6B00]" />
+                        <span>{isUploadingLogo ? 'Téléchargement...' : 'Télécharger un Logo (Fichier)'}</span>
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/webp"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={isUploadingLogo}
+                        />
+                      </label>
+                      {logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setLogoUrl('')}
+                          className="text-xs text-rose-600 hover:underline font-bold"
+                        >
+                          Effacer
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="sm:col-span-2">
                 <label className="text-xs font-bold text-slate-700 block mb-1">Adresse physique</label>
                 <input
@@ -272,16 +391,50 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                  isActive ? 'bg-emerald-500' : 'bg-slate-300'
-                }`}
+                className={`w-12 h-7 rounded-full p-1 transition-colors ${isActive ? 'bg-[#00A86B]' : 'bg-slate-300'}`}
               >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-md ${
-                    isActive ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${isActive ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
+            </div>
+          </div>
+
+          {/* SECTION 1.5 : SÉCURITÉ & IDENTIFIANTS GÉRANT */}
+          <div className="space-y-4 bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 shadow-sm">
+            <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>2. Sécurité & Accès de Connexion Gérant</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-300 block mb-1">Nom d&apos;utilisateur / Identifiant</label>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-xl font-mono text-amber-400 font-bold">
+                  {restaurant.subdomain}
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1 block">Utilisé par le gérant pour se connecter sur /login.</span>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-300">Réinitialiser le Mot de Passe</label>
+                  <button
+                    type="button"
+                    onClick={handleGeneratePassword}
+                    className="text-[11px] font-bold text-[#FF6B00] hover:underline flex items-center gap-1"
+                  >
+                    <Key className="w-3 h-3" />
+                    <span>Générer</span>
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Laisser vide pour ne pas modifier..."
+                  className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl p-3 text-white placeholder-slate-500 outline-none font-mono font-bold"
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">Si renseigné, remplace immédiatement l&apos;ancien mot de passe du gérant.</span>
+              </div>
             </div>
           </div>
 

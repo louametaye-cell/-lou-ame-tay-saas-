@@ -33,7 +33,9 @@ import {
   MessageCircle,
   Headphones,
   Bot,
-  Trash2
+  Trash2,
+  Upload,
+  Key,
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -75,7 +77,47 @@ export default function SuperAdminDashboardPage() {
   const [newRestoPlan, setNewRestoPlan] = useState<SubscriptionPlan>('PRO');
   const [newRestoMonths, setNewRestoMonths] = useState<number>(3);
   const [newRestoTables, setNewRestoTables] = useState<number>(12);
+  const [newRestoEstablishmentType, setNewRestoEstablishmentType] = useState('Restaurant');
+  const [newRestoLogoUrl, setNewRestoLogoUrl] = useState('');
+  const [newRestoPassword, setNewRestoPassword] = useState('Pass1234!');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingLogo(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'louametay/logos');
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.image?.url) {
+        setNewRestoLogoUrl(data.image.url);
+        toast.success('Logo officiel téléchargé avec succès !');
+      } else {
+        toast.error(data.error || "Erreur lors de l'upload du logo");
+      }
+    } catch (err) {
+      toast.error("Erreur réseau lors de l'upload du logo");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleGeneratePassword = () => {
+    const randomPin = Math.floor(1000 + Math.random() * 9000);
+    const generated = `Pass${randomPin}!`;
+    setNewRestoPassword(generated);
+    toast.info(`Nouveau mot de passe généré : ${generated}`);
+  };
 
   const fetchRestaurants = async () => {
     try {
@@ -187,6 +229,9 @@ export default function SuperAdminDashboardPage() {
           plan: newRestoPlan,
           months: newRestoMonths,
           tablesCount: newRestoTables,
+          establishmentType: newRestoEstablishmentType,
+          logoUrl: newRestoLogoUrl,
+          password: newRestoPassword,
         }),
       });
 
@@ -202,6 +247,9 @@ export default function SuperAdminDashboardPage() {
       setNewRestoOwner('');
       setNewRestoPhone('');
       setNewRestoAddress('');
+      setNewRestoEstablishmentType('Restaurant');
+      setNewRestoLogoUrl('');
+      setNewRestoPassword('Pass1234!');
       fetchRestaurants();
     } catch (err: any) {
       toast.error(err.message || 'Impossible de créer le restaurant');
@@ -722,15 +770,34 @@ export default function SuperAdminDashboardPage() {
                       }`}
                     >
                       <div>
-                        {/* Card Header: Name + Switch ON/OFF */}
+                        {/* Card Header: Logo, Name, Badge + Switch ON/OFF */}
                         <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-base sm:text-lg font-black text-slate-900 truncate group-hover:text-[#FF6B00] transition-colors">
-                              {resto.name}
-                            </h3>
-                            <span className="text-xs text-slate-500 block font-mono">
-                              /{resto.subdomain}
-                            </span>
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {resto.logoUrl ? (
+                              <div className="w-11 h-11 rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-xs shrink-0 flex items-center justify-center p-0.5">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={resto.logoUrl} alt={resto.name} className="w-full h-full object-cover rounded-xl" />
+                              </div>
+                            ) : (
+                              <div className="w-11 h-11 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-[#FF6B00] flex items-center justify-center font-black text-sm shrink-0">
+                                {resto.name.slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h3 className="text-base font-black text-slate-900 truncate group-hover:text-[#FF6B00] transition-colors">
+                                  {resto.name}
+                                </h3>
+                                {((resto as any).establishmentType || (resto as any).branding?.establishmentType) && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                    {(resto as any).establishmentType || (resto as any).branding?.establishmentType}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-slate-500 block font-mono">
+                                /{resto.subdomain}
+                              </span>
+                            </div>
                           </div>
 
                           {/* Switch ON/OFF */}
@@ -982,6 +1049,90 @@ export default function SuperAdminDashboardPage() {
                     placeholder="Ex: Thiès, Dakar Plateau, Saly..."
                     className="w-full bg-white border border-slate-300 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 placeholder-slate-400 outline-none font-medium shadow-xs"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Type d&apos;établissement
+                    </label>
+                    <select
+                      value={newRestoEstablishmentType}
+                      onChange={(e) => setNewRestoEstablishmentType(e.target.value)}
+                      className="w-full bg-white border border-slate-300 focus:border-[#FF6B00] rounded-xl p-3 text-slate-900 outline-none font-medium shadow-xs text-xs"
+                    >
+                      <option value="Restaurant">Restaurant Traditionnel / Gastronomique</option>
+                      <option value="Fastfood">Fastfood / Burger & Tacos</option>
+                      <option value="Hôtel Restaurant">Hôtel / Complexe Hôtelier</option>
+                      <option value="Pizzeria">Pizzeria & Trattoria</option>
+                      <option value="Café / Salon de thé">Café / Salon de thé</option>
+                      <option value="Bar / Lounge">Bar / Lounge</option>
+                      <option value="Boulangerie / Pâtisserie">Boulangerie / Pâtisserie</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Logo Officiel (PNG/JPG)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {newRestoLogoUrl ? (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={newRestoLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+                        </div>
+                      ) : null}
+                      <label className="flex-1 cursor-pointer flex items-center justify-center gap-1.5 px-3 py-2.5 border border-dashed border-slate-300 hover:border-[#FF6B00] rounded-xl text-slate-600 bg-slate-50 hover:bg-orange-50/50 transition-colors">
+                        <Upload className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-semibold truncate">
+                          {isUploadingLogo ? 'Upload...' : newRestoLogoUrl ? 'Changer' : 'Charger logo'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={isUploadingLogo}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section Accès Gérant */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-amber-950 flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5 text-amber-600" />
+                      Accès de Connexion Gérant
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleGeneratePassword}
+                      className="text-[11px] font-bold text-amber-700 hover:underline flex items-center gap-1"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Générer aléatoire
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 text-[10px] block">Identifiant :</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {newRestoSubdomain || 'votre-identifiant'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 text-[10px] block">Mot de passe initial :</span>
+                      <input
+                        type="text"
+                        value={newRestoPassword}
+                        onChange={(e) => setNewRestoPassword(e.target.value)}
+                        placeholder="Ex: Pass1234!"
+                        className="w-full bg-white border border-amber-300 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Subscription configuration */}

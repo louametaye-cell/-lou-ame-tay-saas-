@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
@@ -36,3 +36,4 @@ mots passe supabase.txt
 *.txt
 .vercel
 .env*
+.agents

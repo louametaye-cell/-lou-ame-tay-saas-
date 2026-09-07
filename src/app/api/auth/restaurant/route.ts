@@ -20,12 +20,19 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { identifier, pin, restaurantId } = body;
+    const { identifier, password, pin, restaurantId } = body;
 
     const cleanInput = (identifier || restaurantId || '').trim().toLowerCase();
+    const providedSecret = (password || pin || '').trim();
 
     if (!cleanInput) {
-      return NextResponse.json({ error: 'Identifiant ou sélection de restaurant requise' }, { status: 400 });
+      return NextResponse.json({ error: 'Identifiant ou sous-domaine requis' }, { status: 400 });
+    }
+
+    if (!providedSecret) {
+      return NextResponse.json({ 
+        error: 'Mot de passe requis. Veuillez saisir le mot de passe attribué par l\'administrateur.' 
+      }, { status: 400 });
     }
 
     // 1. Recherche du Tenant (Restaurant) en base de données
@@ -46,26 +53,18 @@ export async function POST(req: Request) {
       }, { status: 404 });
     }
 
-    // 2. Vérification du mot de passe ou validation connexion démo directe
+    // 2. Vérification stricte du mot de passe
     let isValid = false;
-
-    if (restaurantId && !pin) {
-      // Connexion démo 1-clic autorisée pour prévisualiser le restaurant
-      isValid = true;
-    } else if (pin) {
-      if (dbTenant.passwordHash) {
-        isValid = await bcrypt.compare(pin.trim(), dbTenant.passwordHash);
-      } else {
-        // Fallback temporaire pour les anciens comptes non migrés
-        const validPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
-        isValid = validPasswords.includes(pin.trim());
-      }
+    if (dbTenant.passwordHash) {
+      isValid = await bcrypt.compare(providedSecret, dbTenant.passwordHash);
     } else {
-      isValid = false;
+      // Fallback temporaire pour les anciens comptes non migrés
+      const validPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
+      isValid = validPasswords.includes(providedSecret);
     }
 
     if (!isValid) {
-      return NextResponse.json({ error: 'Mot de passe ou Code PIN incorrect' }, { status: 401 });
+      return NextResponse.json({ error: 'Identifiant ou mot de passe incorrect' }, { status: 401 });
     }
 
     // 3. Préparation des données de session
@@ -108,19 +107,6 @@ export async function POST(req: Request) {
 
 // GET /api/auth/restaurant (Retourne uniquement la liste publique pour démo sans fuite de PII)
 export async function GET() {
-  try {
-    const tenants = await (prisma as any).tenant.findMany({
-      select: {
-        id: true,
-        businessName: true,
-        subdomain: true,
-        logoUrl: true,
-      },
-      take: 10,
-    });
-
-    return NextResponse.json({ restaurants: tenants });
-  } catch (e) {
-    return NextResponse.json({ restaurants: [] });
-  }
+  // Désactivation de la liste automatique publique pour respecter la confidentialité des restaurants abonnés
+  return NextResponse.json({ restaurants: [] });
 }

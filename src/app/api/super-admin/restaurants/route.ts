@@ -28,6 +28,8 @@ export async function GET(req: Request) {
       logoUrl: t.logoUrl,
       bannerUrl: t.bannerUrl,
       currency: t.currency,
+      establishmentType: (t.branding as any)?.establishmentType || 'Restaurant',
+      branding: t.branding || {},
       isActive: t.subscriptionStatus !== 'CANCELED' && t.subscriptionStatus !== 'SUSPENDED',
       tablesCount: t.tables?.length || 0,
       ordersCount: t.orders?.length || 0,
@@ -54,7 +56,19 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, subdomain, ownerName, phone, address, plan, months, tablesCount } = body;
+    const { 
+      name, 
+      subdomain, 
+      ownerName, 
+      phone, 
+      address, 
+      plan, 
+      months, 
+      tablesCount,
+      logoUrl,
+      establishmentType,
+      password,
+    } = body;
 
     if (!name || !subdomain) {
       return NextResponse.json(
@@ -109,7 +123,8 @@ export async function POST(req: Request) {
       });
     }
 
-    const hashedPassword = await bcrypt.hash('Pass1234!', 10);
+    const initialPassword = password && String(password).trim() ? String(password).trim() : 'Pass1234!';
+    const hashedPassword = await bcrypt.hash(initialPassword, 10);
     const durationMonths = Number(months) || 3;
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
@@ -123,6 +138,10 @@ export async function POST(req: Request) {
         ownerName: ownerName || 'Gérant non renseigné',
         phone: phone || '+221 77 000 00 00',
         address: address || 'Dakar / Sénégal',
+        logoUrl: logoUrl || null,
+        branding: {
+          establishmentType: establishmentType || 'Restaurant',
+        },
         currentPlanId: dbPlan.id,
         subscriptionStatus: 'ACTIVE',
         monthlyFee: dbPlan.price || 25000,

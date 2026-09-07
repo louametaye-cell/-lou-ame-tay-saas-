@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -17,42 +17,28 @@ import {
   MessageCircle,
   QrCode,
   TrendingUp,
-  Volume2
+  Volume2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface RestaurantItem {
-  id: string;
-  name: string;
-  subdomain: string;
-  ownerName: string;
-  address: string;
-  plan: string;
-}
 
 export default function RestaurantLoginPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState('');
-  const [pin, setPin] = useState('1234');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [restaurantsList, setRestaurantsList] = useState<RestaurantItem[]>([]);
-
-  useEffect(() => {
-    // Fetch registered restaurants for quick demo selection
-    fetch('/api/auth/restaurant')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.restaurants) {
-          setRestaurantsList(data.restaurants);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
       toast.error('Veuillez renseigner votre identifiant ou sous-domaine');
+      return;
+    }
+
+    if (!password.trim()) {
+      toast.error('Veuillez renseigner votre mot de passe de connexion');
       return;
     }
 
@@ -63,7 +49,7 @@ export default function RestaurantLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           identifier: identifier.trim(),
-          pin: pin.trim(),
+          password: password.trim(),
         }),
       });
 
@@ -80,29 +66,6 @@ export default function RestaurantLoginPage() {
       }
     } catch (err) {
       toast.error('Erreur de communication avec le serveur');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleQuickLogin = async (resto: RestaurantItem) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/auth/restaurant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantId: resto.id }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        localStorage.setItem('current_restaurant_id', resto.id);
-        localStorage.setItem('current_restaurant_subdomain', resto.subdomain);
-        localStorage.setItem('current_restaurant_name', resto.name);
-        toast.success(`Connexion directe : ${resto.name}`);
-        router.push(`/dashboard?restaurantId=${resto.id}`);
-      }
-    } catch (err) {
-      toast.error('Erreur de connexion');
     } finally {
       setIsLoading(false);
     }
@@ -242,18 +205,28 @@ export default function RestaurantLoginPage() {
                 <label className="text-xs font-bold text-slate-300 block mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <KeyRound className="w-3.5 h-3.5 text-orange-400" />
-                    <span>Code PIN / Mot de passe</span>
+                    <span>Mot de passe Gérant</span>
                   </span>
-                  <span className="text-[11px] text-slate-400 font-normal">Défaut : 1234</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Attribué par l&apos;Administration</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  placeholder="Code PIN d'accès..."
-                  className="w-full bg-slate-800/80 border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-slate-500 outline-none transition-all"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Saisissez votre mot de passe..."
+                    className="w-full bg-slate-800/80 border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-2xl pl-4 pr-12 py-3.5 text-sm text-white placeholder:text-slate-500 outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors"
+                    title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -271,31 +244,6 @@ export default function RestaurantLoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Quick Access for Official Partner Establishments */}
-            {restaurantsList.length > 0 && (
-              <div className="mt-6 pt-5 border-t border-white/10 relative z-10">
-                <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 mb-2.5">
-                  <Store className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Accès Gérants — Établissements Partenaires Officiels 🇸🇳 :</span>
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {restaurantsList.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => handleQuickLogin(r)}
-                      disabled={isLoading}
-                      className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-500/60 text-white text-xs font-bold p-2.5 rounded-xl transition-all flex items-center gap-2 active:scale-95 text-left truncate cursor-pointer group"
-                      title={`Connexion à l'espace gérant ${r.name}`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 group-hover:scale-125 transition-transform" />
-                      <span className="truncate">{r.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Support Contact */}
             <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 relative z-10">

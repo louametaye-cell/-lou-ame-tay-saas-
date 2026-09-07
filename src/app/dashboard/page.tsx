@@ -45,6 +45,7 @@ import {
 import { formatFCFA } from '@/lib/utils';
 import { isDrinkOrBarItem } from '@/lib/order-routing';
 import { getAssignedServerForTable } from '@/lib/server-shift';
+import { ChangePasswordModal } from '@/components/dashboard/ChangePasswordModal';
 import { toast } from 'sonner';
 
 interface CurrentOrder {
@@ -80,13 +81,14 @@ export default function OperationalDashboardPage() {
   const [currentDateString, setCurrentDateString] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // KPIs
   const [kpis, setKpis] = useState({
     todayRevenue: 125000,
     todayOrders: 18,
     todayCovers: 42,
-    outOfStock: 2,
+    outOfStock: 0,
     revenueChange: 12.5,
     ordersChange: 5.2,
     coversChange: 8.0,
@@ -107,11 +109,8 @@ export default function OperationalDashboardPage() {
     { day: 'Dim', scans: 68, orders: 22 },
   ]);
 
-  // Stock Alerts
-  const [alerts, setAlerts] = useState<StockAlert[]>([
-    { id: '1', itemName: 'Bissap Maison 50cl', stock: 0, unit: 'bouteilles', isOutOfStock: true, category: 'Boissons' },
-    { id: '2', itemName: 'Pastels Poisson (Portion 6)', stock: 2, unit: 'portions', isOutOfStock: false, category: 'Entrées' },
-  ]);
+  // Stock Alerts (dynamiquement chargées depuis l'API, aucun mock hardcodé)
+  const [alerts, setAlerts] = useState<StockAlert[]>([]);
 
   // Live Waiter Calls
   const [waiterCalls, setWaiterCalls] = useState<any[]>([]);
@@ -177,12 +176,39 @@ export default function OperationalDashboardPage() {
 
   // Initialize restaurant name & date
   useEffect(() => {
-    const storedId = localStorage.getItem('current_restaurant_id');
-    const storedName = localStorage.getItem('current_restaurant_name');
-    const storedSub = localStorage.getItem('current_restaurant_subdomain');
-    if (storedId) setRestaurantId(storedId);
-    if (storedName) setRestaurantName(storedName);
-    if (storedSub) setRestaurantSubdomain(storedSub);
+    let activeId = '';
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryId = params.get('restaurantId');
+      if (queryId) {
+        activeId = queryId;
+        localStorage.setItem('current_restaurant_id', queryId);
+        setRestaurantId(queryId);
+        fetch(`/api/super-admin/restaurants/${queryId}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.restaurant) {
+              const rName = data.restaurant.name || data.restaurant.businessName;
+              setRestaurantName(rName);
+              if (data.restaurant.subdomain) {
+                setRestaurantSubdomain(data.restaurant.subdomain);
+                localStorage.setItem('current_restaurant_subdomain', data.restaurant.subdomain);
+              }
+              localStorage.setItem('current_restaurant_name', rName);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
+    if (!activeId) {
+      const storedId = localStorage.getItem('current_restaurant_id');
+      const storedName = localStorage.getItem('current_restaurant_name');
+      const storedSub = localStorage.getItem('current_restaurant_subdomain');
+      if (storedId) setRestaurantId(storedId);
+      if (storedName) setRestaurantName(storedName);
+      if (storedSub) setRestaurantSubdomain(storedSub);
+    }
 
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = { 
@@ -389,6 +415,15 @@ export default function OperationalDashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Sécurité & Mot de passe Gérant */}
+            <button
+              onClick={() => setIsChangePasswordOpen(true)}
+              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs cursor-pointer"
+              title="Modifier votre mot de passe de connexion"
+            >
+              <span>🔐 Sécurité & Accès</span>
+            </button>
 
             {/* Studio de Marque Branding */}
             <Link
@@ -1032,6 +1067,15 @@ export default function OperationalDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        restaurantId={restaurantId}
+        restaurantSubdomain={restaurantSubdomain}
+        restaurantName={restaurantName}
+      />
     </div>
   );
 }

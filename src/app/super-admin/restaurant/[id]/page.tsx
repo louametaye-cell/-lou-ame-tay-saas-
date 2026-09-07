@@ -354,7 +354,7 @@ export default function SuperAdminRestaurantDetailPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg sm:text-xl font-black text-slate-900 truncate">
-                    {restaurant.name}
+                    {restaurant.name || (restaurant as any).businessName || 'Établissement'}
                   </h1>
                   <span
                     className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
@@ -365,6 +365,11 @@ export default function SuperAdminRestaurantDetailPage() {
                   >
                     {restaurant.isActive ? '● En Ligne (Ouvert)' : '✕ Fermé / Désactivé'}
                   </span>
+                  {(restaurant.branding as any)?.establishmentType && (
+                    <span className="text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md">
+                      {(restaurant.branding as any).establishmentType}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-slate-500">
                   Identifiant : <span className="font-mono text-[#FF6B00]">/{restaurant.subdomain}</span> • {totalTables} tables
@@ -393,8 +398,15 @@ export default function SuperAdminRestaurantDetailPage() {
               </button>
 
               <a
-                href={`/dashboard`}
+                href={`/dashboard?restaurantId=${restaurant.id}`}
                 target="_blank"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('current_restaurant_id', restaurant.id);
+                    localStorage.setItem('current_restaurant_name', restaurant.name || (restaurant as any).businessName || '');
+                    localStorage.setItem('current_restaurant_subdomain', restaurant.subdomain);
+                  }
+                }}
                 className="flex items-center gap-1.5 bg-[#FF6B00] hover:bg-orange-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-xs transition-all"
               >
                 <Store className="w-4 h-4" />

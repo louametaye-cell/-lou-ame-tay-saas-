@@ -23,7 +23,8 @@ import {
   ExternalLink,
   Upload,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Store,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RestaurantBranding } from '@/types';
@@ -118,8 +119,10 @@ export default function BrandStudioPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [restaurantName, setRestaurantName] = useState('MG Café Resto');
+  const [establishmentType, setEstablishmentType] = useState('Restaurant');
   const [subdomain, setSubdomain] = useState('mg-cafe-resto');
   const [restaurantId, setRestaurantId] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Branding State
   const [branding, setBranding] = useState<RestaurantBranding>({
@@ -164,6 +167,11 @@ export default function BrandStudioPage() {
         }
         if (data.name) setRestaurantName(data.name);
         if (data.subdomain) setSubdomain(data.subdomain);
+        if (data.establishmentType) {
+          setEstablishmentType(data.establishmentType);
+        } else if (data.branding?.establishmentType) {
+          setEstablishmentType(data.branding.establishmentType);
+        }
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -179,14 +187,20 @@ export default function BrandStudioPage() {
         body: JSON.stringify({
           restaurantId,
           subdomain,
-          branding,
+          name: restaurantName,
+          establishmentType,
+          branding: {
+            ...branding,
+            establishmentType,
+          },
         }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success('🎨 Identité graphique enregistrée avec succès !', {
-          description: 'Vos clients verront instantanément ce nouveau design sur leur menu QR Code.',
+        localStorage.setItem('current_restaurant_name', restaurantName);
+        toast.success('🎨 Identité & Personnalisation enregistrées avec succès !', {
+          description: 'Vos clients verront instantanément ce nom et ce design sur leur menu QR Code.',
         });
       } else {
         toast.error(data.error || 'Erreur lors de la sauvegarde');
@@ -198,21 +212,45 @@ export default function BrandStudioPage() {
     }
   };
 
-  // Upload logo or banner as data URL (instant client-side)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'bannerUrl') => {
+  // Upload logo or banner to server API
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'bannerUrl') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 4 * 1024 * 1024) {
-      toast.error('Fichier trop volumineux (Maximum 4 Mo)');
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (Maximum 5 Mo)');
       return;
     }
 
+    try {
+      setIsUploadingImage(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', field === 'logoUrl' ? 'louametay/logos' : 'louametay/banners');
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.image?.url) {
+        setBranding((prev) => ({ ...prev, [field]: data.image.url }));
+        toast.success(field === 'logoUrl' ? 'Logo officiel téléchargé !' : 'Bannière téléchargée !');
+        return;
+      }
+    } catch (err) {
+      console.warn('Fallback data URL');
+    } finally {
+      setIsUploadingImage(false);
+    }
+
+    // Fallback dataURL
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
       setBranding((prev) => ({ ...prev, [field]: result }));
-      toast.success(field === 'logoUrl' ? 'Logo chargé avec succès' : 'Bannière chargée avec succès');
+      toast.success(field === 'logoUrl' ? 'Logo chargé (mode local)' : 'Bannière chargée (mode local)');
     };
     reader.readAsDataURL(file);
   };
@@ -297,6 +335,51 @@ export default function BrandStudioPage() {
         {/* LEFT COLUMN : SETTINGS CONTROLS (7 Cols) */}
         <div className="lg:col-span-7 space-y-6">
           
+          {/* SECTION 0 : NOM & TYPE D'ÉTABLISSEMENT */}
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Store className="w-4 h-4 text-orange-600" />
+                <span>Nom & Type d&apos;Établissement</span>
+              </h3>
+              <span className="text-[11px] text-slate-400 font-mono">/{subdomain}</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Nom commercial affiché
+                </label>
+                <input
+                  type="text"
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  placeholder="Ex: MG Café Resto, Le Teranga..."
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Type d&apos;activité
+                </label>
+                <select
+                  value={establishmentType}
+                  onChange={(e) => setEstablishmentType(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none"
+                >
+                  <option value="Restaurant">Restaurant Traditionnel / Gastronomique</option>
+                  <option value="Fastfood">Fastfood / Burger & Tacos</option>
+                  <option value="Hôtel Restaurant">Hôtel / Complexe Hôtelier</option>
+                  <option value="Pizzeria">Pizzeria & Trattoria</option>
+                  <option value="Café / Salon de thé">Café / Salon de thé</option>
+                  <option value="Bar / Lounge">Bar / Lounge</option>
+                  <option value="Boulangerie / Pâtisserie">Boulangerie / Pâtisserie</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           {/* SECTION 1 : PALETTES RAPIDES */}
           <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
@@ -764,9 +847,12 @@ export default function BrandStudioPage() {
                       <h4 className="text-xs font-black tracking-tight" style={{ fontFamily: selectedTitleFont }}>
                         {restaurantName}
                       </h4>
-                      <span className="text-[9px] font-bold block" style={{ color: branding.primaryColor || '#FF6B00' }}>
-                        📍 Table 04
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] font-bold block" style={{ color: branding.primaryColor || '#FF6B00' }}>
+                          📍 Table 04
+                        </span>
+                        <span className="text-[8px] opacity-60">• {establishmentType}</span>
+                      </div>
                     </div>
                   </div>
                   <span className="text-[10px] bg-black/5 px-2 py-1 rounded-lg font-bold">🇸🇳 FR</span>

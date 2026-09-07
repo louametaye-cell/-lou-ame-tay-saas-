@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
+import bcrypt from 'bcryptjs';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 
 // GET /api/super-admin/restaurants/[id]
@@ -18,12 +19,41 @@ export async function GET(
       where: { id: resolvedParams.id },
       include: {
         plan: true,
+        tables: true,
+        orders: true,
       }
     });
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant non trouvé' }, { status: 404 });
     }
-    return NextResponse.json({ restaurant });
+
+    const formatted = {
+      ...restaurant,
+      id: restaurant.id,
+      name: restaurant.businessName,
+      businessName: restaurant.businessName,
+      subdomain: restaurant.subdomain,
+      ownerName: restaurant.ownerName || 'Gérant',
+      phone: restaurant.phone,
+      address: restaurant.address || 'Sénégal',
+      city: restaurant.city || 'Dakar',
+      logoUrl: restaurant.logoUrl,
+      bannerUrl: restaurant.bannerUrl,
+      currency: restaurant.currency || 'FCFA',
+      isActive: restaurant.subscriptionStatus !== 'CANCELED' && restaurant.subscriptionStatus !== 'SUSPENDED',
+      tableCount: restaurant.tables?.length || 12,
+      tablesCount: restaurant.tables?.length || 12,
+      ordersCount: restaurant.orders?.length || 0,
+      subscription: {
+        id: restaurant.id,
+        plan: restaurant.plan?.name || 'Inconnu',
+        status: restaurant.subscriptionStatus,
+        price: Number(restaurant.monthlyFee || restaurant.plan?.price || 25000),
+        endDate: restaurant.subscriptionExpiresAt ? restaurant.subscriptionExpiresAt.toISOString() : undefined,
+      }
+    };
+
+    return NextResponse.json({ restaurant: formatted });
   } catch (error) {
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
@@ -89,7 +119,7 @@ async function handleUpdate(
     }
 
     let brandingUpdateData: any = {};
-    if (body.displaySettings !== undefined) {
+    if (body.displaySettings !== undefined || body.establishmentType !== undefined) {
       const currentResto = await (prisma as any).tenant.findUnique({
         where: { id: resolvedParams.id },
         select: { branding: true, subdomain: true }
@@ -97,8 +127,16 @@ async function handleUpdate(
       const currentBranding = (currentResto?.branding as any) || {};
       brandingUpdateData.branding = {
         ...currentBranding,
-        displaySettings: body.displaySettings,
+        ...(body.displaySettings !== undefined ? { displaySettings: body.displaySettings } : {}),
+        ...(body.establishmentType !== undefined ? { establishmentType: body.establishmentType } : {}),
       };
+    }
+
+    let securityUpdateData: any = {};
+    const rawPass = (body.newPassword || body.password || '').trim();
+    if (rawPass) {
+      const hashed = await bcrypt.hash(rawPass, 10);
+      securityUpdateData.passwordHash = hashed;
     }
 
     const updated = await (prisma as any).tenant.update({
@@ -108,6 +146,8 @@ async function handleUpdate(
         ownerName: body.ownerName !== undefined ? body.ownerName : undefined,
         phone: body.phone || undefined,
         address: body.address !== undefined ? body.address : undefined,
+        logoUrl: body.logoUrl !== undefined ? body.logoUrl : undefined,
+        ...securityUpdateData,
         ...subscriptionUpdateData,
         ...brandingUpdateData,
       },
@@ -123,7 +163,29 @@ async function handleUpdate(
       } catch (e) {}
     }
 
-    return NextResponse.json({ restaurant: updated, message: 'Restaurant mis à jour avec succès dans la BDD' });
+    const formattedUpdated = {
+      ...updated,
+      id: updated.id,
+      name: updated.businessName,
+      businessName: updated.businessName,
+      subdomain: updated.subdomain,
+      ownerName: updated.ownerName,
+      phone: updated.phone,
+      address: updated.address,
+      logoUrl: updated.logoUrl,
+      subscription: {
+        id: updated.id,
+        plan: updated.plan?.name || 'Inconnu',
+        status: updated.subscriptionStatus,
+        price: Number(updated.monthlyFee || updated.plan?.price || 25000),
+        endDate: updated.subscriptionExpiresAt ? updated.subscriptionExpiresAt.toISOString() : undefined,
+      }
+    };
+
+    return NextResponse.json({ 
+      restaurant: formattedUpdated, 
+      message: 'Restaurant mis à jour avec succès dans la BDD' 
+    });
   } catch (error: any) {
     console.error('Erreur update restaurant:', error);
     return NextResponse.json({ error: error?.message || 'Erreur lors de la mise à jour' }, { status: 500 });

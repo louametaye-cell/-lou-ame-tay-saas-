@@ -5,6 +5,7 @@ import { ChefHat, Sparkles, CheckCircle } from 'lucide-react';
 import { OrderType, OrderStatus } from '@/types';
 import { OrderTicketCard } from './OrderTicketCard';
 import { KitchenFilter } from './KitchenHeader';
+import { isKitchenDish } from '@/lib/order-routing';
 
 interface OrderTicketGridProps {
   orders: OrderType[];
@@ -25,6 +26,12 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
         // Exclude cancelled orders
         if (order.status === 'CANCELLED') return false;
 
+        // La cuisine KDS ne traite que les commandes contenant au moins un plat de cuisson/cuisine
+        const hasKitchenDishes = order.items && order.items.length > 0
+          ? order.items.some(isKitchenDish)
+          : true;
+        if (!hasKitchenDishes) return false;
+
         if (activeFilter === 'PENDING') return order.status === 'PENDING';
         if (activeFilter === 'PREPARING') return order.status === 'PREPARING';
 
@@ -32,21 +39,6 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
           const diffMs = Date.now() - new Date(order.createdAt).getTime();
           const minutes = diffMs / (1000 * 60);
           return minutes >= 15 && order.status !== 'SERVED';
-        }
-
-        if (activeFilter === 'DRINKS') {
-          return order.items.some((i) => {
-            const itemName = (i.name || i.menuItem?.name || '').toLowerCase();
-            const catId = (i.menuItem?.categoryId || '').toLowerCase();
-            return (
-              catId.includes('boisson') ||
-              itemName.includes('bissap') ||
-              itemName.includes('bouye') ||
-              itemName.includes('eau') ||
-              itemName.includes('jus') ||
-              itemName.includes('coca')
-            );
-          });
         }
 
         // 'ALL' filter: show pending and preparing orders

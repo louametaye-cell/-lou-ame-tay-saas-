@@ -234,18 +234,7 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Tout
-            </button>
-            <button
-              type="button"
-              onClick={() => onFilterChange('DRINKS')}
-              className={`px-3 py-1 rounded-xl font-bold transition-all ${
-                activeFilter === 'DRINKS'
-                  ? 'bg-purple-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              🥤 Boissons
+              Tous les Plats
             </button>
           </div>
         </div>
