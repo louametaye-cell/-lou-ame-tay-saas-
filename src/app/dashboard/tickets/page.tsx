@@ -158,7 +158,7 @@ export default function TicketsPage() {
         body: JSON.stringify({
           content: replyText.trim(),
           sender: 'CLIENT',
-          senderName: 'Chez Fatou (Restaurateur)',
+          senderName: (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null) || 'Restaurateur',
         }),
       });
 

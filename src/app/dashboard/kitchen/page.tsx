@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useKitchenOrders } from '@/hooks/useKitchenOrders';
 import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitchen';
 import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
@@ -8,9 +8,20 @@ import { KitchenHistory } from '@/components/KitchenHistory';
 import { History, LayoutGrid } from 'lucide-react';
 
 export default function DashboardKitchenPage() {
+  const [restaurantName, setRestaurantName] = useState('Écran Cuisine (KDS)');
+  const [restaurantId, setRestaurantId] = useState<string | undefined>(undefined);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
   const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('current_restaurant_name');
+      const storedId = localStorage.getItem('current_restaurant_id');
+      if (storedName) setRestaurantName(storedName);
+      if (storedId) setRestaurantId(storedId);
+    }
+  }, []);
 
   const {
     orders,
@@ -19,6 +30,7 @@ export default function DashboardKitchenPage() {
     updateOrderStatus,
     refetch,
   } = useKitchenOrders({
+    restaurantId,
     isAudioEnabled,
     pollIntervalMs: 3500,
   });
@@ -44,7 +56,7 @@ export default function DashboardKitchenPage() {
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* 1. KDS Fixed Header */}
       <KitchenHeader
-        restaurantName="Chez Fatou & Frères - Thiès"
+        restaurantName={restaurantName}
         isConnected={isConnected}
         isAudioEnabled={isAudioEnabled}
         onToggleAudio={() => setIsAudioEnabled((prev) => !prev)}
@@ -108,14 +120,17 @@ export default function DashboardKitchenPage() {
           <OrderTicketGrid
             orders={orders}
             onUpdateStatus={updateOrderStatus}
-            restaurantName="Chez Fatou & Frères"
+            restaurantName={restaurantName}
             activeFilter={activeFilter}
           />
         )}
 
         {/* Tab 2: History View */}
         {activeTab === 'HISTORY' && (
-          <KitchenHistory />
+          <KitchenHistory
+            restaurantId={restaurantId}
+            restaurantName={restaurantName}
+          />
         )}
       </main>
     </div>

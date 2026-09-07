@@ -109,16 +109,17 @@ export default function QRCodeOrderPage() {
     tables: number;
   } | null>(null);
 
-  const [restaurantName, setRestaurantName] = useState('Chez Fatou & Frères');
-  const [phone, setPhone] = useState('+221 76 231 20 03');
-  const [city, setCity] = useState('Thiès');
+  const [restaurantName, setRestaurantName] = useState('Mon Restaurant');
+  const [phone, setPhone] = useState('+221 77 000 00 00');
+  const [city, setCity] = useState('Dakar');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || 'tenant_madiba_restau';
-      const res = await fetch(`/api/dashboard/qrcodes/order?restaurantId=${activeId}`);
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null) || '';
+      const url = activeId ? `/api/dashboard/qrcodes/order?restaurantId=${encodeURIComponent(activeId)}` : '/api/dashboard/qrcodes/order';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -132,6 +133,24 @@ export default function QRCodeOrderPage() {
 
   useEffect(() => {
     fetchOrders();
+
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('current_restaurant_name');
+      const storedId = localStorage.getItem('current_restaurant_id');
+      if (storedName) setRestaurantName(storedName);
+      if (storedId) {
+        fetch(`/api/super-admin/restaurants/${storedId}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.restaurant) {
+              if (data.restaurant.businessName) setRestaurantName(data.restaurant.businessName);
+              if (data.restaurant.phone) setPhone(data.restaurant.phone);
+              if (data.restaurant.city) setCity(data.restaurant.city);
+            }
+          })
+          .catch(() => {});
+      }
+    }
   }, []);
 
   const handleOpenOrder = (tables: number, title: string, price: number, format: string) => {

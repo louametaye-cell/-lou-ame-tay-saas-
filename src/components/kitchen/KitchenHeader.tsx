@@ -39,7 +39,7 @@ interface KitchenHeaderProps {
 }
 
 export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
-  restaurantName = 'Chez Fatou & Frères',
+  restaurantName = 'Écran Cuisine (KDS)',
   isConnected,
   isAudioEnabled,
   onToggleAudio,

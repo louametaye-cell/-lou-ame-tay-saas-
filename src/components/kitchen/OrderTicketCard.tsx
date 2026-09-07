@@ -31,7 +31,7 @@ interface OrderTicketCardProps {
 export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
   order,
   onUpdateStatus,
-  restaurantName = 'Chez Fatou & Frères',
+  restaurantName = 'Lou Ame Tay ?',
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isBluetoothPrinting, setIsBluetoothPrinting] = useState(false);

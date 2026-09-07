@@ -29,7 +29,7 @@ export const SplitBillDrawer: React.FC<SplitBillDrawerProps> = ({
   onClose,
   totalAmount,
   tableNumber,
-  restaurantName = 'Chez Fatou & Frères',
+  restaurantName = 'Lou Ame Tay ?',
   lang = 'FR',
 }) => {
   const [splitCount, setSplitCount] = useState(2);
