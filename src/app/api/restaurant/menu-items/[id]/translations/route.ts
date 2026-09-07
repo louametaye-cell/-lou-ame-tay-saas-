@@ -5,8 +5,13 @@ import { DishTranslationResult } from '@/lib/translation-engine';
 
 // POST /api/restaurant/menu-items/[id]/translations
 // Enregistre ou met à jour les 4 traductions (FR, EN, ES, IT) pour un plat
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const body = await req.json();
     const { translations } = body as { translations: DishTranslationResult };
 
@@ -21,7 +26,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           await (prisma as any).menuItemTranslation.upsert({
             where: {
               menuItemId_language: {
-                menuItemId: params.id,
+                menuItemId: id,
                 language: lang as any,
               },
             },
@@ -30,7 +35,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
               description: trans.description,
             },
             create: {
-              menuItemId: params.id,
+              menuItemId: id,
               language: lang as any,
               name: trans.name,
               description: trans.description,
@@ -44,7 +49,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     return NextResponse.json({
       success: true,
-      menuItemId: params.id,
+      menuItemId: id,
       translations,
       message: 'Traductions (FR, EN, ES, IT) enregistrées avec succès !',
     });
@@ -53,6 +58,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   return POST(req, { params });
 }

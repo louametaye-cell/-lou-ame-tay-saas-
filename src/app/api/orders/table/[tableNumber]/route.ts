@@ -29,18 +29,21 @@ export async function GET(
       }
     }
 
-    // Seules les commandes du repas actuel (moins de 2 heures) sont retournées
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    const whereClause: any = {
-      tableNumber: tableNum,
-      createdAt: { gte: twoHoursAgo },
-    };
-    if (validTenantId) {
-      whereClause.tenantId = validTenantId;
+    if (!validTenantId) {
+      return NextResponse.json(
+        { error: 'Identifiant du restaurant requis pour consulter les commandes de cette table' },
+        { status: 400 }
+      );
     }
 
+    // Seules les commandes du repas actuel (moins de 2 heures) pour ce restaurant précis sont retournées
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const dbOrders = await (prisma as any).order.findMany({
-      where: whereClause,
+      where: {
+        tenantId: validTenantId,
+        tableNumber: tableNum,
+        createdAt: { gte: twoHoursAgo },
+      },
       include: {
         items: true,
       },

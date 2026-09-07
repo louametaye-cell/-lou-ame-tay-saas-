@@ -5,10 +5,11 @@ import { invalidateMenuCache } from '@/lib/cache';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id } = params;
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const body = await request.json();
     const { isAvailable, isSpecialOfTheDay, restaurantId = 'mg-cafe-resto' } = body;
 

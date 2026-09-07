@@ -316,7 +316,7 @@ export default function BrandStudioPage() {
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] via-orange-600 to-[#00A86B] hover:opacity-95 text-white font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl shadow-lg shadow-orange-600/20 active:scale-95 transition-all"
+              className="min-h-[44px] flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl border border-amber-500/40 shadow-xs active:scale-[0.97] transition-all"
             >
               {isSaving ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />

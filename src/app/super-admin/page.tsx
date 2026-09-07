@@ -1206,10 +1206,10 @@ export default function SuperAdminDashboardPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="bg-gradient-to-r from-[#FF6B00] to-[#00A86B] text-slate-900 font-extrabold px-6 py-2.5 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                    className="min-h-[44px] bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-6 py-2.5 rounded-xl border border-amber-500/40 shadow-xs transition-all active:scale-[0.97] flex items-center gap-2"
                   >
                     {isSubmitting ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />

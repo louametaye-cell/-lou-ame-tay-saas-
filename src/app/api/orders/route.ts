@@ -40,10 +40,10 @@ export async function GET(req: Request) {
     }
 
     if (!resolvedTenantId && !isAuthorizedSuperAdmin(req)) {
-      const fallback = await (prisma as any).tenant.findFirst({ select: { id: true } });
-      if (fallback) {
-        resolvedTenantId = fallback.id;
-      }
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Restaurant non identifié (identifiant ou session requis)' },
+        { status: 401 }
+      );
     }
 
     const whereClause = resolvedTenantId ? { tenantId: resolvedTenantId } : {};
@@ -117,20 +117,10 @@ export async function POST(req: Request) {
       console.warn('Error checking tenant:', err);
     }
 
-    // Fallback: if no tenant found by input ID/subdomain, find first tenant in DB
-    if (!validTenantId) {
-      try {
-        const fallbackTenant = await (prisma as any).tenant.findFirst({ select: { id: true } });
-        if (fallbackTenant) {
-          validTenantId = fallbackTenant.id;
-        }
-      } catch (e) {}
-    }
-
     if (!validTenantId) {
       return NextResponse.json(
-        { error: 'Restaurant non identifié dans la base de données' },
-        { status: 400 }
+        { error: 'Restaurant non identifié : impossible d\'enregistrer la commande pour un établissement inexistant' },
+        { status: 404 }
       );
     }
 

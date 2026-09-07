@@ -118,10 +118,10 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#FF6B00] via-orange-600 to-[#00A86B] hover:opacity-95 active:scale-[0.98] text-slate-900 font-black text-sm py-4 px-4 rounded-2xl shadow-xl shadow-orange-600/30 transition-all flex items-center justify-center gap-2"
+              className="w-full min-h-[48px] bg-amber-400 hover:bg-amber-500 active:scale-[0.97] text-slate-950 font-black text-sm py-3.5 px-4 rounded-2xl border border-amber-500/40 shadow-xs transition-all flex items-center justify-center gap-2"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Déverrouiller l&apos;Espace Agence</span>

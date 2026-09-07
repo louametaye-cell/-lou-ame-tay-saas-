@@ -31,12 +31,25 @@ export default function CashierCounterPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'EXPRESS' | 'TABLE'>('ALL');
+  const [restaurantName, setRestaurantName] = useState<string>('Caisse Restaurant');
+  const [restaurantId, setRestaurantId] = useState<string>('');
 
-  // Fetch current live orders
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('current_restaurant_name');
+      const storedId = localStorage.getItem('current_restaurant_id');
+      if (storedName) setRestaurantName(storedName);
+      if (storedId) setRestaurantId(storedId);
+    }
+  }, []);
+
+  // Fetch current live orders for active restaurant
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/orders');
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
+      const url = storedId ? `/api/orders?restaurantId=${encodeURIComponent(storedId)}` : '/api/orders';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -104,8 +117,9 @@ export default function CashierCounterPage() {
   };
 
   const handlePrintReceipt = (order: OrderType) => {
-    EscPosPrinterService.printViaWindowFallback(order, 'Chez Fatou & Frères (Comptoir)');
-    toast.success(`🖨️ Ticket de caisse imprimé !`);
+    const currentName = restaurantName || 'Caisse Restaurant';
+    EscPosPrinterService.printViaWindowFallback(order, currentName);
+    toast.success(`🖨️ Ticket de caisse imprimé (${currentName}) !`);
   };
 
   const handleCallCustomer = (order: OrderType) => {
@@ -140,13 +154,13 @@ export default function CashierCounterPage() {
   }, [orders]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 sm:p-6 space-y-6">
-      {/* 1. TOP HEADER & CASHIER BAR */}
-      <header className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 space-y-6">
+      {/* 1. TOP HEADER & CASHIER BAR (LIGHT MODE PREMIUM) */}
+      <header className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition-all"
+            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all active:scale-[0.97]"
             title="Retour au Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -154,46 +168,46 @@ export default function CashierCounterPage() {
 
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 text-slate-950 rounded-xl font-black shadow-xs">
+              <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black shadow-xs">
                 <Receipt className="w-5 h-5" />
               </div>
-              <h1 className="text-lg sm:text-xl font-black text-white tracking-tight">
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                 Écran Caisse &amp; Comptoir Express
               </h1>
             </div>
-            <p className="text-xs text-slate-400">
-              Chez Fatou &amp; Frères • Encaissement instantané &amp; Commandes à emporter
+            <p className="text-xs text-slate-500 font-medium">
+              {restaurantName} • Encaissement instantané &amp; Commandes à emporter
             </p>
           </div>
         </div>
 
         {/* Quick KPI stats & Keyboard shortcuts badge */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="hidden lg:flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-2xl text-[11px] font-mono text-slate-400">
-            <span className="bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded font-black">[R]</span> Actualiser
-            <span className="bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded font-black ml-1">[F]</span> Filtrer
+          <div className="hidden lg:flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-2xl text-[11px] font-mono text-slate-600">
+            <span className="bg-white text-slate-900 border border-slate-200 px-1.5 py-0.5 rounded font-black shadow-2xs">[R]</span> Actualiser
+            <span className="bg-white text-slate-900 border border-slate-200 px-1.5 py-0.5 rounded font-black ml-1 shadow-2xs">[F]</span> Filtrer
           </div>
 
-          <div className="bg-slate-800/80 border border-slate-700/80 px-3.5 py-2 rounded-2xl flex items-center gap-2.5">
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+          <div className="bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xs">
+            <DollarSign className="w-4 h-4 text-emerald-600" />
             <div>
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Caisse du Jour</span>
-              <span className="text-sm font-black text-white font-mono">{formatFCFA(totalRevenue)}</span>
+              <span className="text-[10px] text-emerald-700 font-bold block uppercase">Caisse du Jour</span>
+              <span className="text-sm font-black text-emerald-950 font-mono">{formatFCFA(totalRevenue)}</span>
             </div>
           </div>
 
-          <div className="bg-slate-800/80 border border-purple-500/30 px-3.5 py-2 rounded-2xl flex items-center gap-2.5">
+          <div className="bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xs">
             <span className="text-base">⚡</span>
             <div>
-              <span className="text-[10px] text-purple-300 font-bold block uppercase">Ventes Express</span>
-              <span className="text-sm font-black text-purple-300 font-mono">{formatFCFA(expressRevenue)}</span>
+              <span className="text-[10px] text-amber-700 font-bold block uppercase">Ventes Express</span>
+              <span className="text-sm font-black text-amber-950 font-mono">{formatFCFA(expressRevenue)}</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={fetchOrders}
-            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition-all border border-slate-700"
+            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all border border-slate-200 active:scale-[0.97]"
             title="Actualiser"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -206,10 +220,10 @@ export default function CashierCounterPage() {
         <button
           type="button"
           onClick={() => setActiveFilter('ALL')}
-          className={`px-4 py-2 rounded-2xl text-xs font-black transition-all ${
+          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all active:scale-[0.97] border ${
             activeFilter === 'ALL'
-              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
+              ? 'bg-amber-400 text-slate-950 border-amber-500/40 shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
           Toutes les Commandes ({orders.filter((o) => o.status !== 'SERVED').length})
@@ -218,14 +232,14 @@ export default function CashierCounterPage() {
         <button
           type="button"
           onClick={() => setActiveFilter('EXPRESS')}
-          className={`px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 ${
+          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
             activeFilter === 'EXPRESS'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 ring-2 ring-purple-400'
-              : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
+              ? 'bg-slate-900 text-amber-400 border-slate-900 shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
           <span>⚡ Comptoir / Express</span>
-          <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
+          <span className="bg-amber-400/20 text-amber-600 border border-amber-300/30 px-2 py-0.5 rounded-full text-[10px] font-mono">
             {orders.filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && o.status !== 'SERVED').length}
           </span>
         </button>
@@ -233,14 +247,14 @@ export default function CashierCounterPage() {
         <button
           type="button"
           onClick={() => setActiveFilter('TABLE')}
-          className={`px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 ${
+          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
             activeFilter === 'TABLE'
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-              : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
+              ? 'bg-amber-400 text-slate-950 border-amber-500/40 shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
           <span>🍽️ Tables (Salle)</span>
-          <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
+          <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono">
             {orders.filter((o) => o.orderType !== 'EXPRESS' && o.tableNumber > 0 && o.status !== 'SERVED').length}
           </span>
         </button>
@@ -248,33 +262,33 @@ export default function CashierCounterPage() {
 
       {/* 3. READY TO PICKUP BANNER */}
       {readyOrders.length > 0 && (
-        <section className="bg-gradient-to-r from-emerald-950 to-teal-950 border-2 border-emerald-500/50 rounded-3xl p-4 sm:p-5 shadow-xl space-y-3">
+        <section className="bg-amber-50/70 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
-              <h3 className="text-sm sm:text-base font-black text-emerald-300">
+              <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+              <h3 className="text-sm sm:text-base font-black text-amber-950">
                 📦 Commandes Prêtes à Retirer ({readyOrders.length})
               </h3>
             </div>
-            <span className="text-xs text-emerald-400 font-bold">À remettre aux clients</span>
+            <span className="text-xs text-amber-900 font-bold">À remettre aux clients</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {readyOrders.map((ord) => (
               <div
                 key={ord.id}
-                className="bg-slate-900 border border-emerald-500/40 p-3 rounded-2xl flex items-center justify-between gap-2"
+                className="bg-white border border-amber-200 p-3.5 rounded-2xl flex items-center justify-between gap-2 shadow-2xs"
               >
                 <div className="min-w-0 space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-black text-emerald-400 text-xs">
+                    <span className="font-mono font-black text-amber-700 text-xs">
                       #{ord.id.slice(-5).toUpperCase()}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-bold text-slate-500">
                       {ord.orderType === 'EXPRESS' || ord.tableNumber === 0 ? '⚡ Express' : `Table ${ord.tableNumber}`}
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-white block truncate">
+                  <span className="text-xs font-bold text-slate-900 block truncate">
                     {ord.customerName || `${ord.items.length} articles`} • {formatFCFA(ord.total)}
                   </span>
                 </div>
@@ -283,15 +297,15 @@ export default function CashierCounterPage() {
                   <button
                     type="button"
                     onClick={() => handleCallCustomer(ord)}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl"
+                    className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition-all active:scale-[0.97]"
                     title="Appeler le client"
                   >
-                    <Volume2 className="w-3.5 h-3.5" />
+                    <Volume2 className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus(ord.id, 'SERVED')}
-                    className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-xs"
+                    className="px-3 py-2 min-h-[40px] bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs transition-all active:scale-[0.97]"
                     title="Marquer comme retirée"
                   >
                     Retiré ✓
@@ -306,9 +320,9 @@ export default function CashierCounterPage() {
       {/* 4. ORDERS GRID */}
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeOrders.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-slate-500 space-y-2 bg-slate-900/50 rounded-3xl border border-slate-800">
+          <div className="col-span-full py-16 text-center text-slate-500 space-y-2 bg-white rounded-3xl border border-slate-200 shadow-xs">
             <span className="text-4xl block">✨</span>
-            <h3 className="text-base font-bold text-slate-300">Aucune commande en attente</h3>
+            <h3 className="text-base font-bold text-slate-800">Aucune commande en attente</h3>
             <p className="text-xs text-slate-500">Toutes les commandes sont préparées ou encaissées !</p>
           </div>
         ) : (
@@ -318,27 +332,27 @@ export default function CashierCounterPage() {
             return (
               <div
                 key={order.id}
-                className={`bg-slate-900 rounded-3xl border-2 overflow-hidden shadow-xl flex flex-col justify-between transition-all ${
-                  isExpress
-                    ? 'border-purple-500/60 bg-gradient-to-b from-purple-950/20 to-slate-900'
-                    : 'border-slate-800'
+                className={`bg-white rounded-3xl border-2 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between transition-all ${
+                  isExpress ? 'border-amber-300' : 'border-slate-200'
                 }`}
               >
                 {/* Card Header */}
                 <div
-                  className={`p-4 flex items-center justify-between text-white ${
+                  className={`p-4 flex items-center justify-between ${
                     isExpress
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600'
+                      ? 'bg-slate-900 text-amber-400'
                       : order.status === 'PENDING'
-                      ? 'bg-amber-500 text-slate-950'
-                      : 'bg-blue-600'
+                      ? 'bg-amber-400 text-slate-950'
+                      : 'bg-slate-900 text-white'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black tracking-tight">
+                    <span className="text-base sm:text-lg font-black tracking-tight">
                       {isExpress ? '⚡ COMPTOIR' : `TABLE ${order.tableNumber}`}
                     </span>
-                    <span className="text-xs font-mono font-bold bg-black/20 px-2 py-0.5 rounded-md">
+                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
+                      order.status === 'PENDING' && !isExpress ? 'bg-black/10 text-slate-950' : 'bg-white/15 text-white'
+                    }`}>
                       #{order.id.slice(-5).toUpperCase()}
                     </span>
                   </div>
@@ -349,11 +363,11 @@ export default function CashierCounterPage() {
                 </div>
 
                 {/* Customer line & payment badge */}
-                <div className="px-4 py-2 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs text-slate-600">
                   <div className="flex items-center gap-1.5 truncate">
                     {order.customerName ? (
-                      <span className="text-amber-300 font-bold flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-orange-400" />
+                      <span className="text-slate-900 font-bold flex items-center gap-1">
+                        <User className="w-3.5 h-3.5 text-amber-600" />
                         <span>{order.customerName}</span>
                       </span>
                     ) : (
@@ -361,44 +375,44 @@ export default function CashierCounterPage() {
                     )}
                   </div>
 
-                  <span className="font-bold text-slate-300">
+                  <span className="font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
                     {order.paymentMethod === 'WAVE' ? '🔵 Wave' : order.paymentMethod === 'ORANGE_MONEY' ? '🟠 OM' : '💵 Espèces'}
                   </span>
                 </div>
 
                 {/* Items List */}
-                <div className="p-4 space-y-2.5 flex-1 overflow-y-auto max-h-56 text-xs text-slate-200">
+                <div className="p-4 space-y-2.5 flex-1 overflow-y-auto max-h-56 text-xs text-slate-800 bg-white">
                   {order.items.map((item, idx) => (
-                    <div key={item.id || idx} className="flex justify-between items-start border-b border-slate-800/80 pb-1.5 last:border-0">
+                    <div key={item.id || idx} className="flex justify-between items-start border-b border-slate-100 pb-1.5 last:border-0">
                       <div className="space-y-0.5 min-w-0 flex-1 pr-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-black text-amber-400">{item.quantity}x</span>
-                          <span className="font-bold text-white truncate">{item.name || item.menuItem?.name || 'Plat'}</span>
+                          <span className="font-mono font-black text-amber-600">{item.quantity}x</span>
+                          <span className="font-bold text-slate-900 truncate">{item.name || item.menuItem?.name || 'Plat'}</span>
                         </div>
                         {item.notes && (
-                          <span className="block text-[10px] text-amber-300/80 italic pl-4">
+                          <span className="block text-[10px] text-amber-700 italic pl-4">
                             Note : {item.notes}
                           </span>
                         )}
                       </div>
-                      <span className="font-mono font-bold text-slate-300 shrink-0">
+                      <span className="font-mono font-bold text-slate-700 shrink-0">
                         {formatFCFA(item.price * item.quantity)}
                       </span>
                     </div>
                   ))}
 
                   {order.customerNote && (
-                    <div className="p-2 bg-amber-950/40 border border-amber-500/30 rounded-xl text-[11px] text-amber-200">
+                    <div className="p-2 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900">
                       <strong>Remarque :</strong> « {order.customerNote} »
                     </div>
                   )}
                 </div>
 
                 {/* Total & Action Buttons */}
-                <div className="p-4 bg-slate-950/80 border-t border-slate-800 space-y-3">
+                <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-bold uppercase">Total à Encaisser :</span>
-                    <span className="text-base font-black text-amber-400 font-mono">{formatFCFA(order.total)}</span>
+                    <span className="text-slate-600 font-bold uppercase">Total à Encaisser :</span>
+                    <span className="text-base font-black text-slate-950 font-mono">{formatFCFA(order.total)}</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-1.5">
@@ -406,10 +420,10 @@ export default function CashierCounterPage() {
                     <button
                       type="button"
                       onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                      className={`py-2 px-1.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
+                      className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
                         order.status === 'PREPARING'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-200'
                       }`}
                     >
                       <ChefHat className="w-3.5 h-3.5" />
@@ -420,10 +434,10 @@ export default function CashierCounterPage() {
                     <button
                       type="button"
                       onClick={() => handleUpdateStatus(order.id, 'READY')}
-                      className={`py-2 px-1.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
+                      className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
                         order.status === 'READY'
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                          : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
                       }`}
                     >
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -434,7 +448,7 @@ export default function CashierCounterPage() {
                     <button
                       type="button"
                       onClick={() => handlePrintReceipt(order)}
-                      className="py-2 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1"
+                      className="py-2 px-1.5 min-h-[40px] bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.97] transition-all"
                       title="Imprimer ticket de caisse"
                     >
                       <Printer className="w-3.5 h-3.5" />
@@ -446,7 +460,7 @@ export default function CashierCounterPage() {
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus(order.id, 'SERVED')}
-                    className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all"
+                    className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Encaisser &amp; Clôturer</span>

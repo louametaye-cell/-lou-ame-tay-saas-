@@ -37,12 +37,7 @@ export async function POST(req: Request) {
     } catch (e) {}
 
     if (!validTenantId) {
-      const fallbackTenant = await (prisma as any).tenant.findFirst({ select: { id: true } });
-      if (fallbackTenant) validTenantId = fallbackTenant.id;
-    }
-
-    if (!validTenantId) {
-      return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 400 });
+      return NextResponse.json({ error: 'Restaurant introuvable ou non identifié' }, { status: 404 });
     }
 
     const newCall = await (prisma as any).waiterCall.create({

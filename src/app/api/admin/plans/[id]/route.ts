@@ -2,11 +2,17 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/plans/[id]
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
+
     const plan = await (prisma as any).plan.findFirst({
       where: {
-        OR: [{ id: params.id }, { slug: params.id }],
+        OR: [{ id }, { slug: id }],
       },
     });
     if (!plan) {
@@ -20,13 +26,18 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
 // PUT /api/admin/plans/[id]
 // Modifier le prix, la description, le nom et les métadonnées du pack dans PostgreSQL Supabase
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const body = await req.json();
     const { price, description, colorTheme, isRecommended, name } = body;
 
     const existing = await (prisma as any).plan.findFirst({
-      where: { OR: [{ id: params.id }, { slug: params.id }] },
+      where: { OR: [{ id }, { slug: id }] },
     });
 
     if (!existing) {

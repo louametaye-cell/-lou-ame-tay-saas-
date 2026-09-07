@@ -3,8 +3,13 @@ import { prisma } from '@/lib/prisma';
 
 // POST /api/admin/tenants/[id]/upgrade
 // Surclasser le pack d'un restaurant dans la BDD PostgreSQL Supabase avec Prisma
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const body = await req.json();
     const { newPlanId, periodMonths } = body;
 
@@ -27,7 +32,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     expiry.setMonth(expiry.getMonth() + duration);
 
     const updatedTenant = await (prisma as any).tenant.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         currentPlanId: plan.id,
         subscriptionStatus: 'ACTIVE',

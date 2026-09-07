@@ -272,11 +272,11 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             </div>
           ) : null}
 
-          {/* 2. LIVE STEPS TIMELINE */}
+          {/* 2. LIVE STEPS TIMELINE (4 COULEURS OFFICIELLES) */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
-            {/* Step 1 */}
+            {/* Step 1: 🟡 Transmise */}
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-2xs font-bold text-[11px]">
+              <div className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-2xs font-black text-[11px]">
                 ✓
               </div>
               <div className="min-w-0 flex-1">
@@ -285,10 +285,10 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               </div>
             </div>
 
-            {/* Step 2 */}
+            {/* Step 2: 🔵 En préparation */}
             <div className="flex items-center gap-3">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
-                currentStep >= 2 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
+                currentStep >= 2 ? 'bg-blue-500 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
               }`}>
                 {currentStep >= 2 ? '✓' : <ChefHat className="w-3.5 h-3.5" />}
               </div>
@@ -298,10 +298,10 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               </div>
             </div>
 
-            {/* Step 3 */}
+            {/* Step 3: 🟣 Prête */}
             <div className="flex items-center gap-3">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
-                currentStep >= 3 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
+                currentStep >= 3 ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
               }`}>
                 {currentStep >= 3 ? '✓' : <Utensils className="w-3.5 h-3.5" />}
               </div>
@@ -311,10 +311,10 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               </div>
             </div>
 
-            {/* Step 4 */}
+            {/* Step 4: 🟢 Servie */}
             <div className="flex items-center gap-3">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${
-                currentStep === 4 ? 'bg-emerald-500 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
+                currentStep === 4 ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-200 text-slate-500'
               }`}>
                 {currentStep === 4 ? '🎉' : '4'}
               </div>
@@ -411,10 +411,10 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                 type="button"
                 onClick={handleRequestBill}
                 disabled={billRequested}
-                className={`py-3 px-3 rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all ${
+                className={`min-h-[48px] px-4 rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all ${
                   billRequested
                     ? 'bg-emerald-100 text-emerald-900 border-emerald-400 shadow-xs'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-md active:scale-95'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-md active:scale-[0.97]'
                 }`}
               >
                 <Receipt className="w-4 h-4" />
@@ -424,9 +424,9 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               <button
                 type="button"
                 onClick={() => onPayOnline?.(totalBalance)}
-                className="py-3 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+                className="min-h-[48px] px-4 bg-amber-400 hover:bg-amber-500 text-slate-950 rounded-2xl font-black text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-xs transition-all active:scale-[0.97]"
               >
-                <Smartphone className="w-4 h-4" />
+                <Smartphone className="w-4 h-4 text-slate-950" />
                 <span>Payer par Wave / OM</span>
               </button>
             </div>
@@ -447,7 +447,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                 <button
                   type="button"
                   onClick={onOrderMore}
-                  className="py-2.5 px-3 bg-white hover:bg-amber-50 text-amber-950 border border-amber-300 font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-2xs active:scale-95 transition-all"
+                  className="min-h-[48px] px-3 bg-white hover:bg-amber-50 text-amber-950 border border-amber-300 font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-2xs active:scale-[0.97] transition-all"
                 >
                   <Plus className="w-3.5 h-3.5 text-amber-600 stroke-[3]" />
                   <span>🍰 + Desserts &amp; Cafés</span>
@@ -457,7 +457,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                   <button
                     type="button"
                     onClick={onStartNewMeal}
-                    className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-2xs active:scale-95 transition-all"
+                    className="min-h-[48px] px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-2xs active:scale-[0.97] transition-all"
                   >
                     <span>🔄 Nouveau Repas Vierge</span>
                   </button>
@@ -473,7 +473,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="text-xs font-bold text-slate-500 hover:text-slate-800 py-2 px-3 transition-colors"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 py-2.5 px-3 rounded-xl transition-colors active:scale-[0.97]"
             >
               Fermer
             </button>
@@ -482,7 +482,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               <button
                 type="button"
                 onClick={onCallWaiter}
-                className="py-2 px-3 bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs rounded-xl border border-amber-300 flex items-center gap-1.5 transition-all"
+                className="min-h-[44px] px-3.5 bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs rounded-xl border border-amber-300 flex items-center gap-1.5 transition-all active:scale-[0.97]"
               >
                 <Bell className="w-3.5 h-3.5 text-amber-700" />
                 <span>Appeler Serveur</span>
@@ -495,7 +495,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
               <button
                 type="button"
                 onClick={onStartNewMeal}
-                className="py-2.5 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition-all"
+                className="min-h-[44px] px-3.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition-all active:scale-[0.97]"
               >
                 Nouveau Repas
               </button>
@@ -504,7 +504,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             <button
               type="button"
               onClick={onOrderMore}
-              className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-1.5 transition-all"
+              className="min-h-[48px] px-4 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-1.5 border border-amber-500/30 transition-all active:scale-[0.97]"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>+ Ajouter d&apos;autres Plats</span>

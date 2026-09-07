@@ -3,8 +3,13 @@ import { canUseFeature } from '@/lib/checkPlanAccess';
 
 // POST /api/admin/tenants/[id]/check-access
 // Tester une restriction de fonctionnalité ou quota en temps réel
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const body = await req.json();
     const { featureKey, requestedCount, action } = body;
 
@@ -12,7 +17,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'featureKey obligatoire' }, { status: 400 });
     }
 
-    const check = canUseFeature(params.id, featureKey, requestedCount);
+    const check = canUseFeature(id, featureKey, requestedCount);
 
     if (!check.allowed) {
       return NextResponse.json({

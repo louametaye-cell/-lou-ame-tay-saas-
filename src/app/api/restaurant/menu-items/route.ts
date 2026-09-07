@@ -34,15 +34,7 @@ async function resolveTenantId(reqTenantInput?: string): Promise<{ id: string; s
     }
   }
 
-  // Fallback sur le premier tenant actif
-  try {
-    const fallbackTenant = await (prisma as any).tenant.findFirst({
-      select: { id: true, subdomain: true },
-    });
-    return fallbackTenant || null;
-  } catch (e) {
-    return null;
-  }
+  return null;
 }
 
 // GET /api/restaurant/menu-items

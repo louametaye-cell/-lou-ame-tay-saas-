@@ -177,10 +177,10 @@ export function ChangePasswordModal({
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-gradient-to-r from-[#FF6B00] to-amber-500 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
+              className="min-h-[44px] bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-5 py-2.5 rounded-xl border border-amber-500/40 shadow-xs transition-all active:scale-[0.97] flex items-center gap-2 cursor-pointer"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
