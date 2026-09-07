@@ -63,15 +63,29 @@ export default function DashboardMenuManagementPage() {
   const [isSpecial, setIsSpecial] = useState<boolean>(false);
 
   // Load from API
-  useEffect(() => {
-    fetch('/api/menu')
+  const fetchMenu = () => {
+    const storedSub = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_subdomain') : null;
+    const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
+    const query = storedSub ? `?subdomain=${storedSub}` : storedId ? `?tenantId=${storedId}` : '';
+
+    fetch(`/api/menu${query}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.restaurant) {
           setRestaurant(data.restaurant);
+          if (data.restaurant.categories?.length > 0) {
+            setCategoryId((prev) => {
+              const exists = data.restaurant.categories.some((c: any) => c.id === prev);
+              return exists ? prev : data.restaurant.categories[0].id;
+            });
+          }
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchMenu();
   }, []);
 
   // Toggle item availability
@@ -157,48 +171,52 @@ export default function DashboardMenuManagementPage() {
   // Create dish
   const handleCreateDish = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
-
-    const newDish: MenuItemType = {
-      id: `dish_${Date.now()}`,
-      name,
-      description: desc,
-      price,
-      imageUrl,
-      isAvailable: true,
-      preparationTime: prepTime,
-      allergens,
-      categoryId,
-      isSpecialOfTheDay: isSpecial,
-      isSpecial: isSpecial,
-      translations: {
-        FR: { name, description: desc },
-        EN: translations.EN.name ? translations.EN : undefined,
-        ES: translations.ES.name ? translations.ES : undefined,
-        IT: translations.IT.name ? translations.IT : undefined,
-      } as any,
-    };
-
-    const cloned = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
-    const cat = cloned.categories.find((c) => c.id === categoryId);
-    if (cat) {
-      if (!cat.items) cat.items = [];
-      cat.items.unshift(newDish);
+    if (!name.trim()) {
+      toast.error('Veuillez renseigner le nom du plat');
+      return;
     }
-    setRestaurant(cloned);
-    setIsAddModalOpen(false);
-    toast.success(`✨ Plat "${name}" ajouté avec succès au menu !`);
 
-    // Reset form
-    setName('');
-    setWolofName('');
-    setDesc('');
-    setTranslations({
-      FR: { name: '', description: '' },
-      EN: { name: '', description: '' },
-      ES: { name: '', description: '' },
-      IT: { name: '', description: '' },
-    });
+    try {
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
+      const res = await fetch('/api/restaurant/menu-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: storedId || restaurant.id,
+          name: name.trim(),
+          description: desc.trim(),
+          price: Number(price),
+          categoryId: categoryId || restaurant.categories[0]?.id,
+          imageUrl,
+          isAvailable: true,
+          isSpecialOfTheDay: isSpecial,
+          isDailySpecial: isSpecial,
+          translations,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erreur lors de l\'ajout du plat');
+      }
+
+      toast.success(`✨ Plat "${name}" ajouté avec succès au menu !`);
+      setIsAddModalOpen(false);
+      fetchMenu();
+
+      // Reset form
+      setName('');
+      setWolofName('');
+      setDesc('');
+      setTranslations({
+        FR: { name: '', description: '' },
+        EN: { name: '', description: '' },
+        ES: { name: '', description: '' },
+        IT: { name: '', description: '' },
+      });
+    } catch (err: any) {
+      toast.error(err.message || 'Impossible d\'ajouter le plat');
+    }
   };
 
   // Flattened items for table search

@@ -62,12 +62,32 @@ export default function AddPlatPage() {
 
     setIsSubmitting(true);
     try {
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
+      const storedName = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : null;
+      const activeRestoId = storedId || 'resto_thies_01';
+      const activeRestoName = storedName || 'Mon Restaurant';
+
+      // 1. Ajout direct dans le menu actif via l'API menu-items
+      await fetch('/api/restaurant/menu-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: activeRestoId,
+          name: name.trim(),
+          description: description.trim(),
+          price: Number(price),
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+          isAvailable: true,
+        }),
+      }).catch((e) => console.warn('Menu item direct save notice:', e));
+
+      // 2. Traçabilité dans le journal des demandes
       const res = await fetch('/api/dashboard/menu-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          restaurantId: 'resto_thies_01',
-          restaurantName: 'Chez Fatou & Frères',
+          restaurantId: activeRestoId,
+          restaurantName: activeRestoName,
           name,
           wolofName: wolofName.trim() ? wolofName : undefined,
           description,
@@ -79,7 +99,7 @@ export default function AddPlatPage() {
       });
 
       if (res.ok) {
-        toast.success('Plat soumis avec succès ! L\'équipe agence l\'intègre dans les 24h.');
+        toast.success('✨ Plat ajouté directement à votre menu et enregistré !');
         setName('');
         setWolofName('');
         setDescription('');

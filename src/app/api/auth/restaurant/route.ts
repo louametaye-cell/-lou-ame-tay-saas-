@@ -20,18 +20,19 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { identifier, pin } = body;
+    const { identifier, pin, restaurantId } = body;
 
-    const cleanInput = (identifier || '').trim().toLowerCase();
+    const cleanInput = (identifier || restaurantId || '').trim().toLowerCase();
 
-    if (!cleanInput || !pin) {
-      return NextResponse.json({ error: 'Identifiant et mot de passe requis' }, { status: 400 });
+    if (!cleanInput) {
+      return NextResponse.json({ error: 'Identifiant ou sélection de restaurant requise' }, { status: 400 });
     }
 
     // 1. Recherche du Tenant (Restaurant) en base de données
     const dbTenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
+          { id: cleanInput },
           { email: cleanInput },
           { subdomain: cleanInput },
           { phone: { contains: cleanInput } },
@@ -45,16 +46,22 @@ export async function POST(req: Request) {
       }, { status: 404 });
     }
 
-    // 2. Vérification du mot de passe
-    // S'il n'a pas de mot de passe haché (vieux compte), on le laisse passer si c'est "Pass1234!" par défaut.
+    // 2. Vérification du mot de passe ou validation connexion démo directe
     let isValid = false;
-    
-    if (dbTenant.passwordHash) {
-      isValid = await bcrypt.compare(pin.trim(), dbTenant.passwordHash);
+
+    if (restaurantId && !pin) {
+      // Connexion démo 1-clic autorisée pour prévisualiser le restaurant
+      isValid = true;
+    } else if (pin) {
+      if (dbTenant.passwordHash) {
+        isValid = await bcrypt.compare(pin.trim(), dbTenant.passwordHash);
+      } else {
+        // Fallback temporaire pour les anciens comptes non migrés
+        const validPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
+        isValid = validPasswords.includes(pin.trim());
+      }
     } else {
-      // Fallback temporaire pour les anciens comptes non migrés
-      const validPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
-      isValid = validPasswords.includes(pin.trim());
+      isValid = false;
     }
 
     if (!isValid) {

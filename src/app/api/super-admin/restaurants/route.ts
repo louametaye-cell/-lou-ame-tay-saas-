@@ -146,6 +146,81 @@ export async function POST(req: Request) {
       });
     }
 
+    // Création autonome des catégories et plats de démarrage
+    try {
+      const catPlats = await (prisma as any).category.create({
+        data: {
+          tenantId: newTenant.id,
+          name: 'Plats & Spécialités',
+          icon: '🍲',
+          displayOrder: 1,
+        }
+      });
+
+      const catBoissons = await (prisma as any).category.create({
+        data: {
+          tenantId: newTenant.id,
+          name: 'Boissons Fraîches',
+          icon: '🥤',
+          displayOrder: 2,
+        }
+      });
+
+      const catDesserts = await (prisma as any).category.create({
+        data: {
+          tenantId: newTenant.id,
+          name: 'Desserts & Douceurs',
+          icon: '🍰',
+          displayOrder: 3,
+        }
+      });
+
+      await (prisma as any).menuItem.createMany({
+        data: [
+          {
+            tenantId: newTenant.id,
+            categoryId: catPlats.id,
+            name: 'Thiéboudienne du Terroir',
+            description: 'Riz rouge au poisson noble et légumes frais du marché',
+            price: 3500,
+            isAvailable: true,
+            isDailySpecial: true,
+            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            tenantId: newTenant.id,
+            categoryId: catPlats.id,
+            name: 'Yassa Poulet Braisé',
+            description: 'Poulet mariné au citron vert et oignons confits',
+            price: 3000,
+            isAvailable: true,
+            isDailySpecial: false,
+            imageUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            tenantId: newTenant.id,
+            categoryId: catBoissons.id,
+            name: 'Jus de Bissap Maison',
+            description: 'Infusion fraîche de fleurs d\'hibiscus et menthe',
+            price: 1000,
+            isAvailable: true,
+            imageUrl: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            tenantId: newTenant.id,
+            categoryId: catDesserts.id,
+            name: 'Thiakry au Lait Doux',
+            description: 'Couscous de mil au yaourt crémeux et touche de muscade',
+            price: 1500,
+            isAvailable: true,
+            imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=600&q=80',
+          }
+        ]
+      });
+    } catch (seedErr) {
+      console.warn('Warning: Erreur initialisation menu modèle pour nouveau tenant:', seedErr);
+    }
+
     return NextResponse.json({ 
       success: true, 
       restaurant: {

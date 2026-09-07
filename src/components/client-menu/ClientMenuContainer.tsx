@@ -548,19 +548,41 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       {/* 4. Main Dishes Grid by Category */}
       <main className="max-w-4xl mx-auto px-3 sm:px-4 pt-6 space-y-10">
         {filteredCategories.length === 0 ? (
-          <div className="bg-white rounded-3xl p-8 text-center shadow-xs border border-orange-100 mt-6">
-            <div className="text-4xl mb-2">🔍</div>
-            <h3 className="text-base font-bold text-slate-900">
-              Aucun plat ne correspond à votre recherche
-            </h3>
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="mt-4 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-5 py-2.5 rounded-2xl transition-all"
-            >
-              Afficher tout le menu
-            </button>
-          </div>
+          searchQuery.trim() ? (
+            <div className="bg-white rounded-3xl p-8 text-center shadow-xs border border-orange-100 mt-6 space-y-3">
+              <div className="text-4xl mb-1">🔍</div>
+              <h3 className="text-base font-bold text-slate-900">
+                Aucun plat ne correspond à votre recherche « {searchQuery} »
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="mt-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-5 py-2.5 rounded-2xl transition-all shadow-xs"
+              >
+                Afficher tout le menu
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 text-center shadow-xs border border-amber-200/80 mt-6 space-y-3">
+              <div className="text-4xl mb-1">👨‍🍳</div>
+              <h3 className="text-lg font-black text-slate-950">
+                La carte de {restaurant.name} est en cours de préparation !
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Notre équipe cuisine finalise actuellement les plats et spécialités du jour. Revenez dans quelques instants ou faites signe au serveur de salle.
+              </p>
+              {restaurant.phone && (
+                <div className="pt-2">
+                  <a
+                    href={`tel:${restaurant.phone}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold shadow-2xs hover:bg-emerald-100 transition-all"
+                  >
+                    <span>📞 {restaurant.phone}</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          )
         ) : (
           filteredCategories.map((category, idx) => {
             const icon = category.icon || '🍽️';

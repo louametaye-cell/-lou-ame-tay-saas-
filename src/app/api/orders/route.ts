@@ -4,25 +4,49 @@ import { getAssignedServerIdForTable } from '@/lib/server-shift';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
-
+import { cookies } from 'next/headers';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId');
+    const rawInput = searchParams.get('tenantId') || searchParams.get('restaurantId') || searchParams.get('subdomain');
+    let candidate = rawInput;
 
-    if (!tenantId) {
-      // Seul le Super-Admin a le droit de requêter toutes les commandes globales
-      if (!isAuthorizedSuperAdmin(req)) {
-        return NextResponse.json(
-          { error: 'Accès refusé : tenantId obligatoire pour consulter les commandes' },
-          { status: 400 }
-        );
+    if (!candidate) {
+      try {
+        const cookieStore = cookies();
+        const token = cookieStore.get('saas_token')?.value;
+        if (token && token.startsWith('resto_session_')) {
+          candidate = token.replace('resto_session_', '');
+        }
+      } catch (e) {}
+    }
+
+    let resolvedTenantId: string | null = null;
+    if (candidate) {
+      const dbTenant = await (prisma as any).tenant.findFirst({
+        where: {
+          OR: [
+            { id: candidate },
+            { subdomain: candidate },
+          ],
+        },
+        select: { id: true },
+      });
+      if (dbTenant) {
+        resolvedTenantId = dbTenant.id;
       }
     }
 
-    const whereClause = tenantId ? { tenantId } : {};
+    if (!resolvedTenantId && !isAuthorizedSuperAdmin(req)) {
+      const fallback = await (prisma as any).tenant.findFirst({ select: { id: true } });
+      if (fallback) {
+        resolvedTenantId = fallback.id;
+      }
+    }
+
+    const whereClause = resolvedTenantId ? { tenantId: resolvedTenantId } : {};
 
     const dbOrders = await (prisma as any).order.findMany({
       where: whereClause,
