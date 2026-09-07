@@ -214,6 +214,30 @@ export async function POST(req: Request) {
       }
     });
 
+    // Update salesCount for ordered items and tenant daily order counters non-blockingly
+    try {
+      for (const item of items) {
+        const rawId = item.menuItemId || item.menuItem?.id;
+        const qty = Number(item.quantity) || 1;
+        if (rawId && existingMenuItemIdsSet.has(rawId)) {
+          await (prisma as any).menuItem.update({
+            where: { id: rawId },
+            data: {
+              salesCount: { increment: qty },
+            },
+          });
+        }
+      }
+      await (prisma as any).tenant.update({
+        where: { id: validTenantId },
+        data: {
+          ordersToday: { increment: 1 },
+        },
+      });
+    } catch (metricErr) {
+      console.warn('Non-blocking metric update error in POST /api/orders:', metricErr);
+    }
+
     // Invalidate Redis caches non-blockingly
     try {
       await invalidateLiveOrdersCache(validTenantId);

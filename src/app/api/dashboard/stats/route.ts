@@ -11,13 +11,28 @@ export async function GET(req: Request) {
   const timer = startTimer();
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('restaurantId');
-    if (!tenantId) return NextResponse.json({ error: 'restaurantId missing' }, { status: 400 });
+    const rawInput = searchParams.get('restaurantId') || searchParams.get('tenantId');
+    if (!rawInput) return NextResponse.json({ error: 'restaurantId missing' }, { status: 400 });
+
+    let tenantId = rawInput;
+    const dbTenant = await (prisma as any).tenant.findFirst({
+      where: {
+        OR: [
+          { id: rawInput },
+          { subdomain: rawInput },
+          { slug: rawInput },
+        ],
+      },
+      select: { id: true },
+    });
+    if (dbTenant) {
+      tenantId = dbTenant.id;
+    }
 
     // Contrôle d'accès de session (Anti-IDOR)
     const cookieHeader = req.headers.get('cookie') || '';
     const isSuperAdmin = isAuthorizedSuperAdmin(req);
-    const hasMatchingSession = cookieHeader.includes(`resto_session_${tenantId}`) || isSuperAdmin;
+    const hasMatchingSession = cookieHeader.includes(`resto_session_${tenantId}`) || cookieHeader.includes(`resto_session_${rawInput}`) || isSuperAdmin;
     const hasAnySessionToken = cookieHeader.includes('saas_token=');
 
     if (!hasMatchingSession && !hasAnySessionToken && !isSuperAdmin) {
@@ -54,7 +69,7 @@ export async function GET(req: Request) {
     // Count out of stock items
     const outOfStockItems = await (prisma as any).menuItem.count({
       where: {
-        category: { tenantId },
+        tenantId,
         isAvailable: false
       }
     });

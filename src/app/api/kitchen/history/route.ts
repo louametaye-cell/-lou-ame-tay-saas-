@@ -6,8 +6,27 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('restaurantId');
+    const tenantIdParam = searchParams.get('restaurantId') || searchParams.get('tenantId');
     const format = searchParams.get('format');
+
+    let resolvedTenantId: string | null = null;
+    if (tenantIdParam) {
+      const dbTenant = await (prisma as any).tenant.findFirst({
+        where: {
+          OR: [
+            { id: tenantIdParam },
+            { subdomain: tenantIdParam },
+            { slug: tenantIdParam },
+          ],
+        },
+        select: { id: true },
+      });
+      if (dbTenant) {
+        resolvedTenantId = dbTenant.id;
+      } else {
+        resolvedTenantId = tenantIdParam;
+      }
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -16,18 +35,28 @@ export async function GET(req: Request) {
 
     const dbServed = await (prisma as any).order.findMany({
       where: {
-        ...(tenantId ? { tenantId } : {}),
+        ...(resolvedTenantId ? { tenantId: resolvedTenantId } : {}),
         status: 'SERVED',
-        servedAt: {
-          gte: today,
-          lt: tomorrow,
-        },
+        OR: [
+          {
+            servedAt: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+          {
+            updatedAt: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+        ],
       },
       include: {
         items: true,
       },
       orderBy: {
-        servedAt: 'desc',
+        updatedAt: 'desc',
       },
     });
 

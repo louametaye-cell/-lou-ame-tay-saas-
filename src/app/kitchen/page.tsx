@@ -120,14 +120,17 @@ export default function DashboardKitchenPage() {
           <OrderTicketGrid
             orders={orders}
             onUpdateStatus={updateOrderStatus}
-            restaurantName="Chez Fatou & Frères"
+            restaurantName={restaurantName}
             activeFilter={activeFilter}
           />
         )}
 
         {/* Tab 2: History View */}
         {activeTab === 'HISTORY' && (
-          <KitchenHistory />
+          <KitchenHistory
+            restaurantId={restaurantId}
+            restaurantName={restaurantName}
+          />
         )}
       </main>
     </div>

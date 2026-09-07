@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   Eye, 
@@ -22,62 +22,52 @@ interface DishAnalytics {
   orders: number;
   conversionRate: number; // in %
   revenue: number;
+  price?: number;
+  isAvailable?: boolean;
 }
 
-const SAMPLE_DISH_ANALYTICS: DishAnalytics[] = [
-  {
-    id: '1',
-    name: 'Thiéboudienne Penda Mbaye Rouge',
-    category: 'Plats Traditionnels',
-    views: 450,
-    orders: 142,
-    conversionRate: 31.5,
-    revenue: 568000,
-  },
-  {
-    id: '2',
-    name: 'Yassa Poulet Fermier Braisé',
-    category: 'Plats Traditionnels',
-    views: 380,
-    orders: 98,
-    conversionRate: 25.7,
-    revenue: 392000,
-  },
-  {
-    id: '3',
-    name: 'Dibi Agneau Braisé au Feu de Bois',
-    category: 'Grillades',
-    views: 290,
-    orders: 84,
-    conversionRate: 28.9,
-    revenue: 504000,
-  },
-  {
-    id: '4',
-    name: 'Bissap Maison Glacé',
-    category: 'Boissons',
-    views: 520,
-    orders: 210,
-    conversionRate: 40.3,
-    revenue: 210000,
-  },
-  {
-    id: '5',
-    name: 'Salade Exotique Crevettes',
-    category: 'Entrées',
-    views: 180,
-    orders: 12,
-    conversionRate: 6.6,
-    revenue: 42000,
-  },
-];
+interface AnalyticsDashboardProps {
+  restaurantId?: string;
+}
 
-export const AnalyticsDashboard: React.FC = () => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ restaurantId: propRestaurantId }) => {
   const [period, setPeriod] = useState<'TODAY' | 'WEEK' | 'MONTH'>('TODAY');
+  const [dishes, setDishes] = useState<DishAnalytics[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const totalViews = SAMPLE_DISH_ANALYTICS.reduce((s, d) => s + d.views, 0);
-  const totalOrders = SAMPLE_DISH_ANALYTICS.reduce((s, d) => s + d.orders, 0);
-  const totalRevenue = SAMPLE_DISH_ANALYTICS.reduce((s, d) => s + d.revenue, 0);
+  useEffect(() => {
+    let active = true;
+    const fetchDishPerformance = async () => {
+      try {
+        setIsLoading(true);
+        const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
+        const targetId = propRestaurantId || storedId || '';
+        const url = targetId
+          ? `/api/dashboard/dish-performance?restaurantId=${encodeURIComponent(targetId)}`
+          : '/api/dashboard/dish-performance';
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (active && Array.isArray(data.dishes)) {
+            setDishes(data.dishes);
+          }
+        }
+      } catch (err) {
+        console.error('Erreur chargement performances plats:', err);
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    fetchDishPerformance();
+    return () => {
+      active = false;
+    };
+  }, [propRestaurantId]);
+
+  const totalViews = dishes.reduce((s, d) => s + d.views, 0);
+  const totalOrders = dishes.reduce((s, d) => s + d.orders, 0);
+  const totalRevenue = dishes.reduce((s, d) => s + d.revenue, 0);
   const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
   const avgConversion = totalViews > 0 ? Math.round((totalOrders / totalViews) * 1000) / 10 : 0;
 
@@ -193,39 +183,56 @@ export const AnalyticsDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {SAMPLE_DISH_ANALYTICS.map((dish) => (
-                <tr key={dish.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-4 font-black text-slate-900 flex items-center gap-2">
-                    {dish.conversionRate > 25 ? (
-                      <Flame className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    ) : (
-                      <span className="w-3.5 h-3.5" />
-                    )}
-                    <span>{dish.name}</span>
-                  </td>
-                  <td className="py-3 px-3 text-slate-500">{dish.category}</td>
-                  <td className="py-3 px-3 text-slate-700 font-mono font-bold">{dish.views}</td>
-                  <td className="py-3 px-3 text-emerald-700 font-bold font-mono">
-                    {dish.orders}
-                  </td>
-                  <td className="py-3 px-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-md font-black font-mono text-[11px] ${
-                        dish.conversionRate < 10
-                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                          : dish.conversionRate > 30
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                          : 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      {dish.conversionRate}%
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-right font-black text-orange-600 font-mono">
-                    {formatFCFA(dish.revenue)}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                      <span>Chargement des performances des plats...</span>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : dishes.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                    <span>Aucun plat configuré pour cet établissement.</span>
+                  </td>
+                </tr>
+              ) : (
+                dishes.map((dish) => (
+                  <tr key={dish.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 font-black text-slate-900 flex items-center gap-2">
+                      {dish.conversionRate > 25 ? (
+                        <Flame className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      ) : (
+                        <span className="w-3.5 h-3.5" />
+                      )}
+                      <span>{dish.name}</span>
+                    </td>
+                    <td className="py-3 px-3 text-slate-500">{dish.category}</td>
+                    <td className="py-3 px-3 text-slate-700 font-mono font-bold">{dish.views}</td>
+                    <td className="py-3 px-3 text-emerald-700 font-bold font-mono">
+                      {dish.orders}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`px-2 py-0.5 rounded-md font-black font-mono text-[11px] ${
+                          dish.conversionRate < 10
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                            : dish.conversionRate > 30
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {dish.conversionRate}%
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right font-black text-orange-600 font-mono">
+                      {formatFCFA(dish.revenue)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

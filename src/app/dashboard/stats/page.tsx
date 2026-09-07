@@ -32,15 +32,29 @@ import { AnalyticsDashboard } from '@/components/dashboard/AnalyticsDashboard';
 
 export default function DashboardStatsPage() {
   const [trends, setTrends] = useState<any[]>([]);
+  const [restaurantId, setRestaurantId] = useState<string>('');
+  const [restaurantName, setRestaurantName] = useState<string>('');
   const [stats, setStats] = useState({
-    todayRevenue: 125000,
-    todayOrders: 18,
-    todayCovers: 42,
-    avgTicket: 6944,
+    todayRevenue: 0,
+    todayOrders: 0,
+    todayCovers: 0,
+    avgTicket: 0,
   });
 
   useEffect(() => {
-    fetch('/api/dashboard/weekly-trends')
+    let storedId = '';
+    let storedName = '';
+    if (typeof window !== 'undefined') {
+      storedId = localStorage.getItem('current_restaurant_id') || '';
+      storedName = localStorage.getItem('current_restaurant_name') || '';
+      setRestaurantId(storedId);
+      setRestaurantName(storedName);
+    }
+
+    const weeklyUrl = storedId
+      ? `/api/dashboard/weekly-trends?restaurantId=${encodeURIComponent(storedId)}`
+      : '/api/dashboard/weekly-trends';
+    fetch(weeklyUrl)
       .then((res) => res.json())
       .then((data) => {
         if (data.trends) {
@@ -49,15 +63,18 @@ export default function DashboardStatsPage() {
       })
       .catch(() => {});
 
-    fetch('/api/dashboard/stats')
+    const statsUrl = storedId
+      ? `/api/dashboard/stats?restaurantId=${encodeURIComponent(storedId)}`
+      : '/api/dashboard/stats';
+    fetch(statsUrl)
       .then((res) => res.json())
       .then((data) => {
-        if (data.todayRevenue) {
+        if (data && typeof data.todayRevenue !== 'undefined') {
           setStats({
-            todayRevenue: data.todayRevenue,
-            todayOrders: data.todayOrders,
-            todayCovers: data.todayCovers,
-            avgTicket: data.todayOrders > 0 ? Math.round(data.todayRevenue / data.todayOrders) : 6500,
+            todayRevenue: data.todayRevenue || 0,
+            todayOrders: data.todayOrders || 0,
+            todayCovers: data.todayCovers || 0,
+            avgTicket: data.todayOrders > 0 ? Math.round((data.todayRevenue || 0) / data.todayOrders) : 0,
           });
         }
       })
@@ -82,7 +99,7 @@ export default function DashboardStatsPage() {
                 <span>Statistiques Détaillées de Caisse</span>
               </h1>
               <p className="text-xs text-slate-500">
-                Analyse des ventes, affluence et performances en direct
+                {restaurantName ? `${restaurantName} • ` : ''}Analyse des ventes, affluence et performances en direct
               </p>
             </div>
           </div>
@@ -180,7 +197,7 @@ export default function DashboardStatsPage() {
         </div>
 
         {/* Analytics Conversion & Performance Table */}
-        <AnalyticsDashboard />
+        <AnalyticsDashboard restaurantId={restaurantId} />
       </main>
     </div>
   );

@@ -30,7 +30,7 @@ export default function CashierCounterPage() {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'EXPRESS' | 'TABLE'>('ALL');
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'EXPRESS' | 'TABLE' | 'SERVED'>('ALL');
   const [restaurantName, setRestaurantName] = useState<string>('Caisse Restaurant');
   const [restaurantId, setRestaurantId] = useState<string>('');
 
@@ -130,6 +130,9 @@ export default function CashierCounterPage() {
   // Filtered orders
   const activeOrders = useMemo(() => {
     return orders.filter((o) => {
+      if (activeFilter === 'SERVED') {
+        return o.status === 'SERVED';
+      }
       if (o.status === 'SERVED' || o.status === 'CANCELLED') return false;
       const isExpress = o.orderType === 'EXPRESS' || o.tableNumber === 0;
       if (activeFilter === 'EXPRESS') return isExpress;
@@ -258,6 +261,23 @@ export default function CashierCounterPage() {
             {orders.filter((o) => o.orderType !== 'EXPRESS' && o.tableNumber > 0 && o.status !== 'SERVED').length}
           </span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveFilter('SERVED')}
+          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+            activeFilter === 'SERVED'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+          }`}
+        >
+          <span>✅ Servies &amp; Encaissées</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+            activeFilter === 'SERVED' ? 'bg-white/20 text-white font-black' : 'bg-emerald-100 text-emerald-800 font-bold'
+          }`}>
+            {orders.filter((o) => o.status === 'SERVED').length}
+          </span>
+        </button>
       </div>
 
       {/* 3. READY TO PICKUP BANNER */}
@@ -321,9 +341,15 @@ export default function CashierCounterPage() {
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeOrders.length === 0 ? (
           <div className="col-span-full py-16 text-center text-slate-500 space-y-2 bg-white rounded-3xl border border-slate-200 shadow-xs">
-            <span className="text-4xl block">✨</span>
-            <h3 className="text-base font-bold text-slate-800">Aucune commande en attente</h3>
-            <p className="text-xs text-slate-500">Toutes les commandes sont préparées ou encaissées !</p>
+            <span className="text-4xl block">{activeFilter === 'SERVED' ? '✅' : '✨'}</span>
+            <h3 className="text-base font-bold text-slate-800">
+              {activeFilter === 'SERVED' ? 'Aucune commande servie pour l\'instant' : 'Aucune commande en attente'}
+            </h3>
+            <p className="text-xs text-slate-500">
+              {activeFilter === 'SERVED'
+                ? 'Les commandes servies et clôturées apparaîtront ici avec possibilité de réimpression.'
+                : 'Toutes les commandes sont préparées ou encaissées !'}
+            </p>
           </div>
         ) : (
           activeOrders.map((order) => {
@@ -411,60 +437,88 @@ export default function CashierCounterPage() {
                 {/* Total & Action Buttons */}
                 <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-600 font-bold uppercase">Total à Encaisser :</span>
+                    <span className="text-slate-600 font-bold uppercase">
+                      {order.status === 'SERVED' ? 'Total Encaissé :' : 'Total à Encaisser :'}
+                    </span>
                     <span className="text-base font-black text-slate-950 font-mono">{formatFCFA(order.total)}</span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {/* Action 1: Préparer */}
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                      className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
-                        order.status === 'PREPARING'
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-200'
-                      }`}
-                    >
-                      <ChefHat className="w-3.5 h-3.5" />
-                      <span>Préparer</span>
-                    </button>
+                  {order.status === 'SERVED' ? (
+                    <div className="space-y-2">
+                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Servie &amp; Clôturée</span>
+                        </span>
+                        <span className="font-mono text-[11px] text-emerald-700">
+                          {order.servedAt ? new Date(order.servedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Terminée'}
+                        </span>
+                      </div>
 
-                    {/* Action 2: Prête */}
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus(order.id, 'READY')}
-                      className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
-                        order.status === 'READY'
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                          : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
-                      }`}
-                    >
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      <span>Prête</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePrintReceipt(order)}
+                        className="w-full min-h-[46px] px-4 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+                        title="Réimprimer le ticket de caisse 80mm"
+                      >
+                        <Printer className="w-4 h-4" />
+                        <span>🖨️ Réimprimer Ticket 80mm</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {/* Action 1: Préparer */}
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
+                          className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
+                            order.status === 'PREPARING'
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                              : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-200'
+                          }`}
+                        >
+                          <ChefHat className="w-3.5 h-3.5" />
+                          <span>Préparer</span>
+                        </button>
 
-                    {/* Action 3: Imprimer Ticket */}
-                    <button
-                      type="button"
-                      onClick={() => handlePrintReceipt(order)}
-                      className="py-2 px-1.5 min-h-[40px] bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.97] transition-all"
-                      title="Imprimer ticket de caisse"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>Ticket</span>
-                    </button>
-                  </div>
+                        {/* Action 2: Prête */}
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStatus(order.id, 'READY')}
+                          className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
+                            order.status === 'READY'
+                              ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                              : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          <span>Prête</span>
+                        </button>
 
-                  {/* Bouton Final Encaisser & Clôturer */}
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateStatus(order.id, 'SERVED')}
-                    className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Encaisser &amp; Clôturer</span>
-                  </button>
+                        {/* Action 3: Imprimer Ticket */}
+                        <button
+                          type="button"
+                          onClick={() => handlePrintReceipt(order)}
+                          className="py-2 px-1.5 min-h-[40px] bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.97] transition-all"
+                          title="Imprimer ticket de caisse"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Ticket</span>
+                        </button>
+                      </div>
+
+                      {/* Bouton Final Encaisser & Clôturer */}
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus(order.id, 'SERVED')}
+                        className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Encaisser &amp; Clôturer</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );

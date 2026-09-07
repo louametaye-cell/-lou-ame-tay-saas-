@@ -28,3 +28,6 @@ export async function PATCH(
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
 }
+
+export const POST = PATCH;
+

@@ -51,11 +51,25 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
-  restaurantName = 'Chez Fatou & Frères',
+  restaurantName = 'Lou Ame Tay ?',
 }) => {
+  const getOrderTotal = (o: any): number => {
+    if (!o) return 0;
+    if (o.total !== undefined && o.total !== null && !isNaN(Number(o.total)) && Number(o.total) > 0) {
+      return Number(o.total);
+    }
+    if (o.totalAmount !== undefined && o.totalAmount !== null && !isNaN(Number(o.totalAmount)) && Number(o.totalAmount) > 0) {
+      return Number(o.totalAmount);
+    }
+    if (Array.isArray(o.items) && o.items.length > 0) {
+      return o.items.reduce((s: number, i: any) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
+    }
+    return 0;
+  };
+
   // Accumulated orders for this table session
   const allOrders = sessionOrders.length > 0 ? sessionOrders : order ? [order] : [];
-  const totalBalance = allOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const totalBalance = allOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
 
   // Derive latest live status from backend
   const activeStatus = order?.status || (sessionOrders.length > 0 ? sessionOrders[sessionOrders.length - 1].status : 'PENDING');
@@ -343,7 +357,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                 <div key={ord.id} className="p-3 space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 border-b border-slate-100 pb-1">
                     <span>Tour N°{ordIdx + 1} ({ord.createdAt ? new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'En cours'})</span>
-                    <span className="font-mono text-slate-700">{formatFCFA(ord.total)}</span>
+                    <span className="font-mono text-slate-700">{formatFCFA(getOrderTotal(ord))}</span>
                   </div>
 
                   <div className="space-y-1.5">

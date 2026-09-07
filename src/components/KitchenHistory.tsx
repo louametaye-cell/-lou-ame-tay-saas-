@@ -8,12 +8,14 @@ import { toast } from 'sonner';
 
 interface KitchenHistoryProps {
   restaurantId?: string;
+  restaurantName?: string;
   onRestoreOrder?: (orderId: string) => void;
   refreshTrigger?: number;
 }
 
 export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
-  restaurantId = 'tenant_madiba_restau',
+  restaurantId: propRestaurantId,
+  restaurantName,
   onRestoreOrder,
   refreshTrigger = 0,
 }) => {
@@ -21,9 +23,19 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getEffectiveId = useCallback(() => {
+    if (propRestaurantId && propRestaurantId !== 'tenant_madiba_restau') return propRestaurantId;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('current_restaurant_id');
+      if (stored) return stored;
+    }
+    return propRestaurantId || '';
+  }, [propRestaurantId]);
+
   const fetchHistory = useCallback(async () => {
     try {
-      const url = `/api/kitchen/history?restaurantId=${encodeURIComponent(restaurantId)}`;
+      const targetId = getEffectiveId();
+      const url = targetId ? `/api/kitchen/history?restaurantId=${encodeURIComponent(targetId)}` : '/api/kitchen/history';
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -35,7 +47,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [restaurantId]);
+  }, [getEffectiveId]);
 
   useEffect(() => {
     fetchHistory();
@@ -44,7 +56,8 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   }, [fetchHistory, refreshTrigger]);
 
   const handleExportCSV = () => {
-    const url = `/api/kitchen/history?restaurantId=${encodeURIComponent(restaurantId)}&format=csv`;
+    const targetId = getEffectiveId();
+    const url = targetId ? `/api/kitchen/history?restaurantId=${encodeURIComponent(targetId)}&format=csv` : '/api/kitchen/history?format=csv';
     window.open(url, '_blank');
     toast.success('Fichier CSV de l\'historique généré !');
   };
@@ -65,7 +78,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
               </span>
             </h3>
             <p className="text-xs text-slate-500">
-              Journal des plats envoyés en salle aujourd'hui
+              {restaurantName ? `${restaurantName} • ` : ''}Journal des plats envoyés en salle aujourd'hui
             </p>
           </div>
         </div>
