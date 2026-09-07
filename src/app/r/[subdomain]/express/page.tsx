@@ -1,7 +1,6 @@
 import React from 'react';
+import { notFound } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
-
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
@@ -15,7 +14,7 @@ interface PageProps {
 
 export default async function ExpressCounterMenuPage({ params }: PageProps) {
   const resolvedParams = await Promise.resolve(params);
-  let restaurant: any = SAMPLE_RESTAURANT;
+  let restaurant: any = null;
 
   try {
     const dbTenant = await (prisma as any).tenant.findFirst({
@@ -38,8 +37,11 @@ export default async function ExpressCounterMenuPage({ params }: PageProps) {
       },
     });
 
-    if (dbTenant) {
-      const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
+    if (!dbTenant) {
+      notFound();
+    }
+
+    const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
 
       restaurant = {
         id: dbTenant.id,
@@ -75,7 +77,6 @@ export default async function ExpressCounterMenuPage({ params }: PageProps) {
           })),
         })),
       };
-    }
   } catch (error) {
     console.error('Erreur chargement menu express :', error);
   }

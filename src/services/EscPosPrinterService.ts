@@ -31,7 +31,9 @@ export class EscPosPrinterService {
    * Génère le flux d'octets brut ESC/POS pour une imprimante 80mm
    */
   public static generateTicketBytes(order: OrderType, restaurantName = 'LOU AME TAY ?'): Uint8Array {
-    const formattedTable = order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`;
+    const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0 || !order.tableNumber;
+    const tableHeader = isExpress ? 'COMPTOIR EXPRESS' : `TABLE ${order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`}`;
+    const effectiveTotal = (order as any).totalAmount ?? order.total ?? order.items?.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0) ?? 0;
     const orderDate = new Date(order.createdAt).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -42,14 +44,14 @@ export class EscPosPrinterService {
     raw += this.ALIGN_CENTER;
     raw += this.BOLD_ON;
     raw += `${restaurantName}\n`;
-    raw += 'BON DE COMMANDE CUISINE\n';
+    raw += 'BON DE COMMANDE CUISINE & CAISSE\n';
     raw += this.BOLD_OFF;
     raw += '==========================================\n';
 
     // Giant Table Header
     raw += this.DOUBLE_SIZE;
     raw += this.BOLD_ON;
-    raw += `TABLE ${formattedTable}\n`;
+    raw += `${tableHeader}\n`;
     raw += this.NORMAL_SIZE;
     raw += this.BOLD_OFF;
 
@@ -86,7 +88,7 @@ export class EscPosPrinterService {
 
     raw += '==========================================\n';
     raw += this.ALIGN_RIGHT;
-    raw += `TOTAL : ${formatFCFA(order.total)}\n`;
+    raw += `TOTAL : ${formatFCFA(effectiveTotal)}\n`;
     raw += `Mode de règlement : ${order.paymentMethod || 'Espèces / TPE'}\n`;
     raw += '\n\n\n';
     raw += this.FULL_CUT;
@@ -128,7 +130,9 @@ export class EscPosPrinterService {
    * Fenêtre d'impression standard 80mm
    */
   public static printViaWindowFallback(order: OrderType, restaurantName = 'LOU AME TAY ?') {
-    const formattedTable = order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`;
+    const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0 || !order.tableNumber;
+    const tableHeader = isExpress ? 'COMPTOIR EXPRESS' : `TABLE ${order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`}`;
+    const effectiveTotal = (order as any).totalAmount ?? order.total ?? order.items?.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0) ?? 0;
     const orderDate = new Date(order.createdAt).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -154,7 +158,7 @@ export class EscPosPrinterService {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Ticket Cuisine - Table ${formattedTable}</title>
+          <title>Ticket ${tableHeader} - ${restaurantName}</title>
           <style>
             @page { size: 80mm auto; margin: 0; }
             body {
@@ -171,7 +175,7 @@ export class EscPosPrinterService {
             .right { text-align: right; }
             .bold { font-weight: bold; }
             .giant-table {
-              font-size: 24px;
+              font-size: 22px;
               font-weight: 900;
               border-top: 2px dashed #000;
               border-bottom: 2px dashed #000;
@@ -184,8 +188,8 @@ export class EscPosPrinterService {
         </head>
         <body>
           <div class="center bold" style="font-size: 16px;">${restaurantName}</div>
-          <div class="center bold">BON DE CUISINE</div>
-          <div class="giant-table">TABLE ${formattedTable}</div>
+          <div class="center bold">BON DE COMMANDE CUISINE & CAISSE</div>
+          <div class="giant-table">${tableHeader}</div>
           <div>Heure: ${orderDate} | #${order.id.slice(-4).toUpperCase()}</div>
           ${order.customerName ? `<div>Client: ${order.customerName}</div>` : ''}
           <div class="divider"></div>
@@ -196,7 +200,7 @@ export class EscPosPrinterService {
             <div>${order.customerNote || order.note}</div>
           ` : ''}
           <div class="divider"></div>
-          <div class="right bold" style="font-size: 14px;">TOTAL: ${formatFCFA(order.total)}</div>
+          <div class="right bold" style="font-size: 14px;">TOTAL: ${formatFCFA(effectiveTotal)}</div>
           <div class="right" style="font-size: 11px;">Règlement: ${order.paymentMethod || 'Espèces / TPE'}</div>
           <script>
             window.onload = function() {

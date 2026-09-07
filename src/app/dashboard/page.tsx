@@ -78,6 +78,7 @@ export default function OperationalDashboardPage() {
   const [restaurantId, setRestaurantId] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [restaurantSubdomain, setRestaurantSubdomain] = useState('');
+  const [restaurantLogo, setRestaurantLogo] = useState('');
   const [currentDateString, setCurrentDateString] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -190,6 +191,11 @@ export default function OperationalDashboardPage() {
             if (data.restaurant) {
               const rName = data.restaurant.name || data.restaurant.businessName;
               setRestaurantName(rName);
+              const rLogo = data.restaurant.logoUrl || data.restaurant.logo || '';
+              if (rLogo) {
+                setRestaurantLogo(rLogo);
+                localStorage.setItem('current_restaurant_logo', rLogo);
+              }
               if (data.restaurant.subdomain) {
                 setRestaurantSubdomain(data.restaurant.subdomain);
                 localStorage.setItem('current_restaurant_subdomain', data.restaurant.subdomain);
@@ -205,9 +211,27 @@ export default function OperationalDashboardPage() {
       const storedId = localStorage.getItem('current_restaurant_id');
       const storedName = localStorage.getItem('current_restaurant_name');
       const storedSub = localStorage.getItem('current_restaurant_subdomain');
-      if (storedId) setRestaurantId(storedId);
+      const storedLogo = localStorage.getItem('current_restaurant_logo');
+      if (storedId) {
+        setRestaurantId(storedId);
+        fetch(`/api/super-admin/restaurants/${storedId}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.restaurant) {
+              const rName = data.restaurant.name || data.restaurant.businessName;
+              if (rName) setRestaurantName(rName);
+              const rLogo = data.restaurant.logoUrl || data.restaurant.logo || '';
+              if (rLogo) {
+                setRestaurantLogo(rLogo);
+                localStorage.setItem('current_restaurant_logo', rLogo);
+              }
+            }
+          })
+          .catch(() => {});
+      }
       if (storedName) setRestaurantName(storedName);
       if (storedSub) setRestaurantSubdomain(storedSub);
+      if (storedLogo) setRestaurantLogo(storedLogo);
     }
 
     const now = new Date();
@@ -328,6 +352,7 @@ export default function OperationalDashboardPage() {
     localStorage.removeItem('current_restaurant_id');
     localStorage.removeItem('current_restaurant_name');
     localStorage.removeItem('current_restaurant_subdomain');
+    localStorage.removeItem('current_restaurant_logo');
     // Supprimer le cookie saas_token côté client
     if (typeof document !== 'undefined') {
       document.cookie = "saas_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
@@ -345,9 +370,12 @@ export default function OperationalDashboardPage() {
           <div className="flex items-center gap-3">
             <Link href="/dashboard" className="shrink-0 group">
               <img 
-                src="/logo.png" 
-                alt="Lou Ame Tay ?" 
+                src={restaurantLogo || "/logo.png"} 
+                alt={restaurantName || "Lou Ame Tay ?"} 
                 className="w-11 h-11 rounded-2xl object-cover border border-amber-300 shadow-xs group-hover:scale-105 transition-transform" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo.png';
+                }}
               />
             </Link>
             <div>

@@ -59,7 +59,14 @@ export async function GET(req: Request) {
       take: 50,
     });
 
-    return NextResponse.json({ orders: dbOrders, source: 'database' });
+    const mappedOrders = dbOrders.map((o: any) => ({
+      ...o,
+      total: Number(o.totalAmount ?? o.total ?? 0),
+      totalAmount: Number(o.totalAmount ?? o.total ?? 0),
+      orderType: (o.tableNumber === 0 || o.tableNumber === null || !o.tableNumber) ? 'EXPRESS' : 'TABLE',
+    }));
+
+    return NextResponse.json({ orders: mappedOrders, source: 'database' });
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });

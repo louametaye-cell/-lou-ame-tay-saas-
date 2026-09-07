@@ -228,9 +228,27 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       .filter((cat) => (cat.items || []).length > 0);
   }, [restaurant.categories, searchQuery]);
 
+  // Enregistrer le scan QR du menu dès le chargement du menu client
+  useEffect(() => {
+    if (restaurant?.id) {
+      fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: restaurant.id,
+          subdomain: (restaurant as any).subdomain,
+          tableNumber: isExpress ? 0 : tableNumber,
+        }),
+      }).catch(() => {});
+    }
+  }, [restaurant?.id, isExpress, tableNumber]);
+
   // Handlers
   const handleOpenDetails = (item: MenuItemType) => {
     setSelectedItemForDetail(item);
+    if (item.id) {
+      fetch(`/api/restaurant/menu-items/${item.id}/view`, { method: 'POST' }).catch(() => {});
+    }
   };
 
   const handleCloseDetails = () => {
@@ -241,6 +259,10 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     if (!item.isAvailable) {
       toast.error('Ce plat est actuellement épuisé.');
       return;
+    }
+
+    if (item.id) {
+      fetch(`/api/restaurant/menu-items/${item.id}/view`, { method: 'POST' }).catch(() => {});
     }
 
     addItem(item);

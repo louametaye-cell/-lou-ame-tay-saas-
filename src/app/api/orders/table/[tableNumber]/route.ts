@@ -51,7 +51,14 @@ export async function GET(
       take: 20,
     });
 
-    return NextResponse.json({ orders: dbOrders || [] });
+    const mappedOrders = (dbOrders || []).map((o: any) => ({
+      ...o,
+      total: Number(o.totalAmount ?? o.total ?? 0),
+      totalAmount: Number(o.totalAmount ?? o.total ?? 0),
+      orderType: (o.tableNumber === 0 || o.tableNumber === null || !o.tableNumber) ? 'EXPRESS' : 'TABLE',
+    }));
+
+    return NextResponse.json({ orders: mappedOrders });
   } catch (error) {
     console.error('Erreur récupération commandes table:', error);
     return NextResponse.json({ error: 'Erreur récupération commandes table' }, { status: 500 });

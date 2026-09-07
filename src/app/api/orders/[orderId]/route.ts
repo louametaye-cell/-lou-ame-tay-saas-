@@ -17,7 +17,14 @@ export async function GET(
     });
 
     if (dbOrder) {
-      return NextResponse.json({ order: dbOrder });
+      return NextResponse.json({
+        order: {
+          ...dbOrder,
+          total: Number(dbOrder.totalAmount ?? dbOrder.total ?? 0),
+          totalAmount: Number(dbOrder.totalAmount ?? dbOrder.total ?? 0),
+          orderType: (dbOrder.tableNumber === 0 || dbOrder.tableNumber === null || !dbOrder.tableNumber) ? 'EXPRESS' : 'TABLE',
+        }
+      });
     }
 
     return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 });
@@ -40,20 +47,29 @@ export async function PATCH(
       return NextResponse.json({ error: 'Statut manquant' }, { status: 400 });
     }
 
-    const servedAtDate = status === 'SERVED' ? new Date() : null;
+    const updatePayload: any = { status: status as any };
+    if (status === 'SERVED') {
+      updatePayload.servedAt = new Date();
+    } else if (status === 'PREPARING') {
+      updatePayload.preparedAt = new Date();
+    }
 
     const updatedOrder = await (prisma as any).order.update({
       where: { id: orderId },
-      data: {
-        status: status as any,
-        servedAt: servedAtDate,
-      },
+      data: updatePayload,
       include: {
         items: true,
       }
     });
 
-    return NextResponse.json({ order: updatedOrder });
+    return NextResponse.json({
+      order: {
+        ...updatedOrder,
+        total: Number(updatedOrder.totalAmount ?? updatedOrder.total ?? 0),
+        totalAmount: Number(updatedOrder.totalAmount ?? updatedOrder.total ?? 0),
+        orderType: (updatedOrder.tableNumber === 0 || updatedOrder.tableNumber === null || !updatedOrder.tableNumber) ? 'EXPRESS' : 'TABLE',
+      }
+    });
   } catch (error) {
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du statut' },
@@ -61,3 +77,5 @@ export async function PATCH(
     );
   }
 }
+
+export const POST = PATCH;

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const { subdomain, restaurantId, tableNumber } = body;
 
     const targetId = subdomain || restaurantId;
-    if (!targetId || !tableNumber) {
+    if (!targetId) {
       return NextResponse.json({ error: 'Données de scan incomplètes' }, { status: 400 });
     }
 
@@ -29,13 +29,11 @@ export async function POST(req: Request) {
       });
 
       if (dbTenant) {
-        // Just increment totalScans if the field exists, or assume it's logged via some relation
         await (prisma as any).tenant.update({
           where: { id: dbTenant.id },
           data: {
-             // If there was a totalScans field: totalScans: { increment: 1 }
-             // We can skip explicit scan logging if it's not strictly necessary for v1.
-          }
+            qrScansToday: { increment: 1 },
+          },
         });
       }
     } catch (e) {

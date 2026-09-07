@@ -32,14 +32,54 @@ export default function CashierCounterPage() {
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'EXPRESS' | 'TABLE' | 'SERVED'>('ALL');
   const [restaurantName, setRestaurantName] = useState<string>('Caisse Restaurant');
+  const [restaurantPhone, setRestaurantPhone] = useState<string>('+221 77 458 74 74');
   const [restaurantId, setRestaurantId] = useState<string>('');
+
+  const getOrderTotal = (o: any): number => {
+    if (o?.total !== undefined && o?.total !== null && !isNaN(Number(o.total))) return Number(o.total);
+    if (o?.totalAmount !== undefined && o?.totalAmount !== null && !isNaN(Number(o.totalAmount))) return Number(o.totalAmount);
+    if (Array.isArray(o?.items)) {
+      return o.items.reduce((s: number, i: any) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
+    }
+    return 0;
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryId = params.get('restaurantId');
+      if (queryId) {
+        localStorage.setItem('current_restaurant_id', queryId);
+        setRestaurantId(queryId);
+      }
+
       const storedName = localStorage.getItem('current_restaurant_name');
-      const storedId = localStorage.getItem('current_restaurant_id');
+      const storedId = queryId || localStorage.getItem('current_restaurant_id');
+      const storedPhone = localStorage.getItem('current_restaurant_phone');
+
       if (storedName) setRestaurantName(storedName);
       if (storedId) setRestaurantId(storedId);
+      if (storedPhone) setRestaurantPhone(storedPhone);
+
+      if (storedId) {
+        fetch(`/api/super-admin/restaurants/${storedId}`)
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.restaurant) {
+              const rName = d.restaurant.name || d.restaurant.businessName;
+              const rPhone = d.restaurant.phone || '+221 77 458 74 74';
+              if (rName) {
+                setRestaurantName(rName);
+                localStorage.setItem('current_restaurant_name', rName);
+              }
+              if (rPhone) {
+                setRestaurantPhone(rPhone);
+                localStorage.setItem('current_restaurant_phone', rPhone);
+              }
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, []);
 
@@ -47,7 +87,7 @@ export default function CashierCounterPage() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
       const url = storedId ? `/api/orders?restaurantId=${encodeURIComponent(storedId)}` : '/api/orders';
       const res = await fetch(url);
       if (res.ok) {
@@ -147,13 +187,13 @@ export default function CashierCounterPage() {
 
   // Daily statistics
   const totalRevenue = useMemo(() => {
-    return orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    return orders.reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
   const expressRevenue = useMemo(() => {
     return orders
       .filter((o) => o.orderType === 'EXPRESS' || o.tableNumber === 0)
-      .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+      .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
   return (
@@ -169,18 +209,26 @@ export default function CashierCounterPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
 
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black shadow-xs">
                 <Receipt className="w-5 h-5" />
               </div>
               <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                 Écran Caisse &amp; Comptoir Express
               </h1>
+              <span className="text-[11px] font-black text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Direct Synchronisé
+              </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              {restaurantName} • Encaissement instantané &amp; Commandes à emporter
-            </p>
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-slate-600 font-bold">{restaurantName}</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-700 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                📞 Gérance : <a href={`tel:${restaurantPhone}`} className="text-amber-900 hover:underline">{restaurantPhone}</a>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -309,7 +357,7 @@ export default function CashierCounterPage() {
                     </span>
                   </div>
                   <span className="text-xs font-bold text-slate-900 block truncate">
-                    {ord.customerName || `${ord.items.length} articles`} • {formatFCFA(ord.total)}
+                    {ord.customerName || `${ord.items.length} articles`} • {formatFCFA(getOrderTotal(ord))}
                   </span>
                 </div>
 
@@ -340,16 +388,29 @@ export default function CashierCounterPage() {
       {/* 4. ORDERS GRID */}
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeOrders.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-slate-500 space-y-2 bg-white rounded-3xl border border-slate-200 shadow-xs">
+          <div className="col-span-full py-14 text-center text-slate-500 space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
             <span className="text-4xl block">{activeFilter === 'SERVED' ? '✅' : '✨'}</span>
             <h3 className="text-base font-bold text-slate-800">
               {activeFilter === 'SERVED' ? 'Aucune commande servie pour l\'instant' : 'Aucune commande en attente'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
               {activeFilter === 'SERVED'
                 ? 'Les commandes servies et clôturées apparaîtront ici avec possibilité de réimpression.'
-                : 'Toutes les commandes sont préparées ou encaissées !'}
+                : 'Toutes les commandes en cours ont été préparées, servies ou encaissées.'}
             </p>
+
+            {activeFilter !== 'SERVED' && orders.some((o) => o.status === 'SERVED') && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter('SERVED')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-2xl text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>✅ {orders.filter((o) => o.status === 'SERVED').length} commande(s) servie(s) et clôturée(s) aujourd'hui</span>
+                  <span className="underline font-bold">Consulter &amp; Réimprimer Ticket &rarr;</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           activeOrders.map((order) => {
@@ -440,7 +501,7 @@ export default function CashierCounterPage() {
                     <span className="text-slate-600 font-bold uppercase">
                       {order.status === 'SERVED' ? 'Total Encaissé :' : 'Total à Encaisser :'}
                     </span>
-                    <span className="text-base font-black text-slate-950 font-mono">{formatFCFA(order.total)}</span>
+                    <span className="text-base font-black text-slate-950 font-mono">{formatFCFA(getOrderTotal(order))}</span>
                   </div>
 
                   {order.status === 'SERVED' ? (

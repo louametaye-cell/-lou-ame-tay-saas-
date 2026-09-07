@@ -1,7 +1,6 @@
 import React from 'react';
+import { notFound } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
-
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
@@ -30,7 +29,7 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
   const cleanDigits = rawTableStr.replace(/[^0-9]/g, '');
   const tableNum = parseInt(cleanDigits, 10) || 1;
 
-  let restaurant: any = SAMPLE_RESTAURANT;
+  let restaurant: any = null;
 
   try {
     // 2. Recherche directe dans la table Prisma `tenant`
@@ -54,8 +53,11 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
       },
     });
 
-    if (dbTenant) {
-      const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
+    if (!dbTenant) {
+      notFound();
+    }
+
+    const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
 
       restaurant = {
         id: dbTenant.id,
@@ -91,7 +93,6 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
           })),
         })),
       };
-    }
   } catch (error) {
     console.error('Erreur chargement menu restaurant :', error);
   }
