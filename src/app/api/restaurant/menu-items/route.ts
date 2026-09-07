@@ -8,28 +8,39 @@ import { Language } from '@/types';
 async function resolveTenantId(reqTenantInput?: string): Promise<{ id: string; subdomain: string } | null> {
   let input = reqTenantInput;
   if (!input) {
-    const cookieStore = cookies();
-    const token = cookieStore.get('saas_token')?.value;
-    if (token && token.startsWith('resto_session_')) {
-      input = token.replace('resto_session_', '');
+    try {
+      const cookieStore = cookies();
+      const token = cookieStore.get('saas_token')?.value;
+      if (token && token.startsWith('resto_session_')) {
+        input = token.replace('resto_session_', '');
+      }
+    } catch (e) {}
+  }
+
+  if (input) {
+    try {
+      const dbTenant = await (prisma as any).tenant.findFirst({
+        where: {
+          OR: [
+            { id: input },
+            { subdomain: input },
+          ],
+        },
+        select: { id: true, subdomain: true },
+      });
+      if (dbTenant) return dbTenant;
+    } catch (err) {
+      console.error('Erreur resolution tenant:', err);
     }
   }
 
-  if (!input) return null;
-
+  // Fallback sur le premier tenant actif
   try {
-    const dbTenant = await (prisma as any).tenant.findFirst({
-      where: {
-        OR: [
-          { id: input },
-          { subdomain: input },
-        ],
-      },
+    const fallbackTenant = await (prisma as any).tenant.findFirst({
       select: { id: true, subdomain: true },
     });
-    return dbTenant || null;
-  } catch (err) {
-    console.error('Erreur resolution tenant:', err);
+    return fallbackTenant || null;
+  } catch (e) {
     return null;
   }
 }
@@ -38,7 +49,7 @@ async function resolveTenantId(reqTenantInput?: string): Promise<{ id: string; s
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantParam = searchParams.get('tenantId') || searchParams.get('restaurantId');
+    const tenantParam = searchParams.get('tenantId') || searchParams.get('restaurantId') || searchParams.get('subdomain');
     const tenant = await resolveTenantId(tenantParam || undefined);
 
     if (!tenant) {
