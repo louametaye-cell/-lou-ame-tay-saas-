@@ -3,6 +3,8 @@ import { saasStorage } from '@/lib/saas-storage';
 import { PaymentTransaction } from '@/types/saas';
 import { prisma } from '@/lib/prisma';
 
+import crypto from 'crypto';
+
 // POST /api/webhooks/wave
 // Webhook officiel Wave pour confirmation de paiement et activation instantanée
 export async function POST(req: Request) {
@@ -10,12 +12,29 @@ export async function POST(req: Request) {
     const signature = req.headers.get('x-wave-signature') || req.headers.get('wave-signature');
     const webhookSecret = process.env.WAVE_WEBHOOK_SECRET;
 
-    // Validation de sécurité en environnement de production si la clé secrète est configurée
-    if (webhookSecret && process.env.NODE_ENV === 'production' && !signature) {
-      return NextResponse.json({ error: 'Signature Wave manquante' }, { status: 401 });
+    const rawBody = await req.text();
+    let body: any;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: 'JSON invalide' }, { status: 400 });
     }
 
-    const body = await req.json();
+    // Validation cryptographique si la clé secrète WAVE_WEBHOOK_SECRET est configurée
+    if (webhookSecret) {
+      if (!signature) {
+        return NextResponse.json({ error: 'Signature Wave manquante' }, { status: 401 });
+      }
+      const expectedHmac = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
+      const sigBuf = Buffer.from(signature);
+      const expBuf = Buffer.from(expectedHmac);
+      const isHmacValid = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+      const isTokenValid = signature === webhookSecret;
+
+      if (!isHmacValid && !isTokenValid) {
+        return NextResponse.json({ error: 'Signature Wave non valide' }, { status: 401 });
+      }
+    }
 
     const {
       type,

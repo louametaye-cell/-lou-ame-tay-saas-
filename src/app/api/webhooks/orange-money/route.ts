@@ -7,6 +7,9 @@ import { prisma } from '@/lib/prisma';
 // Webhook IPN Orange Money Sénégal pour confirmation et activation automatique
 export async function POST(req: Request) {
   try {
+    const omSecret = process.env.ORANGE_MONEY_WEBHOOK_SECRET;
+    const authHeader = req.headers.get('authorization') || req.headers.get('x-om-secret');
+
     const body = await req.json();
     const {
       status,
@@ -16,6 +19,15 @@ export async function POST(req: Request) {
       amount,
       subscriber_msisdn,
     } = body;
+
+    // Validation d'authenticité si le secret Orange Money est configuré
+    if (omSecret) {
+      const isHeaderValid = authHeader && (authHeader === omSecret || authHeader === `Bearer ${omSecret}`);
+      const isTokenValid = notif_token && notif_token === omSecret;
+      if (!isHeaderValid && !isTokenValid) {
+        return NextResponse.json({ error: 'Signature ou jeton Orange Money non valide' }, { status: 401 });
+      }
+    }
 
     if (!txnid && !notif_token) {
       return NextResponse.json({ error: 'Payload IPN invalide' }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 export async function GET(req: Request) {
   try {
@@ -21,6 +22,14 @@ export async function GET(req: Request) {
 
     if (!tenant) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+
+    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut voir les données financières de caisse
+    if (!isAuthorizedTenant(req, tenant.id)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session gérant requise pour consulter les clôtures de caisse' },
+        { status: 401 }
+      );
     }
 
     const whereClause: any = {

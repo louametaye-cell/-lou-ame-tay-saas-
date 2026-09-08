@@ -23,7 +23,29 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 2. ROUTES PUBLIQUES (AUCUN MOT DE PASSE REQUIS POUR LES CLIENTS DU RESTAURANT)
+  // 2. SÉCURISATION DES APIS RESTAURATEUR SENSIBLES (/api/dashboard/*, /api/tenant/cashiers/*, /api/tenant/cash-sessions/*, etc.)
+  const isProtectedTenantApi =
+    pathname.startsWith('/api/dashboard') ||
+    pathname.startsWith('/api/tenant/cashiers') ||
+    pathname.startsWith('/api/tenant/cash-sessions') ||
+    pathname.startsWith('/api/tenant/waiters') ||
+    pathname.startsWith('/api/tenant/zones');
+
+  if (isProtectedTenantApi) {
+    const tenantToken =
+      request.cookies.get('saas_token')?.value ||
+      request.cookies.get('superadmin_token')?.value ||
+      request.headers.get('authorization')?.replace('Bearer ', '');
+
+    if (!tenantToken) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Authentification requise' },
+        { status: 401 }
+      );
+    }
+  }
+
+  // 3. ROUTES PUBLIQUES (AUCUN MOT DE PASSE REQUIS POUR LES CLIENTS DU RESTAURANT)
   const isPublicRoute =
     pathname.startsWith('/r/') ||          // Menu client QR Code
     pathname.startsWith('/menu/') ||       // Menu alternatif
@@ -31,7 +53,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/pay/') ||        // Paiement mobile client
     pathname.startsWith('/login') ||       // Page de connexion restaurateur
     pathname.startsWith('/super-admin') || // Écran de login Super-Admin client
-    (pathname.startsWith('/api/') && !isSuperAdminApi) || // APIs publiques hors administration
+    (pathname.startsWith('/api/') && !isSuperAdminApi && !isProtectedTenantApi) || // APIs publiques
     pathname.startsWith('/_next') ||
     pathname.includes('/favicon.ico') ||
     pathname === '/';
@@ -41,7 +63,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. ROUTES DU TABLEAU DE BORD RESTAURATEUR (/dashboard, /cashier, /kitchen)
+  // 4. ROUTES DU TABLEAU DE BORD RESTAURATEUR (/dashboard, /cashier, /kitchen)
   const token = request.cookies.get('saas_token')?.value || request.cookies.get('token')?.value;
 
   if (!token && (pathname.startsWith('/dashboard') || pathname.startsWith('/cashier') || pathname.startsWith('/kitchen'))) {

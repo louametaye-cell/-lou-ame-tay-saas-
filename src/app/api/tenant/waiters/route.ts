@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 export async function GET(req: Request) {
   try {
@@ -8,6 +9,10 @@ export async function GET(req: Request) {
     const tenantId = searchParams.get('tenantId');
     if (!tenantId) {
       return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
+    }
+
+    if (!isAuthorizedTenant(req, tenantId)) {
+      return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
 
     const waiters = await prisma.waiter.findMany({
@@ -34,6 +39,10 @@ export async function POST(req: Request) {
 
     if (!tenantId) {
       return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
+    }
+
+    if (!isAuthorizedTenant(req, tenantId)) {
+      return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
 
     if (!name) {

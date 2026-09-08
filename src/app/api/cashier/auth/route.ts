@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    // 🔒 ANTI-BRUTE FORCE : Limite à 5 essais de PIN par minute par adresse IP
+    const rate = await checkRateLimit(req, 'auth');
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives de code PIN. Veuillez patienter 1 minute avant de réessayer.' },
+        { status: 429, headers: { 'Retry-After': String(rate.reset) } }
+      );
+    }
+
     const body = await req.json();
     const { restaurantId, pinCode } = body;
 

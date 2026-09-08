@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { OrderType } from '@/types';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 // GET /api/dashboard/orders/current
 // Récupère les commandes en cours avec détection des retards (>20 min)
@@ -9,6 +10,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const tenantId = searchParams.get('restaurantId');
     if (!tenantId) return NextResponse.json({ error: 'restaurantId missing' }, { status: 400 });
+
+    // 🔒 CONTRÔLE D'ACCÈS STRICT : Seul le gérant ou Super-Admin peut accéder aux commandes en direct
+    if (!isAuthorizedTenant(req, tenantId)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session requise pour consulter les commandes en cours' },
+        { status: 401 }
+      );
+    }
 
     const now = Date.now();
 

@@ -4,6 +4,7 @@ import { getCachedDashboardStats, setCachedDashboardStats } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
 
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 // GET /api/dashboard/stats
 // Récupère les KPIs temps réel de caisse pour le restaurateur
@@ -28,14 +29,9 @@ export async function GET(req: Request) {
       tenantId = dbTenant.id;
     }
 
-    // Contrôle d'accès de session (Anti-IDOR)
-    const cookieHeader = req.headers.get('cookie') || '';
-    const isSuperAdmin = isAuthorizedSuperAdmin(req);
-    const hasMatchingSession = cookieHeader.includes(`resto_session_${tenantId}`) || cookieHeader.includes(`resto_session_${rawInput}`) || isSuperAdmin;
-    const hasAnySessionToken = cookieHeader.includes('saas_token=');
-
-    if (!hasMatchingSession && !hasAnySessionToken && !isSuperAdmin) {
-      return NextResponse.json({ error: 'Accès non autorisé aux statistiques' }, { status: 401 });
+    // 🔒 CONTRÔLE D'ACCÈS STRICT (Anti-IDOR & Cloisonnement Multi-Tenant)
+    if (!isAuthorizedTenant(req, tenantId)) {
+      return NextResponse.json({ error: 'Accès non autorisé aux statistiques de cet établissement' }, { status: 401 });
     }
 
     // 1. Check Redis Cache (TTL 60s)

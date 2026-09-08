@@ -19,13 +19,18 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { password } = body;
 
-    const validPasswords = [
-      process.env.SUPER_ADMIN_PASSWORD,
-      'admin123',
-      'SuperAdmin2024!',
-    ].filter(Boolean);
+    const isProd = process.env.NODE_ENV === 'production';
+    const configuredSecret = process.env.SUPER_ADMIN_PASSWORD?.trim();
 
-    if (password && validPasswords.includes(password.trim())) {
+    const validPasswords: string[] = isProd
+      ? (configuredSecret ? [configuredSecret] : [])
+      : ([configuredSecret, 'admin123', 'SuperAdmin2024!'].filter(Boolean) as string[]);
+
+    if (isProd && !configuredSecret) {
+      console.error('CRITICAL: SUPER_ADMIN_PASSWORD is not configured in production environment variables.');
+    }
+
+    if (password && validPasswords.length > 0 && validPasswords.includes(password.trim())) {
       const token = generateAdminToken();
 
       const res = NextResponse.json({

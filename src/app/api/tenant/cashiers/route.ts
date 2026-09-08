@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 export async function GET(req: Request) {
   try {
@@ -22,10 +23,28 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
+    // 🔒 CONTRÔLE D'ACCÈS STRICT : Seul le gérant authentifié ou Super-Admin peut voir l'équipe
+    if (!isAuthorizedTenant(req, tenant.id)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session gérant requise pour consulter les caissiers' },
+        { status: 401 }
+      );
+    }
+
+    // 🔒 SÉCURITÉ ABSOLUE : Exclusion du champ pinCode pour empêcher toute fuite de secret
     const cashiers = await prisma.cashier.findMany({
       where: { tenantId: tenant.id },
       orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
-      include: {
+      select: {
+        id: true,
+        tenantId: true,
+        name: true,
+        phone: true,
+        shift: true,
+        schedule: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: { sessions: true, orders: true }
         },
@@ -44,7 +63,12 @@ export async function GET(req: Request) {
       }
     });
 
-    return NextResponse.json({ success: true, cashiers });
+    const safeCashiers = cashiers.map((c) => ({
+      ...c,
+      hasPin: true, // Indicateur que le PIN est configuré sans jamais le divulguer en clair
+    }));
+
+    return NextResponse.json({ success: true, cashiers: safeCashiers });
   } catch (error) {
     console.error('Erreur récupération caissiers:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la récupération des caissiers' }, { status: 500 });
@@ -79,6 +103,14 @@ export async function POST(req: Request) {
 
     if (!tenant) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+
+    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant ou Super-Admin peut créer un caissier
+    if (!isAuthorizedTenant(req, tenant.id)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session gérant requise pour créer un caissier' },
+        { status: 401 }
+      );
     }
 
     // Check PIN uniqueness for this tenant

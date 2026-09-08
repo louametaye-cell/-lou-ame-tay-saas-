@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { getAssignedServerIdForTable } from '@/lib/server-shift';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/cache';
 import { startTimer, logPerformance } from '@/lib/logger';
-import { cookies } from 'next/headers';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 export async function GET(req: Request) {
   try {
@@ -39,9 +40,9 @@ export async function GET(req: Request) {
       }
     }
 
-    if (!resolvedTenantId && !isAuthorizedSuperAdmin(req)) {
+    if (!resolvedTenantId || !isAuthorizedTenant(req, resolvedTenantId)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé : Restaurant non identifié (identifiant ou session requis)' },
+        { error: 'Accès non autorisé : Session gérant requise pour consulter les commandes' },
         { status: 401 }
       );
     }

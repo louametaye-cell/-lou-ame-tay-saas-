@@ -109,7 +109,7 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Entrez le mot de passe (admin123)..."
+                placeholder="Entrez le mot de passe Super-Admin..."
                 className="w-full bg-slate-50/90 border border-slate-200/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 rounded-2xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-all shadow-inner"
                 autoFocus
               />

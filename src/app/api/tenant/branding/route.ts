@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -65,6 +67,10 @@ export async function PUT(req: Request) {
 
     if (!tenant) {
       return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 404 });
+    }
+
+    if (!isAuthorizedTenant(req, tenant.id)) {
+      return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
 
     const currentBranding = (tenant.branding as any) || {};

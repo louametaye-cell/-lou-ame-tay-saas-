@@ -55,12 +55,18 @@ export async function POST(req: Request) {
 
     // 2. Vérification stricte du mot de passe
     let isValid = false;
+    const isProd = process.env.NODE_ENV === 'production';
+
     if (dbTenant.passwordHash) {
       isValid = await bcrypt.compare(providedSecret, dbTenant.passwordHash);
+    } else if (!isProd) {
+      // Fallback de développement uniquement pour les environnements de test locaux
+      const devPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
+      isValid = devPasswords.includes(providedSecret);
     } else {
-      // Fallback temporaire pour les anciens comptes non migrés
-      const validPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
-      isValid = validPasswords.includes(providedSecret);
+      // En production, un compte sans hash sécurisé ne peut pas être accédé via fallback
+      console.error(`[SECURITY ALERT] Restaurant ${dbTenant.id} attempted login without passwordHash in production.`);
+      isValid = false;
     }
 
     if (!isValid) {

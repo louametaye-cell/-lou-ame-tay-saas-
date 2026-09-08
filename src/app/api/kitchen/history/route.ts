@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 // GET /api/kitchen/history
 // Récupère l'historique des commandes servies aujourd'hui
@@ -9,22 +10,32 @@ export async function GET(req: Request) {
     const tenantIdParam = searchParams.get('restaurantId') || searchParams.get('tenantId');
     const format = searchParams.get('format');
 
+    if (!tenantIdParam) {
+      return NextResponse.json({ error: 'restaurantId ou tenantId requis' }, { status: 400 });
+    }
+
     let resolvedTenantId: string | null = null;
-    if (tenantIdParam) {
-      const dbTenant = await (prisma as any).tenant.findFirst({
-        where: {
-          OR: [
-            { id: tenantIdParam },
-            { subdomain: tenantIdParam },
-          ],
-        },
-        select: { id: true },
-      });
-      if (dbTenant) {
-        resolvedTenantId = dbTenant.id;
-      } else {
-        resolvedTenantId = tenantIdParam;
-      }
+    const dbTenant = await (prisma as any).tenant.findFirst({
+      where: {
+        OR: [
+          { id: tenantIdParam },
+          { subdomain: tenantIdParam },
+        ],
+      },
+      select: { id: true },
+    });
+    if (dbTenant) {
+      resolvedTenantId = dbTenant.id;
+    } else {
+      resolvedTenantId = tenantIdParam;
+    }
+
+    if (!resolvedTenantId) {
+      return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 404 });
+    }
+
+    if (!isAuthorizedTenant(req, resolvedTenantId)) {
+      return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
 
     const today = new Date();

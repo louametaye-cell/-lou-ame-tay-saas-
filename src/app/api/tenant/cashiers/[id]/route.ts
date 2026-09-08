@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 export async function PATCH(
   req: Request,
@@ -18,6 +19,14 @@ export async function PATCH(
 
     if (!current) {
       return NextResponse.json({ error: 'Caissier introuvable' }, { status: 404 });
+    }
+
+    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut modifier un caissier
+    if (!isAuthorizedTenant(req, current.tenantId)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session gérant requise pour modifier ce caissier' },
+        { status: 401 }
+      );
     }
 
     const dataToUpdate: any = {};
@@ -55,7 +64,8 @@ export async function PATCH(
       data: dataToUpdate
     });
 
-    return NextResponse.json({ success: true, cashier: updated });
+    const { pinCode: _, ...safeUpdated } = updated as any;
+    return NextResponse.json({ success: true, cashier: { ...safeUpdated, hasPin: true } });
   } catch (error) {
     console.error('Erreur mise à jour caissier:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la mise à jour' }, { status: 500 });
@@ -69,6 +79,23 @@ export async function DELETE(
   try {
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id;
+
+    const current = await prisma.cashier.findUnique({
+      where: { id },
+      select: { id: true, tenantId: true }
+    });
+
+    if (!current) {
+      return NextResponse.json({ error: 'Caissier introuvable' }, { status: 404 });
+    }
+
+    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut supprimer un caissier
+    if (!isAuthorizedTenant(req, current.tenantId)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session gérant requise pour supprimer ce caissier' },
+        { status: 401 }
+      );
+    }
 
     // Check if cashier has open session
     const openSession = await prisma.cashSession.findFirst({
