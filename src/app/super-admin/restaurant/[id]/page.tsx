@@ -62,7 +62,6 @@ import {
   Tooltip, 
   CartesianGrid 
 } from 'recharts';
-import { SuperAdminAuthGuard } from '@/components/super-admin/SuperAdminAuthGuard';
 import { RestaurantType, SubscriptionStatus, OrderType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { RestaurantEditModal } from '@/components/RestaurantEditModal';
@@ -371,28 +370,24 @@ export default function SuperAdminRestaurantDetailPage() {
 
   if (isLoading) {
     return (
-      <SuperAdminAuthGuard>
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
-        </div>
-      </SuperAdminAuthGuard>
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
+      </div>
     );
   }
 
   if (!restaurant) {
     return (
-      <SuperAdminAuthGuard>
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 p-8 text-center">
-          <h2 className="text-xl font-bold">Restaurant introuvable</h2>
-          <Link
-            href="/super-admin"
-            className="mt-4 inline-flex items-center gap-2 bg-[#FF6B00] px-4 py-2 rounded-xl text-xs font-bold"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Retour aux restaurants</span>
-          </Link>
-        </div>
-      </SuperAdminAuthGuard>
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 p-8 text-center">
+        <h2 className="text-xl font-bold">Restaurant introuvable</h2>
+        <Link
+          href="/super-admin"
+          className="mt-4 inline-flex items-center gap-2 bg-[#FF6B00] px-4 py-2 rounded-xl text-xs font-bold"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Retour aux restaurants</span>
+        </Link>
+      </div>
     );
   }
 
@@ -451,8 +446,7 @@ export default function SuperAdminRestaurantDetailPage() {
       ];
 
   return (
-    <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-16">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-16">
         {/* Top Breadcrumb Header */}
         <header className="bg-white border-b border-slate-200 shadow-xs px-4 sm:px-8 py-4 sticky top-0 z-30 backdrop-blur-md print:hidden">
           <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
@@ -1939,6 +1933,5 @@ export default function SuperAdminRestaurantDetailPage() {
           onClose={() => setIsWhatsAppModalOpen(false)}
         />
       </div>
-    </SuperAdminAuthGuard>
   );
 }

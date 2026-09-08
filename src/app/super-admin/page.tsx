@@ -46,7 +46,6 @@ import {
   Tooltip, 
   CartesianGrid,
 } from 'recharts';
-import { SuperAdminAuthGuard } from '@/components/super-admin/SuperAdminAuthGuard';
 import { RestaurantType, SubscriptionPlan, SubscriptionStatus } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { RestaurantEditModal } from '@/components/RestaurantEditModal';
@@ -358,8 +357,7 @@ export default function SuperAdminDashboardPage() {
   }, [restaurants]);
 
   return (
-    <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20">
         {/* Top Header */}
         <header className="bg-white border-b border-slate-200 shadow-xs px-4 sm:px-8 py-5 sticky top-0 z-30 backdrop-blur-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
@@ -1223,6 +1221,5 @@ export default function SuperAdminDashboardPage() {
           </div>
         )}
       </div>
-    </SuperAdminAuthGuard>
   );
 }

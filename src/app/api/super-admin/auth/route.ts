@@ -1,6 +1,43 @@
 import { NextResponse } from 'next/server';
-import { generateAdminToken } from '@/lib/admin-auth';
+import { generateAdminToken, isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+
+/**
+ * GET /api/super-admin/auth
+ * Vérifie si la session Super Admin est active et valide (cookie ou header).
+ */
+export async function GET(req: Request) {
+  try {
+    const authorized = isAuthorizedSuperAdmin(req);
+    if (authorized) {
+      return NextResponse.json({ authenticated: true });
+    }
+    return NextResponse.json(
+      { authenticated: false, error: 'Session non autorisée ou expirée' },
+      { status: 401 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { authenticated: false, error: 'Erreur de vérification de session' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/super-admin/auth
+ * Déconnexion sécurisée : supprime le cookie HttpOnly de session.
+ */
+export async function DELETE() {
+  const res = NextResponse.json({
+    success: true,
+    message: 'Session Super-Admin fermée avec succès',
+  });
+
+  res.cookies.delete('superadmin_token');
+  return res;
+}
+
 
 export async function POST(req: Request) {
   try {

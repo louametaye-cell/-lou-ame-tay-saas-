@@ -24,7 +24,6 @@ import {
 import { SaaSPlan, SaaSFeature } from '@/types/saas';
 import { formatFCFA } from '@/lib/utils';
 import { toast } from 'sonner';
-import { SuperAdminAuthGuard } from '@/components/super-admin/SuperAdminAuthGuard';
 
 export default function SuperAdminPlansPage() {
   const [plans, setPlans] = useState<SaaSPlan[]>([]);
@@ -149,8 +148,7 @@ export default function SuperAdminPlansPage() {
   };
 
   return (
-    <SuperAdminAuthGuard>
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-slate-900 pb-20">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-500 selection:text-slate-900 pb-20">
         {/* Header */}
         <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-4 sticky top-0 z-30 shadow-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
@@ -370,6 +368,5 @@ export default function SuperAdminPlansPage() {
           )}
         </main>
       </div>
-    </SuperAdminAuthGuard>
   );
 }
