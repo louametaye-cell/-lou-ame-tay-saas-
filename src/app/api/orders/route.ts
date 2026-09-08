@@ -183,7 +183,7 @@ export async function POST(req: Request) {
       0
     );
 
-    const allowedPaymentMethods = ['CASH', 'WAVE', 'ORANGE_MONEY', 'CARD', 'CASH_TPE'];
+    const allowedPaymentMethods = ['CASH', 'WAVE', 'ORANGE_MONEY', 'YAS_MONEY', 'CARD', 'CASH_TPE'];
     const cleanPaymentMethod = allowedPaymentMethods.includes(paymentMethod) ? paymentMethod : 'CASH';
 
     const cleanTableNum = isExpress ? 0 : parseInt(String(tableNumber).replace(/[^0-9]/g, ''), 10) || 0;
@@ -197,6 +197,8 @@ export async function POST(req: Request) {
         paymentMethod: cleanPaymentMethod,
         transactionRef: transactionRef ? String(transactionRef).trim() : undefined,
         waiterId: validWaiterId || undefined,
+        cashierId: body.cashierId || undefined,
+        cashSessionId: body.cashSessionId || undefined,
         zoneId: validZoneId || undefined,
         locationDetail: locationDetail || undefined,
         status: 'PENDING',

@@ -215,4 +215,146 @@ export class EscPosPrinterService {
     printWindow.document.write(htmlContent);
     printWindow.document.close();
   }
+
+  /**
+   * Impression du Rapport Z de Clôture de Caisse (80mm Thermique)
+   */
+  public static printZReport(session: any, restaurantName = 'LOU AME TAY ?') {
+    const printWindow = window.open('', '_blank', 'width=420,height=750');
+    if (!printWindow) return;
+
+    const openingDate = session.openedAt
+      ? new Date(session.openedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
+      : '-';
+    const closingDate = session.closedAt
+      ? new Date(session.closedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
+      : new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+
+    const cashierName = session.cashier?.name || 'Caissier';
+    const cashierShift = session.cashier?.shift || 'STANDARD';
+
+    const openingFloat = Number(session.openingFloat) || 0;
+    const totalCash = Number(session.totalCash) || 0;
+    const totalWave = Number(session.totalWave) || 0;
+    const totalOM = Number(session.totalOM) || 0;
+    const totalYas = Number(session.totalYas) || 0;
+    const totalCard = Number(session.totalCard) || 0;
+    const totalRevenue = Number(session.totalRevenue) || 0;
+    const expectedCash = Number(session.expectedCash) || (openingFloat + totalCash);
+    const countedCash = Number(session.countedCash) || 0;
+    const discrepancy = Number(session.cashDiscrepancy) || (countedCash - expectedCash);
+
+    let discrepancyLabel = 'ÉQUILIBRÉ (0 FCFA)';
+    let discrepancyColor = '#16a34a';
+    if (discrepancy > 0) {
+      discrepancyLabel = `+${formatFCFA(discrepancy)} (EXCÉDENT)`;
+      discrepancyColor = '#16a34a';
+    } else if (discrepancy < 0) {
+      discrepancyLabel = `${formatFCFA(discrepancy)} (MANQUANT / DEFICIT)`;
+      discrepancyColor = '#dc2626';
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Rapport Z Clôture de Caisse - ${restaurantName}</title>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            body {
+              font-family: 'Courier New', Courier, monospace;
+              width: 76mm;
+              margin: 0 auto;
+              padding: 6mm 2mm;
+              color: #000;
+              background: #fff;
+              font-size: 12px;
+              line-height: 1.25;
+            }
+            .center { text-align: center; }
+            .right { text-align: right; }
+            .left { text-align: left; }
+            .bold { font-weight: bold; }
+            .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
+            .double-divider { border-bottom: 2px solid #000; margin: 6px 0; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+            .badge-title {
+              font-size: 15px;
+              font-weight: 900;
+              border-top: 2px solid #000;
+              border-bottom: 2px solid #000;
+              padding: 4px 0;
+              margin: 6px 0;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="center bold" style="font-size: 16px;">${restaurantName}</div>
+          <div class="center" style="font-size: 11px;">Plateforme SaaS Lou Ame Tay ?</div>
+          <div class="badge-title">CLOTURE DE CAISSE<br/>*** RAPPORT Z SHIFT ***</div>
+
+          <div class="row"><span>Caissier(e) :</span> <span class="bold">${cashierName}</span></div>
+          <div class="row"><span>Shift / Créneau :</span> <span>${cashierShift}</span></div>
+          <div class="row"><span>Ouverture :</span> <span>${openingDate}</span></div>
+          <div class="row"><span>Clôture :</span> <span>${closingDate}</span></div>
+          <div class="row"><span>Nbre commandes :</span> <span class="bold">${session.orderCount || 0}</span></div>
+
+          <div class="divider"></div>
+          <div class="row bold">
+            <span>Fond de caisse départ :</span>
+            <span>${formatFCFA(openingFloat)}</span>
+          </div>
+
+          <div class="divider"></div>
+          <div class="bold" style="margin-bottom: 4px;">VENTILATION DES ENCAISSEMENTS :</div>
+          <div class="row"><span>• Espèces (Cash) :</span> <span>${formatFCFA(totalCash)}</span></div>
+          <div class="row"><span>• Wave :</span> <span>${formatFCFA(totalWave)}</span></div>
+          <div class="row"><span>• Orange Money :</span> <span>${formatFCFA(totalOM)}</span></div>
+          <div class="row"><span>• Yas Money (Free) :</span> <span>${formatFCFA(totalYas)}</span></div>
+          <div class="row"><span>• Cartes / TPE :</span> <span>${formatFCFA(totalCard)}</span></div>
+
+          <div class="double-divider"></div>
+          <div class="row bold" style="font-size: 14px;">
+            <span>TOTAL RECETTES SHIFT :</span>
+            <span>${formatFCFA(totalRevenue)}</span>
+          </div>
+          <div class="double-divider"></div>
+
+          <div class="bold" style="margin-bottom: 4px;">CONTROLE TIROIR-CAISSE (ESPECES) :</div>
+          <div class="row"><span>Espèces théoriques (Fond+Ventes):</span> <span class="bold">${formatFCFA(expectedCash)}</span></div>
+          <div class="row"><span>Espèces réelles comptées:</span> <span class="bold">${formatFCFA(countedCash)}</span></div>
+          <div class="row bold" style="font-size: 13px; color: ${discrepancyColor};">
+            <span>ÉCART DE CAISSE :</span>
+            <span>${discrepancyLabel}</span>
+          </div>
+
+          ${session.notes ? `
+            <div class="divider"></div>
+            <div class="bold">Notes / Observations :</div>
+            <div style="font-size: 11px;">${session.notes}</div>
+          ` : ''}
+
+          <div class="divider"></div>
+          <div style="margin-top: 15px; display: flex; justify-content: space-between; font-size: 11px;">
+            <div>Signature Caissier :<br/><br/><br/>__________________</div>
+            <div class="right">Signature Gérant :<br/><br/><br/>__________________</div>
+          </div>
+          <div class="center" style="font-size: 9px; margin-top: 20px; color: #555;">
+            Document comptable interne infalsifiable - Lou Ame Tay ?
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  }
 }

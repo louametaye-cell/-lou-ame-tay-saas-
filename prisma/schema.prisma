@@ -48,8 +48,22 @@ enum PaymentMethod {
   CASH
   WAVE
   ORANGE_MONEY
+  YAS_MONEY
   CARD
   CASH_TPE
+}
+
+enum CashierShift {
+  MORNING
+  EVENING
+  NIGHT
+  FULL_DAY
+  CUSTOM
+}
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
 }
 
 enum OrderStatus {
@@ -163,6 +177,8 @@ model Tenant {
   tickets      SupportTicket[]
   waiterCalls  WaiterCall[]
   QRCodeOrder  QRCodeOrder[]
+  cashiers     Cashier[]
+  cashSessions CashSession[]
 
   @@map("tenants")
 }
@@ -330,6 +346,8 @@ model Order {
   tableId        String?       @map("table_id")
   tableNumber    Int?          @map("table_number")
   waiterId       String?       @map("waiter_id")
+  cashierId      String?       @map("cashier_id")
+  cashSessionId  String?       @map("cash_session_id")
   locationDetail String?       @map("location_detail")
   status         OrderStatus   @default(PENDING)
   paymentMethod  PaymentMethod @default(CASH) @map("payment_method")
@@ -344,15 +362,19 @@ model Order {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  zone   Zone?       @relation(fields: [zoneId], references: [id])
-  table  Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  waiter Waiter?     @relation(fields: [waiterId], references: [id])
-  items  OrderItem[]
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  zone        Zone?        @relation(fields: [zoneId], references: [id])
+  table       Table?       @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  waiter      Waiter?      @relation(fields: [waiterId], references: [id])
+  cashier     Cashier?     @relation(fields: [cashierId], references: [id], onDelete: SetNull)
+  cashSession CashSession? @relation(fields: [cashSessionId], references: [id], onDelete: SetNull)
+  items       OrderItem[]
 
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
   @@index([tableNumber])
+  @@index([cashierId])
+  @@index([cashSessionId])
   @@map("orders")
 }
 
@@ -457,4 +479,56 @@ model QRCodeOrder {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("qrcode_orders")
+}
+
+model Cashier {
+  id        String       @id @default(cuid())
+  tenantId  String       @map("tenant_id")
+  name      String
+  phone     String?
+  pinCode   String       @map("pin_code")
+  shift     CashierShift @default(MORNING)
+  schedule  String?
+  isActive  Boolean      @default(true) @map("is_active")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions CashSession[]
+  orders   Order[]
+
+  @@unique([tenantId, pinCode], name: "uq_tenant_cashier_pin")
+  @@index([tenantId, isActive])
+  @@map("cashiers")
+}
+
+model CashSession {
+  id              String            @id @default(cuid())
+  tenantId        String            @map("tenant_id")
+  cashierId       String            @map("cashier_id")
+  status          CashSessionStatus @default(OPEN)
+  openedAt        DateTime          @default(now()) @map("opened_at")
+  closedAt        DateTime?         @map("closed_at")
+  openingFloat    Decimal           @default(0) @map("opening_float") @db.Decimal(10, 2)
+  countedCash     Decimal?          @map("counted_cash") @db.Decimal(10, 2)
+  expectedCash    Decimal?          @map("expected_cash") @db.Decimal(10, 2)
+  cashDiscrepancy Decimal?          @map("cash_discrepancy") @db.Decimal(10, 2)
+  totalCash       Decimal           @default(0) @map("total_cash") @db.Decimal(10, 2)
+  totalWave       Decimal           @default(0) @map("total_wave") @db.Decimal(10, 2)
+  totalOM         Decimal           @default(0) @map("total_om") @db.Decimal(10, 2)
+  totalYas        Decimal           @default(0) @map("total_yas") @db.Decimal(10, 2)
+  totalCard       Decimal           @default(0) @map("total_card") @db.Decimal(10, 2)
+  totalRevenue    Decimal           @default(0) @map("total_revenue") @db.Decimal(10, 2)
+  orderCount      Int               @default(0) @map("order_count")
+  notes           String?           @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cashier Cashier @relation(fields: [cashierId], references: [id], onDelete: Cascade)
+  orders  Order[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, openedAt])
+  @@map("cash_sessions")
 }

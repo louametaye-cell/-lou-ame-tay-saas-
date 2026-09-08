@@ -347,3 +347,44 @@ export interface MenuRequestType {
   status: MenuRequestStatus;
   createdAt: string;
 }
+
+export type CashierShift = 'MORNING' | 'EVENING' | 'NIGHT' | 'FULL_DAY' | 'CUSTOM';
+export type CashSessionStatus = 'OPEN' | 'CLOSED';
+
+export interface CashierType {
+  id: string;
+  tenantId: string;
+  name: string;
+  phone?: string | null;
+  pinCode: string;
+  shift: CashierShift;
+  schedule?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CashSessionType {
+  id: string;
+  tenantId: string;
+  cashierId: string;
+  cashier?: CashierType;
+  status: CashSessionStatus;
+  openedAt: string;
+  closedAt?: string | null;
+  openingFloat: number;
+  countedCash?: number | null;
+  expectedCash?: number | null;
+  cashDiscrepancy?: number | null;
+  totalCash: number;
+  totalWave: number;
+  totalOM: number;
+  totalYas: number;
+  totalCard: number;
+  totalRevenue: number;
+  orderCount: number;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+

@@ -29,7 +29,9 @@ import {
   TrendingUp,
   Headphones,
   Plus,
-  Wine
+  Wine,
+  KeyRound,
+  Receipt
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -986,6 +988,28 @@ export default function OperationalDashboardPage() {
             </div>
             <h4 className="text-sm font-black text-slate-900">Statistiques & Vues</h4>
             <p className="text-xs text-slate-500 mt-1">Diagnostic vues vs commandes</p>
+          </Link>
+
+          <Link
+            href="/dashboard/cashiers"
+            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-amber-500 hover:shadow-sm transition-all group"
+          >
+            <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+              <KeyRound className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Équipe Caissiers</h4>
+            <p className="text-xs text-slate-500 mt-1">Codes PIN et plannings matin/soir</p>
+          </Link>
+
+          <Link
+            href="/dashboard/cash-closures"
+            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-emerald-500 hover:shadow-sm transition-all group"
+          >
+            <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+              <Receipt className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Clôtures & Caisses</h4>
+            <p className="text-xs text-slate-500 mt-1">Fonds de départ et rapports Z 80mm</p>
           </Link>
         </section>
       </main>
