@@ -29,7 +29,6 @@ export default function SuperAdminPlansPage() {
   const [plans, setPlans] = useState<SaaSPlan[]>([]);
   const [features, setFeatures] = useState<SaaSFeature[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
-  const [showArchived, setShowArchived] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -39,7 +38,7 @@ export default function SuperAdminPlansPage() {
   const fetchData = useCallback(async () => {
     try {
       const [resPlans, resFeats] = await Promise.all([
-        fetch(`/api/admin/plans?includeArchived=${showArchived}`),
+        fetch('/api/admin/plans'),
         fetch('/api/admin/features'),
       ]);
 
@@ -61,7 +60,7 @@ export default function SuperAdminPlansPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [showArchived]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -203,28 +202,19 @@ export default function SuperAdminPlansPage() {
         </header>
 
         <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
-          {/* Subheader & Archive Toggle */}
+          {/* Subheader */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
-                <span>{showArchived ? 'Tous les Packs (Actifs & Archives)' : 'Les 7 Formules Wolof Officielles'}</span>
+                <span>Les 7 Formules Wolof Officielles</span>
                 <span className="text-xs bg-orange-100 text-orange-700 font-bold px-2 py-0.5 rounded-full">
                   {plans.length} {plans.length > 1 ? 'packs' : 'pack'}
                 </span>
               </h2>
               <p className="text-xs text-slate-500">
-                {showArchived 
-                  ? 'Affichage incluant les anciens packs de transition archivés' 
-                  : 'Grille tarifaire active et visible pour les souscriptions des restaurants'}
+                Grille tarifaire active et visible pour les souscriptions des restaurants
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowArchived(!showArchived)}
-              className="text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
-            >
-              <span>{showArchived ? 'Masquer les 4 anciens packs' : 'Afficher les 4 anciens packs archivés'}</span>
-            </button>
           </div>
 
           {/* Plan Selector Tabs (7 Formules) */}
@@ -238,8 +228,6 @@ export default function SuperAdminPlansPage() {
                   className={`p-5 rounded-3xl border text-left transition-all relative overflow-hidden ${
                     isSelected
                       ? 'bg-white border-orange-500 shadow-xl ring-2 ring-orange-500/20'
-                      : p.isActive === false
-                      ? 'bg-slate-100/70 border-slate-300 opacity-70 hover:opacity-100'
                       : 'bg-white/60 border-slate-200 hover:border-slate-300'
                   }`}
                 >
@@ -248,11 +236,6 @@ export default function SuperAdminPlansPage() {
                       Pack {p.name}
                     </span>
                     <div className="flex items-center gap-1">
-                      {p.isActive === false && (
-                        <span className="bg-slate-200 text-slate-600 border border-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          Archivé
-                        </span>
-                      )}
                       {p.isRecommended && (
                         <span className="bg-orange-500/20 text-orange-500 border border-orange-500/30 text-[10px] font-black px-2 py-0.5 rounded-full">
                           ⭐ Populaire

@@ -48,7 +48,7 @@ export async function GET(req: Request) {
             price: t.plan.price,
             colorTheme: t.plan.colorTheme || '#FF6B00',
           }
-        : { id: 'plan_pro', name: 'Pro', slug: 'pro', price: 25000, colorTheme: '#FF6B00' },
+        : { id: 'plan_nio_far', name: 'NIO FAR', slug: 'nio-far', price: 25000, colorTheme: '#0284c7' },
     }));
 
     return NextResponse.json({ tenants: formatted, source: 'database' });

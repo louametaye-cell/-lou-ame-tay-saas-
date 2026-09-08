@@ -2,16 +2,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/plans
-// Récupérer la liste des packs directement depuis PostgreSQL Supabase (filtré par défaut sur les formules actives)
-export async function GET(req: Request) {
+// Récupérer la liste des formules officielles Wolof depuis PostgreSQL Supabase
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url);
-    const includeArchived = searchParams.get('includeArchived') === 'true';
-
-    const whereClause = includeArchived ? {} : { isActive: true };
-
     const plans = await (prisma as any).plan.findMany({
-      where: whereClause,
+      where: { isActive: true },
       include: {
         planFeatures: {
           include: {
@@ -30,10 +25,6 @@ export async function GET(req: Request) {
       'teranga': 5,
       'buur': 6,
       'ndaje': 7,
-      'starter': 10,
-      'pro': 11,
-      'premium': 12,
-      'institution': 13,
     };
 
     const formatted = plans.map((p: any) => ({

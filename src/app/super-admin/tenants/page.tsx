@@ -32,7 +32,7 @@ export default function SuperAdminTenantsListPage() {
 
   // Upgrade Modal state
   const [upgradingTenant, setUpgradingTenant] = useState<any | null>(null);
-  const [selectedNewPlanId, setSelectedNewPlanId] = useState<string>('plan_pro');
+  const [selectedNewPlanId, setSelectedNewPlanId] = useState<string>('plan_nio_far');
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isCronRunning, setIsCronRunning] = useState(false);
 

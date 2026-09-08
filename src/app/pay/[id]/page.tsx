@@ -20,7 +20,7 @@ export default function PublicPaymentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const tenantId = (params?.id as string) || '';
-  const planId = searchParams?.get('plan') || 'plan_pro';
+  const planId = searchParams?.get('plan') || 'plan_nio_far';
   const months = parseInt(searchParams?.get('months') || '1', 10);
 
   const [loading, setLoading] = useState(true);

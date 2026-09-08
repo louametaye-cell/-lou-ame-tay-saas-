@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       console.warn('⚠️ Webhook Wave reçu sans tenant_id valide');
       return NextResponse.json({ error: 'tenant_id requis' }, { status: 400 });
     }
-    const planId = metadata?.plan_id || 'plan_pro';
+    const planId = metadata?.plan_id || 'plan_nio_far';
     const periodMonths = metadata?.period_months || 1;
 
     // Enregistrement de la transaction

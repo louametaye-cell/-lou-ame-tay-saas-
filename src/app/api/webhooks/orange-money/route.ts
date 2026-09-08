@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       console.warn('⚠️ Webhook Orange Money reçu sans order_id/tenantId valide');
       return NextResponse.json({ error: 'order_id requis' }, { status: 400 });
     }
-    const planId = 'plan_pro';
+    const planId = 'plan_nio_far';
 
     // Enregistrement de la transaction Orange Money
     const transaction: PaymentTransaction = {

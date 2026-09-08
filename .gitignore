@@ -37,3 +37,4 @@ mots passe supabase.txt
 .vercel
 .env*
 .agents
+scratch/

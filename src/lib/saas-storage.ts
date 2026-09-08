@@ -157,7 +157,7 @@ export const DEFAULT_PLANS: SaaSPlan[] = [
 
 // Initial Seed Tenants (4 Établissements Partenaires Réels Sénégal)
 export const DEFAULT_TENANTS: SaaSTenant[] = [
-  // 1. MG CAFÉ RESTO (Madiba - Thiès - Formule STARTER)
+  // 1. MG CAFÉ RESTO (Madiba - Thiès - Formule TÀMBALI)
   {
     id: 'tenant_madiba_restau',
     businessName: 'MG Café Resto (Madiba)',
@@ -166,7 +166,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     phone: '+221 77 458 74 74',
     address: 'HLM Route de Mbour',
     city: 'Thiès',
-    currentPlanId: 'plan_starter',
+    currentPlanId: 'plan_tambali',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
     lastSeenAt: new Date().toISOString(),
@@ -178,7 +178,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 2. CHEZ COLLÉ (Sam's - Thiès - Formule PRO)
+  // 2. CHEZ COLLÉ (Sam's - Thiès - Formule NIO FAR)
   {
     id: 'tenant_sams_restaurant',
     businessName: "Chez Collé (Sam's)",
@@ -187,7 +187,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     phone: '+221 77 458 74 74',
     address: 'Avenue Lamine Guèye',
     city: 'Thiès',
-    currentPlanId: 'plan_pro',
+    currentPlanId: 'plan_nio_far',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
     lastSeenAt: new Date().toISOString(),
@@ -199,7 +199,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 3. ANIMA PIZZERIA (Dakar Plage BCEAO - Formule PREMIUM VIP)
+  // 3. ANIMA PIZZERIA (Dakar Plage BCEAO - Formule XÉWEUL)
   {
     id: 'tenant_anima_pizzeria',
     businessName: 'Anima Pizzeria',
@@ -208,7 +208,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     phone: '+221 77 458 74 74',
     address: 'Plage BCEAO, Yoff',
     city: 'Dakar',
-    currentPlanId: 'plan_premium',
+    currentPlanId: 'plan_xeweul',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
     lastSeenAt: new Date().toISOString(),
@@ -220,7 +220,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 4. HÔTEL RESTAURANT CAYOR (Lat-Dior - Thiès - Formule PREMIUM VIP)
+  // 4. HÔTEL RESTAURANT CAYOR (Lat-Dior - Thiès - Formule TERANGA)
   {
     id: 'tenant_hotel_lat_dior',
     businessName: 'Hôtel Restaurant Cayor (Lat-Dior)',
@@ -229,7 +229,7 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     phone: '+221 77 458 74 74',
     address: 'Quartier Lat-Dior',
     city: 'Thiès',
-    currentPlanId: 'plan_premium',
+    currentPlanId: 'plan_teranga',
     subscriptionStatus: 'ACTIVE',
     subscriptionExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
     lastSeenAt: new Date().toISOString(),
