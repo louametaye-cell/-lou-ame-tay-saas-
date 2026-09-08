@@ -19,7 +19,11 @@ import {
   Phone,
   Clock,
   Wifi,
-  PlusCircle
+  PlusCircle,
+  Volume2,
+  ChefHat,
+  ShoppingBag,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -72,6 +76,7 @@ export default function DisplaySettingsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedScreen, setSelectedScreen] = useState(1);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [copiedPickupUrl, setCopiedPickupUrl] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
 
   useEffect(() => {
@@ -398,6 +403,85 @@ export default function DisplaySettingsPage() {
                   <Phone className="w-3.5 h-3.5" />
                   <span>Commander un écran (+221 77 458 74 74)</span>
                 </a>
+              </div>
+            </div>
+
+            {/* 2.5 NOUVEAU : ÉCRAN TV RETRAIT FAST-FOOD / GUICHET (ORDER STATUS BOARD) */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white rounded-3xl border-2 border-blue-500/30 p-6 sm:p-8 shadow-xl space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-blue-500/20 text-blue-400 border border-blue-500/40 rounded-2xl">
+                    <Volume2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/40">
+                        QSR Fast-Food &amp; Guichet
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Carillon &amp; Voix Actifs
+                      </span>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                      📢 Écran TV Retrait des Commandes (Status Board)
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Affiche en direct deux colonnes géantes : « EN PRÉPARATION » et « PRÊT À RETIRER » avec carillon Ding-Dong et appel vocal du numéro au guichet.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const pickupUrl = `${baseUrl}/pickup/${restaurantId}`;
+                      navigator.clipboard.writeText(pickupUrl);
+                      setCopiedPickupUrl(true);
+                      toast.success('📋 Lien de l\'Écran Retrait copié !');
+                      setTimeout(() => setCopiedPickupUrl(false), 2000);
+                    }}
+                    className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all"
+                  >
+                    {copiedPickupUrl ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    <span>{copiedPickupUrl ? 'Copié !' : 'Copier le Lien'}</span>
+                  </button>
+
+                  <a
+                    href={`/pickup/${restaurantId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-2 active:scale-95"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Lancer l&apos;Écran Retrait Plein Écran</span>
+                  </a>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
+                <div className="lg:col-span-2 space-y-2">
+                  <span className="text-xs font-bold text-slate-400 block">
+                    URL de projection TV en salle :
+                  </span>
+                  <input
+                    type="text"
+                    value={`${baseUrl}/pickup/${restaurantId}`}
+                    readOnly
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-blue-300 outline-none select-all"
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    💡 <em>Astuce : Ouvrez cette page sur votre Smart TV au-dessus du comptoir. Le son et la voix informeront vos clients sans que vos équipes n&apos;aient à crier.</em>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+                  <QRCodeSVG value={`${baseUrl}/pickup/${restaurantId}` || 'https://lou-ame-tay.com'} size={50} level="M" />
+                  <div className="text-[11px] text-slate-400 leading-tight">
+                    <span className="font-bold text-white block">QR Écran Retrait</span>
+                    Scannez pour ouvrir directement sur votre TV ou tablette
+                  </div>
+                </div>
               </div>
             </div>
 

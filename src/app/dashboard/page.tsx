@@ -476,6 +476,17 @@ export default function OperationalDashboardPage() {
               <span>🖥️ Écran TV</span>
             </Link>
 
+            {/* QSR Fast-Food Pickup Board Quick View */}
+            <Link
+              href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Ouvrir l'Écran TV Retrait Commandes (Status Board Fast-Food)"
+            >
+              <span>📢 Retrait Guichet</span>
+            </Link>
+
             {/* Cashier Counter Quick View */}
             <Link
               href="/cashier"
@@ -1010,6 +1021,19 @@ export default function OperationalDashboardPage() {
             </div>
             <h4 className="text-sm font-black text-slate-900">Clôtures & Caisses</h4>
             <p className="text-xs text-slate-500 mt-1">Fonds de départ et rapports Z 80mm</p>
+          </Link>
+
+          <Link
+            href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-500 hover:shadow-sm transition-all group"
+          >
+            <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+              <Zap className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-black text-slate-900">Écran Retrait TV</h4>
+            <p className="text-xs text-slate-500 mt-1">Carillon Ding-Dong & appels vocaux</p>
           </Link>
         </section>
       </main>

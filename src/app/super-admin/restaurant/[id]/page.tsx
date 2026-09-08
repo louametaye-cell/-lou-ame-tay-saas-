@@ -41,7 +41,15 @@ import {
   Check,
   Copy,
   ShieldCheck,
-  Eye
+  Eye,
+  Sliders,
+  Key,
+  CreditCard,
+  Globe,
+  Building2,
+  Volume2,
+  Zap,
+  UtensilsCrossed
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -68,7 +76,7 @@ export default function SuperAdminRestaurantDetailPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance' | 'display'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance' | 'display' | 'configuration'>('overview');
   const [appUrl, setAppUrl] = useState<string>('http://localhost:3000');
   
   // Modals state
@@ -86,6 +94,29 @@ export default function SuperAdminRestaurantDetailPage() {
   const [tvMaxScreens, setTvMaxScreens] = useState(1);
   const [isSavingTv, setIsSavingTv] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  // Configuration Intégrale State (Super-Admin Control)
+  const [establishmentType, setEstablishmentType] = useState<string>('RESTAURANT');
+  const [serviceMode, setServiceMode] = useState<string>('TABLE');
+  const [configCurrency, setConfigCurrency] = useState<string>('FCFA');
+  const [featKds, setFeatKds] = useState<boolean>(true);
+  const [featCashier, setFeatCashier] = useState<boolean>(true);
+  const [featTvSignage, setFeatTvSignage] = useState<boolean>(true);
+  const [featPickupBoard, setFeatPickupBoard] = useState<boolean>(true);
+  const [featWaiterCall, setFeatWaiterCall] = useState<boolean>(true);
+  const [featMultilingual, setFeatMultilingual] = useState<boolean>(true);
+  const [featMultiCurrency, setFeatMultiCurrency] = useState<boolean>(true);
+  const [featThermalPrinting, setFeatThermalPrinting] = useState<boolean>(true);
+  const [featMobileMoney, setFeatMobileMoney] = useState<boolean>(true);
+  const [quotaTables, setQuotaTables] = useState<number>(15);
+  const [quotaDishes, setQuotaDishes] = useState<number>(100);
+  const [quotaScreens, setQuotaScreens] = useState<number>(1);
+  const [waveMerchantId, setWaveMerchantId] = useState<string>('');
+  const [omMerchantNumber, setOmMerchantNumber] = useState<string>('');
+  const [tvaRate, setTvaRate] = useState<number>(18);
+  const [nineaNumber, setNineaNumber] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [isSavingConfig, setIsSavingConfig] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -146,8 +177,89 @@ export default function SuperAdminRestaurantDetailPage() {
         setTvDuration(6);
         setTvMaxScreens(1);
       }
+
+      // Configuration & Features initialization
+      const b = (restaurant.branding as any) || {};
+      setEstablishmentType(b.establishmentType || 'RESTAURANT');
+      setServiceMode(b.serviceMode || 'TABLE');
+      setConfigCurrency(restaurant.currency || 'FCFA');
+
+      const f = b.features || {};
+      setFeatKds(f.kdsKitchen !== false);
+      setFeatCashier(f.cashierPos !== false);
+      setFeatTvSignage(f.tvSignage !== false);
+      setFeatPickupBoard(f.pickupBoard !== false);
+      setFeatWaiterCall(f.waiterCall !== false);
+      setFeatMultilingual(f.multilingual !== false);
+      setFeatMultiCurrency(f.multiCurrency !== false);
+      setFeatThermalPrinting(f.thermalPrinting !== false);
+      setFeatMobileMoney(f.mobileMoney !== false);
+
+      const q = b.quotas || {};
+      setQuotaTables(q.maxTables || restaurant.tableCount || 15);
+      setQuotaDishes(q.maxDishes || 100);
+      setQuotaScreens(q.maxScreens || ds?.maxScreens || 1);
+
+      const fisc = b.fiscal || {};
+      setTvaRate(fisc.tvaRate !== undefined ? fisc.tvaRate : 18);
+      setNineaNumber(fisc.ninea || '');
+
+      setWaveMerchantId(restaurant.waveMerchantId || '');
+      setOmMerchantNumber(restaurant.omMerchantNumber || '');
     }
   }, [restaurant]);
+
+  const handleSaveConfiguration = async () => {
+    if (!restaurant) return;
+    try {
+      setIsSavingConfig(true);
+      const res = await fetch(`/api/super-admin/restaurants/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currency: configCurrency,
+          waveMerchantId,
+          omMerchantNumber,
+          establishmentType,
+          serviceMode,
+          features: {
+            kdsKitchen: featKds,
+            cashierPos: featCashier,
+            tvSignage: featTvSignage,
+            pickupBoard: featPickupBoard,
+            waiterCall: featWaiterCall,
+            multilingual: featMultilingual,
+            multiCurrency: featMultiCurrency,
+            thermalPrinting: featThermalPrinting,
+            mobileMoney: featMobileMoney,
+          },
+          quotas: {
+            maxTables: Number(quotaTables),
+            maxDishes: Number(quotaDishes),
+            maxScreens: Number(quotaScreens),
+          },
+          fiscal: {
+            tvaRate: Number(tvaRate),
+            ninea: nineaNumber,
+          },
+          ...(newPassword.trim() ? { newPassword: newPassword.trim() } : {}),
+        }),
+      });
+
+      if (res.ok) {
+        toast.success('Configuration complète enregistrée avec succès dans la BDD !');
+        setNewPassword('');
+        fetchRestaurant();
+      } else {
+        const err = await res.json();
+        throw new Error(err.error || 'Erreur lors de la sauvegarde');
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur lors de la sauvegarde de la configuration');
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
 
   const handleSaveDisplaySettings = async () => {
     if (!restaurant) return;
@@ -531,6 +643,18 @@ export default function SuperAdminRestaurantDetailPage() {
             >
               <Tv className="w-4 h-4" />
               <span>📺 Écrans TV & Diaporama</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('configuration')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === 'configuration'
+                  ? 'bg-[#FF6B00] text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              <Sliders className="w-4 h-4" />
+              <span>⚙️ Configuration & Contrôle Total</span>
             </button>
 
             <button
@@ -1253,7 +1377,531 @@ export default function SuperAdminRestaurantDetailPage() {
             </div>
           )}
 
-          {/* TAB 4: RÉPARTITION PAR TABLE */}
+          {/* TAB 4: CONFIGURATION & CONTRÔLE TOTAL DU RESTAURANT / HÔTEL */}
+          {activeTab === 'configuration' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top Banner with Save action */}
+              <div className="bg-white border-2 border-orange-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-3.5 bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-2xl shadow-md shrink-0">
+                    <Sliders className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-950 px-2.5 py-0.5 rounded-full border border-orange-200">
+                        Administration Centrale • MDA Arts Work
+                      </span>
+                      <span className="text-xs font-bold text-slate-500 font-mono">
+                        ID: {restaurant.id}
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+                      Configuration Intégrale & Contrôle 360°
+                    </h2>
+                    <p className="text-xs text-slate-600 max-w-2xl mt-0.5">
+                      Gérez avec précision absolue les modules activés, quotas, passerelles de paiement, fiscalité et sécurité de <strong>{restaurant.name}</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveConfiguration}
+                  disabled={isSavingConfig}
+                  className="w-full md:w-auto px-6 py-3.5 bg-[#FF6B00] hover:bg-orange-600 disabled:opacity-50 text-white rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"
+                >
+                  {isSavingConfig ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                  )}
+                  <span>{isSavingConfig ? 'Enregistrement en cours...' : '💾 Sauvegarder la Configuration'}</span>
+                </button>
+              </div>
+
+              {/* GRILLE DES 6 BLOCS DE CONFIGURATION */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* BLOC 1 : PROFIL & VOCATION ÉTABLISSEMENT */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                    <Building2 className="w-5 h-5 text-[#FF6B00]" />
+                    <h3 className="text-base font-black text-slate-900">
+                      1. Vocation & Typologie Établissement
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5">
+                        Type d&apos;Établissement :
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { id: 'RESTAURANT', label: '🍽️ Restaurant / Brasserie', desc: 'Service en salle complet' },
+                          { id: 'FAST_FOOD', label: '🍔 Fast-Food / QSR / Snack', desc: 'Comptoir & emporter express' },
+                          { id: 'HOTEL', label: '🏨 Hôtel & Complexe', desc: 'Chambres & Room Service' },
+                          { id: 'LOUNGE_BAR', label: '🍸 Bar / Lounge / Club', desc: 'Boissons & musique' },
+                          { id: 'BAKERY', label: '🥐 Boulangerie / Café', desc: 'Vitrines & douceurs' },
+                        ].map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => setEstablishmentType(t.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              establishmentType === t.id
+                                ? 'border-[#FF6B00] bg-orange-50/50 ring-2 ring-[#FF6B00]/20'
+                                : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                            }`}
+                          >
+                            <span className="font-black text-slate-900 block text-xs">{t.label}</span>
+                            <span className="text-[10px] text-slate-500">{t.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5">
+                        Mode de Service Principal :
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'TABLE', label: '🍽️ Service Table', hint: 'Tables numérotées' },
+                          { id: 'EXPRESS', label: '⚡ Comptoir', hint: 'Vente à emporter' },
+                          { id: 'ROOM_SERVICE', label: '🛎️ Room Service', hint: 'Chambres d\'hôtel' },
+                        ].map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setServiceMode(m.id)}
+                            className={`p-2.5 rounded-xl border text-center transition-all ${
+                              serviceMode === m.id
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-950 font-black ring-2 ring-emerald-500/20'
+                                : 'border-slate-200 hover:border-slate-300 bg-slate-50 text-slate-700 font-bold'
+                            }`}
+                          >
+                            <span className="text-xs block">{m.label}</span>
+                            <span className="text-[10px] text-slate-500 block font-normal">{m.hint}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Devise de Facturation Principale :
+                      </label>
+                      <select
+                        value={configCurrency}
+                        onChange={(e) => setConfigCurrency(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      >
+                        <option value="FCFA">FCFA (Franc CFA - UEMOA)</option>
+                        <option value="EUR">EUR (€ Euro)</option>
+                        <option value="USD">USD ($ Dollar US)</option>
+                        <option value="CAD">CAD ($ Dollar Canadien)</option>
+                        <option value="GBP">GBP (£ Livre Sterling)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOC 2 : QUOTAS COMMERCIAUX */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                    <Layers className="w-5 h-5 text-[#FF6B00]" />
+                    <h3 className="text-base font-black text-slate-900">
+                      2. Quotas Commerciaux Autorisés
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Nombre Maximum de Tables ou Chambres Autorisées :
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="300"
+                        value={quotaTables}
+                        onChange={(e) => setQuotaTables(Number(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Définit le plafond de QR Codes pouvant être imprimés ou scannés simultanément.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Nombre Maximum de Plats au Menu :
+                      </label>
+                      <input
+                        type="number"
+                        min="5"
+                        max="1000"
+                        value={quotaDishes}
+                        onChange={(e) => setQuotaDishes(Number(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Plafond d&apos;articles actifs configurables dans la carte par le restaurateur.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Nombre Maximum d&apos;Écrans TV Autorisés :
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={quotaScreens}
+                        onChange={(e) => setQuotaScreens(Number(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Nombre de flux d&apos;affichage Smart TV simultanés attribués à ce contrat.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOC 3 : INTERRUPTEURS DE FONCTIONNALITÉS (FEATURE FLAGS) - PLEINE LARGEUR */}
+                <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <Zap className="w-5 h-5 text-amber-500" />
+                      <div>
+                        <h3 className="text-base font-black text-slate-900">
+                          3. Interrupteurs de Modules (Feature Flags)
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Activez ou coupez instantanément chaque brique logicielle pour cet établissement.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFeatKds(true);
+                          setFeatCashier(true);
+                          setFeatTvSignage(true);
+                          setFeatPickupBoard(true);
+                          setFeatWaiterCall(true);
+                          setFeatMultilingual(true);
+                          setFeatMultiCurrency(true);
+                          setFeatThermalPrinting(true);
+                          setFeatMobileMoney(true);
+                        }}
+                        className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
+                      >
+                        Tout Activer ✓
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    {[
+                      {
+                        state: featKds,
+                        setter: setFeatKds,
+                        title: '👨‍🍳 Écran Cuisine KDS',
+                        desc: 'Bons de commande en direct avec chronomètre et statut préparation',
+                        color: 'border-orange-200 bg-orange-50/20',
+                      },
+                      {
+                        state: featCashier,
+                        setter: setFeatCashier,
+                        title: '⚡ Caisse POS & Mode Express',
+                        desc: 'Guichet tactile, gestion des caissiers par PIN et clôture Z 80mm',
+                        color: 'border-purple-200 bg-purple-50/20',
+                      },
+                      {
+                        state: featTvSignage,
+                        setter: setFeatTvSignage,
+                        title: '📺 Écran TV Digital Signage',
+                        desc: 'Diffusion dynamique de la carte sur Smart TV (Diaporama ou Quadrant)',
+                        color: 'border-emerald-200 bg-emerald-50/20',
+                      },
+                      {
+                        state: featPickupBoard,
+                        setter: setFeatPickupBoard,
+                        title: '📢 Écran Retrait Commandes',
+                        desc: 'Écran TV Fast-Food avec carillon Ding-Dong synthétisé & voix française',
+                        color: 'border-blue-200 bg-blue-50/20',
+                      },
+                      {
+                        state: featWaiterCall,
+                        setter: setFeatWaiterCall,
+                        title: '🛎️ Bouton Appel Serveur',
+                        desc: 'Appel d\'urgence en salle et demande d\'addition depuis le smartphone',
+                        color: 'border-amber-200 bg-amber-50/20',
+                      },
+                      {
+                        state: featMultilingual,
+                        setter: setFeatMultilingual,
+                        title: '🌐 Menu Multilingue (5 Langues)',
+                        desc: 'Traduction instantanée en Wolof, Français, Anglais, Espagnol et Italien',
+                        color: 'border-cyan-200 bg-cyan-50/20',
+                      },
+                      {
+                        state: featMultiCurrency,
+                        setter: setFeatMultiCurrency,
+                        title: '💱 Multi-Devises Internationales',
+                        desc: 'Conversion automatique des prix pour touristes (EUR, USD, CAD, GBP)',
+                        color: 'border-teal-200 bg-teal-50/20',
+                      },
+                      {
+                        state: featThermalPrinting,
+                        setter: setFeatThermalPrinting,
+                        title: '🖨️ Impression Thermique 80mm',
+                        desc: 'Format ESC/POS optimisé pour imprimantes à rouleau thermique de caisse',
+                        color: 'border-slate-300 bg-slate-50',
+                      },
+                      {
+                        state: featMobileMoney,
+                        setter: setFeatMobileMoney,
+                        title: '📱 Passerelle Mobile Money',
+                        desc: 'Encaissement sans contact avec génération QR Wave, Orange Money et Yas',
+                        color: 'border-indigo-200 bg-indigo-50/20',
+                      },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => item.setter(!item.state)}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
+                          item.state
+                            ? `${item.color} shadow-2xs`
+                            : 'border-slate-200 bg-slate-50/50 opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-slate-900 truncate">
+                              {item.title}
+                            </span>
+                            <span
+                              className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                                item.state
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              {item.state ? 'ACTIF' : 'COUPÉ'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 leading-tight">
+                            {item.desc}
+                          </p>
+                        </div>
+
+                        {/* Toggle Switch */}
+                        <button
+                          type="button"
+                          className={`w-11 h-6 rounded-full transition-colors relative shrink-0 focus:outline-none ${
+                            item.state ? 'bg-emerald-600' : 'bg-slate-300'
+                          }`}
+                        >
+                          <span
+                            className={`w-5 h-5 rounded-full bg-white shadow-md block transform transition-transform absolute top-0.5 left-0.5 ${
+                              item.state ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* BLOC 4 : PASSERELLES PAIEMENTS DIRECTS MARCHAND */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                    <CreditCard className="w-5 h-5 text-[#FF6B00]" />
+                    <h3 className="text-base font-black text-slate-900">
+                      4. Passerelles Paiements Marchands UEMOA
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Wave Merchant ID (Compte Marchand) :
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="ex: wave_merch_774587474"
+                        value={waveMerchantId}
+                        onChange={(e) => setWaveMerchantId(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Les paiements Wave des clients seront directement crédités sur ce compte.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Orange Money Marchand (Téléphone / Code Partenaire) :
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="ex: +221 77 458 74 74"
+                        value={omMerchantNumber}
+                        onChange={(e) => setOmMerchantNumber(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Numéro marchand Orange Money Sénégal utilisé pour générer le lien de paiement.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOC 5 : FISCALITÉ & MENTIONS LÉGALES SÉNÉGAL */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                    <FileText className="w-5 h-5 text-[#FF6B00]" />
+                    <h3 className="text-base font-black text-slate-900">
+                      5. Fiscalité & Mentions Légales Sénégal
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Taux de TVA Appliqué (%) :
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={tvaRate}
+                          onChange={(e) => setTvaRate(Number(e.target.value))}
+                          className="w-32 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                        />
+                        <span className="text-slate-500 font-bold">%</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setTvaRate(18)}
+                            className={`px-2.5 py-1 rounded-lg font-bold text-[10px] border ${
+                              tvaRate === 18 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            18% (Standard)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTvaRate(0)}
+                            className={`px-2.5 py-1 rounded-lg font-bold text-[10px] border ${
+                              tvaRate === 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            0% (Exonéré)
+                          </button>
+                        </div>
+                      </div>
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Calculé et imprimé automatiquement sur les tickets Z et factures légales.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Numéro NINEA Fiscal :
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="ex: 0012345678 2V2"
+                        value={nineaNumber}
+                        onChange={(e) => setNineaNumber(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-[11px] text-slate-500 mt-1 block">
+                        Imprimé en bas de ticket de caisse selon la réglementation fiscale UEMOA / DGID.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOC 6 : SÉCURITÉ & ACCÈS DU GÉRANT */}
+                <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                    <Key className="w-5 h-5 text-rose-500" />
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">
+                        6. Sécurité & Réinitialisation du Mot de Passe Gérant
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        En cas d&apos;oubli ou de changement de responsable, réinitialisez l&apos;accès ici directement.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end text-xs">
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Nouveau Mot de Passe du Gérant (laisser vide pour ne pas modifier) :
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Tapez un nouveau mot de passe sécurisé..."
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="text-[11px] text-slate-500 block leading-tight">
+                        Le mot de passe sera haché avec bcrypt et appliqué immédiatement à la prochaine connexion.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* BOTTOM SAVE CALL TO ACTION */}
+              <div className="sticky bottom-6 bg-slate-900 text-white rounded-3xl p-5 shadow-2xl border-2 border-orange-500 flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
+                <div className="flex items-center gap-3 text-center sm:text-left">
+                  <div className="p-2.5 bg-orange-500 text-white rounded-xl shrink-0 hidden sm:block">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black tracking-tight">
+                      Enregistrer les modifications de l&apos;établissement
+                    </h4>
+                    <p className="text-xs text-slate-300">
+                      Toutes les modifications prendront effet immédiatement en salle et en caisse.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveConfiguration}
+                  disabled={isSavingConfig}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-[#FF6B00] hover:bg-orange-600 disabled:opacity-50 text-white rounded-2xl font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {isSavingConfig ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="w-4 h-4" />
+                  )}
+                  <span>{isSavingConfig ? 'Enregistrement en cours...' : '💾 Valider & Sauvegarder'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: RÉPARTITION PAR TABLE */}
           {activeTab === 'stats' && (
             <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
               <h3 className="text-base font-black text-slate-900 flex items-center gap-2">

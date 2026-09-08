@@ -40,6 +40,9 @@ export async function GET(
       logoUrl: restaurant.logoUrl,
       bannerUrl: restaurant.bannerUrl,
       currency: restaurant.currency || 'FCFA',
+      waveMerchantId: restaurant.waveMerchantId || '',
+      omMerchantNumber: restaurant.omMerchantNumber || '',
+      branding: restaurant.branding || {},
       isActive: restaurant.subscriptionStatus !== 'CANCELED' && restaurant.subscriptionStatus !== 'SUSPENDED',
       tableCount: restaurant.tables?.length || 12,
       tablesCount: restaurant.tables?.length || 12,
@@ -119,7 +122,15 @@ async function handleUpdate(
     }
 
     let brandingUpdateData: any = {};
-    if (body.displaySettings !== undefined || body.establishmentType !== undefined) {
+    if (
+      body.branding !== undefined ||
+      body.displaySettings !== undefined ||
+      body.establishmentType !== undefined ||
+      body.serviceMode !== undefined ||
+      body.features !== undefined ||
+      body.quotas !== undefined ||
+      body.fiscal !== undefined
+    ) {
       const currentResto = await (prisma as any).tenant.findUnique({
         where: { id: resolvedParams.id },
         select: { branding: true, subdomain: true }
@@ -127,8 +138,13 @@ async function handleUpdate(
       const currentBranding = (currentResto?.branding as any) || {};
       brandingUpdateData.branding = {
         ...currentBranding,
+        ...(body.branding || {}),
         ...(body.displaySettings !== undefined ? { displaySettings: body.displaySettings } : {}),
         ...(body.establishmentType !== undefined ? { establishmentType: body.establishmentType } : {}),
+        ...(body.serviceMode !== undefined ? { serviceMode: body.serviceMode } : {}),
+        ...(body.features !== undefined ? { features: { ...(currentBranding.features || {}), ...body.features } } : {}),
+        ...(body.quotas !== undefined ? { quotas: { ...(currentBranding.quotas || {}), ...body.quotas } } : {}),
+        ...(body.fiscal !== undefined ? { fiscal: { ...(currentBranding.fiscal || {}), ...body.fiscal } } : {}),
       };
     }
 
@@ -142,11 +158,16 @@ async function handleUpdate(
     const updated = await (prisma as any).tenant.update({
       where: { id: resolvedParams.id },
       data: {
-        businessName: body.name || undefined,
+        businessName: body.name || body.businessName || undefined,
         ownerName: body.ownerName !== undefined ? body.ownerName : undefined,
         phone: body.phone || undefined,
         address: body.address !== undefined ? body.address : undefined,
+        city: body.city !== undefined ? body.city : undefined,
+        currency: body.currency !== undefined ? body.currency : undefined,
+        waveMerchantId: body.waveMerchantId !== undefined ? body.waveMerchantId : undefined,
+        omMerchantNumber: body.omMerchantNumber !== undefined ? body.omMerchantNumber : undefined,
         logoUrl: body.logoUrl !== undefined ? body.logoUrl : undefined,
+        bannerUrl: body.bannerUrl !== undefined ? body.bannerUrl : undefined,
         ...securityUpdateData,
         ...subscriptionUpdateData,
         ...brandingUpdateData,
@@ -156,7 +177,7 @@ async function handleUpdate(
       }
     });
 
-    if (body.displaySettings !== undefined) {
+    if (body.displaySettings !== undefined || body.branding !== undefined) {
       try {
         await redis.del(`display:${updated.subdomain.toLowerCase()}`);
         await redis.del(`display:${updated.id.toLowerCase()}`);
@@ -172,7 +193,13 @@ async function handleUpdate(
       ownerName: updated.ownerName,
       phone: updated.phone,
       address: updated.address,
+      city: updated.city,
+      currency: updated.currency,
+      waveMerchantId: updated.waveMerchantId || '',
+      omMerchantNumber: updated.omMerchantNumber || '',
       logoUrl: updated.logoUrl,
+      bannerUrl: updated.bannerUrl,
+      branding: updated.branding || {},
       subscription: {
         id: updated.id,
         plan: updated.plan?.name || 'Inconnu',

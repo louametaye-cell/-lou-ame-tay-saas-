@@ -182,6 +182,9 @@ export interface RestaurantType {
   lastOrderAt?: string | null;
   peakHours?: Record<string, number> | null;
 
+  city?: string | null;
+  waveMerchantId?: string | null;
+  omMerchantNumber?: string | null;
   subscriptionId?: string | null;
   subscription?: SubscriptionType | null;
   categories: CategoryType[];
@@ -210,6 +213,29 @@ export interface RestaurantBranding {
   tiktok?: string | null;      // Lien compte TikTok
   googleReviewUrl?: string | null; // Lien direct vers la fiche Google Maps pour avis ⭐
   tagline?: string | null;     // Slogan personnalisé
+  establishmentType?: 'RESTAURANT' | 'FAST_FOOD' | 'HOTEL' | 'LOUNGE_BAR' | 'BAKERY' | string;
+  serviceMode?: 'TABLE' | 'EXPRESS' | 'ROOM_SERVICE' | string;
+  features?: {
+    kdsKitchen?: boolean;
+    cashierPos?: boolean;
+    tvSignage?: boolean;
+    pickupBoard?: boolean;
+    waiterCall?: boolean;
+    multilingual?: boolean;
+    multiCurrency?: boolean;
+    thermalPrinting?: boolean;
+    mobileMoney?: boolean;
+  };
+  quotas?: {
+    maxTables?: number;
+    maxDishes?: number;
+    maxScreens?: number;
+  };
+  fiscal?: {
+    tvaRate?: number;
+    ninea?: string;
+    taxId?: string;
+  };
   displaySettings?: DisplaySettings; // Paramètres de l'écran TV gérés exclusivement par Super-Admin
 }
 
