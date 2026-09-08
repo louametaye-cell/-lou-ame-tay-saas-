@@ -55,7 +55,19 @@ export const ALLERGEN_ICONS: Record<string, { icon: string; label: string }> = {
 
 export type SubscriptionStatus = 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELLED' | 'PAST_DUE' | 'SUSPENDED';
 export type MealPeriod = 'ALL_DAY' | 'LUNCH' | 'DINNER' | 'NIGHT_SNACK';
-export type SubscriptionPlan = 'STARTER' | 'PRO' | 'PREMIUM' | 'ENTERPRISE';
+export type SubscriptionPlan = 
+  | 'STARTER' 
+  | 'PRO' 
+  | 'PREMIUM' 
+  | 'ENTERPRISE' 
+  | 'TAMBALI' 
+  | 'NIO_FAR' 
+  | 'XEWEUL' 
+  | 'BAOBAB' 
+  | 'TERANGA' 
+  | 'BUUR' 
+  | 'NDAJE'
+  | string;
 
 export interface SubscriptionType {
   id: string;

@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/plans
-// Récupérer la liste des packs directement depuis PostgreSQL Supabase
-export async function GET() {
+// Récupérer la liste des packs directement depuis PostgreSQL Supabase (filtré par défaut sur les formules actives)
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+
+    const whereClause = includeArchived ? {} : { isActive: true };
+
     const plans = await (prisma as any).plan.findMany({
+      where: whereClause,
       include: {
         planFeatures: {
           include: {
@@ -14,6 +20,21 @@ export async function GET() {
         },
       },
     });
+
+    // Ordre officiel canonique des formules Wolof
+    const CANONICAL_ORDER: Record<string, number> = {
+      'tambali': 1,
+      'nio-far': 2,
+      'xeweul': 3,
+      'baobab': 4,
+      'teranga': 5,
+      'buur': 6,
+      'ndaje': 7,
+      'starter': 10,
+      'pro': 11,
+      'premium': 12,
+      'institution': 13,
+    };
 
     const formatted = plans.map((p: any) => ({
       id: p.id,
@@ -33,6 +54,12 @@ export async function GET() {
         limitValue: pf.limitValue,
       })) : [],
     }));
+
+    formatted.sort((a: any, b: any) => {
+      const orderA = CANONICAL_ORDER[a.slug] ?? (a.price === 0 ? 99 : a.price);
+      const orderB = CANONICAL_ORDER[b.slug] ?? (b.price === 0 ? 99 : b.price);
+      return orderA - orderB;
+    });
 
     return NextResponse.json({ plans: formatted });
   } catch (error) {

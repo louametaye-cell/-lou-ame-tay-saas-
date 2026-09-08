@@ -27,7 +27,7 @@ export function ExpressPaymentModal({
   onClose,
   tenantId,
   tenantName,
-  currentPlanId = 'plan_pro',
+  currentPlanId = 'nio-far',
 }: ExpressPaymentModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(currentPlanId);
   const [months, setMonths] = useState(1);
@@ -118,9 +118,12 @@ export function ExpressPaymentModal({
               onChange={(e) => setSelectedPlan(e.target.value)}
               className="w-full bg-slate-800 border border-slate-200 text-slate-900 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-orange-500 outline-none"
             >
-              <option value="plan_starter">Starter (15 000 FCFA)</option>
-              <option value="plan_pro">Pro (25 000 FCFA)</option>
-              <option value="plan_enterprise">Premium VIP (45 000 FCFA)</option>
+              <option value="tambali">TÀMBALI (15 000 FCFA /mois)</option>
+              <option value="nio-far">NIO FAR (25 000 FCFA /mois)</option>
+              <option value="xeweul">XÉWEUL (35 000 FCFA /mois)</option>
+              <option value="baobab">BAOBAB (46 800 FCFA /mois)</option>
+              <option value="teranga">TERANGA (65 000 FCFA /mois)</option>
+              <option value="buur">BUUR (80 000 FCFA /mois)</option>
             </select>
           </div>
 

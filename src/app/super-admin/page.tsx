@@ -73,7 +73,7 @@ export default function SuperAdminDashboardPage() {
   const [newRestoOwner, setNewRestoOwner] = useState('');
   const [newRestoPhone, setNewRestoPhone] = useState('');
   const [newRestoAddress, setNewRestoAddress] = useState('');
-  const [newRestoPlan, setNewRestoPlan] = useState<SubscriptionPlan>('PRO');
+  const [newRestoPlan, setNewRestoPlan] = useState<SubscriptionPlan>('NIO_FAR');
   const [newRestoMonths, setNewRestoMonths] = useState<number>(3);
   const [newRestoTables, setNewRestoTables] = useState<number>(12);
   const [newRestoEstablishmentType, setNewRestoEstablishmentType] = useState('Restaurant');
@@ -1139,22 +1139,25 @@ export default function SuperAdminDashboardPage() {
                     Configuration de l&apos;Abonnement
                   </span>
 
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['STARTER', 'PRO', 'ENTERPRISE'] as const).map((plan) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { slug: 'TAMBALI', label: 'TÀMBALI', price: '15k/m' },
+                      { slug: 'NIO_FAR', label: 'NIO FAR', price: '25k/m' },
+                      { slug: 'XEWEUL', label: 'XÉWEUL', price: '35k/m' },
+                      { slug: 'TERANGA', label: 'TERANGA', price: '65k/m' },
+                    ].map((p) => (
                       <button
                         type="button"
-                        key={plan}
-                        onClick={() => setNewRestoPlan(plan)}
-                        className={`p-2.5 rounded-xl border text-center font-bold text-xs transition-all ${
-                          newRestoPlan === plan
+                        key={p.slug}
+                        onClick={() => setNewRestoPlan(p.slug)}
+                        className={`p-2.5 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                          newRestoPlan === p.slug
                             ? 'bg-[#FF6B00] text-slate-900 border-[#FF6B00] shadow-md'
                             : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white hover:bg-slate-700'
                         }`}
                       >
-                        <div>{plan}</div>
-                        <span className="text-[10px] opacity-80">
-                          {plan === 'STARTER' ? '15k/m' : plan === 'PRO' ? '25k/m' : '50k/m'}
-                        </span>
+                        <div>{p.label}</div>
+                        <span className="text-[10px] opacity-80">{p.price}</span>
                       </button>
                     ))}
                   </div>

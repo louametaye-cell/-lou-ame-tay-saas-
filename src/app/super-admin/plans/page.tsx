@@ -28,7 +28,8 @@ import { toast } from 'sonner';
 export default function SuperAdminPlansPage() {
   const [plans, setPlans] = useState<SaaSPlan[]>([]);
   const [features, setFeatures] = useState<SaaSFeature[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('plan_starter');
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [showArchived, setShowArchived] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,17 +39,21 @@ export default function SuperAdminPlansPage() {
   const fetchData = useCallback(async () => {
     try {
       const [resPlans, resFeats] = await Promise.all([
-        fetch('/api/admin/plans'),
+        fetch(`/api/admin/plans?includeArchived=${showArchived}`),
         fetch('/api/admin/features'),
       ]);
 
       if (resPlans.ok && resFeats.ok) {
         const dataPlans = await resPlans.json();
         const dataFeats = await resFeats.json();
-        setPlans(dataPlans.plans || []);
+        const loadedPlans = dataPlans.plans || [];
+        setPlans(loadedPlans);
         setFeatures(dataFeats.features || []);
-        if (dataPlans.plans?.length > 0 && !selectedPlanId) {
-          setSelectedPlanId(dataPlans.plans[0].id);
+        if (loadedPlans.length > 0) {
+          setSelectedPlanId((prev) => {
+            const exists = loadedPlans.some((p: any) => p.id === prev);
+            return exists ? prev : loadedPlans[0].id;
+          });
         }
       }
     } catch (e) {
@@ -56,7 +61,7 @@ export default function SuperAdminPlansPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedPlanId]);
+  }, [showArchived]);
 
   useEffect(() => {
     fetchData();
@@ -198,6 +203,30 @@ export default function SuperAdminPlansPage() {
         </header>
 
         <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-8">
+          {/* Subheader & Archive Toggle */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
+                <span>{showArchived ? 'Tous les Packs (Actifs & Archives)' : 'Les 7 Formules Wolof Officielles'}</span>
+                <span className="text-xs bg-orange-100 text-orange-700 font-bold px-2 py-0.5 rounded-full">
+                  {plans.length} {plans.length > 1 ? 'packs' : 'pack'}
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                {showArchived 
+                  ? 'Affichage incluant les anciens packs de transition archivés' 
+                  : 'Grille tarifaire active et visible pour les souscriptions des restaurants'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowArchived(!showArchived)}
+              className="text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+            >
+              <span>{showArchived ? 'Masquer les 4 anciens packs' : 'Afficher les 4 anciens packs archivés'}</span>
+            </button>
+          </div>
+
           {/* Plan Selector Tabs (7 Formules) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {plans.map((p) => {
@@ -209,18 +238,27 @@ export default function SuperAdminPlansPage() {
                   className={`p-5 rounded-3xl border text-left transition-all relative overflow-hidden ${
                     isSelected
                       ? 'bg-white border-orange-500 shadow-xl ring-2 ring-orange-500/20'
-                      : 'bg-white/60 border-slate-200 hover:border-slate-200'
+                      : p.isActive === false
+                      ? 'bg-slate-100/70 border-slate-300 opacity-70 hover:opacity-100'
+                      : 'bg-white/60 border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-black uppercase tracking-wider text-slate-500">
                       Pack {p.name}
                     </span>
-                    {p.isRecommended && (
-                      <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-black px-2 py-0.5 rounded-full">
-                        ⭐ Populaire
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {p.isActive === false && (
+                        <span className="bg-slate-200 text-slate-600 border border-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          Archivé
+                        </span>
+                      )}
+                      {p.isRecommended && (
+                        <span className="bg-orange-500/20 text-orange-500 border border-orange-500/30 text-[10px] font-black px-2 py-0.5 rounded-full">
+                          ⭐ Populaire
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-2xl font-black text-slate-900">
                     {formatFCFA(p.price)}
