@@ -359,6 +359,11 @@ export default function SuperAdminTenantsListPage() {
                             >
                               <span>{planName}</span>
                             </span>
+                            {t.branding?.grandfathered?.isGrandfathered && (
+                              <span className="block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-0.5 w-fit">
+                                🔒 Garanti 12m (45k)
+                              </span>
+                            )}
                           </td>
 
                           {/* Status */}

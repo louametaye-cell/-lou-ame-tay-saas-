@@ -11,7 +11,7 @@ export async function POST(
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id;
     const body = await req.json();
-    const { newPlanId, periodMonths } = body;
+    const { newPlanId, periodMonths, customMonthlyFee, grandfatheredUntil, reviewNote } = body;
 
     if (!newPlanId) {
       return NextResponse.json({ error: 'newPlanId est obligatoire' }, { status: 400 });
@@ -31,14 +31,36 @@ export async function POST(
     const expiry = new Date();
     expiry.setMonth(expiry.getMonth() + duration);
 
+    const existingTenant = await (prisma as any).tenant.findUnique({
+      where: { id },
+      select: { branding: true },
+    });
+    const currentBranding = (existingTenant?.branding as any) || {};
+
+    const updateData: any = {
+      currentPlanId: plan.id,
+      subscriptionStatus: 'ACTIVE',
+      monthlyFee: customMonthlyFee !== undefined && customMonthlyFee !== null ? Number(customMonthlyFee) : plan.price,
+      subscriptionExpiresAt: expiry,
+    };
+
+    if (grandfatheredUntil) {
+      updateData.branding = {
+        ...currentBranding,
+        grandfathered: {
+          isGrandfathered: true,
+          guaranteedMonthlyFee: customMonthlyFee !== undefined ? Number(customMonthlyFee) : Number(plan.price),
+          catalogPrice: Number(plan.price),
+          grandfatheredUntil: new Date(grandfatheredUntil).toISOString(),
+          targetPlanSlug: plan.slug,
+          reviewNote: reviewNote || `Tarif préférentiel garanti 12 mois à ${Number(customMonthlyFee || plan.price).toLocaleString('fr-FR')} FCFA. Réexamen le ${new Date(grandfatheredUntil).toLocaleDateString('fr-FR')}.`,
+        },
+      };
+    }
+
     const updatedTenant = await (prisma as any).tenant.update({
       where: { id },
-      data: {
-        currentPlanId: plan.id,
-        subscriptionStatus: 'ACTIVE',
-        monthlyFee: plan.price,
-        subscriptionExpiresAt: expiry,
-      },
+      data: updateData,
       include: { plan: true },
     });
 
