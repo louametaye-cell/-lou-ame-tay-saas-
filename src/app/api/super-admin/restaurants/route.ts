@@ -141,6 +141,7 @@ export async function POST(req: Request) {
         logoUrl: logoUrl || null,
         branding: {
           establishmentType: establishmentType || 'Restaurant',
+          phone: phone || '+221 77 000 00 00',
         },
         currentPlanId: dbPlan.id,
         subscriptionStatus: 'ACTIVE',
@@ -148,12 +149,21 @@ export async function POST(req: Request) {
       }
     });
 
-    // Création autonome des tables
+    // Création autonome de la zone par défaut et des tables
+    const defaultZone = await (prisma as any).zone.create({
+      data: {
+        tenantId: newTenant.id,
+        name: 'Salle Principale',
+        type: 'TABLES',
+      }
+    });
+
     const numTables = Number(tablesCount) || 12;
     const tablesToCreate = [];
     for (let i = 1; i <= numTables; i++) {
       tablesToCreate.push({
         tenantId: newTenant.id,
+        zoneId: defaultZone.id,
         tableNumber: i,
         label: `Table ${i}`
       });
@@ -165,7 +175,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Création autonome des catégories et plats de démarrage
+    // Création autonome des catégories et articles modèles de démarrage
     try {
       const catPlats = await (prisma as any).category.create({
         data: {
@@ -176,12 +186,30 @@ export async function POST(req: Request) {
         }
       });
 
-      const catBoissons = await (prisma as any).category.create({
+      const catBoissonsFrais = await (prisma as any).category.create({
         data: {
           tenantId: newTenant.id,
-          name: 'Boissons Fraîches',
-          icon: '🥤',
+          name: 'Boissons Fraîches & Jus Locaux',
+          icon: '🍹',
           displayOrder: 2,
+        }
+      });
+
+      const catBoissonsChaud = await (prisma as any).category.create({
+        data: {
+          tenantId: newTenant.id,
+          name: 'Boissons Chaudes',
+          icon: '☕',
+          displayOrder: 3,
+        }
+      });
+
+      const catCollations = await (prisma as any).category.create({
+        data: {
+          tenantId: newTenant.id,
+          name: 'Collations & En-cas',
+          icon: '🥐',
+          displayOrder: 4,
         }
       });
 
@@ -190,7 +218,7 @@ export async function POST(req: Request) {
           tenantId: newTenant.id,
           name: 'Desserts & Douceurs',
           icon: '🍰',
-          displayOrder: 3,
+          displayOrder: 5,
         }
       });
 
@@ -218,12 +246,30 @@ export async function POST(req: Request) {
           },
           {
             tenantId: newTenant.id,
-            categoryId: catBoissons.id,
-            name: 'Jus de Bissap Maison',
+            categoryId: catBoissonsFrais.id,
+            name: 'Jus de Bissap Rouge Frais',
             description: 'Infusion fraîche de fleurs d\'hibiscus et menthe',
             price: 1000,
             isAvailable: true,
             imageUrl: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            tenantId: newTenant.id,
+            categoryId: catBoissonsChaud.id,
+            name: 'Café Touba Traditionnel',
+            description: 'Café moulu parfumé au poivre de Selim (Djar)',
+            price: 500,
+            isAvailable: true,
+            imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            tenantId: newTenant.id,
+            categoryId: catCollations.id,
+            name: 'Pastels Dorés au Thon (6 pcs)',
+            description: 'Chaussons croustillants servis avec sauce tomate épicée',
+            price: 1500,
+            isAvailable: true,
+            imageUrl: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=600&q=80',
           },
           {
             tenantId: newTenant.id,
