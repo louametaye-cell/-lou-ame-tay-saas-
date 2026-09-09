@@ -1,8 +1,15 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
+
+// Correspondances d'anciens sous-domaines pour garantir zéro rupture sur les anciens QR codes / favoris
+const LEGACY_SUBDOMAINS: Record<string, string> = {
+  'chez-colle': 'sams-prestige',
+  'mg-cafe-resto': 'madiba-restaurant',
+  'hotel-cayor': 'hotel-lat-dior',
+};
 
 interface PageProps {
   params: Promise<{
@@ -18,6 +25,14 @@ interface PageProps {
 export default async function FriendlyTableMenuPage({ params, searchParams }: PageProps) {
   const resolvedParams = await Promise.resolve(params);
   const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
+
+  // Redirection automatique permanente pour les anciens sous-domaines historiques
+  const rawSubdomain = (resolvedParams.subdomain || '').toLowerCase().trim();
+  if (LEGACY_SUBDOMAINS[rawSubdomain]) {
+    const targetSubdomain = LEGACY_SUBDOMAINS[rawSubdomain];
+    const targetTable = resolvedParams.tableNumber || '1';
+    permanentRedirect(`/r/${targetSubdomain}/${targetTable}`);
+  }
 
   // 1. Nettoyage du numéro de table (supporte "1", "01", "table-1", "table-04", etc.)
   const rawTableStr = (

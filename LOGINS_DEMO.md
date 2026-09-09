@@ -9,11 +9,12 @@
 
 | Pack Commercial | Email de Connexion | Mot de passe | Restaurant Pilote Démo | Menu Client (QR Code) |
 | :--- | :--- | :--- | :--- | :--- |
-| 🟢 **Starter (15 000 F)** | `demo.starter@louametay.sn` | `Demo123!` | **MG Café Resto** *(Madiba)* | [`/r/mg-cafe-resto/table-1`](http://localhost:3000/r/mg-cafe-resto/table-1) |
-| 🟠 **Pro (25 000 F)** | `demo.pro@louametay.sn` | `Demo123!` | **Chez Collé** *(Sam's)* | [`/r/chez-colle/table-1`](http://localhost:3000/r/chez-colle/table-1) |
-| 🔵 **Premium VIP (45 000 F)**| `demo.premium@louametay.sn` | `Demo123!` | **Hôtel Cayor** *(Lat-Dior)* | [`/r/hotel-cayor/table-1`](http://localhost:3000/r/hotel-cayor/table-1) |
+| 🟢 **Starter (15 000 F)** | `demo.starter@louametay.sn` | `Demo123!` | **MADIBA RESTAURANT** | [`/r/madiba-restaurant/table-1`](http://localhost:3000/r/madiba-restaurant/table-1) |
+| 🟠 **Pro (25 000 F)** | `demo.pro@louametay.sn` | `Demo123!` | **Sam's Prestige Restaurant** | [`/r/sams-prestige/table-1`](http://localhost:3000/r/sams-prestige/table-1) |
+| 🍕 **Pro Pizzeria (25 000 F)** | `contact@anima-pizzeria.sn` | `Demo123!` | **Anima Pizzeria** | [`/r/anima-pizzeria/table-1`](http://localhost:3000/r/anima-pizzeria/table-1) |
+| 🔵 **Premium VIP (45 000 F)**| `demo.premium@louametay.sn` | `Demo123!` | **Hôtel Résidence Lat-Dior Thiès** | [`/r/hotel-lat-dior/table-1`](http://localhost:3000/r/hotel-lat-dior/table-1) |
 
-> 💡 **Astuce Démo** : Vous pouvez également utiliser le code PIN rapide **`1234`** ou le sous-domaine direct (`mg-cafe-resto`, `chez-colle`, `hotel-cayor`) sur la page de connexion.
+> 💡 **Astuce Démo** : Vous pouvez également utiliser le code PIN rapide **`1234`** ou le sous-domaine direct (`madiba-restaurant`, `sams-prestige`, `hotel-lat-dior`, `anima-pizzeria`) sur la page de connexion. *(Les anciens sous-domaines historiques `chez-colle`, `mg-cafe-resto` et `hotel-cayor` sont automatiquement redirigés sans rupture).*
 
 ---
 

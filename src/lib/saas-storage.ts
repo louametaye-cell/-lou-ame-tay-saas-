@@ -157,12 +157,12 @@ export const DEFAULT_PLANS: SaaSPlan[] = [
 
 // Initial Seed Tenants (4 Établissements Partenaires Réels Sénégal)
 export const DEFAULT_TENANTS: SaaSTenant[] = [
-  // 1. MG CAFÉ RESTO (Madiba - Thiès - Formule TÀMBALI)
+  // 1. MADIBA RESTAURANT (Thiès - Formule TÀMBALI)
   {
     id: 'tenant_madiba_restau',
-    businessName: 'MG Café Resto (Madiba)',
-    subdomain: 'mg-cafe-resto',
-    ownerName: 'Direction MG Café',
+    businessName: 'MADIBA RESTAURANT',
+    subdomain: 'madiba-restaurant',
+    ownerName: 'Direction Madiba',
     phone: '+221 77 458 74 74',
     address: 'HLM Route de Mbour',
     city: 'Thiès',
@@ -178,12 +178,12 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 2. CHEZ COLLÉ (Sam's - Thiès - Formule NIO FAR)
+  // 2. SAM'S PRESTIGE RESTAURANT (Thiès - Formule NIO FAR)
   {
     id: 'tenant_sams_restaurant',
-    businessName: "Chez Collé (Sam's)",
-    subdomain: 'chez-colle',
-    ownerName: 'Direction Chez Collé',
+    businessName: "Sam's Prestige Restaurant",
+    subdomain: 'sams-prestige',
+    ownerName: "Direction Sam's Prestige",
     phone: '+221 77 458 74 74',
     address: 'Avenue Lamine Guèye',
     city: 'Thiès',
@@ -214,17 +214,17 @@ export const DEFAULT_TENANTS: SaaSTenant[] = [
     lastSeenAt: new Date().toISOString(),
     qrScansToday: 0,
     ordersToday: 0,
-    storageUsedMb: 45,
-    photosCount: 44,
+    storageUsedMb: 24,
+    photosCount: 47,
     tablesCount: 20,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  // 4. HÔTEL RESTAURANT CAYOR (Lat-Dior - Thiès - Formule TERANGA)
+  // 4. HÔTEL RÉSIDENCE LAT-DIOR THIÈS (Thiès - Formule TÉRANGA)
   {
     id: 'tenant_hotel_lat_dior',
-    businessName: 'Hôtel Restaurant Cayor (Lat-Dior)',
-    subdomain: 'hotel-cayor',
+    businessName: 'Hôtel Résidence Lat-Dior Thiès',
+    subdomain: 'hotel-lat-dior',
     ownerName: 'Direction Hôtel Cayor',
     phone: '+221 77 458 74 74',
     address: 'Quartier Lat-Dior',
@@ -330,9 +330,9 @@ class SaasStorageService {
     return this.tenants.find((t) => 
       t.id.toLowerCase() === clean || 
       t.subdomain.toLowerCase() === clean ||
-      ((clean === 'resto_thies_01' || clean === 'chezfatou' || clean === 'tenant_starter_01') && (t.id === 'tenant_madiba_restau' || t.subdomain === 'mg-cafe-resto')) ||
-      (clean === 'tenant_pro_01' && (t.id === 'tenant_sams_restaurant' || t.subdomain === 'chez-colle')) ||
-      (clean === 'tenant_premium_01' && (t.id === 'tenant_hotel_lat_dior' || t.subdomain === 'hotel-cayor'))
+      ((clean === 'resto_thies_01' || clean === 'chezfatou' || clean === 'tenant_starter_01') && (t.id === 'tenant_madiba_restau' || t.subdomain === 'madiba-restaurant' || t.subdomain === 'mg-cafe-resto')) ||
+      (clean === 'tenant_pro_01' && (t.id === 'tenant_sams_restaurant' || t.subdomain === 'sams-prestige' || t.subdomain === 'chez-colle')) ||
+      (clean === 'tenant_premium_01' && (t.id === 'tenant_hotel_lat_dior' || t.subdomain === 'hotel-lat-dior' || t.subdomain === 'hotel-cayor'))
     );
   }
 

@@ -11,17 +11,17 @@ async function configureProduction() {
   const oneYearFromNow = new Date();
   oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
-  // 1. MG Café Resto (Madiba)
+  // 1. MADIBA RESTAURANT
   const madiba = await prisma.tenant.update({
     where: { id: 'tenant_madiba_restau' },
     data: {
-      businessName: 'MG Café Resto (Madiba)',
-      subdomain: 'mg-cafe-resto',
+      businessName: 'MADIBA RESTAURANT',
+      subdomain: 'madiba-restaurant',
       phone: '+221 77 458 74 74',
       ownerName: 'Moussa Guèye',
       address: 'HLM Route de Mbour, Thiès',
       city: 'Thiès',
-      email: 'moussa@mg-cafe-resto.sn',
+      email: 'moussa@madiba-restaurant.sn',
       passwordHash: defaultPasswordHash,
       subscriptionStatus: 'ACTIVE',
       subscriptionExpiresAt: oneYearFromNow,
@@ -42,17 +42,17 @@ async function configureProduction() {
   });
   console.log(`✅ [1/4] ${madiba.businessName} configuré en PRODUCTION (Subdomain: ${madiba.subdomain})`);
 
-  // 2. Chez Collé (Sam's)
+  // 2. Sam's Prestige Restaurant
   const sams = await prisma.tenant.update({
     where: { id: 'tenant_sams_restaurant' },
     data: {
-      businessName: "Chez Collé (Sam's)",
-      subdomain: 'chez-colle',
+      businessName: "Sam's Prestige Restaurant",
+      subdomain: 'sams-prestige',
       phone: '+221 77 458 74 74',
       ownerName: 'Collé Cissé',
       address: 'Avenue Lamine Guèye, Thiès',
       city: 'Thiès',
-      email: 'colle@chez-colle.sn',
+      email: 'colle@sams-prestige.sn',
       passwordHash: defaultPasswordHash,
       subscriptionStatus: 'ACTIVE',
       subscriptionExpiresAt: oneYearFromNow,
@@ -87,11 +87,11 @@ async function configureProduction() {
       passwordHash: defaultPasswordHash,
       subscriptionStatus: 'ACTIVE',
       subscriptionExpiresAt: oneYearFromNow,
-      monthlyFee: 45000,
+      monthlyFee: 25000,
       qrScansToday: 0,
       ordersToday: 0,
       branding: {
-        tagline: 'Pizzas Artisanales au Feu de Bois & Vue sur Mer',
+        tagline: 'Authentiques Pizzas au Feu de Bois & Saveurs Italiennes',
         primaryColor: '#DC2626',
         secondaryColor: '#F59E0B',
         phone: '+221 77 458 74 74',
@@ -104,17 +104,17 @@ async function configureProduction() {
   });
   console.log(`✅ [3/4] ${anima.businessName} configuré en PRODUCTION (Subdomain: ${anima.subdomain})`);
 
-  // 4. Hôtel Restaurant Cayor (Lat-Dior)
+  // 4. Hôtel Résidence Lat-Dior Thiès
   const latDior = await prisma.tenant.update({
     where: { id: 'tenant_hotel_lat_dior' },
     data: {
-      businessName: 'Hôtel Restaurant Cayor (Lat-Dior)',
-      subdomain: 'hotel-cayor',
+      businessName: 'Hôtel Résidence Lat-Dior Thiès',
+      subdomain: 'hotel-lat-dior',
       phone: '+221 77 458 74 74',
       ownerName: 'Direction Hôtel Lat-Dior',
       address: 'Quartier Résidentiel Lat-Dior, Thiès',
       city: 'Thiès',
-      email: 'direction@hotel-cayor.sn',
+      email: 'direction@hotel-lat-dior.sn',
       passwordHash: defaultPasswordHash,
       subscriptionStatus: 'ACTIVE',
       subscriptionExpiresAt: oneYearFromNow,
