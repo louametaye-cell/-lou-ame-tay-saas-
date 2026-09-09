@@ -50,8 +50,8 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
           {/* Top Brand & Actions Bar */}
           <div className="flex items-center justify-between gap-3">
             {/* Restaurant Brand & Avatar */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shadow-sm border-2 border-[#FF6B00]/30 bg-white shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div className="relative w-10 h-10 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shadow-sm border-2 border-[#FF6B00]/30 bg-white shrink-0">
                 <Image
                   src={logoUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'}
                   alt={restaurantName}
@@ -61,11 +61,11 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
                   priority
                 />
               </div>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight truncate flex items-center gap-1.5">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-xl font-black text-slate-900 tracking-tight line-clamp-1 leading-snug flex items-center gap-1">
                   <span>👋 {restaurantName}</span>
                 </h1>
-                <p className="text-xs text-orange-600 font-bold tracking-wide truncate">
+                <p className="text-[11px] sm:text-xs text-orange-600 font-bold tracking-wide truncate">
                   {isExpress
                     ? '⚡ Service Express au Comptoir & Bar'
                     : lang === 'WO'

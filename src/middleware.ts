@@ -45,11 +45,14 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. ROUTES PUBLIQUES (AUCUN MOT DE PASSE REQUIS POUR LES CLIENTS DU RESTAURANT)
+  // 3. ROUTES PUBLIQUES & TERMINAUX OPÉRATIONNELS (Clients, TV, Caisse POS avec PIN, Cuisine KDS)
   const isPublicRoute =
     pathname.startsWith('/r/') ||          // Menu client QR Code
     pathname.startsWith('/menu/') ||       // Menu alternatif
-    pathname.startsWith('/display/') ||    // Écrans TV
+    pathname.startsWith('/display/') ||    // Écrans TV Menu
+    pathname.startsWith('/pickup/') ||     // Écran TV Retrait QSR
+    pathname.startsWith('/cashier') ||     // Écran Caisse POS (sécurisé par Code PIN opérateur)
+    pathname.startsWith('/kitchen') ||     // Écran Cuisine KDS de préparation
     pathname.startsWith('/pay/') ||        // Paiement mobile client
     pathname.startsWith('/login') ||       // Page de connexion restaurateur
     pathname.startsWith('/super-admin') || // Écran de login Super-Admin client
@@ -58,15 +61,15 @@ export function middleware(request: NextRequest) {
     pathname.includes('/favicon.ico') ||
     pathname === '/';
 
-  // Si c'est une route publique, on laisse passer immédiatement
+  // Si c'est une route publique ou opérationnelle, on laisse passer immédiatement
   if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // 4. ROUTES DU TABLEAU DE BORD RESTAURATEUR (/dashboard, /cashier, /kitchen)
+  // 4. ROUTES DU TABLEAU DE BORD GÉRANT (/dashboard)
   const token = request.cookies.get('saas_token')?.value || request.cookies.get('token')?.value;
 
-  if (!token && (pathname.startsWith('/dashboard') || pathname.startsWith('/cashier') || pathname.startsWith('/kitchen'))) {
+  if (!token && pathname.startsWith('/dashboard')) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

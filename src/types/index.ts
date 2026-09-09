@@ -312,6 +312,7 @@ export interface OrderType {
   restaurantName?: string | null;
   status: OrderStatus;
   total: number;
+  totalAmount?: number;
   preparedAt?: string | null;
   servedAt?: string | null;
   createdAt: string;

@@ -258,7 +258,14 @@ export async function POST(req: Request) {
 
     logPerformance(`POST /api/orders (${newOrder.id})`, timer.elapsedMs(), `Table ${newOrder.tableNumber}`);
 
-    return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
+    const mappedNewOrder = {
+      ...newOrder,
+      total: Number(newOrder.totalAmount ?? 0),
+      totalAmount: Number(newOrder.totalAmount ?? 0),
+      orderType: (newOrder.tableNumber === 0 || !newOrder.tableNumber) ? 'EXPRESS' : 'TABLE',
+    };
+
+    return NextResponse.json({ success: true, order: mappedNewOrder }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating order in API route:', error?.message || error, error?.stack);
     return NextResponse.json(

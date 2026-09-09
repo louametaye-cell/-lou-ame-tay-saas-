@@ -18,7 +18,17 @@ export const ActiveOrderFloatingPill: React.FC<ActiveOrderFloatingPillProps> = (
 }) => {
   if (!orders || orders.length === 0) return null;
 
-  const totalAccumulated = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const getOrderTotal = (o: any): number => {
+    if (!o) return 0;
+    const val = Number(o.total ?? o.totalAmount ?? 0);
+    if (!isNaN(val) && val > 0) return val;
+    if (Array.isArray(o.items) && o.items.length > 0) {
+      return o.items.reduce((s: number, i: any) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
+    }
+    return 0;
+  };
+
+  const totalAccumulated = orders.reduce((sum, o) => sum + getOrderTotal(o), 0);
   const totalItemsCount = orders.reduce((sum, o) => sum + (o.items?.length || 0), 0);
   const latestOrder = orders[orders.length - 1];
 

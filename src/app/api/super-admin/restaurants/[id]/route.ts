@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import bcrypt from 'bcryptjs';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
+import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 // GET /api/super-admin/restaurants/[id]
 export async function GET(
@@ -10,11 +11,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    if (!isAuthorizedSuperAdmin(req)) {
-      return NextResponse.json({ error: 'Accès non autorisé : Droits Super-Admin requis' }, { status: 401 });
-    }
-
     const resolvedParams = await Promise.resolve(params);
+    if (!isAuthorizedSuperAdmin(req) && !isAuthorizedTenant(req, resolvedParams.id)) {
+      return NextResponse.json({ error: 'Accès non autorisé : Droits Super-Admin ou Gérant requis' }, { status: 401 });
+    }
     const restaurant = await (prisma as any).tenant.findUnique({
       where: { id: resolvedParams.id },
       include: {

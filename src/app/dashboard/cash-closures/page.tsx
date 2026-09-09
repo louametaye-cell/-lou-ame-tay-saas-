@@ -38,7 +38,9 @@ export default function CashClosuresSupervisionPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedId = localStorage.getItem('current_restaurant_id') || '';
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryId = urlParams.get('restaurantId') || '';
+      const storedId = queryId || localStorage.getItem('current_restaurant_id') || '';
       const storedName = localStorage.getItem('current_restaurant_name') || 'Mon Restaurant';
       setRestaurantId(storedId);
       setRestaurantName(storedName);

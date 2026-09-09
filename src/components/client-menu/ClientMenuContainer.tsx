@@ -128,8 +128,12 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const [activeOrder, setActiveOrder] = useState<OrderType | null>(null);
   const [isCallWaiterOpen, setIsCallWaiterOpen] = useState(false);
 
-  // Table session accumulated orders with 2-Hour TTL Auto-Reset
-  const [sessionOrders, setSessionOrders] = useState<OrderType[]>(() => {
+  const [isMounted, setIsMounted] = useState(false);
+  // Table session accumulated orders with 2-Hour TTL Auto-Reset (chargé côté client pour éliminer toute erreur d'hydratation SSR)
+  const [sessionOrders, setSessionOrders] = useState<OrderType[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
     if (typeof window !== 'undefined') {
       const savedTime = localStorage.getItem(`louametay_meal_timestamp_${tableNumber}`);
       if (savedTime) {
@@ -138,19 +142,22 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         if (elapsed > 2 * 60 * 60 * 1000) {
           localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
           localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
-          return [];
+          setSessionOrders([]);
+          return;
         }
       }
 
       const saved = localStorage.getItem(`louametay_session_orders_${tableNumber}`);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setSessionOrders(parsed);
+          }
         } catch (e) {}
       }
     }
-    return [];
-  });
+  }, [tableNumber]);
 
   // Real-time polling to sync order status (PENDING -> PREPARING -> READY -> SERVED)
   useEffect(() => {
@@ -163,9 +170,15 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         if (res.ok) {
           const data = await res.json();
           if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
+            const mappedOrders: OrderType[] = data.orders.map((ord: any) => ({
+              ...ord,
+              total: Number(ord.total ?? ord.totalAmount ?? 0),
+              totalAmount: Number(ord.totalAmount ?? ord.total ?? 0),
+            }));
+
             setSessionOrders((prev) => {
               // Check if any order transitioned to SERVED
-              data.orders.forEach((updatedOrd: OrderType) => {
+              mappedOrders.forEach((updatedOrd: OrderType) => {
                 const prevOrd = prev.find((p) => p.id === updatedOrd.id);
                 if (prevOrd && prevOrd.status !== 'SERVED' && updatedOrd.status === 'SERVED') {
                   const tableDisplay = isExpress ? 'Comptoir' : `Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber}`;
@@ -175,8 +188,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                 }
               });
 
-              localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(data.orders));
-              return data.orders;
+              localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(mappedOrders));
+              return mappedOrders;
             });
 
             // Update activeOrder if matched
@@ -354,27 +367,36 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         throw new Error(data.error || 'Erreur lors de la commande.');
       }
 
-      const placedOrder: OrderType = data.order || {
-        id: `ord_${Date.now()}`,
-        restaurantId: restaurant.id,
-        tableNumber: isExpress ? 0 : tableNumber,
-        orderType: isExpress ? 'EXPRESS' : 'TABLE',
-        customerName: customerName.trim() || null,
-        customerNote: customerNote.trim() || null,
-        paymentMethod,
-        status: 'PENDING',
-        total: getTotalPrice(),
-        createdAt: new Date().toISOString(),
-        items: items.map((i) => ({
-          id: `item_${Math.random()}`,
-          menuItemId: i.menuItem.id,
-          name: i.menuItem.name,
-          price: i.menuItem.price,
-          quantity: i.quantity,
-          options: i.options,
-          notes: i.customNotes,
-        })),
-      };
+      const rawOrder = data.order;
+      const orderTotal = Number(rawOrder?.total ?? rawOrder?.totalAmount ?? getTotalPrice());
+      const placedOrder: OrderType = rawOrder
+        ? {
+            ...rawOrder,
+            total: orderTotal,
+            totalAmount: orderTotal,
+          }
+        : {
+            id: `ord_${Date.now()}`,
+            restaurantId: restaurant.id,
+            tableNumber: isExpress ? 0 : tableNumber,
+            orderType: isExpress ? 'EXPRESS' : 'TABLE',
+            customerName: customerName.trim() || null,
+            customerNote: customerNote.trim() || null,
+            paymentMethod,
+            status: 'PENDING',
+            total: getTotalPrice(),
+            totalAmount: getTotalPrice(),
+            createdAt: new Date().toISOString(),
+            items: items.map((i) => ({
+              id: `item_${Math.random()}`,
+              menuItemId: i.menuItem.id,
+              name: i.menuItem.name,
+              price: i.menuItem.price,
+              quantity: i.quantity,
+              options: i.options,
+              notes: i.customNotes,
+            })),
+          };
 
       setActiveOrder(placedOrder);
       setSessionOrders((prev) => {
@@ -682,7 +704,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       />
 
       {/* 5.5. Persistent Floating Pill for Active Table Orders */}
-      {sessionOrders.length > 0 && !isOrderSuccessOpen && (
+      {isMounted && sessionOrders.length > 0 && !isOrderSuccessOpen && (
         <ActiveOrderFloatingPill
           orders={sessionOrders}
           tableNumber={tableNumber}
