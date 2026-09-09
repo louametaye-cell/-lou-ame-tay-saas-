@@ -28,8 +28,11 @@ export const ActiveOrderFloatingPill: React.FC<ActiveOrderFloatingPillProps> = (
     return 0;
   };
 
+  const unpaidOrders = orders.filter((o: any) => o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED');
+  const totalUnpaid = unpaidOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
   const totalAccumulated = orders.reduce((sum, o) => sum + getOrderTotal(o), 0);
   const totalItemsCount = orders.reduce((sum, o) => sum + (o.items?.length || 0), 0);
+  const isFullyPaid = orders.length > 0 && unpaidOrders.length === 0;
   const latestOrder = orders[orders.length - 1];
 
   // Estimated prep time
@@ -58,13 +61,23 @@ export const ActiveOrderFloatingPill: React.FC<ActiveOrderFloatingPillProps> = (
                 Table {formattedTable}
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-500" />
-              <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>En Cuisine</span>
-              </span>
+              {isFullyPaid ? (
+                <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                  <span>Payé à la caisse ✓</span>
+                </span>
+              ) : (
+                <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>En Cuisine</span>
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-300 font-medium truncate">
-              {totalItemsCount} article{totalItemsCount > 1 ? 's' : ''} • Solde : <strong className="text-white font-mono">{formatFCFA(totalAccumulated)}</strong>
+              {totalItemsCount} article{totalItemsCount > 1 ? 's' : ''} • {isFullyPaid ? (
+                <span className="text-emerald-400 font-black">Soldé / Payé ✓</span>
+              ) : (
+                <>Solde : <strong className="text-white font-mono">{formatFCFA(totalUnpaid)}</strong></>
+              )}
             </p>
           </div>
         </div>
