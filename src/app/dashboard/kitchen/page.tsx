@@ -16,8 +16,14 @@ export default function DashboardKitchenPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryId = params.get('restaurantId');
+      if (queryId) {
+        localStorage.setItem('current_restaurant_id', queryId);
+        setRestaurantId(queryId);
+      }
       const storedName = localStorage.getItem('current_restaurant_name');
-      const storedId = localStorage.getItem('current_restaurant_id');
+      const storedId = queryId || localStorage.getItem('current_restaurant_id');
       if (storedName) setRestaurantName(storedName);
       if (storedId) setRestaurantId(storedId);
     }
