@@ -20,7 +20,9 @@ import {
   EyeOff, 
   Briefcase,
   Store,
-  Receipt
+  Receipt,
+  Archive,
+  Trash2
 } from 'lucide-react';
 import { CashierType, CashierShift } from '@/types';
 
@@ -129,6 +131,36 @@ export default function CashiersManagementPage() {
         fetchCashiers(restaurantId);
       } else {
         toast.error(data.error || 'Erreur de modification');
+      }
+    } catch (e) {
+      toast.error('Erreur serveur');
+    }
+  };
+
+  const handleArchiveOrDeleteCashier = async (cashier: any) => {
+    const sessionCount = cashier._count?.sessions || 0;
+    const orderCount = cashier._count?.orders || 0;
+    const hasHistory = sessionCount > 0 || orderCount > 0;
+
+    const message = hasHistory
+      ? `Ce caissier (${cashier.name}) a déjà ${sessionCount} session(s) de caisse et ${orderCount} commande(s) enregistrées.\n\nPour protéger vos clôtures et vos rapports financiers (rapports Z), son compte sera archivé et désactivé (aucune suppression de données comptables).\n\nConfirmer l'archivage ?`
+      : `Voulez-vous supprimer définitivement le compte du caissier « ${cashier.name} » ? (Aucune session ou vente n'y est associée).`;
+
+    if (!confirm(message)) return;
+
+    try {
+      const url = hasHistory 
+        ? `/api/tenant/cashiers/${cashier.id}` 
+        : `/api/tenant/cashiers/${cashier.id}?hard=true`;
+
+      const res = await fetch(url, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        toast.success(data.message || (hasHistory ? 'Caissier archivé avec succès' : 'Caissier supprimé'));
+        fetchCashiers(restaurantId);
+      } else {
+        toast.error(data.error || 'Erreur lors de l\'opération');
       }
     } catch (e) {
       toast.error('Erreur serveur');
@@ -474,22 +506,35 @@ export default function CashiersManagementPage() {
                     </div>
                   </div>
 
-                  <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleActive(c)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-colors ${
-                        c.isActive
-                          ? 'border-red-200 text-red-600 hover:bg-red-50'
-                          : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                      }`}
-                    >
-                      {c.isActive ? 'Désactiver le compte' : 'Réactiver le compte'}
-                    </button>
+                  <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(c)}
+                        className={`text-xs font-bold px-2.5 py-1.5 rounded-xl border transition-colors ${
+                          c.isActive
+                            ? 'border-amber-200 text-amber-800 hover:bg-amber-50'
+                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                        }`}
+                        title={c.isActive ? 'Suspendre ce compte temporairement' : 'Réactiver ce compte'}
+                      >
+                        {c.isActive ? 'Désactiver' : 'Réactiver'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleArchiveOrDeleteCashier(c)}
+                        className="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 flex items-center gap-1 transition-colors"
+                        title="Archiver ou supprimer ce profil caissier"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Archiver</span>
+                      </button>
+                    </div>
 
                     <Link
                       href={`/cashier${restaurantId ? `?restaurantId=${restaurantId}` : ''}`}
-                      className="text-xs font-bold text-slate-700 hover:text-orange-600 flex items-center gap-1"
+                      className="text-xs font-bold text-slate-700 hover:text-orange-600 flex items-center gap-1 ml-auto"
                     >
                       <span>Tester Caisse</span>
                       <span>→</span>

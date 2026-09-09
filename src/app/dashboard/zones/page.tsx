@@ -8,42 +8,70 @@ import Link from 'next/link';
 export default function ZonesManagerPage() {
   const [zones, setZones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneType, setNewZoneType] = useState('TABLES');
+  const [restaurantId, setRestaurantId] = useState('');
 
-  const fetchZones = async () => {
+  const fetchZones = async (rId?: string) => {
     try {
-      const res = await fetch('/api/tenant/zones');
+      const activeId = rId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || '' : '');
+      const query = activeId ? `?tenantId=${encodeURIComponent(activeId)}` : '';
+      const res = await fetch(`/api/tenant/zones${query}`);
       const data = await res.json();
-      setZones(data.zones || []);
+      if (res.ok && data.zones) {
+        setZones(data.zones);
+      } else {
+        setZones([]);
+      }
     } catch (e) {
-      toast.error('Erreur de chargement');
+      toast.error('Erreur de chargement des zones');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchZones();
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('current_restaurant_id') || '';
+      setRestaurantId(storedId);
+      fetchZones(storedId);
+    }
   }, []);
 
   const handleCreateZone = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newZoneName.trim()) return;
+    if (!newZoneName.trim()) {
+      toast.error('Veuillez saisir un nom pour la zone');
+      return;
+    }
+
+    const activeId = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || '' : '');
+    setIsSubmitting(true);
 
     try {
       const res = await fetch('/api/tenant/zones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newZoneName, type: newZoneType })
+        body: JSON.stringify({ 
+          name: newZoneName.trim(), 
+          type: newZoneType,
+          tenantId: activeId
+        })
       });
-      if (res.ok) {
-        toast.success('Zone créée');
+      const data = await res.json();
+
+      if (res.ok && (data.success || data.zone)) {
+        toast.success(`Zone « ${newZoneName.trim()} » créée avec succès !`);
         setNewZoneName('');
-        fetchZones();
+        fetchZones(activeId);
+      } else {
+        toast.error(data.error || 'Erreur lors de la création de la zone');
       }
     } catch (e) {
-      toast.error('Erreur lors de la création');
+      toast.error('Erreur réseau lors de la création');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -95,8 +123,12 @@ export default function ZonesManagerPage() {
               <option value="FREE_ZONE">Zone Libre (Transat/Chambre)</option>
             </select>
           </div>
-          <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white font-bold h-12 px-6 rounded-xl flex items-center gap-2 transition-colors">
-            <Plus className="w-4 h-4" /> Ajouter
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold h-12 px-6 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> {isSubmitting ? 'Création...' : 'Ajouter'}
           </button>
         </form>
       </div>

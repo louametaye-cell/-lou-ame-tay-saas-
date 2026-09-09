@@ -17,7 +17,10 @@ import {
   Flame,
   ShieldCheck,
   Store,
-  Calendar
+  Calendar,
+  Coffee,
+  Cookie,
+  Zap
 } from 'lucide-react';
 import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType, MenuItemType, LEGAL_14_ALLERGENS } from '@/types';
@@ -34,6 +37,38 @@ export default function DashboardMenuManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [itemType, setItemType] = useState<'DISH' | 'DRINK' | 'SNACK'>('DISH');
+
+  const openAddModalWithType = (type: 'DISH' | 'DRINK' | 'SNACK') => {
+    setItemType(type);
+    setIsAddModalOpen(true);
+
+    if (type === 'DRINK') {
+      const drinkCat = restaurant.categories.find((c) =>
+        c.name.toLowerCase().includes('boisson') || c.name.toLowerCase().includes('jus')
+      );
+      if (drinkCat) setCategoryId(drinkCat.id);
+      setImageUrl('https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=400&q=80');
+      setPrice(800);
+      setPrepTime(5);
+    } else if (type === 'SNACK') {
+      const snackCat = restaurant.categories.find((c) =>
+        c.name.toLowerCase().includes('collation') || c.name.toLowerCase().includes('dessert')
+      );
+      if (snackCat) setCategoryId(snackCat.id);
+      setImageUrl('https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=400&q=80');
+      setPrice(1500);
+      setPrepTime(10);
+    } else {
+      const dishCat = restaurant.categories.find((c) =>
+        !c.name.toLowerCase().includes('boisson') && !c.name.toLowerCase().includes('collation')
+      );
+      if (dishCat) setCategoryId(dishCat.id);
+      setImageUrl('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80');
+      setPrice(3500);
+      setPrepTime(20);
+    }
+  };
 
   // Form states (Multilingual FR / EN / ES / IT)
   const [name, setName] = useState('');
@@ -255,21 +290,40 @@ export default function DashboardMenuManagementPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Link
               href={`/display/${restaurant.subdomain || 'mg-cafe-resto'}`}
               target="_blank"
-              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-3.5 py-2.5 rounded-xl shadow-xs transition-all"
             >
-              <span>🖥️ Écran Menu TV</span>
+              <span>🖥️ Écran TV</span>
             </Link>
 
             <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl shadow-xs transition-all"
+              type="button"
+              onClick={() => openAddModalWithType('DISH')}
+              className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 text-xs sm:text-sm font-black px-3 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
-              <span>Nouveau Plat</span>
+              <Utensils className="w-3.5 h-3.5" />
+              <span>+ Plat</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openAddModalWithType('DRINK')}
+              className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-xs sm:text-sm font-black px-3 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              <Coffee className="w-3.5 h-3.5" />
+              <span>+ Boisson</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openAddModalWithType('SNACK')}
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black px-3 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              <Cookie className="w-3.5 h-3.5" />
+              <span>+ Collation</span>
             </button>
           </div>
         </div>
@@ -289,7 +343,7 @@ export default function DashboardMenuManagementPage() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Sparkles className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
               <span>⚡ Ruptures en Direct &amp; Plat du Jour</span>
             </button>
 
@@ -351,7 +405,7 @@ export default function DashboardMenuManagementPage() {
         {viewMode === 'LIVE_STOCK' && (
           <LiveStockManager
             categories={restaurant.categories}
-            onOpenAddModal={() => setIsAddModalOpen(true)}
+            onOpenAddModal={(type?: any) => openAddModalWithType(type || 'DISH')}
             onItemUpdated={(updated) => {
               const clone = JSON.parse(JSON.stringify(restaurant)) as RestaurantType;
               clone.categories.forEach((c) => {
@@ -490,10 +544,64 @@ export default function DashboardMenuManagementPage() {
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl text-slate-900">
-            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-orange-600" />
-              <span>Ajouter un Plat au Menu</span>
-            </h2>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                {itemType === 'DRINK' ? (
+                  <Coffee className="w-5 h-5 text-sky-600" />
+                ) : itemType === 'SNACK' ? (
+                  <Cookie className="w-5 h-5 text-emerald-600" />
+                ) : (
+                  <Utensils className="w-5 h-5 text-orange-600" />
+                )}
+                <span>
+                  {itemType === 'DRINK'
+                    ? 'Ajouter une Boisson'
+                    : itemType === 'SNACK'
+                    ? 'Ajouter une Collation'
+                    : 'Ajouter un Plat au Menu'}
+                </span>
+              </h2>
+            </div>
+
+            {/* Type selector pills */}
+            <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => openAddModalWithType('DISH')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  itemType === 'DISH'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Utensils className="w-3.5 h-3.5" />
+                <span>Plat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openAddModalWithType('DRINK')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  itemType === 'DRINK'
+                    ? 'bg-sky-500 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Coffee className="w-3.5 h-3.5" />
+                <span>Boisson</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openAddModalWithType('SNACK')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  itemType === 'SNACK'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Cookie className="w-3.5 h-3.5" />
+                <span>Collation</span>
+              </button>
+            </div>
 
             <form onSubmit={handleCreateDish} className="space-y-4">
               {/* Language Tabs & Auto-Translate Action */}

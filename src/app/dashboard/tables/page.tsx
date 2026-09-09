@@ -13,13 +13,16 @@ import { TableManager } from '@/components/dashboard/TableManager';
 export default function DashboardTablesPage() {
   const [subdomain, setSubdomain] = useState('mg-cafe-resto');
   const [restaurantName, setRestaurantName] = useState('Mon Restaurant');
+  const [restaurantId, setRestaurantId] = useState('');
   const [tableCount, setTableCount] = useState(12);
 
   useEffect(() => {
     const storedSub = localStorage.getItem('current_restaurant_subdomain');
     const storedName = localStorage.getItem('current_restaurant_name');
+    const storedId = localStorage.getItem('current_restaurant_id');
     if (storedSub) setSubdomain(storedSub);
     if (storedName) setRestaurantName(storedName);
+    if (storedId) setRestaurantId(storedId);
   }, []);
 
   return (
@@ -83,6 +86,7 @@ export default function DashboardTablesPage() {
           subdomain={subdomain}
           restaurantName={restaurantName}
           initialTableCount={tableCount}
+          restaurantId={restaurantId}
         />
       </main>
     </div>

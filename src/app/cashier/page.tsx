@@ -113,12 +113,12 @@ export default function CashierCounterPage() {
   }, []);
 
   const fetchRestaurantDetails = (id: string) => {
-    fetch(`/api/super-admin/restaurants/${id}`)
+    fetch(`/api/tenant/branding?restaurantId=${encodeURIComponent(id)}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.restaurant) {
-          const rName = d.restaurant.name || d.restaurant.businessName;
-          const rPhone = d.restaurant.phone || '+221 77 458 74 74';
+        if (d.success || d.name || d.branding) {
+          const rName = d.name || d.restaurant?.name || d.businessName;
+          const rPhone = d.phone || d.branding?.phone || d.restaurant?.phone || '+221 77 458 74 74';
           if (rName) {
             setRestaurantName(rName);
             localStorage.setItem('current_restaurant_name', rName);

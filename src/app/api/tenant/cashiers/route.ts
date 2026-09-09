@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // 🔒 SÉCURITÉ ABSOLUE : Exclusion du champ pinCode pour empêcher toute fuite de secret
+    // Récupération des caissiers avec code PIN pour le gérant authentifié
     const cashiers = await prisma.cashier.findMany({
       where: { tenantId: tenant.id },
       orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
@@ -40,6 +40,7 @@ export async function GET(req: Request) {
         tenantId: true,
         name: true,
         phone: true,
+        pinCode: true,
         shift: true,
         schedule: true,
         isActive: true,
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
 
     const safeCashiers = cashiers.map((c) => ({
       ...c,
-      hasPin: true, // Indicateur que le PIN est configuré sans jamais le divulguer en clair
+      hasPin: Boolean(c.pinCode),
     }));
 
     return NextResponse.json({ success: true, cashiers: safeCashiers });

@@ -27,16 +27,19 @@ export async function GET(req: Request) {
     }
 
     const brandingData = (tenant.branding as any) || {};
+    const effectivePhone = tenant.phone || brandingData.phone || '+221 77 458 74 74';
 
     return NextResponse.json({
       success: true,
       name: tenant.businessName,
       subdomain: tenant.subdomain,
+      phone: effectivePhone,
       logoUrl: tenant.logoUrl || brandingData.logoUrl,
       bannerUrl: tenant.bannerUrl || brandingData.bannerUrl,
       establishmentType: brandingData.establishmentType || 'Restaurant',
       branding: {
         ...brandingData,
+        phone: effectivePhone,
         logoUrl: tenant.logoUrl || brandingData.logoUrl,
         bannerUrl: tenant.bannerUrl || brandingData.bannerUrl,
       },
@@ -94,6 +97,11 @@ export async function PUT(req: Request) {
 
     if (branding?.bannerUrl) {
       updateData.bannerUrl = branding.bannerUrl;
+    }
+
+    const newPhone = (branding?.phone || body.phone);
+    if (newPhone && typeof newPhone === 'string' && newPhone.trim().length > 0) {
+      updateData.phone = newPhone.trim();
     }
 
     const updated = await (prisma as any).tenant.update({

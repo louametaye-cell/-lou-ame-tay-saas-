@@ -103,17 +103,51 @@ export async function DELETE(
     });
 
     if (openSession) {
-      return NextResponse.json({ error: 'Impossible de désactiver un caissier ayant une session de caisse en cours' }, { status: 400 });
+      return NextResponse.json({ error: 'Impossible d\'archiver ou supprimer un caissier ayant une session de caisse en cours d\'activité' }, { status: 400 });
     }
 
+    // Check sessions and orders count
+    const cashierWithCounts = await prisma.cashier.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { sessions: true, orders: true }
+        }
+      }
+    });
+
+    const hasHistory = (cashierWithCounts?._count?.sessions || 0) > 0 || (cashierWithCounts?._count?.orders || 0) > 0;
+    const { searchParams } = new URL(req.url);
+    const hardDelete = searchParams.get('hard') === 'true';
+
+    if (hardDelete && !hasHistory) {
+      // 0 session et 0 commande : suppression définitive sécurisée autorisée
+      await prisma.cashier.delete({
+        where: { id }
+      });
+      return NextResponse.json({ 
+        success: true, 
+        action: 'DELETED', 
+        message: 'Profil caissier supprimé définitivement (aucune donnée historique liée).' 
+      });
+    }
+
+    // Si le caissier a des sessions historiques ou si archivage demandé : SOFT ARCHIVE Garanti
     const updated = await prisma.cashier.update({
       where: { id },
       data: { isActive: false }
     });
 
-    return NextResponse.json({ success: true, message: 'Caissier désactivé avec succès', cashier: updated });
+    return NextResponse.json({ 
+      success: true, 
+      action: 'ARCHIVED',
+      message: hasHistory 
+        ? 'Caissier archivé avec succès (historique comptable et rapports Z intégralement conservés).' 
+        : 'Caissier désactivé avec succès.', 
+      cashier: updated 
+    });
   } catch (error) {
-    console.error('Erreur désactivation caissier:', error);
-    return NextResponse.json({ error: 'Erreur serveur lors de la désactivation' }, { status: 500 });
+    console.error('Erreur archivage/suppression caissier:', error);
+    return NextResponse.json({ error: 'Erreur serveur lors de l\'opération' }, { status: 500 });
   }
 }

@@ -2,7 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-  Sparkles, 
+  Star,
+  Coffee,
+  Cookie,
+  Utensils,
   Search, 
   CheckCircle2, 
   AlertTriangle,
@@ -21,7 +24,7 @@ import { toast } from 'sonner';
 interface LiveStockManagerProps {
   categories: CategoryType[];
   onItemUpdated?: (updatedItem: MenuItemType) => void;
-  onOpenAddModal?: () => void;
+  onOpenAddModal?: (type?: 'DISH' | 'DRINK' | 'SNACK') => void;
 }
 
 export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
@@ -237,7 +240,7 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
           }`}
         >
           <span className="text-xs font-bold flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
             <span>Plats du Jour ⭐</span>
           </span>
           <span className="text-2xl font-black font-mono">{specialCount}</span>
@@ -252,7 +255,7 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Rechercher un plat par nom ou ingrédient..."
+              placeholder="Rechercher un plat, boisson ou collation..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500"
@@ -260,14 +263,34 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
           </div>
 
           {onOpenAddModal && (
-            <button
-              type="button"
-              onClick={onOpenAddModal}
-              className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-2xl font-black text-xs flex items-center gap-1.5 shadow-xs transition-all shrink-0"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>+ Ajouter un Plat</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpenAddModal('DISH')}
+                className="py-2.5 px-3.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-2xl font-black text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Utensils className="w-3.5 h-3.5" />
+                <span>+ Plat</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onOpenAddModal('DRINK')}
+                className="py-2.5 px-3.5 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white rounded-2xl font-black text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Coffee className="w-3.5 h-3.5" />
+                <span>+ Boisson</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onOpenAddModal('SNACK')}
+                className="py-2.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl font-black text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Cookie className="w-3.5 h-3.5" />
+                <span>+ Collation</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -421,7 +444,7 @@ export const LiveStockManager: React.FC<LiveStockManagerProps> = ({
                     }`}
                     title="Mettre en avant comme Plat du Jour"
                   >
-                    <Sparkles className={`w-3.5 h-3.5 ${isSpecial ? 'fill-amber-500 text-amber-600' : ''}`} />
+                    <Star className={`w-3.5 h-3.5 ${isSpecial ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
                     <span>{isSpecial ? 'Plat du Jour ⭐' : 'Standard'}</span>
                   </button>
 

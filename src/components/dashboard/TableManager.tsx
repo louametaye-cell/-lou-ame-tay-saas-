@@ -11,7 +11,8 @@ import {
   UtensilsCrossed,
   ShieldCheck,
   Package,
-  Phone
+  Phone,
+  Printer
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { OrderType } from '@/types';
@@ -28,12 +29,14 @@ interface TableManagerProps {
   subdomain?: string;
   restaurantName?: string;
   initialTableCount?: number;
+  restaurantId?: string;
 }
 
 export const TableManager: React.FC<TableManagerProps> = ({
   subdomain: propSubdomain,
   restaurantName: propRestaurantName,
   initialTableCount = 12,
+  restaurantId: propRestaurantId,
 }) => {
   const [activeTab, setActiveTab] = useState<'SERVICE' | 'QRCODES'>('SERVICE');
   const [qrMode, setQrMode] = useState<'TABLE' | 'EXPRESS'>('TABLE');
@@ -42,6 +45,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [baseUrl, setBaseUrl] = useState('');
 
+  const effectiveRestaurantId = propRestaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
   const effectiveSubdomain = propSubdomain || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_subdomain') : '') || '';
   const effectiveRestaurantName = propRestaurantName || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : '') || 'Mon Restaurant';
 
@@ -133,6 +137,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
           orders={orders}
           tableCount={tableCount}
           onRefreshOrders={fetchLiveOrders}
+          restaurantId={effectiveRestaurantId}
         />
       )}
 
@@ -143,7 +148,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
           <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 border-2 border-amber-300/80 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center shadow-xs shrink-0">
-                <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
+                <Printer className="w-6 h-6 stroke-[2.5]" />
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -251,7 +256,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
                   href="/dashboard/qrcodes"
                   className="py-3 px-5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 font-black text-xs rounded-2xl shadow-lg flex items-center gap-2 active:scale-95 transition-all"
                 >
-                  <Package className="w-4 h-4" />
+                  <Printer className="w-4 h-4" />
                   <span>Commander Chevalet Comptoir Officiel (MGD)</span>
                 </Link>
 

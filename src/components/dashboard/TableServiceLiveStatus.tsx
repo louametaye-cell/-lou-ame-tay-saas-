@@ -36,17 +36,24 @@ interface TableServiceLiveStatusProps {
   orders: OrderType[];
   tableCount?: number;
   onRefreshOrders?: () => void;
+  restaurantId?: string;
 }
 
 export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   orders,
   tableCount = 12,
   onRefreshOrders,
+  restaurantId,
 }) => {
+  const effectiveTenantId = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || '' : '');
+
   // Liste des membres du shift
   const [shiftMembers, setShiftMembers] = useState<ServerShiftMember[]>(() => {
     return getServerShiftMembers();
   });
+
+  // Dynamic zones from DB
+  const [zones, setZones] = useState<any[]>([]);
 
   // Table -> Assigned Server map: { 1: "Modou Faye", 2: "Modou Faye", ... }
   const [tableServerMap, setTableServerMap] = useState<Record<number, string>>(() => {
@@ -56,8 +63,46 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   // Modale d'édition d'un serveur
   const [editingMember, setEditingMember] = useState<ServerShiftMember | null>(null);
 
-  // Filtre par Zone / Salle (Toutes, Salle, Terrasse, VIP)
-  const [activeZoneFilter, setActiveZoneFilter] = useState<'ALL' | 'SALLE' | 'TERRASSE' | 'VIP'>('ALL');
+  // Filtre par Zone / Salle
+  const [activeZoneFilter, setActiveZoneFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (!effectiveTenantId) return;
+
+    // Fetch tenant zones
+    fetch(`/api/tenant/zones?tenantId=${encodeURIComponent(effectiveTenantId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.zones && Array.isArray(data.zones)) {
+          setZones(data.zones);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch tenant waiters from DB
+    fetch(`/api/tenant/waiters?tenantId=${encodeURIComponent(effectiveTenantId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.waiters && Array.isArray(data.waiters)) {
+          const dbWaiters = data.waiters;
+          const current = getServerShiftMembers();
+          if (current.length === 0 && dbWaiters.length > 0) {
+            const mapped: ServerShiftMember[] = dbWaiters.map((w: any) => ({
+              id: w.id,
+              name: w.name,
+              phone: w.phone || undefined,
+              shiftHours: '11h00 - 23h30 (Journée Complète)',
+              periodType: 'FULL_DAY',
+              status: 'ACTIVE',
+              assignedTables: [],
+            }));
+            setShiftMembers(mapped);
+            saveServerShiftMembers(mapped);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [effectiveTenantId]);
 
   // Formulaire d'ajout rapide
   const [isAddWaiterOpen, setIsAddWaiterOpen] = useState(false);
@@ -276,60 +321,70 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
         </div>
 
         {/* Server Cards with Shifts & Edit Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
-          {shiftMembers.map((member) => {
-            const tableCountAssigned = Object.values(tableServerMap).filter((v) => v === member.name).length;
+        {shiftMembers.length === 0 ? (
+          <div className="text-center py-6 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl space-y-1.5">
+            <Users className="w-7 h-7 text-slate-400 mx-auto" />
+            <p className="text-xs font-bold text-slate-700">Aucun serveur dans le shift en cours</p>
+            <p className="text-[11px] text-slate-400 max-w-md mx-auto">
+              Cliquez sur « Ajouter Serveur au Shift » ci-dessus pour intégrer des serveurs et leur attribuer des tables en temps réel.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+            {shiftMembers.map((member) => {
+              const tableCountAssigned = Object.values(tableServerMap).filter((v) => v === member.name).length;
 
-            return (
-              <div
-                key={member.id}
-                className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-amber-400 p-3.5 rounded-2xl transition-all shadow-2xs flex flex-col justify-between gap-2.5 group"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-black text-slate-900 text-xs truncate">
-                        {member.name}
-                      </span>
-                      <span
-                        className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
-                          member.status === 'ACTIVE'
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : member.status === 'BREAK'
-                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                            : 'bg-rose-100 text-rose-800'
-                        }`}
-                      >
-                        {member.status === 'ACTIVE' ? '🟢 En Service' : member.status === 'BREAK' ? '⏸️ En Pause' : '🔴 Terminé'}
-                      </span>
+              return (
+                <div
+                  key={member.id}
+                  className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-amber-400 p-3.5 rounded-2xl transition-all shadow-2xs flex flex-col justify-between gap-2.5 group"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-black text-slate-900 text-xs truncate">
+                          {member.name}
+                        </span>
+                        <span
+                          className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                            member.status === 'ACTIVE'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : member.status === 'BREAK'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}
+                        >
+                          {member.status === 'ACTIVE' ? '🟢 En Service' : member.status === 'BREAK' ? '⏸️ En Pause' : '🔴 Terminé'}
+                        </span>
+                      </div>
+
+                      <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1 truncate">
+                        <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{member.shiftHours}</span>
+                      </p>
                     </div>
 
-                    <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1 truncate">
-                      <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{member.shiftHours}</span>
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setEditingMember(member)}
+                      className="p-1.5 bg-white group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-900 rounded-lg border border-slate-200 group-hover:border-amber-300 transition-all shadow-2xs"
+                      title="Modifier horaires / shift"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setEditingMember(member)}
-                    className="p-1.5 bg-white group-hover:bg-amber-100 text-slate-400 group-hover:text-amber-900 rounded-lg border border-slate-200 group-hover:border-amber-300 transition-all shadow-2xs"
-                    title="Modifier horaires / shift"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 font-medium">Tables assignées</span>
+                    <span className="font-mono font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      {tableCountAssigned} table{tableCountAssigned > 1 ? 's' : ''}
+                    </span>
+                  </div>
                 </div>
-
-                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500 font-medium">Tables assignées</span>
-                  <span className="font-mono font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                    {tableCountAssigned} table{tableCountAssigned > 1 ? 's' : ''}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Add Waiter Inline Drawer */}
         {isAddWaiterOpen && (
@@ -397,50 +452,24 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
             🍽️ Toutes les Tables ({tableCount})
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveZoneFilter('SALLE')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-              activeZoneFilter === 'SALLE'
-                ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            🛋️ Salle Principale (T1 - T4)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveZoneFilter('TERRASSE')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-              activeZoneFilter === 'TERRASSE'
-                ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            🌿 Terrasse Extérieure (T5 - T8)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveZoneFilter('VIP')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-              activeZoneFilter === 'VIP'
-                ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            👑 Salons VIP (T9 - T12)
-          </button>
+          {zones.map((zone) => (
+            <button
+              key={zone.id}
+              type="button"
+              onClick={() => setActiveZoneFilter(zone.id)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                activeZoneFilter === zone.id
+                  ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              📍 {zone.name}
+            </button>
+          ))}
         </div>
 
         <span className="text-xs font-bold text-slate-500 hidden sm:inline px-2">
-          {activeTablesList.filter((t) => {
-            if (activeZoneFilter === 'SALLE') return t.tableNum >= 1 && t.tableNum <= 4;
-            if (activeZoneFilter === 'TERRASSE') return t.tableNum >= 5 && t.tableNum <= 8;
-            if (activeZoneFilter === 'VIP') return t.tableNum >= 9;
-            return true;
-          }).length} tables affichées
+          {tableCount} tables configurées
         </span>
       </div>
 
@@ -448,9 +477,12 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeTablesList
           .filter((t) => {
-            if (activeZoneFilter === 'SALLE') return t.tableNum >= 1 && t.tableNum <= 4;
-            if (activeZoneFilter === 'TERRASSE') return t.tableNum >= 5 && t.tableNum <= 8;
-            if (activeZoneFilter === 'VIP') return t.tableNum >= 9;
+            if (activeZoneFilter === 'ALL') return true;
+            const targetZone = zones.find((z) => z.id === activeZoneFilter);
+            if (!targetZone) return true;
+            if (targetZone.tables && targetZone.tables.length > 0) {
+              return targetZone.tables.some((zt: any) => zt.tableNumber === t.tableNum);
+            }
             return true;
           })
           .map((t) => {
@@ -500,6 +532,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                     onChange={(e) => handleAssignServer(t.tableNum, e.target.value)}
                     className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 cursor-pointer shadow-2xs"
                   >
+                    <option value="Non assigné">Non assigné</option>
                     {shiftMembers.map((m) => (
                       <option key={m.id} value={m.name}>
                         👤 {m.name}

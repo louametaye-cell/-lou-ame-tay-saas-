@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   Utensils, 
   ArrowLeft, 
-  Sparkles, 
+  Send, 
   Upload, 
   Check, 
   ShieldCheck, 
@@ -302,7 +302,7 @@ export default function AddPlatPage() {
               disabled={isSubmitting}
               className="w-full min-h-[56px] bg-green-600 hover:bg-green-700 text-white text-base font-black rounded-2xl shadow-xl shadow-green-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
-              <Sparkles className="w-5 h-5" />
+              <Send className="w-5 h-5" />
               <span>{isSubmitting ? 'Transmission à l\'agence...' : 'Soumettre mon plat 🚀'}</span>
             </button>
           </form>

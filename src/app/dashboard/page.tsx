@@ -21,6 +21,7 @@ import {
   Users, 
   RefreshCw, 
   Sparkles, 
+  Palette,
   Zap, 
   X, 
   ExternalLink,
@@ -929,7 +930,7 @@ export default function OperationalDashboardPage() {
             className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-orange-500 hover:shadow-sm transition-all group"
           >
             <div className="p-3 bg-orange-100 text-orange-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-6 h-6" />
+              <Palette className="w-6 h-6" />
             </div>
             <h4 className="text-sm font-black text-slate-900">Studio de Marque</h4>
             <p className="text-xs text-slate-500 mt-1">Couleurs, Google Fonts & Avis Maps</p>
