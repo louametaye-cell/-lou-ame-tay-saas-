@@ -560,9 +560,19 @@ export default function CashierCounterPage() {
 
   // Logout / Switch Cashier
   const handleLogoutCashier = () => {
+    if (currentSession) {
+      const confirmLogout = window.confirm(
+        `Une session de caisse est actuellement ouverte pour ${currentCashier?.name || 'le caissier'}.\n\n` +
+        `• Cliquez sur OK pour vous déconnecter (relève d'équipe, la caisse reste ouverte pour le prochain caissier).\n` +
+        `• Pour fermer définitivement la caisse et imprimer le rapport, utilisez plutôt le bouton rouge "Clôturer la Caisse (Z)".`
+      );
+      if (!confirmLogout) return;
+    }
+
     setCurrentCashier(null);
     localStorage.removeItem('current_cashier');
-    toast.info('Caissier déconnecté. Veuillez sélectionner le profil pour le prochain shift.');
+    document.cookie = 'cashier_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    toast.success('Caissier déconnecté avec succès. Saisissez votre code PIN pour reprendre la caisse.');
     setIsPinModalOpen(true);
   };
 
@@ -702,10 +712,11 @@ export default function CashierCounterPage() {
                   <button
                     type="button"
                     onClick={handleLogoutCashier}
-                    className="ml-1 text-slate-400 hover:text-red-600 font-normal underline"
-                    title="Changer de caissier (Relève)"
+                    className="ml-2 px-2.5 py-1 bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-700 border border-slate-200 hover:border-rose-300 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    title="Déconnecter le caissier"
                   >
-                    (Relève)
+                    <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Déconnexion</span>
                   </button>
                 </div>
               ) : (
@@ -739,6 +750,19 @@ export default function CashierCounterPage() {
             >
               <Lock className="w-4 h-4" />
               <span>Clôturer la Caisse (Z)</span>
+            </button>
+          )}
+
+          {/* Bouton Déconnexion Caissier */}
+          {currentCashier && (
+            <button
+              type="button"
+              onClick={handleLogoutCashier}
+              className="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-700 border border-slate-200 font-bold text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+              title="Déconnecter le caissier en poste"
+            >
+              <LogOut className="w-4 h-4 text-rose-600" />
+              <span>Déconnexion</span>
             </button>
           )}
 
