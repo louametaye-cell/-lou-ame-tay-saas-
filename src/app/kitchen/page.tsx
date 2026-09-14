@@ -1,146 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useKitchenOrders } from '@/hooks/useKitchenOrders';
-import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitchen';
-import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
-import { KitchenHistory } from '@/components/KitchenHistory';
-import { History, LayoutGrid } from 'lucide-react';
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import KitchenKDSView from '@/components/kitchen/KitchenKDSView';
 
-export default function DashboardKitchenPage() {
-  const [restaurantName, setRestaurantName] = useState('Écran Cuisine (KDS)');
-  const [restaurantId, setRestaurantId] = useState<string | undefined>(undefined);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
-  const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
+function KitchenPageContent() {
+  const searchParams = useSearchParams();
+  const restaurantId = searchParams?.get('restaurantId') || undefined;
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const queryId = params.get('restaurantId');
-      if (queryId) {
-        localStorage.setItem('current_restaurant_id', queryId);
-        setRestaurantId(queryId);
-      }
-      const storedName = localStorage.getItem('current_restaurant_name');
-      const storedId = queryId || localStorage.getItem('current_restaurant_id');
-      if (storedName) setRestaurantName(storedName);
-      if (storedId) setRestaurantId(storedId);
-    }
-  }, []);
+  return <KitchenKDSView initialRestaurantId={restaurantId} />;
+}
 
-  const {
-    orders,
-    isLoading,
-    isConnected,
-    updateOrderStatus,
-    refetch,
-  } = useKitchenOrders({
-    restaurantId,
-    isAudioEnabled,
-    pollIntervalMs: 3500,
-  });
-
-  // Calculate live counts
-  const pendingOrders = orders.filter((o) => o.status === 'PENDING');
-  const pendingCount = pendingOrders.length;
-  const preparingCount = orders.filter((o) => o.status === 'PREPARING').length;
-  const readyCount = orders.filter((o) => o.status === 'READY').length;
-  const servedCount = orders.filter((o) => o.status === 'SERVED').length;
-  const urgentCount = orders.filter((o) => {
-    if (o.status === 'SERVED' || o.status === 'CANCELLED') return false;
-    const diffMs = Date.now() - new Date(o.createdAt).getTime();
-    return diffMs / (1000 * 60) >= 15;
-  }).length;
-
-  const handleAcknowledgeAll = async () => {
-    for (const ord of pendingOrders) {
-      await updateOrderStatus(ord.id, 'PREPARING');
-    }
-  };
-
+export default function KitchenPage() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
-      {/* 1. KDS Fixed Header */}
-      <KitchenHeader
-        restaurantName={restaurantName}
-        isConnected={isConnected}
-        isAudioEnabled={isAudioEnabled}
-        onToggleAudio={() => setIsAudioEnabled((prev) => !prev)}
-        counts={{
-          pending: pendingCount,
-          preparing: preparingCount,
-          ready: readyCount,
-          served: servedCount,
-          urgent: urgentCount,
-        }}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-        onRefresh={refetch}
-        isLoading={isLoading}
-      />
-
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 pt-5 space-y-6">
-        {/* Repeating Alert Banner if pending orders */}
-        <KitchenAlertManager
-          pendingOrders={pendingOrders}
-          onAcknowledgeAll={handleAcknowledgeAll}
-        />
-
-        {/* View Tabs Selector */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setActiveTab('LIVE')}
-              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
-                activeTab === 'LIVE'
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span>Tickets en Direct ({pendingCount + preparingCount})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('HISTORY')}
-              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
-                activeTab === 'HISTORY'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <History className="w-4 h-4" />
-              <span>Historique ({servedCount})</span>
-            </button>
-          </div>
-
-          <div className="text-xs text-slate-500 font-mono font-medium">
-            {pendingCount + preparingCount} en cuisine • {servedCount} servie(s)
-          </div>
-        </div>
-
-        {/* Tab 1: Live KDS Grid */}
-        {activeTab === 'LIVE' && (
-          <OrderTicketGrid
-            orders={orders}
-            onUpdateStatus={updateOrderStatus}
-            restaurantName={restaurantName}
-            activeFilter={activeFilter}
-          />
-        )}
-
-        {/* Tab 2: History View */}
-        {activeTab === 'HISTORY' && (
-          <KitchenHistory
-            restaurantId={restaurantId}
-            restaurantName={restaurantName}
-          />
-        )}
-      </main>
-    </div>
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-amber-400 gap-3">
+        <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs uppercase tracking-widest font-black">Chargement de l'Écran Cuisine...</span>
+      </div>
+    }>
+      <KitchenPageContent />
+    </Suspense>
   );
 }
