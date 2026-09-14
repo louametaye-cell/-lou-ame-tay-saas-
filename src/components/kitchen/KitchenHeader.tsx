@@ -84,12 +84,13 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
               <div className="p-2 bg-amber-500/15 text-amber-700 rounded-2xl border border-amber-500/30">
                 <ChefHat className="w-6 h-6" />
               </div>
-              <div>
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
-                  <span>Écran Cuisine (KDS)</span>
-                  <span className="text-xs text-amber-800 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-200 hidden sm:inline">
-                    {restaurantName}
-                  </span>
+                  <span>Cuisine KDS</span>
+                  {restaurantName && restaurantName !== 'Écran Cuisine (KDS)' ? (
+                    <span className="text-xs text-amber-800 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-200">
+                      {restaurantName}
+                    </span>
+                  ) : null}
                 </h1>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <div className="flex items-center gap-1">

@@ -16,8 +16,8 @@ export async function GET(req: Request) {
     const tenant = await (prisma as any).tenant.findFirst({
       where: {
         OR: [
-          ...(restaurantId ? [{ id: restaurantId }] : []),
-          ...(subdomain ? [{ subdomain }] : []),
+          ...(restaurantId ? [{ id: restaurantId }, { subdomain: restaurantId }] : []),
+          ...(subdomain ? [{ subdomain }, { id: subdomain }] : []),
         ],
       },
     });
