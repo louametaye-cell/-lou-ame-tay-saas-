@@ -60,27 +60,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="lg:col-span-7 flex flex-col items-start pt-2">
             
             {/* Top Official Brand Badge */}
-            <div className="flex items-center gap-3 bg-white p-2 sm:p-2.5 pr-4 rounded-2xl border border-gray-200/80 shadow-xs mb-6 hover:border-emerald-300 transition-all">
+            <div className="flex items-center gap-3 bg-white p-2 sm:p-2.5 pr-4 rounded-2xl border border-emerald-200/80 shadow-xs mb-6 hover:border-emerald-400 transition-all">
               <OfficialLogo variant="icon-only" size="sm" />
               <div className="flex flex-col">
                 <span className="text-[11px] font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
                   <span>Lou Ame Tay ?</span>
-                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Officiel 🇸🇳</span>
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">SaaS 100% Sénégalais 🇸🇳</span>
                 </span>
                 <span className="text-[10px] text-gray-500 font-medium">
-                  La solution digitale des restaurateurs de Thiès & Dakar
+                  Restauration • Hôtellerie • Tourisme au Sénégal
                 </span>
               </div>
             </div>
 
             {/* Main Headline */}
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-6 tracking-tight text-[#1A1A1A]">
-              Le menu digital qui fait tourner votre <span className="text-[#00A86B]">restaurant</span>.
+            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] mb-6 tracking-tight text-[#1A1A1A]">
+              La transition digitale de la <span className="text-[#00A86B]">restauration</span>, de l'hôtellerie et du tourisme.
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg sm:text-xl text-gray-500 mb-8 max-w-xl leading-relaxed font-normal">
-              Fini les menus papier déchirés et les erreurs de commande. Vos clients scannent le QR code de leur table et commandent directement depuis leur smartphone.
+            <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-xl leading-relaxed font-normal">
+              Une campagne de digitalisation responsable, pensée et conçue au Sénégal. Vos clients scannent le QR code et commandent directement depuis leur smartphone sans aucun papier.
             </p>
 
             {/* 2 Big Action Buttons as requested */}

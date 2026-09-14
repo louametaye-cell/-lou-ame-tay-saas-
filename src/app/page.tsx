@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Header } from '@/components/landing/Header';
 import { HeroSection } from '@/components/landing/HeroSection';
+import { MissionSection } from '@/components/landing/MissionSection';
 import { ProblemsSection } from '@/components/landing/ProblemsSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { InteractiveLiveDemo } from '@/components/landing/InteractiveLiveDemo';
@@ -80,6 +81,9 @@ export default function HomePage() {
           onOpenTrial={() => setIsTrialModalOpen(true)}
           onOpenQrModal={() => setIsQrModalOpen(true)}
         />
+
+        {/* 1.5 Mission & Vision - Campagne de Digitalisation 100% Sénégalaise */}
+        <MissionSection />
 
         {/* 2. Problems & Solutions (Pourquoi digitaliser ?) */}
         <ProblemsSection />

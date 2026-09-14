@@ -23,13 +23,12 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ onOpenTrial }) => {
 
         {/* Headline */}
         <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-4xl mx-auto">
-          Prêt à digitaliser votre restaurant et en finir avec les erreurs de commande ?
+          Prêt à accélérer la transition digitale de votre établissement ?
         </h2>
 
         {/* Subtitle */}
         <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto font-normal leading-relaxed">
-          Rejoignez les restaurateurs de Dakar, Thiès et Saly qui augmentent leur chiffre d'affaires 
-          grâce au menu QR code « Lou Ame Tay ? ».
+          Rejoignez les acteurs de la restauration, de l'hôtellerie et du tourisme à Dakar, Thiès, Saly et dans tout le Sénégal avec la solution 100% locale « Lou Ame Tay ? ».
         </p>
 
         {/* Giant CTA Buttons */}
