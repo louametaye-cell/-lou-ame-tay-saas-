@@ -30,6 +30,7 @@ interface WeeklyMenuCustomerBannerProps {
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
+  isOrderingEnabled?: boolean;
 }
 
 export const WeeklyMenuCustomerBanner: React.FC<WeeklyMenuCustomerBannerProps> = ({
@@ -38,6 +39,7 @@ export const WeeklyMenuCustomerBanner: React.FC<WeeklyMenuCustomerBannerProps> =
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
+  isOrderingEnabled = true,
 }) => {
   const schedule = useMemo(() => getStoredWeeklySchedule(), []);
   const today = useMemo(() => getCurrentDayOfWeek(), []);
@@ -256,7 +258,7 @@ export const WeeklyMenuCustomerBanner: React.FC<WeeklyMenuCustomerBannerProps> =
                     className="py-1.5 px-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-xl font-black text-xs flex items-center gap-1 shadow-2xs transition-all"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Commander</span>
+                    <span>{isOrderingEnabled ? 'Commander' : 'Ajouter'}</span>
                   </button>
                 </div>
               </div>

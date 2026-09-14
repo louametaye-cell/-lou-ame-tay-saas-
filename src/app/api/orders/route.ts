@@ -108,6 +108,7 @@ export async function POST(req: Request) {
 
     // Look up tenant in database by id OR subdomain to get valid tenant ID for foreign key
     let validTenantId: string | null = null;
+    let tenantPlanSlug: string | null = null;
     try {
       const dbTenant = await (prisma as any).tenant.findFirst({
         where: {
@@ -116,10 +117,16 @@ export async function POST(req: Request) {
             { subdomain: tenantIdInput },
           ],
         },
-        select: { id: true },
+        select: {
+          id: true,
+          plan: {
+            select: { slug: true, name: true }
+          }
+        },
       });
       if (dbTenant) {
         validTenantId = dbTenant.id;
+        tenantPlanSlug = dbTenant.plan?.slug?.toLowerCase() || null;
       }
     } catch (err) {
       console.warn('Error checking tenant:', err);
@@ -129,6 +136,17 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'Restaurant non identifié : impossible d\'enregistrer la commande pour un établissement inexistant' },
         { status: 404 }
+      );
+    }
+
+    // 🔒 Règle SaaS stricte : Le pack TÀMBALI est un pack vitrine pure, sans commande numérique
+    if (tenantPlanSlug === 'tambali') {
+      return NextResponse.json(
+        { 
+          error: 'La prise de commande numérique n\'est pas activée pour cet établissement sous formule vitrine TÀMBALI. La commande se fait oralement auprès du personnel.',
+          plan: 'TÀMBALI'
+        },
+        { status: 403 }
       );
     }
 

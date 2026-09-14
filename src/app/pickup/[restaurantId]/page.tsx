@@ -63,6 +63,7 @@ export default function FastFoodPickupBoardPage() {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isTambaliPlan, setIsTambaliPlan] = useState<boolean>(false);
 
   // Set to track which orders have already chimed so we don't repeat for the same order
   const alertedOrderIdsRef = useRef<Set<string>>(new Set());
@@ -148,8 +149,16 @@ export default function FastFoodPickupBoardPage() {
     try {
       if (!restaurantId) return;
       const res = await fetch(`/api/pickup/${encodeURIComponent(restaurantId)}`);
+      if (res.status === 403) {
+        setIsTambaliPlan(true);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
+        if (data.isTambali) {
+          setIsTambaliPlan(true);
+          return;
+        }
         if (data.success) {
           setRestaurant(data.restaurant);
           setPreparingOrders(data.preparing || []);
@@ -195,6 +204,31 @@ export default function FastFoodPickupBoardPage() {
       document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
   };
+
+  if (isTambaliPlan) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6 text-center">
+        <div className="max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-4 shadow-2xl">
+          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-3xl flex items-center justify-center mx-auto">
+            <Store className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-black text-white">Écran de Retrait Guichet</h1>
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Cette fonctionnalité n'est pas incluse dans la formule vitrine <strong className="text-amber-300">TÀMBALI</strong>.
+            Elle est réservée aux établissements équipés d'une prise de commande numérique avec caisse et cuisine connectée.
+          </p>
+          <div className="pt-2">
+            <a
+              href={`/r/${restaurantId}`}
+              className="inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-2xl transition-all shadow-lg"
+            >
+              Voir le Menu Digital
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#090D16] text-white flex flex-col justify-between font-sans select-none overflow-hidden">

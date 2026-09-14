@@ -203,6 +203,10 @@ export interface RestaurantType {
   ordersCount?: number;
   stats?: RestaurantStatsType;
   branding?: RestaurantBranding | null;
+  planSlug?: string;
+  planName?: string;
+  isTambali?: boolean;
+  isOrderingEnabled?: boolean;
   createdAt?: string;
 }
 

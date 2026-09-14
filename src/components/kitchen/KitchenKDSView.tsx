@@ -19,6 +19,7 @@ export default function KitchenKDSView({ initialRestaurantId }: KitchenKDSViewPr
   const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
   const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
   const [isLoadingDetails, setIsLoadingDetails] = useState(true);
+  const [isTambaliPlan, setIsTambaliPlan] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -41,6 +42,9 @@ export default function KitchenKDSView({ initialRestaurantId }: KitchenKDSViewPr
         fetch(`/api/tenant/branding?restaurantId=${encodeURIComponent(effectiveId)}`)
           .then((r) => r.json())
           .then((d) => {
+            if (d.isTambali || d.plan?.slug?.toLowerCase() === 'tambali') {
+              setIsTambaliPlan(true);
+            }
             const rName = d.name || d.restaurant?.name || d.businessName;
             if (rName) {
               setRestaurantName(rName);
@@ -84,6 +88,38 @@ export default function KitchenKDSView({ initialRestaurantId }: KitchenKDSViewPr
       await updateOrderStatus(ord.id, 'PREPARING');
     }
   };
+
+  // Si l'établissement est sous le pack vitrine TÀMBALI, l'écran KDS n'est pas inclus
+  if (isTambaliPlan && !isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-slate-900/90 border border-white/10 rounded-3xl p-8 space-y-6 shadow-2xl">
+          <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-3xl flex items-center justify-center mx-auto border border-amber-500/20 shadow-lg">
+            <ChefHat className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Lock className="w-4 h-4" />
+              <span>Formule TÀMBALI (Menu Vitrine)</span>
+            </div>
+            <h1 className="text-xl font-black text-white">Écran Cuisine KDS</h1>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              L'écran Cuisine KDS n'est pas inclus dans la formule <strong className="text-amber-300">TÀMBALI</strong>.
+              Ce pack est dédié à la consultation vitrine avec prise de commande physique directe par les serveurs.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href={restaurantId ? `/r/${restaurantId}` : '/login'}
+              className="inline-flex items-center justify-center w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl transition-all shadow-md"
+            >
+              Voir le Menu Digital
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Si aucun établissement n'est spécifié, écran de sécurité hermétique
   if (!restaurantId && !isLoadingDetails) {

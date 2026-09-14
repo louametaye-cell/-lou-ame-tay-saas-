@@ -1,5 +1,5 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
@@ -34,11 +34,23 @@ export default async function ExpressCounterMenuPage({ params }: PageProps) {
           },
         },
         tables: true,
+        plan: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          }
+        },
       },
     });
 
     if (!dbTenant) {
       notFound();
+    }
+
+    // Si l'établissement est sous la formule vitrine TÀMBALI, redirection immédiate vers son menu normal
+    if (dbTenant.plan?.slug?.toLowerCase() === 'tambali') {
+      redirect(`/r/${dbTenant.subdomain || resolvedParams.subdomain}`);
     }
 
     const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};

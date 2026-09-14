@@ -65,6 +65,13 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
           },
         },
         tables: true,
+        plan: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          }
+        },
       },
     });
 
@@ -73,21 +80,28 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
     }
 
     const brandingObj = typeof dbTenant.branding === 'object' && dbTenant.branding !== null ? dbTenant.branding : {};
+    const planSlug = (dbTenant.plan?.slug || '').toLowerCase();
+    const isTambali = planSlug === 'tambali';
+    const isOrderingEnabled = !isTambali;
 
-      restaurant = {
-        id: dbTenant.id,
-        name: dbTenant.businessName,
-        tagline: brandingObj.tagline || 'Scannez • Commandez • Savourez !',
-        subdomain: dbTenant.subdomain,
-        phone: dbTenant.phone,
-        address: dbTenant.address,
-        logoUrl: dbTenant.logoUrl,
-        bannerUrl: dbTenant.bannerUrl,
-        currency: dbTenant.currency || 'FCFA',
-        isActive: dbTenant.subscriptionStatus === 'ACTIVE' || dbTenant.subscriptionStatus === 'TRIAL',
-        tableCount: dbTenant.tables?.length || 12,
-        tablesCount: dbTenant.tables?.length || 12,
-        branding: brandingObj,
+    restaurant = {
+      id: dbTenant.id,
+      name: dbTenant.businessName,
+      tagline: brandingObj.tagline || (isTambali ? 'Consultez • Choisissez • Dégustez !' : 'Scannez • Commandez • Savourez !'),
+      subdomain: dbTenant.subdomain,
+      phone: dbTenant.phone,
+      address: dbTenant.address,
+      logoUrl: dbTenant.logoUrl,
+      bannerUrl: dbTenant.bannerUrl,
+      currency: dbTenant.currency || 'FCFA',
+      isActive: dbTenant.subscriptionStatus === 'ACTIVE' || dbTenant.subscriptionStatus === 'TRIAL',
+      tableCount: dbTenant.tables?.length || 12,
+      tablesCount: dbTenant.tables?.length || 12,
+      branding: brandingObj,
+      planSlug: planSlug || undefined,
+      planName: dbTenant.plan?.name || undefined,
+      isTambali,
+      isOrderingEnabled,
         categories: (dbTenant.categories || []).map((c: any) => ({
           id: c.id,
           name: c.name,

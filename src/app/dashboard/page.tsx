@@ -86,6 +86,7 @@ export default function OperationalDashboardPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isTambaliPlan, setIsTambaliPlan] = useState(false);
 
   // KPIs
   const [kpis, setKpis] = useState({
@@ -188,22 +189,25 @@ export default function OperationalDashboardPage() {
         activeId = queryId;
         localStorage.setItem('current_restaurant_id', queryId);
         setRestaurantId(queryId);
-        fetch(`/api/super-admin/restaurants/${queryId}`)
+        fetch(`/api/tenant/branding?restaurantId=${queryId}`)
           .then((r) => r.json())
           .then((data) => {
-            if (data.restaurant) {
-              const rName = data.restaurant.name || data.restaurant.businessName;
+            if (data.isTambali || data.plan?.slug?.toLowerCase() === 'tambali') {
+              setIsTambaliPlan(true);
+            }
+            const rName = data.name || data.businessName;
+            if (rName) {
               setRestaurantName(rName);
-              const rLogo = data.restaurant.logoUrl || data.restaurant.logo || '';
-              if (rLogo) {
-                setRestaurantLogo(rLogo);
-                localStorage.setItem('current_restaurant_logo', rLogo);
-              }
-              if (data.restaurant.subdomain) {
-                setRestaurantSubdomain(data.restaurant.subdomain);
-                localStorage.setItem('current_restaurant_subdomain', data.restaurant.subdomain);
-              }
               localStorage.setItem('current_restaurant_name', rName);
+            }
+            const rLogo = data.logoUrl || '';
+            if (rLogo) {
+              setRestaurantLogo(rLogo);
+              localStorage.setItem('current_restaurant_logo', rLogo);
+            }
+            if (data.subdomain) {
+              setRestaurantSubdomain(data.subdomain);
+              localStorage.setItem('current_restaurant_subdomain', data.subdomain);
             }
           })
           .catch(() => {});
@@ -217,17 +221,22 @@ export default function OperationalDashboardPage() {
       const storedLogo = localStorage.getItem('current_restaurant_logo');
       if (storedId) {
         setRestaurantId(storedId);
-        fetch(`/api/super-admin/restaurants/${storedId}`)
+        fetch(`/api/tenant/branding?restaurantId=${storedId}`)
           .then((r) => r.json())
           .then((data) => {
-            if (data.restaurant) {
-              const rName = data.restaurant.name || data.restaurant.businessName;
-              if (rName) setRestaurantName(rName);
-              const rLogo = data.restaurant.logoUrl || data.restaurant.logo || '';
-              if (rLogo) {
-                setRestaurantLogo(rLogo);
-                localStorage.setItem('current_restaurant_logo', rLogo);
-              }
+            if (data.isTambali || data.plan?.slug?.toLowerCase() === 'tambali') {
+              setIsTambaliPlan(true);
+            }
+            const rName = data.name || data.businessName;
+            if (rName) setRestaurantName(rName);
+            const rLogo = data.logoUrl || '';
+            if (rLogo) {
+              setRestaurantLogo(rLogo);
+              localStorage.setItem('current_restaurant_logo', rLogo);
+            }
+            if (data.subdomain) {
+              setRestaurantSubdomain(data.subdomain);
+              localStorage.setItem('current_restaurant_subdomain', data.subdomain);
             }
           })
           .catch(() => {});
@@ -477,36 +486,54 @@ export default function OperationalDashboardPage() {
               <span>🖥️ Écran TV</span>
             </Link>
 
-            {/* QSR Fast-Food Pickup Board Quick View */}
-            <Link
-              href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-              title="Ouvrir l'Écran TV Retrait Commandes (Status Board Fast-Food)"
-            >
-              <span>📢 Retrait Guichet</span>
-            </Link>
+            {isTambaliPlan ? (
+              <>
+                <span className="hidden md:inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 text-xs font-bold px-3 py-2 rounded-2xl shadow-2xs">
+                  ✨ Formule TÀMBALI (Vitrine)
+                </span>
+                <Link
+                  href={`/r/${restaurantSubdomain || restaurantId}`}
+                  target="_blank"
+                  className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+                  title="Consulter le menu digital vitrine en ligne"
+                >
+                  <span>👁️ Voir Menu Client</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* QSR Fast-Food Pickup Board Quick View */}
+                <Link
+                  href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+                  title="Ouvrir l'Écran TV Retrait Commandes (Status Board Fast-Food)"
+                >
+                  <span>📢 Retrait Guichet</span>
+                </Link>
 
-            {/* Cashier Counter Quick View */}
-            <Link
-              href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
-              target="_blank"
-              className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-              title="Ouvrir le Terminal Caisse POS de votre établissement"
-            >
-              <span>⚡ Caisse Express</span>
-            </Link>
+                {/* Cashier Counter Quick View */}
+                <Link
+                  href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
+                  target="_blank"
+                  className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+                  title="Ouvrir le Terminal Caisse POS de votre établissement"
+                >
+                  <span>⚡ Caisse Express</span>
+                </Link>
 
-            {/* Kitchen KDS Quick View */}
-            <Link
-              href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
-              target="_blank"
-              className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-              title="Ouvrir l'Écran Cuisine KDS de votre établissement"
-            >
-              <span>👨‍🍳 Écran Cuisine KDS</span>
-            </Link>
+                {/* Kitchen KDS Quick View */}
+                <Link
+                  href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
+                  target="_blank"
+                  className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+                  title="Ouvrir l'Écran Cuisine KDS de votre établissement"
+                >
+                  <span>👨‍🍳 Écran Cuisine KDS</span>
+                </Link>
+              </>
+            )}
 
             {/* Logout */}
             <button
@@ -985,17 +1012,6 @@ export default function OperationalDashboardPage() {
           </Link>
 
           <Link
-            href="/dashboard/kitchen"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-orange-400 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-orange-100 text-orange-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Store className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Écran Cuisine KDS</h4>
-            <p className="text-xs text-slate-500 mt-1">Tickets en direct et impression 80mm</p>
-          </Link>
-
-          <Link
             href="/dashboard/stats"
             className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-400 hover:shadow-sm transition-all group"
           >
@@ -1003,43 +1019,58 @@ export default function OperationalDashboardPage() {
               <BarChart3 className="w-6 h-6" />
             </div>
             <h4 className="text-sm font-black text-slate-900">Statistiques & Vues</h4>
-            <p className="text-xs text-slate-500 mt-1">Diagnostic vues vs commandes</p>
+            <p className="text-xs text-slate-500 mt-1">Diagnostic des consultations et plats populaires</p>
           </Link>
 
-          <Link
-            href="/dashboard/cashiers"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-amber-500 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <KeyRound className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Équipe Caissiers</h4>
-            <p className="text-xs text-slate-500 mt-1">Codes PIN et plannings matin/soir</p>
-          </Link>
+          {!isTambaliPlan && (
+            <>
+              <Link
+                href="/dashboard/kitchen"
+                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-orange-400 hover:shadow-sm transition-all group"
+              >
+                <div className="p-3 bg-orange-100 text-orange-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+                  <Store className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-black text-slate-900">Écran Cuisine KDS</h4>
+                <p className="text-xs text-slate-500 mt-1">Tickets en direct et impression 80mm</p>
+              </Link>
 
-          <Link
-            href="/dashboard/cash-closures"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-emerald-500 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Receipt className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Clôtures & Caisses</h4>
-            <p className="text-xs text-slate-500 mt-1">Fonds de départ et rapports Z 80mm</p>
-          </Link>
+              <Link
+                href="/dashboard/cashiers"
+                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-amber-500 hover:shadow-sm transition-all group"
+              >
+                <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+                  <KeyRound className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-black text-slate-900">Équipe Caissiers</h4>
+                <p className="text-xs text-slate-500 mt-1">Codes PIN et plannings matin/soir</p>
+              </Link>
 
-          <Link
-            href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-500 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Zap className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Écran Retrait TV</h4>
-            <p className="text-xs text-slate-500 mt-1">Carillon Ding-Dong & appels vocaux</p>
-          </Link>
+              <Link
+                href="/dashboard/cash-closures"
+                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-emerald-500 hover:shadow-sm transition-all group"
+              >
+                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+                  <Receipt className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-black text-slate-900">Clôtures & Caisses</h4>
+                <p className="text-xs text-slate-500 mt-1">Fonds de départ et rapports Z 80mm</p>
+              </Link>
+
+              <Link
+                href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-500 hover:shadow-sm transition-all group"
+              >
+                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-black text-slate-900">Écran Retrait TV</h4>
+                <p className="text-xs text-slate-500 mt-1">Carillon Ding-Dong & appels vocaux</p>
+              </Link>
+            </>
+          )}
         </section>
       </main>
 

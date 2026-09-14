@@ -20,6 +20,15 @@ export async function GET(req: Request) {
           ...(subdomain ? [{ subdomain }, { id: subdomain }] : []),
         ],
       },
+      include: {
+        plan: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          }
+        }
+      }
     });
 
     if (!tenant) {
@@ -28,6 +37,8 @@ export async function GET(req: Request) {
 
     const brandingData = (tenant.branding as any) || {};
     const effectivePhone = tenant.phone || brandingData.phone || '+221 77 458 74 74';
+    const planSlug = (tenant.plan?.slug || '').toLowerCase();
+    const isTambali = planSlug === 'tambali';
 
     return NextResponse.json({
       success: true,
@@ -37,6 +48,13 @@ export async function GET(req: Request) {
       logoUrl: tenant.logoUrl || brandingData.logoUrl,
       bannerUrl: tenant.bannerUrl || brandingData.bannerUrl,
       establishmentType: brandingData.establishmentType || 'Restaurant',
+      plan: tenant.plan ? {
+        id: tenant.plan.id,
+        name: tenant.plan.name,
+        slug: tenant.plan.slug,
+      } : null,
+      isTambali,
+      isOrderingEnabled: !isTambali,
       branding: {
         ...brandingData,
         phone: effectivePhone,

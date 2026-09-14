@@ -5,11 +5,11 @@ const srcDir = 'C:/Users/DELL/Desktop/Lou ame Tay menu digital Mda arts work/cap
 const destDir = 'C:/Users/DELL/.gemini/antigravity-cli/brain/75de7c6c-7d49-45e7-8d44-20e944055fef';
 
 const files = [
-  '01_ouverture_caisse_pin_et_fond.png',
-  '02_kds_cuisine_en_preparation_zero_fcfa.png',
-  '03_ecran_tv_pickup_commande_prete_xxl.png',
-  '04_caisse_servie_non_encaissee_0fcfa.png',
-  '05_modal_cloture_z_ecart_0fcfa.png'
+  '22_tambali_selection_drawer_mobile.png',
+  '23_tambali_cashier_blocked.png',
+  '24_tambali_kitchen_blocked.png',
+  '25_tambali_pickup_blocked.png',
+  '26_tambali_dashboard_clean.png',
 ];
 
 for (const f of files) {
@@ -18,5 +18,8 @@ for (const f of files) {
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, dest);
     console.log(`Copié : ${f} -> ${dest}`);
+  } else {
+    console.warn(`Introuvable : ${src}`);
   }
 }
+

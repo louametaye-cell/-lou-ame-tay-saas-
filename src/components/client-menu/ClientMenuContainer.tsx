@@ -159,9 +159,12 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     }
   }, [tableNumber]);
 
+  // 🔒 Déterminer si la prise de commande numérique est activée (TÀMBALI = vitrine pure, sans commande numérique)
+  const isOrderingEnabled = restaurant.isOrderingEnabled ?? (!restaurant.isTambali && restaurant.planSlug !== 'tambali');
+
   // Real-time polling to sync order status (PENDING -> PREPARING -> READY -> SERVED)
   useEffect(() => {
-    if (sessionOrders.length === 0 && !activeOrder) return;
+    if (!isOrderingEnabled || (sessionOrders.length === 0 && !activeOrder)) return;
 
     const pollLiveOrders = async () => {
       try {
@@ -300,6 +303,11 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
   // Upsell check before validating order
   const handleOpenCartOrUpsell = () => {
+    if (!isOrderingEnabled) {
+      setIsCartOpen(true);
+      return;
+    }
+
     const hasDrinkOrDessert = items.some(
       (i) =>
         i.menuItem.categoryId?.toLowerCase().includes('boisson') ||
@@ -317,6 +325,10 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
   // Submit order action avec verrouillage anti-double clic
   const handleSubmitOrder = async () => {
+    if (!isOrderingEnabled) {
+      toast.info('Présentez votre sélection au serveur ou à la caisse pour commander.');
+      return;
+    }
     const now = Date.now();
     if (isSubmittingOrder || now - lastSubmitRef.current < 4000) {
       return;
@@ -563,6 +575,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             lang={currentLang}
             currency={currentCurrency}
             exchangeRates={exchangeRates}
+            isOrderingEnabled={isOrderingEnabled}
           />
 
           <DailySpecialsSection
@@ -713,15 +726,16 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         totalPrice={getTotalPrice()}
         tableNumber={tableNumber}
         onOpenCart={handleOpenCartOrUpsell}
-        onOpenSplitBill={() => setIsSplitBillOpen(true)}
+        onOpenSplitBill={isOrderingEnabled ? () => setIsSplitBillOpen(true) : undefined}
+        isOrderingEnabled={isOrderingEnabled}
         lang={currentLang}
         currency={currentCurrency}
         exchangeRates={exchangeRates}
         primaryColor={primaryColor}
       />
 
-      {/* 5.5. Persistent Floating Pill for Active Table Orders */}
-      {isMounted && sessionOrders.length > 0 && !isOrderSuccessOpen && (
+      {/* 5.5. Persistent Floating Pill for Active Table Orders (désactivé sur pack TÀMBALI) */}
+      {isOrderingEnabled && isMounted && sessionOrders.length > 0 && !isOrderSuccessOpen && (
         <ActiveOrderFloatingPill
           orders={sessionOrders}
           tableNumber={tableNumber}
@@ -746,21 +760,23 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         exchangeRates={exchangeRates}
       />
 
-      {/* 7. Upsell Drawer (Bissap, Bouye, Pastels) */}
-      <UpsellDrawer
-        isOpen={isUpsellOpen}
-        onClose={() => {
-          setIsUpsellOpen(false);
-          setIsCartOpen(true);
-        }}
-        onAddUpsellItem={(item) => {
-          addItem(item);
-        }}
-        onContinueToCheckout={() => {
-          setIsUpsellOpen(false);
-          setIsCartOpen(true);
-        }}
-      />
+      {/* 7. Upsell Drawer (Bissap, Bouye, Pastels - uniquement si commande active) */}
+      {isOrderingEnabled && (
+        <UpsellDrawer
+          isOpen={isUpsellOpen}
+          onClose={() => {
+            setIsUpsellOpen(false);
+            setIsCartOpen(true);
+          }}
+          onAddUpsellItem={(item) => {
+            addItem(item);
+          }}
+          onContinueToCheckout={() => {
+            setIsUpsellOpen(false);
+            setIsCartOpen(true);
+          }}
+        />
+      )}
 
       {/* 8. Cart & Checkout Drawer */}
       <CartCheckoutDrawer
@@ -781,55 +797,62 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onClearCart={clearCart}
         onSubmitOrder={handleSubmitOrder}
         isSubmitting={isSubmittingOrder}
+        isOrderingEnabled={isOrderingEnabled}
         lang={currentLang}
         currency={currentCurrency}
         exchangeRates={exchangeRates}
       />
 
-      {/* 9. Mobile Money Direct Checkout (Wave QR / OM USSD) */}
-      <MobileMoneyCheckout
-        isOpen={isMobileMoneyOpen}
-        onClose={() => setIsMobileMoneyOpen(false)}
-        method={paymentMethod === 'ORANGE_MONEY' ? 'ORANGE_MONEY' : 'WAVE'}
-        totalAmount={getTotalPrice()}
-        tableNumber={tableNumber}
-        restaurantName={restaurant.name}
-        onPaymentCompleted={(txRef) => {
-          executeOrderPlacement(txRef);
-        }}
-        lang={currentLang}
-      />
+      {/* 9. Mobile Money Direct Checkout (uniquement si commande active) */}
+      {isOrderingEnabled && (
+        <MobileMoneyCheckout
+          isOpen={isMobileMoneyOpen}
+          onClose={() => setIsMobileMoneyOpen(false)}
+          method={paymentMethod === 'ORANGE_MONEY' ? 'ORANGE_MONEY' : 'WAVE'}
+          totalAmount={getTotalPrice()}
+          tableNumber={tableNumber}
+          restaurantName={restaurant.name}
+          onPaymentCompleted={(txRef) => {
+            executeOrderPlacement(txRef);
+          }}
+          lang={currentLang}
+        />
+      )}
 
-      {/* 10. Split Bill Drawer with WhatsApp Share */}
-      <SplitBillDrawer
-        isOpen={isSplitBillOpen}
-        onClose={() => setIsSplitBillOpen(false)}
-        totalAmount={getTotalPrice()}
-        tableNumber={tableNumber}
-        restaurantName={restaurant.name}
-        lang={currentLang}
-      />
+      {/* 10. Split Bill Drawer with WhatsApp Share (uniquement si commande active) */}
+      {isOrderingEnabled && (
+        <SplitBillDrawer
+          isOpen={isSplitBillOpen}
+          onClose={() => setIsSplitBillOpen(false)}
+          totalAmount={getTotalPrice()}
+          tableNumber={tableNumber}
+          restaurantName={restaurant.name}
+          lang={currentLang}
+        />
+      )}
 
-      {/* 11. Live Order Status & Digital Receipt Tracker */}
-      <OrderSuccessTracker
-        order={activeOrder}
-        sessionOrders={sessionOrders}
-        isOpen={isOrderSuccessOpen}
-        onClose={() => setIsOrderSuccessOpen(false)}
-        onOrderMore={() => setIsOrderSuccessOpen(false)}
-        onStartNewMeal={handleStartNewMeal}
-        onCallWaiter={() => setIsCallWaiterOpen(true)}
-        onPayOnline={(amount) => {
-          setIsOrderSuccessOpen(false);
-          setIsMobileMoneyOpen(true);
-        }}
-        lang={currentLang}
-        currency={currentCurrency}
-        exchangeRates={exchangeRates}
-        restaurantName={restaurant.name}
-      />
+      {/* 11. Live Order Status & Digital Receipt Tracker (Strictement désactivé sur formule vitrine TÀMBALI) */}
+      {isOrderingEnabled && (
+        <OrderSuccessTracker
+          order={activeOrder}
+          sessionOrders={sessionOrders}
+          isOpen={isOrderSuccessOpen}
+          onClose={() => setIsOrderSuccessOpen(false)}
+          onOrderMore={() => setIsOrderSuccessOpen(false)}
+          onStartNewMeal={handleStartNewMeal}
+          onCallWaiter={() => setIsCallWaiterOpen(true)}
+          onPayOnline={(amount) => {
+            setIsOrderSuccessOpen(false);
+            setIsMobileMoneyOpen(true);
+          }}
+          lang={currentLang}
+          currency={currentCurrency}
+          exchangeRates={exchangeRates}
+          restaurantName={restaurant.name}
+        />
+      )}
 
-      {/* 12. Call Waiter / Server Dedicated Modal */}
+      {/* 12. Call Waiter / Server Dedicated Modal (Reste actif pour appeler le serveur physiquement) */}
       <CallWaiterModal
         isOpen={isCallWaiterOpen}
         onClose={() => setIsCallWaiterOpen(false)}

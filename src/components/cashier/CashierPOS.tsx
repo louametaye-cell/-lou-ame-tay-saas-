@@ -83,6 +83,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
   // Waiter Calls / Bill Requests State
   const [waiterCalls, setWaiterCalls] = useState<any[]>([]);
+  const [isTambaliPlan, setIsTambaliPlan] = useState<boolean>(false);
+  const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(true);
 
   const getOrderTotal = (o: any): number => {
     if (o?.total !== undefined && o?.total !== null && !isNaN(Number(o.total))) return Number(o.total);
@@ -129,6 +131,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     fetch(`/api/tenant/branding?restaurantId=${encodeURIComponent(id)}`)
       .then((r) => r.json())
       .then((d) => {
+        if (d.isTambali || d.plan?.slug?.toLowerCase() === 'tambali') {
+          setIsTambaliPlan(true);
+        }
         if (d.success || d.name || d.branding) {
           const rName = d.name || d.restaurant?.name || d.businessName;
           const rPhone = d.phone || d.branding?.phone || d.restaurant?.phone || '+221 77 458 74 74';
@@ -142,7 +147,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setIsLoadingDetails(false));
   };
 
   const fetchCashiersList = async (id: string) => {
@@ -660,6 +666,38 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         );
     }
   };
+
+  // 🔒 VUE 0 : ÉTABLISSEMENT SOUS FORMULE VITRINE TÀMBALI (SANS CAISSE NUMÉRIQUE)
+  if (isTambaliPlan && !isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-slate-900/90 border border-white/10 rounded-3xl p-8 space-y-6 shadow-2xl">
+          <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-3xl flex items-center justify-center mx-auto border border-amber-500/20 shadow-lg">
+            <Store className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Lock className="w-4 h-4" />
+              <span>Formule TÀMBALI (Menu Vitrine)</span>
+            </div>
+            <h1 className="text-xl font-black text-white">Espace Caisse POS</h1>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              L'espace Caisse POS n'est pas inclus dans la formule <strong className="text-amber-300">TÀMBALI</strong>.
+              Ce pack est dédié à un menu digital vitrine sans prise de commande numérique (l'établissement opérant avec sa propre caisse physique ou prise de commande orale directe).
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href={restaurantId ? `/r/${restaurantId}` : '/login'}
+              className="inline-flex items-center justify-center w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl transition-all shadow-md"
+            >
+              Voir le Menu Digital
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 🔒 VUE 1 : PAGE DE CONNEXION CAISSIER PLEIN ÉCRAN (SI AUCUN CAISSIER N'EST IDENTIFIÉ)
   if (!currentCashier) {

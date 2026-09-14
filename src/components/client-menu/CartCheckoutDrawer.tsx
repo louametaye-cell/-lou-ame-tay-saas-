@@ -11,7 +11,9 @@ import {
   CreditCard, 
   Banknote, 
   Smartphone, 
-  Coins 
+  Coins,
+  UserCheck,
+  Utensils
 } from 'lucide-react';
 import { CartItem, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { PaymentMethod, useCartStore } from '@/store/useCartStore';
@@ -36,6 +38,7 @@ interface CartCheckoutDrawerProps {
   onClearCart: () => void;
   onSubmitOrder: () => void;
   isSubmitting?: boolean;
+  isOrderingEnabled?: boolean;
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
@@ -59,6 +62,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
   onClearCart,
   onSubmitOrder,
   isSubmitting = false,
+  isOrderingEnabled = true,
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
@@ -99,13 +103,19 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2">
-                <span>{lang === 'WO' ? 'Sa Panie' : t.yourOrder}</span>
+                <span>
+                  {!isOrderingEnabled
+                    ? (lang === 'WO' ? 'Sa Tànneef' : 'Ma Sélection')
+                    : (lang === 'WO' ? 'Sa Panie' : t.yourOrder)}
+                </span>
                 <span className="text-xs bg-white text-orange-600 px-2 py-0.5 rounded-lg font-black font-mono">
                   Table {formattedTable}
                 </span>
               </h2>
               <p className="text-xs text-orange-100">
-                {items.length} {items.length > 1 ? t.articles : t.article}
+                {!isOrderingEnabled
+                  ? `${items.length} ${items.length > 1 ? 'articles sélectionnés' : 'article sélectionné'} (indicatif)`
+                  : `${items.length} ${items.length > 1 ? t.articles : t.article}`}
               </p>
             </div>
           </div>
@@ -217,132 +227,136 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
                 })}
               </div>
 
-              {/* Payment Method Selector */}
-              <div className="pt-2 border-t border-slate-200 space-y-2.5">
-                <label className="text-xs font-black text-slate-900 uppercase tracking-wider block">
-                  {lang === 'WO' ? 'Moyen de paiement :' : 'Moyen de paiement sur place :'}
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onPaymentMethodChange('WAVE')}
-                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
-                      paymentMethod === 'WAVE'
-                        ? 'border-blue-500 bg-blue-50 text-blue-950 font-black shadow-xs ring-2 ring-blue-400/40'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <span className="text-base">🔵</span>
-                    <span className="text-[11px] font-extrabold text-[#1DA1F2]">Wave</span>
-                  </button>
+              {/* Payment Method Selector & Customer Note (uniquement si commande numérique activée) */}
+              {isOrderingEnabled ? (
+                <>
+                  <div className="pt-2 border-t border-slate-200 space-y-2.5">
+                    <label className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                      {lang === 'WO' ? 'Moyen de paiement :' : 'Moyen de paiement sur place :'}
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onPaymentMethodChange('WAVE')}
+                        className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                          paymentMethod === 'WAVE'
+                            ? 'border-blue-500 bg-blue-50 text-blue-950 font-black shadow-xs ring-2 ring-blue-400/40'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-base">🔵</span>
+                        <span className="text-[11px] font-extrabold text-[#1DA1F2]">Wave</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => onPaymentMethodChange('ORANGE_MONEY')}
-                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
-                      paymentMethod === 'ORANGE_MONEY'
-                        ? 'border-orange-500 bg-orange-50 text-orange-950 font-black shadow-xs ring-2 ring-orange-400/40'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <span className="text-base">🟠</span>
-                    <span className="text-[11px] font-extrabold text-[#FF6B00]">OM</span>
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() => onPaymentMethodChange('ORANGE_MONEY')}
+                        className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                          paymentMethod === 'ORANGE_MONEY'
+                            ? 'border-orange-500 bg-orange-50 text-orange-950 font-black shadow-xs ring-2 ring-orange-400/40'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-base">🟠</span>
+                        <span className="text-[11px] font-extrabold text-[#FF6B00]">OM</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => onPaymentMethodChange('CASH_TPE')}
-                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
-                      paymentMethod === 'CASH_TPE'
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-2 ring-emerald-400/40'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <Banknote className="w-5 h-5 text-emerald-600" />
-                    <span className="text-[11px] font-extrabold text-emerald-900">Espèces</span>
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() => onPaymentMethodChange('CASH_TPE')}
+                        className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                          paymentMethod === 'CASH_TPE'
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-2 ring-emerald-400/40'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <Banknote className="w-5 h-5 text-emerald-600" />
+                        <span className="text-[11px] font-extrabold text-emerald-900">Espèces</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => onPaymentMethodChange('CARD')}
-                    className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
-                      paymentMethod === 'CARD'
-                        ? 'border-purple-600 bg-purple-50 text-purple-950 font-black shadow-xs ring-2 ring-purple-400/40'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <CreditCard className="w-5 h-5 text-purple-600" />
-                    <span className="text-[11px] font-extrabold text-purple-900">Carte</span>
-                  </button>
-                </div>
+                      <button
+                        type="button"
+                        onClick={() => onPaymentMethodChange('CARD')}
+                        className={`min-h-[50px] p-2 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                          paymentMethod === 'CARD'
+                            ? 'border-purple-600 bg-purple-50 text-purple-950 font-black shadow-xs ring-2 ring-purple-400/40'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <CreditCard className="w-5 h-5 text-purple-600" />
+                        <span className="text-[11px] font-extrabold text-purple-900">Carte</span>
+                      </button>
+                    </div>
 
-                {/* Cash Appoint Suggestions */}
-                {paymentMethod === 'CASH_TPE' && (
-                  <div className="bg-emerald-50/80 p-3 rounded-2xl border border-emerald-200 space-y-2 animate-in fade-in">
-                    <span className="text-[11px] font-bold text-emerald-950 flex items-center gap-1">
-                      <Coins className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>{lang === 'WO' ? 'Am nga moné ?' : 'Prévoir la monnaie sur place :'}</span>
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
-                      {['Montant exact', 'Billet 5 000 F', 'Billet 10 000 F', 'Billet 20 000 F'].map(
-                        (preset) => (
-                          <button
-                            key={preset}
-                            type="button"
-                            onClick={() => handleSelectCashPreset(preset)}
-                            className={`p-2 rounded-xl font-bold transition-all border text-[11px] ${
-                              cashNote === preset
-                                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-                                : 'bg-white text-slate-700 border-emerald-200 hover:bg-emerald-100/50'
-                            }`}
-                          >
-                            {preset}
-                          </button>
-                        )
-                      )}
+                    {/* Cash Appoint Suggestions */}
+                    {paymentMethod === 'CASH_TPE' && (
+                      <div className="bg-emerald-50/80 p-3 rounded-2xl border border-emerald-200 space-y-2 animate-in fade-in">
+                        <span className="text-[11px] font-bold text-emerald-950 flex items-center gap-1">
+                          <Coins className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>{lang === 'WO' ? 'Am nga moné ?' : 'Prévoir la monnaie sur place :'}</span>
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+                          {['Montant exact', 'Billet 5 000 F', 'Billet 10 000 F', 'Billet 20 000 F'].map(
+                            (preset) => (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => handleSelectCashPreset(preset)}
+                                className={`p-2 rounded-xl font-bold transition-all border text-[11px] ${
+                                  cashNote === preset
+                                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                                    : 'bg-white text-slate-700 border-emerald-200 hover:bg-emerald-100/50'
+                                }`}
+                              >
+                                {preset}
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Wave Info Banner */}
+                    {paymentMethod === 'WAVE' && (
+                      <div className="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 space-y-1">
+                        <span className="font-bold block">🔵 Paiement Wave instantané</span>
+                        <p className="text-[11px] text-blue-800">
+                          Vous pourrez scanner le QR Code du serveur ou ouvrir directement l'application Wave à l'étape suivante.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Customer Name & Kitchen Instructions */}
+                  <div className="pt-2 border-t border-slate-200 space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-900 block">
+                        {lang === 'WO' ? 'Sa Tur (Bëgg-bëgg) :' : 'Votre Prénom (Optionnel) :'}
+                      </label>
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => onCustomerNameChange(e.target.value)}
+                        placeholder="Ex: Moussa, Fatou, Ibrahima..."
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl p-3 text-xs sm:text-sm text-slate-900 outline-none shadow-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-900 block">
+                        {t.kitchenNoteLabel}
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={customerNote}
+                        onChange={(e) => onCustomerNoteChange(e.target.value)}
+                        placeholder={t.kitchenNotePlaceholder}
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl p-3 text-xs sm:text-sm text-slate-900 outline-none shadow-xs resize-none"
+                      />
                     </div>
                   </div>
-                )}
-
-                {/* Wave Info Banner */}
-                {paymentMethod === 'WAVE' && (
-                  <div className="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 space-y-1">
-                    <span className="font-bold block">🔵 Paiement Wave instantané</span>
-                    <p className="text-[11px] text-blue-800">
-                      Vous pourrez scanner le QR Code du serveur ou ouvrir directement l'application Wave à l'étape suivante.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Customer Name & Kitchen Instructions */}
-              <div className="pt-2 border-t border-slate-200 space-y-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-900 block">
-                    {lang === 'WO' ? 'Sa Tur (Bëgg-bëgg) :' : 'Votre Prénom (Optionnel) :'}
-                  </label>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => onCustomerNameChange(e.target.value)}
-                    placeholder="Ex: Moussa, Fatou, Ibrahima..."
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl p-3 text-xs sm:text-sm text-slate-900 outline-none shadow-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-900 block">
-                    {t.kitchenNoteLabel}
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={customerNote}
-                    onChange={(e) => onCustomerNoteChange(e.target.value)}
-                    placeholder={t.kitchenNotePlaceholder}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500 rounded-2xl p-3 text-xs sm:text-sm text-slate-900 outline-none shadow-xs resize-none"
-                  />
-                </div>
-              </div>
+                </>
+              ) : null}
             </>
           )}
         </div>
@@ -353,7 +367,7 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
             <div className="flex items-baseline justify-between">
               <div>
                 <span className="text-xs text-slate-500 block uppercase font-bold">
-                  {t.totalToPay}
+                  {!isOrderingEnabled ? 'Total estimé de votre sélection' : t.totalToPay}
                 </span>
                 {convertedTotal && (
                   <span className="text-xs font-bold text-emerald-700 block">
@@ -366,21 +380,44 @@ export const CartCheckoutDrawer: React.FC<CartCheckoutDrawerProps> = ({
               </span>
             </div>
 
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={onSubmitOrder}
-              className="w-full min-h-[52px] bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 active:scale-[0.99] disabled:bg-slate-300 text-white font-black text-sm sm:text-base rounded-2xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all"
-            >
-              <Send className="w-4 h-4" />
-              <span>
-                {isSubmitting
-                  ? 'Transmission...'
-                  : isExpress
-                  ? '⚡ Commander au Comptoir'
-                  : `🚀 Commander pour Table ${formattedTable}`}
-              </span>
-            </button>
+            {isOrderingEnabled ? (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={onSubmitOrder}
+                className="w-full min-h-[52px] bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-95 active:scale-[0.99] disabled:bg-slate-300 text-white font-black text-sm sm:text-base rounded-2xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all"
+              >
+                <Send className="w-4 h-4" />
+                <span>
+                  {isSubmitting
+                    ? 'Transmission...'
+                    : isExpress
+                    ? '⚡ Commander au Comptoir'
+                    : `🚀 Commander pour Table ${formattedTable}`}
+                </span>
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300/80 rounded-2xl text-center space-y-2 shadow-xs animate-in fade-in">
+                  <div className="w-10 h-10 bg-amber-500 text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm font-black text-amber-950 leading-snug">
+                    Présentez votre sélection au serveur ou à la caisse pour passer commande
+                  </p>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Votre commande sera prise oralement par notre personnel de service.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full min-h-[48px] bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-sm rounded-2xl flex items-center justify-center transition-all shadow-md"
+                >
+                  Continuer la consultation du menu
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

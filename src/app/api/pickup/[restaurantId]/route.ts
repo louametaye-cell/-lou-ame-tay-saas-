@@ -25,12 +25,28 @@ export async function GET(
         logoUrl: true,
         bannerUrl: true,
         branding: true,
-        currency: true
+        currency: true,
+        plan: {
+          select: {
+            slug: true,
+            name: true
+          }
+        }
       }
     });
 
     if (!tenant) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+
+    if (tenant.plan?.slug?.toLowerCase() === 'tambali') {
+      return NextResponse.json(
+        { 
+          error: 'L\'écran de Retrait Guichet n\'est pas activé pour cet établissement sous formule vitrine TÀMBALI.',
+          isTambali: true 
+        },
+        { status: 403 }
+      );
     }
 
     // Start of current day (Senegal / GMT)

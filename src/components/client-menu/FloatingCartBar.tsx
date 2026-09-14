@@ -12,6 +12,7 @@ interface FloatingCartBarProps {
   tableNumber: number;
   onOpenCart: () => void;
   onOpenSplitBill?: () => void;
+  isOrderingEnabled?: boolean;
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
@@ -23,6 +24,7 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
   totalPrice,
   onOpenCart,
   onOpenSplitBill,
+  isOrderingEnabled = true,
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
@@ -87,9 +89,13 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
             onClick={onOpenCart}
             style={primaryColor ? { backgroundColor: primaryColor } : undefined}
             className="min-h-[46px] px-4 sm:px-6 bg-emerald-600 hover:opacity-90 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg flex items-center gap-2 transition-all"
-            aria-label="Voir mon panier"
+            aria-label={!isOrderingEnabled ? "Voir ma sélection" : "Voir mon panier"}
           >
-            <span>{lang === 'WO' ? 'Xool sa panie' : t.viewCart}</span>
+            <span>
+              {!isOrderingEnabled
+                ? (lang === 'WO' ? 'Xool sa tànneef' : 'Voir ma sélection')
+                : (lang === 'WO' ? 'Xool sa panie' : t.viewCart)}
+            </span>
             <ArrowRight className="w-4 h-4 stroke-[3]" />
           </button>
         </div>
