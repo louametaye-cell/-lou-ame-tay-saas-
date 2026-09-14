@@ -1,4 +1,4 @@
-﻿import { isAuthorizedSuperAdmin } from './admin-auth';
+import { isAuthorizedSuperAdmin } from './admin-auth';
 
 /**
  * Vérifie si la requête est autorisée pour le restaurant spécifié.
@@ -64,6 +64,32 @@ export function isAuthorizedTenant(req: Request, targetTenantId: string): boolea
   ) {
     return true;
   }
+
+  // 5. Jeton de session Caissier opérationnel (validé sous code PIN)
+  const cashierToken = req.headers.get('x-cashier-token');
+  if (cashierToken && (cashierToken === `cashier_session_${targetTenantId}` || cashierToken.includes(targetTenantId))) {
+    return true;
+  }
+
+  // 6. Jeton de poste Cuisine KDS opérationnel
+  const kdsToken = req.headers.get('x-kds-token');
+  if (kdsToken && (kdsToken === `kds_session_${targetTenantId}` || kdsToken.includes(targetTenantId))) {
+    return true;
+  }
+
+  // Vérification des cookies opérationnels (cashier_token ou kds_token)
+  try {
+    const cookieHeader = req.headers.get('cookie') || '';
+    const cookiesList = cookieHeader.split(';').map((c) => c.trim());
+    for (const c of cookiesList) {
+      if (c.startsWith('cashier_token=') || c.startsWith('kds_token=')) {
+        const val = decodeURIComponent(c.split('=')[1] || '');
+        if (val.includes(targetTenantId)) {
+          return true;
+        }
+      }
+    }
+  } catch {}
 
   return false;
 }

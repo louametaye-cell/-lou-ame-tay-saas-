@@ -45,6 +45,7 @@ export default function DashboardKitchenPage() {
   const pendingOrders = orders.filter((o) => o.status === 'PENDING');
   const pendingCount = pendingOrders.length;
   const preparingCount = orders.filter((o) => o.status === 'PREPARING').length;
+  const readyCount = orders.filter((o) => o.status === 'READY').length;
   const servedCount = orders.filter((o) => o.status === 'SERVED').length;
   const urgentCount = orders.filter((o) => {
     if (o.status === 'SERVED' || o.status === 'CANCELLED') return false;
@@ -69,6 +70,7 @@ export default function DashboardKitchenPage() {
         counts={{
           pending: pendingCount,
           preparing: preparingCount,
+          ready: readyCount,
           served: servedCount,
           urgent: urgentCount,
         }}

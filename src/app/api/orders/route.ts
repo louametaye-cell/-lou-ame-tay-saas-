@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
     if (!resolvedTenantId || !isAuthorizedTenant(req, resolvedTenantId)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé : Session gérant requise pour consulter les commandes' },
+        { error: 'Accès non autorisé : Session d\'exploitation requise (Gérant, Caisse ou Cuisine)' },
         { status: 401 }
       );
     }

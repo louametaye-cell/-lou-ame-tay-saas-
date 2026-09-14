@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       restaurant: tenant,
       cashier: {
@@ -83,8 +83,18 @@ export async function POST(req: Request) {
         shift: cashier.shift,
         schedule: cashier.schedule
       },
+      token: `cashier_session_${tenant.id}`,
       activeSession
     });
+
+    res.cookies.set('cashier_token', `cashier_session_${tenant.id}`, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 14 // 14 heures de shift
+    });
+
+    return res;
   } catch (error) {
     console.error('Erreur authentification caissier:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la connexion du caissier' }, { status: 500 });

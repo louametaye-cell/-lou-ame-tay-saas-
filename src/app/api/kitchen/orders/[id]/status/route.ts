@@ -72,18 +72,14 @@ export async function PATCH(
 
     if (status === 'PREPARING') {
       updateData.preparedAt = new Date();
+    } else if (status === 'READY') {
+      // Commande prête en cuisine, transmise au guichet / retrait
+      updateData.preparedAt = new Date();
     } else if (status === 'SERVED') {
       updateData.servedAt = new Date();
-      // Uniquement si explicitement demandé par la caisse
-      if (paymentStatus) {
-        updateData.paymentStatus = paymentStatus;
-      }
-      if (cashierId) updateData.cashierId = cashierId;
-      if (cashSessionId) updateData.cashSessionId = cashSessionId;
-      if (paymentMethod && Object.values(PaymentMethod).includes(paymentMethod as PaymentMethod)) {
-        updateData.paymentMethod = paymentMethod as PaymentMethod;
-      }
     }
+    // 🔒 SÉCURITÉ ABSOLUE : Une mise à jour de statut cuisine NE PEUT EN AUCUN CAS modifier paymentStatus ou paymentMethod.
+    // Seul l'encaissement manuel caisse (/api/cashier/orders/[id]/pay) est habilité à valider le paiement.
 
     const updated = await prisma.order.update({
       where: { id: orderId },

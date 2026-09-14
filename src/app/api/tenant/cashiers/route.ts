@@ -90,8 +90,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Le nom du caissier est requis' }, { status: 400 });
     }
 
-    if (!pinCode || !/^\d{4}$/.test(pinCode.trim())) {
+    const cleanPin = pinCode.trim();
+    if (!pinCode || !/^\d{4}$/.test(cleanPin)) {
       return NextResponse.json({ error: 'Le code PIN doit comporter exactement 4 chiffres' }, { status: 400 });
+    }
+
+    const TRIVIAL_PINS = ['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234', '4321', '0123'];
+    if (TRIVIAL_PINS.includes(cleanPin)) {
+      return NextResponse.json(
+        { error: 'Code PIN trop faible ou trivial (ex: 0000, 1234). Veuillez choisir un code sécurisé à 4 chiffres non consécutifs.' },
+        { status: 400 }
+      );
     }
 
     // Resolve tenant

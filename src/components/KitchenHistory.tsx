@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, CheckCircle2, RefreshCw, Clock, DollarSign, RotateCcw } from 'lucide-react';
+import { Download, CheckCircle2, RefreshCw, Clock, ChefHat, RotateCcw } from 'lucide-react';
 import { OrderType } from '@/types';
-import { formatFCFA } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface KitchenHistoryProps {
@@ -20,7 +19,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   refreshTrigger = 0,
 }) => {
   const [historyOrders, setHistoryOrders] = useState<OrderType[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalDishesServed, setTotalDishesServed] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const getEffectiveId = useCallback(() => {
@@ -40,7 +39,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
       if (res.ok) {
         const data = await res.json();
         setHistoryOrders(data.orders || []);
-        setTotalRevenue(data.total || 0);
+        setTotalDishesServed(data.dishesCount || 0);
       }
     } catch (e) {
       console.error('Erreur chargement historique cuisine:', e);
@@ -95,14 +94,14 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
         </div>
       </div>
 
-      {/* Total Revenue Banner */}
-      <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center justify-between">
+      {/* Total Dishes Served Banner (ZÉRO DONNÉE FINANCIÈRE EN CUISINE) */}
+      <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <DollarSign className="w-5 h-5 text-emerald-600" />
-          <span className="text-xs font-bold text-emerald-900">Total Encaissé Aujourd'hui :</span>
+          <ChefHat className="w-5 h-5 text-amber-600" />
+          <span className="text-xs font-bold text-slate-800">Total Plats Expédiés en Salle Aujourd'hui :</span>
         </div>
-        <span className="text-base font-black text-emerald-800 font-mono">
-          {formatFCFA(totalRevenue)}
+        <span className="text-base font-black text-slate-900 font-mono">
+          {totalDishesServed || historyOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + (i.quantity || 1), 0), 0)} plat(s)
         </span>
       </div>
 
@@ -147,8 +146,8 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3 ml-auto">
-                  <span className="text-sm font-black text-amber-700 font-mono">
-                    {formatFCFA(order.total)}
+                  <span className="text-xs font-black text-slate-700 font-mono bg-white border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
+                    {itemCount} plat{itemCount > 1 ? 's' : ''}
                   </span>
 
                   {onRestoreOrder && (

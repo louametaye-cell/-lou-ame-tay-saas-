@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { OrderType, OrderStatus } from '@/types';
 import { playKitchenOrderAlert, playKitchenServedAlert } from '@/components/kitchen/KitchenSoundAlert';
@@ -32,7 +32,9 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
         ? `/api/orders?restaurantId=${restaurantId}`
         : '/api/orders';
 
-      const res = await fetch(url);
+      const headers: Record<string, string> = {};
+      if (restaurantId) headers['x-kds-token'] = `kds_session_${restaurantId}`;
+      const res = await fetch(url, { headers });
       if (res.ok) {
         const data = await res.json();
         const incomingOrders: OrderType[] = data.orders || [];
@@ -86,8 +88,11 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
 
         const res = await fetch(`/api/kitchen/orders/${orderId}/status`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus }),
+          headers: {
+            'Content-Type': 'application/json',
+            ...(restaurantId ? { 'x-kds-token': `kds_session_${restaurantId}` } : {})
+          },
+          body: JSON.stringify({ status: newStatus, restaurantId }),
         });
 
         if (!res.ok) {
@@ -97,8 +102,10 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
         toast.success(
           newStatus === 'PREPARING'
             ? '👨‍🍳 Commande passée en préparation'
+            : newStatus === 'READY'
+            ? '📦 Commande prête au guichet'
             : newStatus === 'SERVED'
-            ? '✅ Commande servie et archivée'
+            ? '✅ Commande servie'
             : 'Statut mis à jour'
         );
 

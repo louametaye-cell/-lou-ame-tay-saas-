@@ -34,6 +34,7 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
 
         if (activeFilter === 'PENDING') return order.status === 'PENDING';
         if (activeFilter === 'PREPARING') return order.status === 'PREPARING';
+        if (activeFilter === 'READY') return order.status === 'READY';
 
         if (activeFilter === 'URGENT') {
           const diffMs = Date.now() - new Date(order.createdAt).getTime();
@@ -41,8 +42,8 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
           return minutes >= 15 && order.status !== 'SERVED';
         }
 
-        // 'ALL' filter: show pending and preparing orders
-        return order.status === 'PENDING' || order.status === 'PREPARING';
+        // 'ALL' filter: show pending, preparing and ready orders
+        return order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
       })
       .sort((a, b) => {
         // PENDING first, then by oldest createdAt

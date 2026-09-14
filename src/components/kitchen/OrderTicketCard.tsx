@@ -76,6 +76,8 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           ? 'border-amber-400 shadow-amber-500/10'
           : order.status === 'PREPARING'
           ? 'border-blue-500 shadow-blue-500/10'
+          : order.status === 'READY'
+          ? 'border-purple-500 shadow-purple-500/20'
           : 'border-slate-200 opacity-85'
       }`}
     >
@@ -90,6 +92,8 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
             ? 'bg-amber-500 text-slate-950'
             : order.status === 'PREPARING'
             ? 'bg-blue-600 text-white'
+            : order.status === 'READY'
+            ? 'bg-purple-700 text-white'
             : 'bg-slate-100 text-slate-800'
         }`}
       >
@@ -128,23 +132,6 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           }`}>
             {isExpressOrder ? '⚡ Guichet Caisse' : `👤 ${order.waiter?.name || getAssignedServerForTable(order.tableNumber)}`}
           </span>
-        </div>
-
-        <div className="flex items-center gap-1 font-bold">
-          {order.paymentMethod === 'WAVE' ? (
-            <span className="text-[#1DA1F2] flex items-center gap-1 font-black">
-              <span>🔵</span> <span>Wave</span>
-            </span>
-          ) : order.paymentMethod === 'ORANGE_MONEY' ? (
-            <span className="text-[#FF6B00] flex items-center gap-1 font-black">
-              <span>🟠</span> <span>OM</span>
-            </span>
-          ) : (
-            <span className="text-emerald-700 flex items-center gap-1 font-black">
-              <Banknote className="w-3.5 h-3.5" />
-              <span>Espèces</span>
-            </span>
-          )}
         </div>
       </div>
 
@@ -216,10 +203,6 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
                     )}
                   </div>
                 </div>
-
-                <span className="text-xs text-slate-600 font-mono font-bold shrink-0">
-                  {formatFCFA(item.price * item.quantity)}
-                </span>
               </div>
             </div>
           ))
@@ -257,9 +240,9 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
       {/* 4. Action Buttons Footer */}
       <div className="p-3 bg-slate-50 border-t border-slate-200 space-y-2">
         <div className="flex items-center justify-between text-xs text-slate-600 px-1 font-medium">
-          <span>Total Commande</span>
-          <span className="text-sm font-black text-slate-900 font-mono">
-            {formatFCFA(order.total)}
+          <span>Contenu de la commande</span>
+          <span className="text-xs font-bold text-slate-800">
+            {order.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0} plat(s)
           </span>
         </div>
 
@@ -292,11 +275,23 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => handleStatusChange('SERVED')}
-              className="flex-1 min-h-[46px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all"
+              onClick={() => handleStatusChange('READY')}
+              className="flex-1 min-h-[46px] bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-purple-600/20 transition-all cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-              <span>✅ Prête / Servie</span>
+              <span>📦 Commande Prête</span>
+            </button>
+          )}
+
+          {order.status === 'READY' && (
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() => handleStatusChange('SERVED')}
+              className="flex-1 min-h-[46px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4 stroke-[3]" />
+              <span>🍽️ {isExpressOrder ? 'Remise au Client' : 'Servie à Table'}</span>
             </button>
           )}
         </div>

@@ -63,16 +63,16 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, session: null });
     }
 
-    // Compute live sales since session opened (rattachées à la session ou servies/payées pendant le shift)
+    // Compute live sales since session opened (strictement limitées aux commandes payées / PAID)
     const orders = await prisma.order.findMany({
       where: {
         tenantId: session.tenantId,
+        paymentStatus: 'PAID',
         OR: [
           { cashSessionId: session.id },
           {
             cashSessionId: null,
             status: 'SERVED',
-            paymentStatus: 'PAID',
             servedAt: {
               gte: session.openedAt,
               ...(session.closedAt ? { lte: session.closedAt } : {})
@@ -267,16 +267,16 @@ export async function PATCH(req: Request) {
 
     const closedAt = new Date();
 
-    // Query all served and paid orders during this session
+    // Query all served and paid orders during this session (strictement limitées aux commandes payées / PAID)
     const orders = await prisma.order.findMany({
       where: {
         tenantId: session.tenantId,
+        paymentStatus: 'PAID',
         OR: [
           { cashSessionId: session.id },
           {
             cashSessionId: null,
             status: 'SERVED',
-            paymentStatus: 'PAID',
             servedAt: {
               gte: session.openedAt,
               lte: closedAt

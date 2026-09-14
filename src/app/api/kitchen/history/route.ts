@@ -90,13 +90,17 @@ export async function GET(req: Request) {
       })),
     }));
 
-    const total = memoryServedToday.reduce((sum: number, order: any) => sum + (Number(order.total) || 0), 0);
+    const dishesCount = memoryServedToday.reduce(
+      (sum: number, order: any) => sum + order.items.reduce((s: number, i: any) => s + (i.quantity || 1), 0),
+      0
+    );
 
-    // CSV Export
+    // CSV Export (Zéro donnée financière - Registre de production cuisine)
     if (format === 'csv') {
-      const headers = ['ID Commande', 'Table', 'Heure Commande', 'Heure Servie', 'Plats', 'Remarque', 'Total (FCFA)', 'Statut'];
+      const headers = ['ID Commande', 'Table', 'Heure Commande', 'Heure Servie', 'Plats', 'Remarque', 'Nombre de Plats', 'Statut'];
       const rows = memoryServedToday.map((o: any) => {
         const itemsSummary = o.items.map((i: any) => `${i.quantity}x ${i.name || 'Plat'}`).join(' | ');
+        const totalItems = o.items.reduce((s: number, i: any) => s + (i.quantity || 1), 0);
         const orderTime = new Date(o.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         const servedTime = o.servedAt ? new Date(o.servedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
         return [
@@ -106,7 +110,7 @@ export async function GET(req: Request) {
           `"${servedTime}"`,
           `"${itemsSummary.replace(/"/g, '""')}"`,
           `"${(o.customerNote || o.note || '').replace(/"/g, '""')}"`,
-          o.total,
+          totalItems,
           `"${o.status}"`,
         ].join(';');
       });
@@ -122,7 +126,7 @@ export async function GET(req: Request) {
       });
     }
 
-    return NextResponse.json({ orders: memoryServedToday, total });
+    return NextResponse.json({ orders: memoryServedToday, dishesCount, ordersCount: memoryServedToday.length });
   } catch (error) {
     return NextResponse.json(
       { error: "Erreur lors de la récupération de l'historique" },

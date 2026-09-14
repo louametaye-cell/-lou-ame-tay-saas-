@@ -45,6 +45,13 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Redirection transparente de l'ancien KDS dashboard vers l'écran Cuisine KDS dédié et sécurisé
+  if (pathname === '/dashboard/kitchen') {
+    const kitchenUrl = new URL('/kitchen', request.url);
+    kitchenUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(kitchenUrl);
+  }
+
   // 3. ROUTES PUBLIQUES & TERMINAUX OPÉRATIONNELS (Clients, TV, Caisse POS avec PIN, Cuisine KDS)
   const isPublicRoute =
     pathname.startsWith('/r/') ||          // Menu client QR Code

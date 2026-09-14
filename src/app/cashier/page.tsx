@@ -180,7 +180,9 @@ export default function CashierCounterPage() {
       setIsLoading(true);
       const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
       const url = storedId ? `/api/orders?restaurantId=${encodeURIComponent(storedId)}` : '/api/orders';
-      const res = await fetch(url);
+      const headers: Record<string, string> = {};
+      if (storedId) headers['x-cashier-token'] = `cashier_session_${storedId}`;
+      const res = await fetch(url, { headers });
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -351,14 +353,13 @@ export default function CashierCounterPage() {
     }
   };
 
-  // Update order status and attach cashier session
+  // Update order status and attach cashier session (sans jamais modifier le statut de paiement)
   const handleUpdateStatus = async (orderId: string, status: OrderStatus, customPaymentMethod?: string) => {
     try {
       const payload: any = { status };
       if (currentCashier) payload.cashierId = currentCashier.id;
       if (currentSession) payload.cashSessionId = currentSession.id;
       if (customPaymentMethod) payload.paymentMethod = customPaymentMethod;
-      if (status === 'SERVED') payload.paymentStatus = 'PAID';
 
       const res = await fetch(`/api/kitchen/orders/${orderId}/status`, {
         method: 'POST',
@@ -577,13 +578,16 @@ export default function CashierCounterPage() {
     return orders.filter((o) => o.status === 'READY');
   }, [orders]);
 
+  // Caisse du Jour & Ventes Express : UNIQUEMENT les commandes effectivement ENCAISSÉES (PAID)
   const totalRevenue = useMemo(() => {
-    return orders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    return orders
+      .filter((o) => o.paymentStatus === 'PAID')
+      .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
   const expressRevenue = useMemo(() => {
     return orders
-      .filter((o) => o.orderType === 'EXPRESS' || o.tableNumber === 0)
+      .filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && o.paymentStatus === 'PAID')
       .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
@@ -629,14 +633,6 @@ export default function CashierCounterPage() {
       {/* 1. TOP HEADER & CASHIER BAR */}
       <header className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all active:scale-[0.97]"
-            title="Retour au Dashboard Gérant"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black shadow-xs">
