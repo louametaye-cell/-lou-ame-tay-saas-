@@ -107,14 +107,8 @@ export default function CashierCounterPage() {
       if (storedId) setRestaurantId(storedId);
       if (storedPhone) setRestaurantPhone(storedPhone);
 
-      // Check stored cashier
-      const storedCashier = localStorage.getItem('current_cashier');
-      if (storedCashier) {
-        try {
-          const parsed = JSON.parse(storedCashier);
-          setCurrentCashier(parsed);
-        } catch (e) {}
-      }
+      // 🔒 Pour la sécurité du terminal caisse, chaque ouverture de page requiert la saisie du code PIN
+      setCurrentCashier(null);
 
       if (storedId) {
         fetchRestaurantDetails(storedId);
@@ -162,10 +156,7 @@ export default function CashierCounterPage() {
       const data = await res.json();
       if (data.success && data.session && data.session.status === 'OPEN') {
         setCurrentSession(data.session);
-        if (data.session.cashier) {
-          setCurrentCashier(data.session.cashier);
-          localStorage.setItem('current_cashier', JSON.stringify(data.session.cashier));
-        }
+        // 🔒 Sécurité : Ne jamais auto-connecter le profil sans validation préalable du code PIN
       } else {
         setCurrentSession(null);
       }
@@ -229,6 +220,25 @@ export default function CashierCounterPage() {
   };
 
   useEffect(() => {
+    if (!currentCashier) {
+      // Saisie directe du PIN au clavier sur la page de connexion
+      const handleLockscreenKey = (e: KeyboardEvent) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
+        if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+          e.preventDefault();
+          handlePinDigit(e.key);
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          handlePinDelete();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          handlePinSubmit();
+        }
+      };
+      window.addEventListener('keydown', handleLockscreenKey);
+      return () => window.removeEventListener('keydown', handleLockscreenKey);
+    }
+
     fetchOrders();
     fetchWaiterCalls();
     const interval = setInterval(() => {
@@ -256,7 +266,7 @@ export default function CashierCounterPage() {
       clearInterval(interval);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [restaurantId]);
+  }, [currentCashier, restaurantId, pinInput]);
 
   // Open the Mandatory Payment Modal
   const handleOpenPaymentModal = (order: OrderType, defaultMethod: string = 'CASH') => {
@@ -644,6 +654,170 @@ export default function CashierCounterPage() {
     }
   };
 
+  // 🔒 VUE 1 : PAGE DE CONNEXION CAISSIER PLEIN ÉCRAN (SI AUCUN CAISSIER N'EST IDENTIFIÉ)
+  if (!currentCashier) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white flex flex-col justify-between font-sans selection:bg-orange-500 selection:text-white p-4 sm:p-8">
+        {/* En-tête supérieur */}
+        <header className="max-w-md mx-auto w-full flex items-center justify-between py-2 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="Lou Ame Tay ?" className="w-9 h-9 rounded-2xl object-cover border border-amber-500/40" />
+            <div>
+              <span className="text-base font-black text-white block leading-tight">Lou Ame Tay ?</span>
+              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Terminal Caisse POS</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span>Poste Verrouillé</span>
+          </div>
+        </header>
+
+        {/* Carte Centrale de Connexion & Pavé PIN */}
+        <main className="max-w-md mx-auto w-full my-auto py-6">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
+            
+            {/* Établissement actif ou sélecteur */}
+            {restaurantId ? (
+              <div className="flex items-center justify-between bg-white/5 border border-white/10 p-3 rounded-2xl text-left">
+                <div className="flex items-center gap-2.5 truncate">
+                  <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Store className="w-4 h-4" />
+                  </div>
+                  <div className="truncate">
+                    <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-bold">Établissement</span>
+                    <span className="font-black text-sm text-amber-200 truncate block">{restaurantName}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newId = window.prompt("Entrez le sous-domaine de l'établissement (ex: anima-pizzeria, madiba-restaurant, sams-prestige, hotel-lat-dior) :", restaurantId);
+                    if (newId && newId.trim()) {
+                      const cleaned = newId.trim();
+                      setRestaurantId(cleaned);
+                      localStorage.setItem('current_restaurant_id', cleaned);
+                      fetchRestaurantDetails(cleaned);
+                      fetchActiveSession(cleaned);
+                      setAuthError('');
+                    }
+                  }}
+                  className="text-xs text-orange-400 hover:text-orange-300 font-bold underline shrink-0 ml-2 cursor-pointer"
+                >
+                  Changer
+                </button>
+              </div>
+            ) : (
+              <div className="text-left space-y-1.5">
+                <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
+                  Sélectionnez votre établissement :
+                </label>
+                <select
+                  value={restaurantId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    if (id) {
+                      setRestaurantId(id);
+                      localStorage.setItem('current_restaurant_id', id);
+                      fetchRestaurantDetails(id);
+                      fetchActiveSession(id);
+                      setAuthError('');
+                    }
+                  }}
+                  className="w-full p-3 bg-slate-800 border border-white/20 rounded-2xl text-sm font-bold text-white focus:outline-hidden focus:border-amber-400 cursor-pointer"
+                >
+                  <option value="">-- Choisir votre établissement --</option>
+                  <option value="anima-pizzeria">🍕 Anima Pizzeria</option>
+                  <option value="madiba-restaurant">☕ MADIBA RESTAURANT</option>
+                  <option value="sams-prestige">🍽️ Sam's Prestige Restaurant</option>
+                  <option value="hotel-lat-dior">🏨 Hôtel Résidence Lat-Dior</option>
+                </select>
+              </div>
+            )}
+
+            {/* Titre & Explication */}
+            <div className="space-y-1">
+              <div className="w-14 h-14 bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-400 rounded-3xl flex items-center justify-center mx-auto mb-2 border border-amber-500/30 shadow-lg shadow-amber-500/10">
+                <KeyRound className="w-7 h-7" />
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Connexion Caisse</h2>
+              <p className="text-xs text-slate-400">
+                Saisissez votre code PIN caissier à 4 chiffres pour déverrouiller
+              </p>
+            </div>
+
+            {/* PIN Code Dots Display */}
+            <div className="bg-slate-900 border border-white/10 p-4 rounded-2xl space-y-2">
+              <div className="flex items-center justify-center gap-4">
+                {[0, 1, 2, 3].map((idx) => (
+                  <div
+                    key={idx}
+                    className={`w-4 h-4 rounded-full transition-all duration-200 ${
+                      pinInput.length > idx 
+                        ? 'bg-amber-400 scale-125 shadow-lg shadow-amber-400/50' 
+                        : 'bg-slate-700 border border-slate-600'
+                    }`}
+                  />
+                ))}
+              </div>
+              {authError && (
+                <p className="text-xs text-rose-400 font-bold pt-1">
+                  ⚠️ {authError}
+                </p>
+              )}
+            </div>
+
+            {/* Pavé Tactile XXL 3x4 */}
+            <div className="grid grid-cols-3 gap-2.5 pt-1">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handlePinDigit(num)}
+                  className="py-3.5 bg-white/5 hover:bg-white/10 active:bg-amber-500 active:text-slate-950 active:scale-95 text-white font-black text-xl rounded-2xl transition-all border border-white/10 shadow-xs cursor-pointer"
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handlePinDelete}
+                className="py-3.5 bg-white/5 hover:bg-rose-500/20 active:scale-95 text-rose-400 font-bold text-xs rounded-2xl transition-all border border-white/10 cursor-pointer flex items-center justify-center"
+                title="Effacer le dernier chiffre"
+              >
+                ⌫ Effacer
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePinDigit('0')}
+                className="py-3.5 bg-white/5 hover:bg-white/10 active:bg-amber-500 active:text-slate-950 active:scale-95 text-white font-black text-xl rounded-2xl transition-all border border-white/10 shadow-xs cursor-pointer"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePinSubmit()}
+                disabled={pinInput.length !== 4}
+                className="py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-40 text-slate-950 font-black text-xs rounded-2xl transition-all shadow-md shadow-amber-500/20 cursor-pointer disabled:cursor-not-allowed active:scale-95 flex items-center justify-center gap-1"
+              >
+                <span>Valider ✓</span>
+              </button>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="max-w-md mx-auto w-full text-center text-xs text-slate-500 py-2 border-t border-white/10 flex items-center justify-between">
+          <Link href="/login" className="text-slate-400 hover:text-amber-400 transition-colors">
+            ← Portail Gérant / Dashboard
+          </Link>
+          <span>Assistance : {restaurantPhone}</span>
+        </footer>
+      </div>
+    );
+  }
+
+  // 🏪 VUE 2 : ESPACE CAISSE OPÉRATIONNEL (CAISSIER AUTHENTIFIÉ SOUS CODE PIN)
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 space-y-6">
       {/* 1. TOP HEADER & CASHIER BAR */}
@@ -753,18 +927,16 @@ export default function CashierCounterPage() {
             </button>
           )}
 
-          {/* Bouton Déconnexion Caissier */}
-          {currentCashier && (
-            <button
-              type="button"
-              onClick={handleLogoutCashier}
-              className="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-700 border border-slate-200 font-bold text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer active:scale-95"
-              title="Déconnecter le caissier en poste"
-            >
-              <LogOut className="w-4 h-4 text-rose-600" />
-              <span>Déconnexion</span>
-            </button>
-          )}
+          {/* Bouton Déconnexion Caissier TRÈS VISIBLE */}
+          <button
+            type="button"
+            onClick={handleLogoutCashier}
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            title="Déconnecter le caissier et verrouiller la caisse"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Déconnexion</span>
+          </button>
 
           <div className="bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xs">
             <DollarSign className="w-4 h-4 text-emerald-600" />
