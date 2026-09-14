@@ -417,12 +417,18 @@ export default function CashierCounterPage() {
       return;
     }
 
+    const activeResto = restaurantId || localStorage.getItem('current_restaurant_id');
+    if (!activeResto) {
+      setAuthError('Veuillez sélectionner votre établissement ci-dessus');
+      return;
+    }
+
     try {
       const res = await fetch('/api/cashier/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          restaurantId: restaurantId || localStorage.getItem('current_restaurant_id'),
+          restaurantId: activeResto,
           pinCode: pinInput.trim()
         })
       });
@@ -665,6 +671,23 @@ export default function CashierCounterPage() {
             {/* Sub-header info with Cashier and Contact */}
             <div className="flex items-center gap-2.5 flex-wrap text-xs">
               <span className="text-slate-600 font-bold">{restaurantName}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const newId = window.prompt("Entrez le sous-domaine de votre établissement (ex: anima-pizzeria, madiba-restaurant, sams-prestige, hotel-lat-dior) :", restaurantId || '');
+                  if (newId && newId.trim()) {
+                    const cleaned = newId.trim();
+                    setRestaurantId(cleaned);
+                    localStorage.setItem('current_restaurant_id', cleaned);
+                    fetchRestaurantDetails(cleaned);
+                    fetchActiveSession(cleaned);
+                  }
+                }}
+                className="text-[10px] text-orange-600 hover:text-orange-700 underline font-medium cursor-pointer"
+                title="Changer d'établissement"
+              >
+                (Changer)
+              </button>
               <span className="text-slate-300">•</span>
               
               {currentCashier ? (
@@ -1172,8 +1195,38 @@ export default function CashierCounterPage() {
                 <KeyRound className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-black text-slate-900">Identification Caissier</h3>
-              <p className="text-xs text-slate-500">Sélectionnez votre profil et saisissez votre code PIN à 4 chiffres.</p>
+              <p className="text-xs text-slate-500">
+                {restaurantId ? `Établissement : ${restaurantName}` : 'Sélectionnez votre établissement et saisissez votre code PIN'}
+              </p>
             </div>
+
+            {/* Sélecteur d'établissement si non configuré */}
+            {!restaurantId && (
+              <div className="space-y-1.5 p-3 bg-orange-50 border border-orange-200 rounded-2xl text-left">
+                <label className="block text-[11px] font-bold text-orange-950 uppercase">Établissement :</label>
+                <select
+                  value={restaurantId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    if (id) {
+                      setRestaurantId(id);
+                      localStorage.setItem('current_restaurant_id', id);
+                      fetchRestaurantDetails(id);
+                      fetchCashiersList(id);
+                      fetchActiveSession(id);
+                      setAuthError('');
+                    }
+                  }}
+                  className="w-full p-2 bg-white border border-orange-300 rounded-xl text-xs font-bold text-slate-800"
+                >
+                  <option value="">-- Choisir votre établissement --</option>
+                  <option value="anima-pizzeria">🍕 Anima Pizzeria</option>
+                  <option value="madiba-restaurant">☕ MADIBA RESTAURANT</option>
+                  <option value="sams-prestige">🍽️ Sam's Prestige Restaurant</option>
+                  <option value="hotel-lat-dior">🏨 Hôtel Résidence Lat-Dior</option>
+                </select>
+              </div>
+            )}
 
             {/* Cashiers list selection */}
             {availableCashiers.length > 0 && (

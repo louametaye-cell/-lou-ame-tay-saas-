@@ -267,6 +267,10 @@ export default function RestaurantLoginPage() {
       <footer className="border-t border-slate-200/60 py-4 px-4 text-center text-xs text-slate-500">
         <p>© 2026 Lou Ame Tay ? • Plateforme SaaS de Menu Digital pour Restaurants au Sénégal</p>
         <div className="mt-1.5 flex items-center justify-center gap-3 text-[10px] text-slate-400 font-medium">
+          <Link href="/cashier" className="text-orange-600 hover:text-orange-500 font-bold transition-colors cursor-pointer flex items-center gap-1">
+            <span>💳</span> Terminal Caisse POS
+          </Link>
+          <span>•</span>
           <Link href="/kitchen" className="hover:text-orange-500 transition-colors cursor-pointer">Portail Cuisine</Link>
           <span>•</span>
           <Link href="/super-admin" className="hover:text-orange-500 transition-colors cursor-pointer">Console Super-Admin</Link>
