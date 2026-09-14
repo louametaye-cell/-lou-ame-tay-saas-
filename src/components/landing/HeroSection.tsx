@@ -160,49 +160,33 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           </div>
 
-          {/* Right Column: Split Aside Phone Simulator & Live Ordering (iPhone 17 Pro Titanium) */}
+          {/* Right Column: Split Aside Phone Simulator & Live Ordering (iPhone 17 Pro Max Reference) */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
             
-            {/* iPhone 17 Pro Outer Titanium Chassis */}
-            <div className="relative w-full max-w-[340px] sm:max-w-[365px] bg-gradient-to-b from-[#3A3B3E] via-[#1E1F21] to-[#121314] p-[3px] rounded-[54px] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4)] border border-[#525458]/60 group">
+            {/* iPhone 17 Pro Max Ultra-Sleek Minimalist Shell */}
+            <div className="relative w-full max-w-[330px] sm:max-w-[350px] mx-auto select-none">
               
-              {/* iPhone 17 Pro Metallic Frame & Antenna Lines */}
-              <div className="bg-[#0B0C0E] p-[10px] rounded-[51px] relative border border-[#2D2E32]/60 shadow-inner">
+              {/* Ultra-thin Metallic Bezel (4px total padding) */}
+              <div className="relative bg-[#1A1B1E] p-[4px] rounded-[50px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-[#3E4046]/70">
                 
-                {/* iPhone Side Action Buttons (Simulated subtle side cutouts) */}
-                <div className="absolute -left-[5px] top-24 w-[3px] h-8 bg-[#3A3B3E] rounded-l-sm" />
-                <div className="absolute -left-[5px] top-36 w-[3px] h-12 bg-[#3A3B3E] rounded-l-sm" />
-                <div className="absolute -left-[5px] top-52 w-[3px] h-12 bg-[#3A3B3E] rounded-l-sm" />
-                <div className="absolute -right-[5px] top-32 w-[3px] h-16 bg-[#3A3B3E] rounded-r-sm" />
+                {/* Precision Side Buttons */}
+                <div className="absolute -left-[4px] top-24 w-[3px] h-7 bg-[#2E3034] rounded-l-xs" />
+                <div className="absolute -left-[4px] top-36 w-[3px] h-10 bg-[#2E3034] rounded-l-xs" />
+                <div className="absolute -left-[4px] top-48 w-[3px] h-10 bg-[#2E3034] rounded-l-xs" />
+                <div className="absolute -right-[4px] top-32 w-[3px] h-14 bg-[#2E3034] rounded-r-xs" />
 
-                {/* Dynamic Island (iPhone 17 Pro Pill Camera & FaceID Sensors) */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-30 flex items-center justify-between px-3 shadow-md border border-white/10">
-                  <div className="w-3 h-3 rounded-full bg-[#121316] border border-[#28292D] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#07130F]" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#0A0B0E] border border-emerald-500/40 flex items-center justify-center">
-                      <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* iPhone OLED Screen Display */}
-                <div className="bg-[#F8F9FA] rounded-[41px] overflow-hidden text-gray-900 flex flex-col h-[585px] select-none border border-gray-200/90 relative">
+                {/* Edge-to-Edge Display Screen */}
+                <div className="bg-[#F8F9FA] rounded-[46px] overflow-hidden text-gray-900 flex flex-col h-[590px] relative border border-black/10">
                   
-                  {/* iOS Status Bar */}
-                  <div className="bg-[#00A86B] text-white px-6 pt-3 pb-1 flex items-center justify-between text-[10px] font-bold tracking-tight select-none">
-                    <span>9:41</span>
-                    <div className="flex items-center gap-1.5 opacity-90">
-                      <span className="text-[9px]">5G</span>
-                      <span className="w-2.5 h-2 rounded-[1px] border border-white flex items-center p-[0.5px]">
-                        <span className="w-full h-full bg-white rounded-[0.5px]" />
-                      </span>
+                  {/* Dynamic Island (Compact pill notch as in reference photo) */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-5 bg-black rounded-full z-30 flex items-center justify-end px-2.5 shadow-sm">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#0E0F12] border border-[#24262A] flex items-center justify-center">
+                      <div className="w-1 h-1 rounded-full bg-emerald-500/80 animate-pulse" />
                     </div>
                   </div>
 
-                  {/* Phone Header Restaurant Info */}
-                  <div className="bg-[#00A86B] p-4 pt-1 text-white shadow-sm">
+                  {/* Top Header Restaurant Info */}
+                  <div className="bg-[#00A86B] p-4 pt-9 text-white shadow-sm">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -306,7 +290,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       </a>
                     </div>
 
-                    {/* iOS Home Bar Indicator */}
+                    {/* iOS Home Indicator Bar */}
                     <div className="w-32 h-1 bg-gray-900/40 rounded-full mx-auto mt-1" />
                   </div>
 
