@@ -250,8 +250,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       { text: 'Menu digital avec photos illimitées', included: true },
       { text: 'Gestion des stocks en 1 clic', included: true },
       { text: 'Personnalisation logo/couleurs (Studio)', included: true },
-      { text: 'Statistiques de consultation', included: true },
-      { text: 'Prise de commande intégrée', included: false },
+      { text: 'Statistiques de consultation', included: true }
     ],
     ctaText: 'Choisir Tàmbali',
     ctaType: 'trial'
