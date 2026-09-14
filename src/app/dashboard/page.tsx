@@ -490,8 +490,10 @@ export default function OperationalDashboardPage() {
 
             {/* Cashier Counter Quick View */}
             <Link
-              href="/cashier"
+              href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
+              target="_blank"
               className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Ouvrir le Terminal Caisse POS de votre établissement"
             >
               <span>⚡ Caisse Express</span>
             </Link>

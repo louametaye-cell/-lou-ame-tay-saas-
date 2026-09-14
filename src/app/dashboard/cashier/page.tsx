@@ -1,7 +1,8 @@
 'use client';
 
-import CashierCounterPage from '@/app/cashier/page';
+import React from 'react';
+import CashierPOS from '@/components/cashier/CashierPOS';
 
 export default function DashboardCashierPage() {
-  return <CashierCounterPage />;
+  return <CashierPOS />;
 }
