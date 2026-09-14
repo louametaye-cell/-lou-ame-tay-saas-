@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Receipt, Clock, Sparkles, ChevronUp } from 'lucide-react';
+import { Receipt, Clock, ChevronUp } from 'lucide-react';
 import { OrderType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 

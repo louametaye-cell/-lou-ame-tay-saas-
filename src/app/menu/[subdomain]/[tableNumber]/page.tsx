@@ -1,7 +1,6 @@
 import React from 'react';
+import { notFound } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
-
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
 
@@ -29,7 +28,7 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
   const cleanDigits = rawTableStr.replace(/[^0-9]/g, '');
   const tableNum = parseInt(cleanDigits, 10) || 1;
 
-  let restaurant: any = SAMPLE_RESTAURANT;
+  let restaurant: any = null;
 
   try {
     const dbTenant = await (prisma as any).tenant.findFirst({
@@ -92,6 +91,10 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
     }
   } catch (error) {
     console.error('Erreur chargement menu restaurant :', error);
+  }
+
+  if (!restaurant) {
+    notFound();
   }
 
   return (

@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-  Sparkles, 
   Calendar, 
   Sun, 
   Moon, 
@@ -206,7 +205,7 @@ export const WeeklyMenuCustomerBanner: React.FC<WeeklyMenuCustomerBannerProps> =
 
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
                   <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-xs uppercase tracking-wider flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
+                    <Utensils className="w-3 h-3" />
                     <span>{dish.slotLabel}</span>
                   </span>
 

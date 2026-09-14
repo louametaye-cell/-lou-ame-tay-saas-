@@ -189,6 +189,41 @@ export async function POST(req: Request) {
 
     const cleanTableNum = isExpress ? 0 : parseInt(String(tableNumber).replace(/[^0-9]/g, ''), 10) || 0;
 
+    // Protection Anti-Doublon / Idempotence (Double clic ou réseau instable dans les 6 secondes)
+    try {
+      const sixSecondsAgo = new Date(Date.now() - 6000);
+      const recentDuplicate = await (prisma as any).order.findFirst({
+        where: {
+          tenantId: validTenantId,
+          tableNumber: cleanTableNum,
+          totalAmount: total > 0 ? total : 0,
+          createdAt: { gte: sixSecondsAgo },
+          status: 'PENDING',
+        },
+        include: {
+          items: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (recentDuplicate) {
+        return NextResponse.json(
+          {
+            order: {
+              ...recentDuplicate,
+              total: Number(recentDuplicate.totalAmount),
+              totalAmount: Number(recentDuplicate.totalAmount),
+              orderType: isExpress ? 'EXPRESS' : 'TABLE',
+            },
+            isDuplicateProtected: true,
+          },
+          { status: 200 }
+        );
+      }
+    } catch (e) {
+      console.warn('Erreur vérification anti-doublon:', e);
+    }
+
     const newOrder = await (prisma as any).order.create({
       data: {
         tenantId: validTenantId,

@@ -19,9 +19,11 @@ export function generateAdminToken(): string {
 export function verifyAdminToken(token: string | null | undefined): boolean {
   if (!token) return false;
 
-  // Rétrocompatibilité contrôlée
-  if (token === 'admin_authorized_token' || token === 'super_admin_session_token_valid' || token === 'adm_session_superadmin') {
-    return true;
+  // Rétrocompatibilité dev uniquement (formellement interdit en production)
+  if (process.env.NODE_ENV !== 'production') {
+    if (token === 'admin_authorized_token' || token === 'super_admin_session_token_valid' || token === 'adm_session_superadmin') {
+      return true;
+    }
   }
 
   try {

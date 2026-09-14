@@ -55,7 +55,11 @@ export async function GET(
         preparedAt: true,
         servedAt: true,
         items: {
-          select: { id: true }
+          select: {
+            id: true,
+            name: true,
+            quantity: true
+          }
         }
       }
     });
@@ -67,16 +71,30 @@ export async function GET(
     const readyOrders: any[] = [];
     const recentlyServedOrders: any[] = [];
 
+    // Helper to abbreviate dish names to 2-3 words max
+    const shortenDishName = (name: string, maxWords = 3): string => {
+      const words = (name || '').trim().split(/\s+/);
+      return words.slice(0, maxWords).join(' ');
+    };
+
     orders.forEach((o) => {
       const isExpress = o.tableNumber === 0 || o.tableNumber === null;
+      const totalItemCount = o.items.reduce((acc, it) => acc + (it.quantity || 1), 0);
+      
+      const itemSummaries = o.items.map((it) => {
+        const shortName = shortenDishName(it.name, 3);
+        return (it.quantity || 1) > 1 ? `${it.quantity}x ${shortName}` : shortName;
+      });
+      const shortItemsSummary = itemSummaries.slice(0, 3).join(', ') + (itemSummaries.length > 3 ? ` +${itemSummaries.length - 3}` : '');
+
       const formatted = {
         id: o.id,
         shortId: `#${o.id.slice(-4).toUpperCase()}`,
         tableNumber: o.tableNumber ?? 0,
         isExpress,
-        customerName: o.customerName || null,
         status: o.status,
-        itemCount: o.items.length,
+        itemCount: totalItemCount,
+        shortSummary: shortItemsSummary || `${totalItemCount} article${totalItemCount > 1 ? 's' : ''}`,
         createdAt: o.createdAt,
         preparedAt: o.preparedAt,
         servedAt: o.servedAt

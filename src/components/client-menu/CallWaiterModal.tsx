@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, X, Check, Droplets, Receipt, Utensils, HelpCircle, Sparkles } from 'lucide-react';
+import { Bell, X, Check, Droplets, Receipt, Utensils, HelpCircle } from 'lucide-react';
 import { getAssignedServerForTable } from '@/lib/server-shift';
 import { toast } from 'sonner';
 
@@ -97,7 +97,7 @@ export const CallWaiterModal: React.FC<CallWaiterModalProps> = ({
           </div>
 
           <h3 className="text-xl font-black">
-            {isExpress ? '🔔 Appeler le Guichet Caisse' : `🔔 Appeler le Serveur`}
+            {isExpress ? 'Appeler le Guichet Caisse' : 'Appeler le Serveur'}
           </h3>
           <p className="text-xs text-amber-100 font-bold mt-1">
             {isExpress ? 'Comptoir Express' : `Table ${formattedTable} • Serveur dédié : ${serverName}`}

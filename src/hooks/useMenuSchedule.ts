@@ -60,7 +60,7 @@ export function useMenuSchedule(): MenuScheduleInfo {
           isLunchTime: false,
           isDinnerTime: false,
           isNightTime: true,
-          periodIcon: '✨',
+          periodIcon: '🌙',
           recommendedCategoryHint: 'Snacks, Boissons fraîches & Tapas',
         });
       }

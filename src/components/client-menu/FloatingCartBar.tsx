@@ -15,6 +15,7 @@ interface FloatingCartBarProps {
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
+  primaryColor?: string;
 }
 
 export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
@@ -25,6 +26,7 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
+  primaryColor,
 }) => {
   if (totalCount === 0) return null;
 
@@ -83,7 +85,8 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
           <button
             type="button"
             onClick={onOpenCart}
-            className="min-h-[46px] px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all"
+            style={primaryColor ? { backgroundColor: primaryColor } : undefined}
+            className="min-h-[46px] px-4 sm:px-6 bg-emerald-600 hover:opacity-90 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg flex items-center gap-2 transition-all"
             aria-label="Voir mon panier"
           >
             <span>{lang === 'WO' ? 'Xool sa panie' : t.viewCart}</span>

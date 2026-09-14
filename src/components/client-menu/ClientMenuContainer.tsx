@@ -213,6 +213,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   }, [tableNumber, restaurant.id, activeOrder, sessionOrders.length, isExpress]);
 
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const lastSubmitRef = useRef<number>(0);
 
   // Flattened menu items for search and specials
   const allMenuItems = useMemo(() => {
@@ -314,8 +315,14 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     }
   };
 
-  // Submit order action
+  // Submit order action avec verrouillage anti-double clic
   const handleSubmitOrder = async () => {
+    const now = Date.now();
+    if (isSubmittingOrder || now - lastSubmitRef.current < 4000) {
+      return;
+    }
+    lastSubmitRef.current = now;
+
     if (items.length === 0) {
       toast.error('Votre panier est vide.');
       return;
@@ -332,6 +339,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   };
 
   const executeOrderPlacement = async (transactionRef?: string) => {
+    if (isSubmittingOrder) return;
     setIsSubmittingOrder(true);
     try {
       const orderPayload = {
@@ -429,7 +437,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     setActiveOrder(null);
     setSessionOrders([]);
     setIsOrderSuccessOpen(false);
-    toast.success('✨ Nouvelle session de table démarrée ! Votre panier est vierge.');
+    toast.success('Nouvelle session de table démarrée ! Votre panier est vierge.');
   };
 
   // If Restaurant is closed or suspended
@@ -459,6 +467,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         backgroundColor: bgColor,
         color: textColor,
         fontFamily: fontBody,
+        ['--primary-color' as any]: primaryColor,
+        ['--secondary-color' as any]: secondaryColor,
       }}
     >
       {/* 0. Dynamic Google Fonts Loading */}
@@ -480,6 +490,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         onSearchChange={setSearchQuery}
         lang={currentLang}
         onLanguageChange={handleLanguageChange}
+        primaryColor={primaryColor}
       />
 
       {/* 1.5. Brand Banner Header (Si configurée) */}
@@ -561,6 +572,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             lang={currentLang}
             currency={currentCurrency}
             exchangeRates={exchangeRates}
+            primaryColor={primaryColor}
           />
 
           {/* Formule Midi / Soir Combinée */}
@@ -569,6 +581,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
               addItem(comboDish);
             }}
             lang={currentLang}
+            primaryColor={primaryColor}
           />
         </div>
       )}
@@ -579,6 +592,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
           categories={filteredCategories}
           activeCategoryId={activeCategoryId}
           lang={currentLang}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
           onSelectCategory={(id) => {
             setActiveCategoryId(id);
             const el = document.getElementById(id);
@@ -668,6 +683,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                       lang={currentLang}
                       currency={currentCurrency}
                       exchangeRates={exchangeRates}
+                      primaryColor={primaryColor}
                     />
                   ))}
                 </div>
@@ -701,6 +717,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
         currency={currentCurrency}
         exchangeRates={exchangeRates}
+        primaryColor={primaryColor}
       />
 
       {/* 5.5. Persistent Floating Pill for Active Table Orders */}

@@ -20,9 +20,12 @@ import { TableServiceLiveStatus } from './TableServiceLiveStatus';
 import { toast } from 'sonner';
 
 interface TableStatus {
+  id?: string;
   number: number;
   status: 'FREE' | 'OCCUPIED' | 'CALL_WAITER' | 'BILL_REQUESTED';
   activeOrder?: OrderType;
+  zoneName?: string;
+  label?: string;
 }
 
 interface TableManagerProps {
@@ -49,6 +52,9 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const effectiveSubdomain = propSubdomain || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_subdomain') : '') || '';
   const effectiveRestaurantName = propRestaurantName || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_name') : '') || 'Mon Restaurant';
 
+  const [dbTables, setDbTables] = useState<any[]>([]);
+  const [isLoadingTables, setIsLoadingTables] = useState(true);
+
   const fetchLiveOrders = async () => {
     try {
       const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '';
@@ -63,33 +69,136 @@ export const TableManager: React.FC<TableManagerProps> = ({
     }
   };
 
+  const fetchDbTables = async () => {
+    const tId = effectiveRestaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '');
+    if (!tId) {
+      setIsLoadingTables(false);
+      return;
+    }
+    try {
+      setIsLoadingTables(true);
+      const res = await fetch(`/api/tenant/tables?restaurantId=${encodeURIComponent(tId)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.tables)) {
+        setDbTables(data.tables);
+        if (data.tables.length > 0) {
+          setTableCount(data.tables.length);
+        }
+      }
+    } catch (e) {
+      console.error('Erreur chargement tables BDD:', e);
+    } finally {
+      setIsLoadingTables(false);
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setBaseUrl(window.location.origin);
     }
 
     fetchLiveOrders();
+    fetchDbTables();
     const interval = setInterval(fetchLiveOrders, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [effectiveRestaurantId]);
 
-  const tables: TableStatus[] = Array.from({ length: tableCount }, (_, i) => {
-    const num = i + 1;
+  const handleAddTable = async () => {
+    const tId = effectiveRestaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '');
+    if (!tId) {
+      toast.error('Session gérant introuvable');
+      return;
+    }
+    const currentMax = dbTables.length > 0 ? Math.max(...dbTables.map((t: any) => t.tableNumber)) : tableCount;
+    const nextNum = currentMax + 1;
+
+    try {
+      const res = await fetch('/api/tenant/tables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: tId,
+          tableNumber: nextNum,
+          label: `Table ${nextNum}`,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`Table ${nextNum} ajoutée au plan de salle BDD`);
+        fetchDbTables();
+      } else {
+        toast.error(data.error || "Erreur lors de l'ajout de la table");
+      }
+    } catch (e) {
+      toast.error("Erreur de communication lors de l'ajout");
+    }
+  };
+
+  const handleRemoveTable = async () => {
+    const tId = effectiveRestaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '');
+    if (!tId) return;
+    if (dbTables.length <= 1) {
+      toast.warning('Vous devez conserver au moins 1 table');
+      return;
+    }
+    const lastTable = dbTables[dbTables.length - 1];
+    if (!lastTable) return;
+
+    // Vérifier si commande en cours
     const activeOrder = orders.find(
-      (o) => o.tableNumber === num && (o.status === 'PENDING' || o.status === 'PREPARING')
+      (o) => o.tableNumber === lastTable.tableNumber && (o.status === 'PENDING' || o.status === 'PREPARING')
     );
-
-    let status: TableStatus['status'] = 'FREE';
     if (activeOrder) {
-      status = 'OCCUPIED';
+      toast.error(`Impossible de retirer la table ${lastTable.tableNumber} : une commande y est en cours`);
+      return;
     }
 
-    return {
-      number: num,
-      status,
-      activeOrder,
-    };
-  });
+    try {
+      const res = await fetch(`/api/tenant/tables/${lastTable.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`Table ${lastTable.tableNumber} retirée du plan de salle`);
+        fetchDbTables();
+      } else {
+        toast.error(data.error || 'Erreur lors de la suppression');
+      }
+    } catch (e) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const tables: TableStatus[] = dbTables.length > 0
+    ? dbTables.map((t: any) => {
+        const num = t.tableNumber;
+        const activeOrder = orders.find(
+          (o) => o.tableNumber === num && (o.status === 'PENDING' || o.status === 'PREPARING')
+        );
+        let status: TableStatus['status'] = 'FREE';
+        if (activeOrder) status = 'OCCUPIED';
+
+        return {
+          id: t.id,
+          number: num,
+          status,
+          activeOrder,
+          zoneName: t.zone?.name,
+          label: t.label,
+        };
+      })
+    : Array.from({ length: tableCount }, (_, i) => {
+        const num = i + 1;
+        const activeOrder = orders.find(
+          (o) => o.tableNumber === num && (o.status === 'PENDING' || o.status === 'PREPARING')
+        );
+        let status: TableStatus['status'] = 'FREE';
+        if (activeOrder) status = 'OCCUPIED';
+
+        return {
+          number: num,
+          status,
+          activeOrder,
+        };
+      });
 
   const freeCount = tables.filter((t) => t.status === 'FREE').length;
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED').length;
@@ -282,17 +391,17 @@ export const TableManager: React.FC<TableManagerProps> = ({
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => setTableCount(Math.max(1, tableCount - 1))}
-                        className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
-                        title="Diminuer"
+                        onClick={handleRemoveTable}
+                        className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 cursor-pointer"
+                        title="Désactiver la dernière table en BDD"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
-                        onClick={() => setTableCount(tableCount + 1)}
-                        className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
-                        title="Ajouter"
+                        onClick={handleAddTable}
+                        className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 cursor-pointer"
+                        title="Ajouter une nouvelle table en BDD"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -378,6 +487,11 @@ export const TableManager: React.FC<TableManagerProps> = ({
                           <span className="text-[11px] font-bold text-slate-700 block">
                             Table {t.number}
                           </span>
+                          {t.zoneName && (
+                            <span className="text-[9px] font-bold text-orange-600 block truncate max-w-[90px] mx-auto">
+                              {t.zoneName}
+                            </span>
+                          )}
                           <span
                             className={`text-[10px] font-extrabold uppercase tracking-wider block ${
                               isOccupied ? 'text-amber-800' : 'text-slate-400'

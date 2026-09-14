@@ -13,7 +13,8 @@ import {
   Bell, 
   CreditCard, 
   Plus, 
-  Sparkles,
+  MapPin,
+  Zap,
   Banknote,
   Smartphone,
   Check
@@ -191,8 +192,18 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
                 {restaurantName}
               </h2>
               <div className="flex items-center gap-1.5 pt-1 text-xs text-slate-300 flex-wrap">
-                <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-md font-bold">
-                  📍 {isExpress ? 'Comptoir Express' : `Table ${formattedTable}`}
+                <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                  {isExpress ? (
+                    <>
+                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Comptoir Express</span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Table {formattedTable}</span>
+                    </>
+                  )}
                 </span>
                 {order.customerName && (
                   <span className="bg-orange-500/20 text-orange-200 border border-orange-400/30 px-2 py-0.5 rounded-md font-bold">
@@ -449,7 +460,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
             <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50/60 border-2 border-amber-200/80 rounded-2xl space-y-2.5">
               <div className="flex items-center justify-between">
                 <h5 className="text-xs font-black text-amber-950 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <Utensils className="w-4 h-4 text-amber-600" />
                   <span>Souhaitez-vous effectuer une nouvelle commande à cette table ?</span>
                 </h5>
               </div>

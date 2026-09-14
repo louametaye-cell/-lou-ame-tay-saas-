@@ -2,7 +2,9 @@ const { PrismaClient, CashierShift } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding initial cashiers for active restaurants...');
+  console.log('⚠️ [ARCHIVÉ] Le seeding automatique de faux caissiers est désactivé.');
+  console.log('Chaque restaurateur doit créer ses propres caissiers depuis son dashboard.');
+  return;
 
   const tenants = await prisma.tenant.findMany();
 

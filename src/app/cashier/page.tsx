@@ -10,7 +10,6 @@ import {
   Banknote, 
   Smartphone, 
   User, 
-  Sparkles, 
   ChefHat, 
   Package, 
   RefreshCw, 
@@ -29,6 +28,8 @@ import {
   LogOut,
   CreditCard,
   Zap,
+  Phone,
+  UtensilsCrossed,
   X
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
@@ -67,6 +68,17 @@ export default function CashierCounterPage() {
   const [closingNotes, setClosingNotes] = useState<string>('');
   const [isClosingSession, setIsClosingSession] = useState(false);
   const [liveSessionDetails, setLiveSessionDetails] = useState<any>(null);
+
+  // Payment Modal States
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [orderToPay, setOrderToPay] = useState<OrderType | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'WAVE' | 'ORANGE_MONEY' | 'YAS_MONEY' | 'CARD'>('CASH');
+  const [amountReceivedInput, setAmountReceivedInput] = useState<string>('');
+  const [transactionRefInput, setTransactionRefInput] = useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  // Waiter Calls / Bill Requests State
+  const [waiterCalls, setWaiterCalls] = useState<any[]>([]);
 
   const getOrderTotal = (o: any): number => {
     if (o?.total !== undefined && o?.total !== null && !isNaN(Number(o.total))) return Number(o.total);
@@ -181,9 +193,46 @@ export default function CashierCounterPage() {
     }
   };
 
+  const fetchWaiterCalls = async () => {
+    try {
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
+      if (!storedId) return;
+      const res = await fetch(`/api/dashboard/waiter-calls?restaurantId=${encodeURIComponent(storedId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.calls)) {
+          setWaiterCalls((prev) => {
+            if (data.calls.length > prev.length) {
+              playOrderSound();
+            }
+            return data.calls;
+          });
+        }
+      }
+    } catch (e) {}
+  };
+
+  const handleResolveWaiterCall = async (callId: string) => {
+    try {
+      await fetch('/api/dashboard/waiter-calls', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callId }),
+      });
+      setWaiterCalls((prev) => prev.filter((c) => c.id !== callId));
+      toast.success("Demande d'addition acquittée avec succès");
+    } catch (e) {
+      toast.error("Erreur lors de l'acquittement");
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 8000);
+    fetchWaiterCalls();
+    const interval = setInterval(() => {
+      fetchOrders();
+      fetchWaiterCalls();
+    }, 7000);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
@@ -191,7 +240,8 @@ export default function CashierCounterPage() {
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         fetchOrders();
-        toast.info('🔄 Liste des commandes actualisée (Touche R)');
+        fetchWaiterCalls();
+        toast.info('🔄 Liste des commandes et appels actualisée (Touche R)');
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         setActiveFilter((prev) => (prev === 'ALL' ? 'EXPRESS' : prev === 'EXPRESS' ? 'TABLE' : 'ALL'));
@@ -204,7 +254,102 @@ export default function CashierCounterPage() {
       clearInterval(interval);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [restaurantId]);
+
+  // Open the Mandatory Payment Modal
+  const handleOpenPaymentModal = (order: OrderType, defaultMethod: string = 'CASH') => {
+    if (!currentSession) {
+      toast.error('Veuillez d\'abord ouvrir votre session de caisse avec votre code PIN');
+      if (!currentCashier) setIsPinModalOpen(true);
+      else setIsOpenSessionModalOpen(true);
+      return;
+    }
+
+    const total = getOrderTotal(order);
+    setOrderToPay(order);
+    setPaymentMethod((defaultMethod as any) || 'CASH');
+    setAmountReceivedInput(String(total));
+    setTransactionRefInput('');
+    setIsPaymentModalOpen(true);
+  };
+
+  // Submit Payment to API /api/cashier/orders/[id]/pay
+  const handleConfirmPayment = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!orderToPay) return;
+
+    const total = getOrderTotal(orderToPay);
+    const amountReceived = paymentMethod === 'CASH' ? Number(amountReceivedInput) : total;
+
+    if (paymentMethod === 'CASH' && (isNaN(amountReceived) || amountReceived < total)) {
+      toast.error(`Montant reçu insuffisant. Le total dû est de ${formatFCFA(total)}`);
+      return;
+    }
+
+    const changeGiven = paymentMethod === 'CASH' ? Math.max(0, amountReceived - total) : 0;
+
+    try {
+      setIsProcessingPayment(true);
+      const res = await fetch(`/api/cashier/orders/${orderToPay.id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: restaurantId || localStorage.getItem('current_restaurant_id'),
+          paymentMethod,
+          cashierId: currentCashier?.id,
+          cashSessionId: currentSession?.id,
+          amountReceived,
+          changeGiven,
+          transactionRef: transactionRefInput.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderToPay.id
+              ? {
+                  ...o,
+                  status: 'SERVED',
+                  paymentStatus: 'PAID',
+                  paymentMethod: paymentMethod as any,
+                  servedAt: new Date().toISOString(),
+                }
+              : o
+          )
+        );
+
+        try {
+          EscPosPrinterService.printViaWindowFallback(
+            { ...orderToPay, status: 'SERVED', paymentStatus: 'PAID', paymentMethod: paymentMethod as any },
+            restaurantName
+          );
+        } catch (printErr) {
+          console.error("Erreur d'impression ticket:", printErr);
+        }
+
+        toast.success(`Encaissement validé : ${formatFCFA(total)} (${paymentMethod})`, {
+          description: changeGiven > 0 ? `Monnaie rendue au client : ${formatFCFA(changeGiven)}` : 'Règlement exact perçu',
+        });
+
+        setIsPaymentModalOpen(false);
+        setOrderToPay(null);
+
+        const activeRestoId = restaurantId || localStorage.getItem('current_restaurant_id');
+        if (activeRestoId) {
+          fetchActiveSession(activeRestoId);
+          fetchWaiterCalls();
+        }
+      } else {
+        toast.error(data.error || "Erreur lors de l'encaissement de la commande");
+      }
+    } catch (err) {
+      toast.error('Erreur réseau lors de la communication caisse');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   // Update order status and attach cashier session
   const handleUpdateStatus = async (orderId: string, status: OrderStatus, customPaymentMethod?: string) => {
@@ -213,6 +358,7 @@ export default function CashierCounterPage() {
       if (currentCashier) payload.cashierId = currentCashier.id;
       if (currentSession) payload.cashSessionId = currentSession.id;
       if (customPaymentMethod) payload.paymentMethod = customPaymentMethod;
+      if (status === 'SERVED') payload.paymentStatus = 'PAID';
 
       const res = await fetch(`/api/kitchen/orders/${orderId}/status`, {
         method: 'POST',
@@ -227,12 +373,10 @@ export default function CashierCounterPage() {
         toast.success(`Commande mise à jour : ${status}`);
         if (restaurantId) fetchActiveSession(restaurantId);
       } else {
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status } : o))
-        );
+        toast.error('Erreur lors de la mise à jour du statut en base');
       }
     } catch (e) {
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erreur réseau lors de la mise à jour');
     }
   };
 
@@ -415,14 +559,16 @@ export default function CashierCounterPage() {
     setIsPinModalOpen(true);
   };
 
-  // Filter Orders
+  // Filter Orders : Une commande reste active en caisse tant qu'elle n'est pas payée et clôturée (SERVED + PAID)
   const activeOrders = useMemo(() => {
     return orders.filter((order) => {
       const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0;
-      if (activeFilter === 'ALL') return order.status !== 'SERVED';
-      if (activeFilter === 'EXPRESS') return isExpress && order.status !== 'SERVED';
-      if (activeFilter === 'TABLE') return !isExpress && order.tableNumber > 0 && order.status !== 'SERVED';
-      if (activeFilter === 'SERVED') return order.status === 'SERVED';
+      const isPaidAndClosed = order.status === 'SERVED' && order.paymentStatus === 'PAID';
+
+      if (activeFilter === 'ALL') return !isPaidAndClosed;
+      if (activeFilter === 'EXPRESS') return isExpress && !isPaidAndClosed;
+      if (activeFilter === 'TABLE') return !isExpress && order.tableNumber > 0 && !isPaidAndClosed;
+      if (activeFilter === 'SERVED') return isPaidAndClosed;
       return true;
     });
   }, [orders, activeFilter]);
@@ -586,7 +732,7 @@ export default function CashierCounterPage() {
           </div>
 
           <div className="bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xs">
-            <span className="text-base">⚡</span>
+            <Zap className="w-4 h-4 text-amber-600" />
             <div>
               <span className="text-[10px] text-amber-700 font-bold block uppercase">Ventes Express</span>
               <span className="text-sm font-black text-amber-950 font-mono">{formatFCFA(expressRevenue)}</span>
@@ -604,6 +750,49 @@ export default function CashierCounterPage() {
         </div>
       </header>
 
+      {/* 1.5. BANDEAU DES DEMANDES D'ADDITION ET APPELS DE SALLE */}
+      {waiterCalls.length > 0 && (
+        <section className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-purple-400/80 space-y-3 animate-in fade-in">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-purple-500/30 text-purple-200 border border-purple-400/40 rounded-2xl animate-bounce">
+                <Receipt className="w-5 h-5 text-amber-300" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                  <span>Demande d&apos;addition en salle</span>
+                  <span className="bg-amber-400 text-slate-950 text-[11px] font-black px-2.5 py-0.5 rounded-full">
+                    {waiterCalls.length} en attente
+                  </span>
+                </h3>
+                <p className="text-xs text-purple-200">
+                  Des clients demandent leur note à table. Préparez le ticket et procédez au règlement ci-dessous.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {waiterCalls.map((call) => (
+                <div
+                  key={call.id}
+                  className="bg-white/10 hover:bg-white/20 border border-purple-300/40 px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs font-black transition-all"
+                >
+                  <span className="text-amber-300">Table {call.tableNumber}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleResolveWaiterCall(call.id)}
+                    className="ml-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer"
+                    title="Acquitter l'appel"
+                  >
+                    Acquitter ✓
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 2. FILTER TABS */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <button
@@ -619,7 +808,7 @@ export default function CashierCounterPage() {
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
             activeFilter === 'ALL' ? 'bg-white/20 text-white font-black' : 'bg-slate-100 text-slate-700 font-bold'
           }`}>
-            {orders.filter((o) => o.status !== 'SERVED').length}
+            {orders.filter((o) => !(o.status === 'SERVED' && o.paymentStatus === 'PAID')).length}
           </span>
         </button>
 
@@ -632,9 +821,10 @@ export default function CashierCounterPage() {
               : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
-          <span>⚡ Comptoir / Express</span>
+          <Zap className="w-4 h-4 text-slate-950 fill-slate-950 shrink-0" />
+          <span>Comptoir / Express</span>
           <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono">
-            {orders.filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && o.status !== 'SERVED').length}
+            {orders.filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID')).length}
           </span>
         </button>
 
@@ -647,9 +837,10 @@ export default function CashierCounterPage() {
               : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
-          <span>🍽️ Tables (Salle)</span>
+          <UtensilsCrossed className="w-4 h-4 text-slate-950 shrink-0" />
+          <span>Tables (Salle)</span>
           <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono">
-            {orders.filter((o) => o.orderType !== 'EXPRESS' && o.tableNumber > 0 && o.status !== 'SERVED').length}
+            {orders.filter((o) => o.orderType !== 'EXPRESS' && o.tableNumber > 0 && !(o.status === 'SERVED' && o.paymentStatus === 'PAID')).length}
           </span>
         </button>
 
@@ -662,11 +853,12 @@ export default function CashierCounterPage() {
               : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
-          <span>✅ Servies &amp; Encaissées</span>
+          <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+          <span>Servies &amp; Encaissées</span>
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
             activeFilter === 'SERVED' ? 'bg-white/20 text-white font-black' : 'bg-emerald-100 text-emerald-800 font-bold'
           }`}>
-            {orders.filter((o) => o.status === 'SERVED').length}
+            {orders.filter((o) => o.status === 'SERVED' && o.paymentStatus === 'PAID').length}
           </span>
         </button>
       </div>
@@ -839,7 +1031,7 @@ export default function CashierCounterPage() {
                     <span className="text-base font-black text-slate-950 font-mono">{formatFCFA(getOrderTotal(order))}</span>
                   </div>
 
-                  {order.status === 'SERVED' ? (
+                  {order.status === 'SERVED' && order.paymentStatus === 'PAID' ? (
                     <div className="space-y-2">
                       <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold">
                         <span className="flex items-center gap-1.5">
@@ -858,48 +1050,60 @@ export default function CashierCounterPage() {
                         title="Réimprimer le ticket de caisse 80mm"
                       >
                         <Printer className="w-4 h-4" />
-                        <span>🖨️ Réimprimer Ticket 80mm</span>
+                        <span>Réimprimer Ticket 80mm</span>
                       </button>
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                          className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
-                            order.status === 'PREPARING'
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                              : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-200'
-                          }`}
-                        >
-                          <ChefHat className="w-3.5 h-3.5" />
-                          <span>Préparer</span>
-                        </button>
+                      {order.status === 'SERVED' ? (
+                        <div className="p-2.5 bg-amber-50 border-2 border-amber-400 rounded-2xl flex items-center justify-between text-xs text-amber-950 font-black shadow-xs">
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-base">🍽️</span>
+                            <span>Servie — En attente de paiement</span>
+                          </span>
+                          <span className="bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                            Non Encaissée
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
+                            className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
+                              order.status === 'PREPARING'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-200'
+                            }`}
+                          >
+                            <ChefHat className="w-3.5 h-3.5" />
+                            <span>Préparer</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStatus(order.id, 'READY')}
-                          className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
-                            order.status === 'READY'
-                              ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                              : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
-                          }`}
-                        >
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          <span>Prête</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(order.id, 'READY')}
+                            className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
+                              order.status === 'READY'
+                                ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                                : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
+                            }`}
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <span>Prête</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handlePrintReceipt(order)}
-                          className="py-2 px-1.5 min-h-[40px] bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.97] transition-all"
-                          title="Imprimer ticket de caisse"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Ticket</span>
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => handlePrintReceipt(order)}
+                            className="py-2 px-1.5 min-h-[40px] bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.97] transition-all"
+                            title="Imprimer ticket de caisse"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Ticket</span>
+                          </button>
+                        </div>
+                      )}
 
                       {/* Bouton Final Encaisser & Clôturer */}
                       <div className="space-y-1.5">
@@ -908,43 +1112,47 @@ export default function CashierCounterPage() {
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => handleUpdateStatus(order.id, 'SERVED', 'CASH')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-emerald-600 hover:text-white font-bold text-[10px]"
+                              onClick={() => handleOpenPaymentModal(order, 'CASH')}
+                              className="px-2 py-1 rounded bg-slate-200 hover:bg-emerald-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                               title="Encaisser en Espèces"
                             >
-                              💵 Cash
+                              <Banknote className="w-3 h-3" />
+                              <span>Cash</span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleUpdateStatus(order.id, 'SERVED', 'WAVE')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-cyan-600 hover:text-white font-bold text-[10px]"
+                              onClick={() => handleOpenPaymentModal(order, 'WAVE')}
+                              className="px-2 py-1 rounded bg-slate-200 hover:bg-cyan-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                               title="Encaisser en Wave"
                             >
-                              🌊 Wave
+                              <Smartphone className="w-3 h-3" />
+                              <span>Wave</span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleUpdateStatus(order.id, 'SERVED', 'ORANGE_MONEY')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-orange-600 hover:text-white font-bold text-[10px]"
+                              onClick={() => handleOpenPaymentModal(order, 'ORANGE_MONEY')}
+                              className="px-2 py-1 rounded bg-slate-200 hover:bg-orange-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                               title="Encaisser en Orange Money"
                             >
-                              🍊 OM
+                              <Phone className="w-3 h-3" />
+                              <span>OM</span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleUpdateStatus(order.id, 'SERVED', 'YAS_MONEY')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-purple-600 hover:text-white font-bold text-[10px]"
+                              onClick={() => handleOpenPaymentModal(order, 'YAS_MONEY')}
+                              className="px-2 py-1 rounded bg-slate-200 hover:bg-purple-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                               title="Encaisser en Yas Money"
                             >
-                              🟣 Yas
+                              <CreditCard className="w-3 h-3" />
+                              <span>Yas</span>
                             </button>
                           </div>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => handleUpdateStatus(order.id, 'SERVED')}
-                          className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+                          onClick={() => handleOpenPaymentModal(order, 'CASH')}
+                          className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
                           <CheckCircle2 className="w-4 h-4" />
                           <span>Encaisser &amp; Clôturer</span>
@@ -1281,6 +1489,274 @@ export default function CashierCounterPage() {
                 >
                   <Printer className="w-4 h-4" />
                   <span>{isClosingSession ? 'Clôture en cours...' : 'Imprimer Ticket Z & Clôturer'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4 : ENCAISSEMENT OBLIGATOIRE DE COMMANDE AVEC CALCUL MONNAIE */}
+      {isPaymentModalOpen && orderToPay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-slate-900 space-y-5">
+            {/* Header Modal */}
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-2xl">
+                  <Banknote className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                    Encaissement Commande #{orderToPay.id.slice(-5).toUpperCase()}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-bold">
+                    {orderToPay.orderType === 'EXPRESS' || orderToPay.tableNumber === 0
+                      ? '⚡ Comptoir Express'
+                      : `🍽️ Table ${orderToPay.tableNumber}`}
+                    {orderToPay.customerName && ` • Client : ${orderToPay.customerName}`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPaymentModalOpen(false);
+                  setOrderToPay(null);
+                }}
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
+                title="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmPayment} className="space-y-4">
+              {/* Total Dû */}
+              <div className="bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-xs">
+                <div>
+                  <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold block">
+                    Total Net à Encaisser
+                  </span>
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-amber-400">
+                    {formatFCFA(getOrderTotal(orderToPay))}
+                  </span>
+                </div>
+                <div className="text-right text-xs text-slate-300 font-bold">
+                  <div>{orderToPay.items?.length || 0} article(s)</div>
+                  <div className="text-[10px] text-slate-400 font-normal">TVA incluse</div>
+                </div>
+              </div>
+
+              {/* Choix du moyen de paiement */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase">
+                  Moyen de paiement :
+                </label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('CASH');
+                      setAmountReceivedInput(String(getOrderTotal(orderToPay)));
+                    }}
+                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                      paymentMethod === 'CASH'
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-950 font-black shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-base">💵</div>
+                    <div className="text-[10px]">Espèces</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('WAVE')}
+                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                      paymentMethod === 'WAVE'
+                        ? 'border-cyan-500 bg-cyan-50 text-cyan-950 font-black shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-base">🌊</div>
+                    <div className="text-[10px]">Wave</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('ORANGE_MONEY')}
+                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                      paymentMethod === 'ORANGE_MONEY'
+                        ? 'border-orange-500 bg-orange-50 text-orange-950 font-black shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-base">🍊</div>
+                    <div className="text-[10px]">Orange M.</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('YAS_MONEY')}
+                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                      paymentMethod === 'YAS_MONEY'
+                        ? 'border-purple-500 bg-purple-50 text-purple-950 font-black shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-base">🟣</div>
+                    <div className="text-[10px]">Yas</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('CARD')}
+                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                      paymentMethod === 'CARD'
+                        ? 'border-blue-500 bg-blue-50 text-blue-950 font-black shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-base">💳</div>
+                    <div className="text-[10px]">Carte/TPE</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Section Spécifique Espèces : Saisie Montant Reçu & Calcul Monnaie */}
+              {paymentMethod === 'CASH' ? (
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Montant reçu du client (FCFA) :
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="100"
+                      value={amountReceivedInput}
+                      onChange={(e) => setAmountReceivedInput(e.target.value)}
+                      className="w-full text-xl font-mono font-black p-3 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                      placeholder="0"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Boutons Coupures Rapides */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setAmountReceivedInput(String(getOrderTotal(orderToPay)))}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-300 transition-colors"
+                    >
+                      Montant exact ({formatFCFA(getOrderTotal(orderToPay))})
+                    </button>
+                    {[5000, 10000, 20000].map((bill) => {
+                      if (bill < getOrderTotal(orderToPay) && bill !== 5000) return null;
+                      return (
+                        <button
+                          key={bill}
+                          type="button"
+                          onClick={() => setAmountReceivedInput(String(bill))}
+                          className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-300 transition-colors"
+                        >
+                          {formatFCFA(bill)}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Résultat Calcul Monnaie Rendue */}
+                  {(() => {
+                    const total = getOrderTotal(orderToPay);
+                    const received = Number(amountReceivedInput) || 0;
+                    const change = received - total;
+
+                    if (received === 0) return null;
+
+                    if (change >= 0) {
+                      return (
+                        <div className="p-3 bg-emerald-100 border border-emerald-300 rounded-xl text-emerald-950 flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase tracking-wider">
+                            Monnaie à rendre :
+                          </span>
+                          <span className="text-xl sm:text-2xl font-black font-mono text-emerald-800">
+                            {formatFCFA(change)}
+                          </span>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="p-3 bg-amber-100 border border-amber-300 rounded-xl text-amber-950 flex items-center justify-between">
+                          <span className="text-xs font-bold">
+                            ⚠️ Montant insuffisant (Manque) :
+                          </span>
+                          <span className="text-base font-black font-mono text-amber-900">
+                            {formatFCFA(Math.abs(change))}
+                          </span>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+              ) : (
+                /* Section Mobile Money & Carte */
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="text-xs text-slate-600 space-y-1">
+                    <div className="font-bold text-slate-800">
+                      Règlement numérique : {paymentMethod}
+                    </div>
+                    <p>
+                      Vérifiez la réception du virement de{' '}
+                      <strong>{formatFCFA(getOrderTotal(orderToPay))}</strong> sur votre compte marchand (
+                      {restaurantPhone}).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Référence / ID de transaction (facultatif) :
+                    </label>
+                    <input
+                      type="text"
+                      value={transactionRefInput}
+                      onChange={(e) => setTransactionRefInput(e.target.value)}
+                      placeholder="Ex: WAV-123456 ou ID SMS..."
+                      className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:border-cyan-500 outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Actions Footer */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaymentModalOpen(false);
+                    setOrderToPay(null);
+                  }}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition-all cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    isProcessingPayment ||
+                    (paymentMethod === 'CASH' &&
+                      Number(amountReceivedInput) < getOrderTotal(orderToPay))
+                  }
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>
+                    {isProcessingPayment
+                      ? 'Encaissement en cours...'
+                      : 'Valider & Imprimer Ticket 80mm'}
+                  </span>
                 </button>
               </div>
             </form>

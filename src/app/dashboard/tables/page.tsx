@@ -11,7 +11,7 @@ import {
 import { TableManager } from '@/components/dashboard/TableManager';
 
 export default function DashboardTablesPage() {
-  const [subdomain, setSubdomain] = useState('mg-cafe-resto');
+  const [subdomain, setSubdomain] = useState('');
   const [restaurantName, setRestaurantName] = useState('Mon Restaurant');
   const [restaurantId, setRestaurantId] = useState('');
   const [tableCount, setTableCount] = useState(12);

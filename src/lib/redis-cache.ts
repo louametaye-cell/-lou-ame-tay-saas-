@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType } from '@/types';
 
 // In-Memory cache simulating Redis with TTL 300s (5 minutes)
@@ -37,13 +36,17 @@ export async function getCachedMenu(tenantId: string): Promise<any> {
     }
   });
 
-  const restaurant = dbTenant ? {
+  if (!dbTenant) {
+    return null;
+  }
+
+  const restaurant = {
     id: dbTenant.id,
     name: dbTenant.businessName,
     subdomain: dbTenant.subdomain,
     categories: dbTenant.categories,
-    tableCount: 12,
-  } : SAMPLE_RESTAURANT;
+    tableCount: dbTenant.tables?.length || 0,
+  };
 
   // 3. Sauvegarder dans Redis avec expiration à 5 minutes (TTL 300s)
   redisMemoryStore.set(cacheKey, {

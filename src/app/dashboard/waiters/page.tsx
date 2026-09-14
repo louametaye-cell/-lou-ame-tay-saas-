@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Users, Plus, Trash2, QrCode } from 'lucide-react';
+import { Users, Plus, Trash2, QrCode, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function WaitersManagerPage() {
@@ -10,51 +10,83 @@ export default function WaitersManagerPage() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [restaurantId, setRestaurantId] = useState('');
+  const [restaurantName, setRestaurantName] = useState('Mon Restaurant');
 
-  const fetchWaiters = async () => {
+  const fetchWaiters = async (tId?: string) => {
+    const id = tId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await fetch('/api/tenant/waiters');
+      setLoading(true);
+      const res = await fetch(`/api/tenant/waiters?tenantId=${encodeURIComponent(id)}`);
       const data = await res.json();
       setWaiters(data.waiters || []);
     } catch (e) {
-      toast.error('Erreur de chargement');
+      toast.error('Erreur lors de la récupération des serveurs');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWaiters();
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('current_restaurant_id') || '';
+      const storedName = localStorage.getItem('current_restaurant_name') || 'Mon Restaurant';
+      setRestaurantId(storedId);
+      setRestaurantName(storedName);
+      fetchWaiters(storedId);
+    }
   }, []);
 
   const handleCreateWaiter = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!newName.trim()) {
+      toast.error('Le nom du serveur est obligatoire');
+      return;
+    }
+    const id = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+    if (!id) {
+      toast.error('Session gérant introuvable, veuillez vous reconnecter');
+      return;
+    }
 
     try {
       const res = await fetch('/api/tenant/waiters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, phone: newPhone })
+        body: JSON.stringify({
+          name: newName.trim(),
+          phone: newPhone.trim() || undefined,
+          tenantId: id,
+        }),
       });
-      if (res.ok) {
-        toast.success('Serveur ajouté');
+      const data = await res.json();
+      if (res.ok && data.waiter) {
+        toast.success(`Serveur ${data.waiter.name} créé avec succès`);
         setNewName('');
         setNewPhone('');
-        fetchWaiters();
+        fetchWaiters(id);
+      } else {
+        toast.error(data.error || 'Erreur lors de la création');
       }
     } catch (e) {
-      toast.error('Erreur lors de la création');
+      toast.error('Erreur de connexion lors de la création');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Voulez-vous vraiment supprimer ce serveur ?')) return;
+    if (!confirm('Voulez-vous vraiment désactiver ce serveur ?')) return;
     try {
       const res = await fetch(`/api/tenant/waiters/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success('Serveur supprimé');
-        fetchWaiters();
+        toast.success('Serveur retiré du service');
+        fetchWaiters(restaurantId);
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Erreur lors de la suppression');
       }
     } catch (e) {
       toast.error('Erreur lors de la suppression');
@@ -62,9 +94,9 @@ export default function WaitersManagerPage() {
   };
 
   const handlePrintQR = (slug: string, name: string) => {
-    const url = `${window.location.origin}/w/${slug}`;
+    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${slug}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-    
+
     const win = window.open('', '_blank');
     if (win) {
       win.document.write(`
@@ -85,7 +117,7 @@ export default function WaitersManagerPage() {
               <h1>${name}</h1>
               <p>Scannez pour commander</p>
               <img src="${qrUrl}" alt="QR Code" />
-              <div class="footer">Lou Ame Tay ? - Service Numérique</div>
+              <div class="footer">Lou Ame Tay ? - ${restaurantName}</div>
             </div>
             <script>
               setTimeout(() => window.print(), 500);
@@ -100,75 +132,102 @@ export default function WaitersManagerPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-          <Users className="text-orange-500" /> Gestion des Serveurs
-        </h1>
-        <Link href="/dashboard" className="text-sm font-bold text-slate-500 hover:text-slate-800">
-          Retour au Dashboard
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+            <Users className="text-orange-500" /> Gestion de l&apos;Équipe de Salle
+          </h1>
+          <p className="text-xs text-slate-500 font-bold">{restaurantName} • Badges &amp; Shifts Serveurs</p>
+        </div>
+        <Link
+          href="/dashboard"
+          className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all border border-slate-200 shadow-2xs"
+          title="Retour au Dashboard"
+        >
+          <ArrowLeft className="w-5 h-5" />
         </Link>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h2 className="text-lg font-bold mb-4 text-slate-700">Ajouter un serveur</h2>
+      <div className="bg-white p-6 rounded-3xl shadow-xs border border-slate-200">
+        <h2 className="text-base font-black mb-4 text-slate-800">Ajouter un nouveau serveur</h2>
         <form onSubmit={handleCreateWaiter} className="flex gap-4 items-end flex-wrap sm:flex-nowrap">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-bold text-slate-600 mb-1">Nom complet</label>
-            <input 
-              type="text" 
-              value={newName} 
-              onChange={(e) => setNewName(e.target.value)} 
+            <label className="block text-xs font-bold text-slate-600 mb-1">Nom complet</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
               placeholder="Ex: Moussa Diop"
-              className="w-full p-3 rounded-xl border border-slate-200 focus:border-orange-500 outline-none"
+              className="w-full p-3 rounded-2xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-bold"
+              required
             />
           </div>
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-bold text-slate-600 mb-1">Téléphone (Optionnel)</label>
-            <input 
-              type="text" 
-              value={newPhone} 
-              onChange={(e) => setNewPhone(e.target.value)} 
-              placeholder="Ex: 77 000 00 00"
-              className="w-full p-3 rounded-xl border border-slate-200 focus:border-orange-500 outline-none"
+            <label className="block text-xs font-bold text-slate-600 mb-1">Téléphone (Optionnel)</label>
+            <input
+              type="text"
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+              placeholder="Ex: +221 77 000 00 00"
+              className="w-full p-3 rounded-2xl border border-slate-200 focus:border-orange-500 outline-none text-sm"
             />
           </div>
-          <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white font-bold h-12 px-6 rounded-xl flex items-center gap-2 transition-colors w-full sm:w-auto justify-center">
+          <button
+            type="submit"
+            className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-black h-12 px-6 rounded-2xl flex items-center gap-2 transition-all w-full sm:w-auto justify-center shadow-xs cursor-pointer"
+          >
             <Plus className="w-4 h-4" /> Ajouter
           </button>
         </form>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-xs border border-slate-200 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 text-slate-600 text-sm">
-              <th className="p-4 font-bold border-b">Nom</th>
-              <th className="p-4 font-bold border-b">Téléphone</th>
-              <th className="p-4 font-bold border-b text-center">Commandes</th>
-              <th className="p-4 font-bold border-b text-right">Actions</th>
+            <tr className="bg-slate-50 text-slate-600 text-xs font-black uppercase">
+              <th className="p-4 border-b border-slate-100">Nom</th>
+              <th className="p-4 border-b border-slate-100">Téléphone</th>
+              <th className="p-4 border-b border-slate-100 text-center">Commandes Rattachées</th>
+              <th className="p-4 border-b border-slate-100 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100 text-sm">
             {loading ? (
-              <tr><td colSpan={4} className="p-4 text-center text-slate-500">Chargement...</td></tr>
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-slate-400 font-bold">
+                  Chargement des serveurs...
+                </td>
+              </tr>
             ) : waiters.length === 0 ? (
-              <tr><td colSpan={4} className="p-4 text-center text-slate-500">Aucun serveur configuré.</td></tr>
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-slate-500 space-y-1">
+                  <div className="font-bold">Aucun serveur configuré.</div>
+                  <div className="text-xs text-slate-400">Ajoutez les membres de votre équipe ci-dessus pour leur générer leur badge QR.</div>
+                </td>
+              </tr>
             ) : (
               waiters.map((w) => (
-                <tr key={w.id} className="border-b last:border-0 hover:bg-slate-50">
-                  <td className="p-4 font-bold text-slate-800">{w.name}</td>
-                  <td className="p-4 text-slate-600">{w.phone || '-'}</td>
-                  <td className="p-4 text-center text-slate-600 font-mono text-sm">{w._count?.orders || 0}</td>
-                  <td className="p-4 text-right flex justify-end gap-2">
-                    <button 
-                      onClick={() => handlePrintQR(w.qrCodeSlug, w.name)} 
-                      className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 p-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-bold"
-                      title="Imprimer le badge QR"
-                    >
-                      <QrCode className="w-5 h-5" /> QR Code
-                    </button>
-                    <button onClick={() => handleDelete(w.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                <tr key={w.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-bold text-slate-900">{w.name}</td>
+                  <td className="p-4 text-slate-600 font-mono text-xs">{w.phone || '-'}</td>
+                  <td className="p-4 text-center text-slate-700 font-mono font-bold">{w._count?.orders || 0}</td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handlePrintQR(w.qrCodeSlug, w.name)}
+                        className="text-slate-700 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-bold shadow-2xs"
+                        title="Imprimer le badge QR"
+                      >
+                        <QrCode className="w-4 h-4 text-orange-600" />
+                        <span>Badge QR</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(w.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-colors"
+                        title="Supprimer ce serveur"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

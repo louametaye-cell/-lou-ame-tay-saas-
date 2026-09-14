@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useRef } from 'react';
 import { CategoryType, Language } from '@/types';
@@ -9,6 +9,8 @@ interface CategoryNavbarProps {
   activeCategoryId: string;
   onSelectCategory: (id: string) => void;
   lang?: Language;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export const CategoryNavbar: React.FC<CategoryNavbarProps> = ({
@@ -16,6 +18,8 @@ export const CategoryNavbar: React.FC<CategoryNavbarProps> = ({
   activeCategoryId,
   onSelectCategory,
   lang = 'FR',
+  primaryColor,
+  secondaryColor,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -56,11 +60,19 @@ export const CategoryNavbar: React.FC<CategoryNavbarProps> = ({
                 data-category-id={category.id}
                 type="button"
                 onClick={() => onSelectCategory(category.id)}
+                style={
+                  isActive && primaryColor
+                    ? {
+                        backgroundColor: isSpecialCategory ? primaryColor : (secondaryColor || primaryColor),
+                        borderColor: primaryColor,
+                      }
+                    : undefined
+                }
                 className={`min-h-[44px] flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap active:scale-95 transition-all shrink-0 shadow-xs border ${
                   isActive
                     ? isSpecialCategory
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-600 shadow-md shadow-orange-500/20 scale-[1.02]'
-                      : 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-600/20 scale-[1.02]'
+                      ? 'text-white shadow-md scale-[1.02]'
+                      : 'text-white shadow-md scale-[1.02]'
                     : isSpecialCategory
                     ? 'bg-amber-50/90 text-amber-900 border-amber-300 hover:bg-amber-100/80'
                     : 'bg-white text-slate-800 border-orange-100 hover:bg-orange-50 hover:text-emerald-700'

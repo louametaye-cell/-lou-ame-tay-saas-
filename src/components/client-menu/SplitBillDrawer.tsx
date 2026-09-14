@@ -9,7 +9,7 @@ import {
   Share2, 
   Calculator, 
   Check, 
-  Sparkles 
+  MapPin 
 } from 'lucide-react';
 import { formatFCFA } from '@/lib/utils';
 import { Language } from '@/types';
@@ -68,8 +68,9 @@ export const SplitBillDrawer: React.FC<SplitBillDrawerProps> = ({
               <h3 className="text-base font-black text-slate-900">
                 {lang === 'WO' ? 'Séddale Facture bi' : 'Partager l\'Addition'}
               </h3>
-              <p className="text-xs text-emerald-700 font-bold">
-                📍 Table N° {formattedTable} • Total : {formatFCFA(totalAmount)}
+              <p className="text-xs text-emerald-700 font-bold flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-emerald-700" />
+                <span>Table N° {formattedTable} • Total : {formatFCFA(totalAmount)}</span>
               </p>
             </div>
           </div>

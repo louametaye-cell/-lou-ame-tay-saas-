@@ -22,7 +22,6 @@ import {
   Cookie,
   Zap
 } from 'lucide-react';
-import { SAMPLE_RESTAURANT } from '@/lib/sample-data';
 import { RestaurantType, MenuItemType, LEGAL_14_ALLERGENS } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { LiveStockManager } from '@/components/dashboard/LiveStockManager';
@@ -32,7 +31,8 @@ import { ImageUploadPicker } from '@/components/dashboard/ImageUploadPicker';
 import { toast } from 'sonner';
 
 export default function DashboardMenuManagementPage() {
-  const [restaurant, setRestaurant] = useState<RestaurantType>(SAMPLE_RESTAURANT);
+  const [restaurant, setRestaurant] = useState<RestaurantType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'LIVE_STOCK' | 'CATALOG' | 'COMBOS' | 'WEEKLY_SCHEDULE'>('LIVE_STOCK');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -44,7 +44,7 @@ export default function DashboardMenuManagementPage() {
     setIsAddModalOpen(true);
 
     if (type === 'DRINK') {
-      const drinkCat = restaurant.categories.find((c) =>
+      const drinkCat = restaurant?.categories?.find((c) =>
         c.name.toLowerCase().includes('boisson') || c.name.toLowerCase().includes('jus')
       );
       if (drinkCat) setCategoryId(drinkCat.id);
@@ -52,7 +52,7 @@ export default function DashboardMenuManagementPage() {
       setPrice(800);
       setPrepTime(5);
     } else if (type === 'SNACK') {
-      const snackCat = restaurant.categories.find((c) =>
+      const snackCat = restaurant?.categories?.find((c) =>
         c.name.toLowerCase().includes('collation') || c.name.toLowerCase().includes('dessert')
       );
       if (snackCat) setCategoryId(snackCat.id);
@@ -60,7 +60,7 @@ export default function DashboardMenuManagementPage() {
       setPrice(1500);
       setPrepTime(10);
     } else {
-      const dishCat = restaurant.categories.find((c) =>
+      const dishCat = restaurant?.categories?.find((c) =>
         !c.name.toLowerCase().includes('boisson') && !c.name.toLowerCase().includes('collation')
       );
       if (dishCat) setCategoryId(dishCat.id);
@@ -91,7 +91,7 @@ export default function DashboardMenuManagementPage() {
   const [isTranslating, setIsTranslating] = useState(false);
 
   const [price, setPrice] = useState<number>(3500);
-  const [categoryId, setCategoryId] = useState<string>(SAMPLE_RESTAURANT.categories[0].id);
+  const [categoryId, setCategoryId] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string>('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80');
   const [prepTime, setPrepTime] = useState<number>(20);
   const [allergens, setAllergens] = useState<string[]>([]);
@@ -99,6 +99,7 @@ export default function DashboardMenuManagementPage() {
 
   // Load from API
   const fetchMenu = () => {
+    setIsLoading(true);
     const storedSub = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_subdomain') : null;
     const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : null;
     const query = storedSub ? `?subdomain=${storedSub}` : storedId ? `?tenantId=${storedId}` : '';
@@ -116,7 +117,10 @@ export default function DashboardMenuManagementPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -217,11 +221,11 @@ export default function DashboardMenuManagementPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          restaurantId: storedId || restaurant.id,
+          restaurantId: storedId || restaurant?.id || '',
           name: name.trim(),
           description: desc.trim(),
           price: Number(price),
-          categoryId: categoryId || restaurant.categories[0]?.id,
+          categoryId: categoryId || restaurant?.categories?.[0]?.id || '',
           imageUrl,
           isAvailable: true,
           isSpecialOfTheDay: isSpecial,
@@ -254,8 +258,34 @@ export default function DashboardMenuManagementPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-slate-600 font-bold text-sm">Chargement de votre carte de restaurant...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!restaurant) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-3xl border border-slate-200 max-w-md shadow-xs">
+          <Utensils className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <h2 className="text-lg font-black text-slate-900 mb-1">Aucun restaurant connecté</h2>
+          <p className="text-xs text-slate-500 mb-4">Veuillez vous reconnecter depuis votre espace restaurateur.</p>
+          <Link href="/login" className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-colors inline-block">
+            Se connecter
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Flattened items for table search
-  const allItems = restaurant.categories.flatMap((c) =>
+  const allItems = (restaurant.categories || []).flatMap((c) =>
     (c.items || []).map((i) => ({ ...i, catName: c.name, catId: c.id }))
   );
 
@@ -292,7 +322,7 @@ export default function DashboardMenuManagementPage() {
 
           <div className="flex items-center gap-2 flex-wrap">
             <Link
-              href={`/display/${restaurant.subdomain || 'mg-cafe-resto'}`}
+              href={`/display/${restaurant.subdomain}`}
               target="_blank"
               className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black px-3.5 py-2.5 rounded-xl shadow-xs transition-all"
             >
@@ -618,14 +648,14 @@ export default function DashboardMenuManagementPage() {
                         key={l.code}
                         type="button"
                         onClick={() => setActiveLangTab(l.code as any)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                           activeLangTab === l.code
                             ? 'bg-amber-500 text-slate-950 font-black shadow-2xs'
                             : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <span>{l.flag}</span>
-                        <span className="hidden sm:inline">{l.label}</span>
+                        <span className="font-black">{l.code}</span>
+                        <span className="hidden sm:inline text-[11px] font-medium">{l.label}</span>
                       </button>
                     ))}
                   </div>

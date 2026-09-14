@@ -302,6 +302,9 @@ export interface OrderType {
   customerName?: string | null;
   customerNote?: string | null;
   paymentMethod?: string | null;
+  paymentStatus?: string | null;
+  cashierId?: string | null;
+  cashSessionId?: string | null;
   transactionRef?: string | null;
   waiterId?: string | null;
   waiter?: { id: string; name: string } | null;

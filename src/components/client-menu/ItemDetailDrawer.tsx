@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Clock, Star, Plus, Minus, Sparkles, Check, MessageSquare } from 'lucide-react';
+import { X, Clock, Star, Plus, Minus, ChefHat, Check, MessageSquare } from 'lucide-react';
 import { MenuItemType, CartItemOption, CartItemExtra, ALLERGEN_ICONS, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
@@ -132,7 +132,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white">
               {isSpecial && (
                 <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <ChefHat className="w-3.5 h-3.5" />
                   <span>{t.specialOfTheDay}</span>
                 </span>
               )}

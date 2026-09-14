@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, Plus, Check, Utensils, ArrowRight } from 'lucide-react';
+import { Plus, Check, Utensils, ArrowRight } from 'lucide-react';
 import { MenuItemType, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
@@ -10,11 +10,13 @@ import { toast } from 'sonner';
 interface ComboSectionProps {
   onAddComboToCart: (comboItem: MenuItemType) => void;
   lang?: Language;
+  primaryColor?: string;
 }
 
 export const ComboSection: React.FC<ComboSectionProps> = ({
   onAddComboToCart,
   lang = 'FR',
+  primaryColor,
 }) => {
   const t = getUIText(lang);
   const [selectedStarter, setSelectedStarter] = useState('Pastels Poisson (4 pcs)');
@@ -45,28 +47,31 @@ export const ComboSection: React.FC<ComboSectionProps> = ({
 
   return (
     <section className="bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/5 border-2 border-amber-400/80 rounded-3xl p-4 sm:p-5 space-y-4 shadow-sm">
-      {/* Banner */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-full inline-block">
-            Menu Tout-en-Un ☀️
+      {/* Banner - Strict 1-Line Title Layout */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-full inline-block"
+            style={primaryColor ? { backgroundColor: primaryColor, color: '#FFFFFF' } : undefined}
+          >
+            Menu Tout-en-Un
           </span>
-          <h3 className="text-base font-black text-slate-950">
-            {t.comboFormulaTitle || '🍱 Formule Midi Téranga (Entrée + Plat + Boisson)'}
-          </h3>
-          <p className="text-xs text-slate-600">
-            {t.comboFormulaSubtitle || 'Composez votre déjeuner complet à tarif préférentiel.'}
-          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] text-slate-400 line-through font-mono">
+              6 000 FCFA
+            </span>
+            <span className="text-xs sm:text-sm font-black text-orange-600 font-mono bg-white/70 px-2 py-0.5 rounded-lg border border-amber-200 shadow-2xs">
+              4 500 FCFA
+            </span>
+          </div>
         </div>
 
-        <div className="text-right shrink-0">
-          <span className="text-base font-black text-orange-600 font-mono block">
-            4 500 FCFA
-          </span>
-          <span className="text-[10px] text-slate-400 line-through font-mono">
-            6 000 FCFA
-          </span>
-        </div>
+        <h3 className="text-xs sm:text-sm md:text-base font-black text-slate-950 whitespace-nowrap overflow-hidden text-ellipsis">
+          {t.comboFormulaTitle || '🍱 Formule Midi Téranga (Entrée + Plat + Boisson)'}
+        </h3>
+        <p className="text-[11px] sm:text-xs text-slate-600 whitespace-nowrap overflow-hidden text-ellipsis">
+          {t.comboFormulaSubtitle || 'Composez votre déjeuner complet à tarif préférentiel.'}
+        </p>
       </div>
 
       {!isOpenBuilder ? (
@@ -74,8 +79,9 @@ export const ComboSection: React.FC<ComboSectionProps> = ({
           type="button"
           onClick={() => setIsOpenBuilder(true)}
           className="w-full py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-98 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all"
+          style={primaryColor ? { backgroundColor: primaryColor, color: '#FFFFFF' } : undefined}
         >
-          <Sparkles className="w-4 h-4 fill-slate-950" />
+          <Utensils className="w-4 h-4" />
           <span>Composer ma Formule (3 étapes)</span>
         </button>
       ) : (
@@ -165,6 +171,7 @@ export const ComboSection: React.FC<ComboSectionProps> = ({
               type="button"
               onClick={handleAddFormula}
               className="flex-1 py-3 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-98 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md"
+              style={primaryColor ? { backgroundColor: primaryColor, color: '#FFFFFF' } : undefined}
             >
               <Check className="w-4 h-4 stroke-[3]" />
               <span>Ajouter la Formule (4 500 FCFA)</span>

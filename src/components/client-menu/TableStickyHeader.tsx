@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search, Bell, X, Receipt, Droplets, HelpCircle, CheckCircle2, Globe } from 'lucide-react';
+import { Search, Bell, X, Receipt, Droplets, HelpCircle, CheckCircle2, Globe, MapPin, Zap } from 'lucide-react';
 import { Language } from '@/types';
 import { getUIText } from '@/lib/translation-engine';
 import { ServiceCallModal } from './ServiceCallModal';
@@ -17,6 +17,7 @@ interface TableStickyHeaderProps {
   onSearchChange: (query: string) => void;
   lang?: Language;
   onLanguageChange?: (lang: Language) => void;
+  primaryColor?: string;
 }
 
 const LANGUAGES: { code: Language; label: string; flag: string }[] = [
@@ -37,6 +38,7 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   onSearchChange,
   lang = 'FR',
   onLanguageChange,
+  primaryColor,
 }) => {
   const t = getUIText(lang);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -79,11 +81,13 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
             <div className="flex items-center gap-2 shrink-0">
               {isExpress ? (
                 <div className="bg-amber-500 text-slate-950 text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 animate-pulse border border-amber-600">
-                  <span>⚡ Comptoir / Bar</span>
+                  <Zap className="w-4 h-4 text-slate-950 fill-slate-950 shrink-0" />
+                  <span>Comptoir / Bar</span>
                 </div>
               ) : (
                 <div className="bg-emerald-600 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5">
-                  <span>📍 {t.table}</span>
+                  <MapPin className="w-4 h-4 text-white shrink-0" />
+                  <span>{t.table}</span>
                   <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-white font-mono">
                     {formattedTable}
                   </span>
@@ -119,14 +123,15 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
                       key={l.code}
                       type="button"
                       onClick={() => onLanguageChange(l.code)}
-                      className={`min-h-[36px] flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                      className={`min-h-[36px] flex-1 sm:flex-initial px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 active:scale-95 ${
                         isSelected
                           ? 'bg-amber-500 text-slate-950 shadow-sm border border-amber-600 font-black'
                           : 'text-slate-600 hover:text-slate-950 hover:bg-orange-50/70 border border-transparent'
                       }`}
+                      style={isSelected && primaryColor ? { backgroundColor: primaryColor, color: '#FFFFFF', borderColor: primaryColor } : undefined}
+                      title={l.label}
                     >
-                      <span className="text-sm leading-none">{l.flag}</span>
-                      <span className="text-[11px] uppercase tracking-wide">{l.code}</span>
+                      <span className="text-[12px] uppercase tracking-wider font-extrabold">{l.code}</span>
                     </button>
                   );
                 })}

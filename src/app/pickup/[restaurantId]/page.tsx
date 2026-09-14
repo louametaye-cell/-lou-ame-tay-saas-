@@ -13,8 +13,8 @@ import {
   Store,
   Sparkles,
   Zap,
-  User,
-  ShoppingBag
+  ShoppingBag,
+  Timer
 } from 'lucide-react';
 
 interface OrderItem {
@@ -22,9 +22,9 @@ interface OrderItem {
   shortId: string;
   tableNumber: number;
   isExpress: boolean;
-  customerName?: string | null;
   status: string;
   itemCount: number;
+  shortSummary?: string;
   createdAt: string;
   preparedAt?: string | null;
   servedAt?: string | null;
@@ -37,6 +37,17 @@ interface RestaurantInfo {
   logoUrl: string;
   tagline: string;
   currency: string;
+}
+
+function getElapsedMinutes(createdAt: string): string {
+  try {
+    const ms = Date.now() - new Date(createdAt).getTime();
+    const mins = Math.max(0, Math.floor(ms / 60000));
+    if (mins < 1) return '< 1 min';
+    return `${mins} min`;
+  } catch {
+    return '1 min';
+  }
 }
 
 export default function FastFoodPickupBoardPage() {
@@ -110,16 +121,13 @@ export default function FastFoodPickupBoardPage() {
     }
   };
 
-  // Web Speech API Text-to-Speech Announcement
+  // Web Speech API Text-to-Speech Announcement - Strictly anonymized without customer names
   const speakReadyOrder = (order: OrderItem) => {
     try {
       if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
       const orderNumberText = order.shortId.replace('#', '');
-      let announcement = `Commande numéro ${orderNumberText} est prête au guichet !`;
-      if (order.customerName) {
-        announcement = `Commande pour ${order.customerName}, numéro ${orderNumberText}, est prête au guichet !`;
-      }
+      const announcement = `Commande numéro ${orderNumberText} est prête au guichet !`;
 
       const utterance = new SpeechSynthesisUtterance(announcement);
       utterance.lang = 'fr-FR';
@@ -296,33 +304,47 @@ export default function FastFoodPickupBoardPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {preparingOrders.map((ord) => (
                   <div
                     key={ord.id}
-                    className="bg-[#0B1222] border border-blue-500/30 hover:border-blue-400 rounded-2xl p-4 text-center transition-all shadow-md group relative overflow-hidden"
+                    className="bg-[#0B1222] border border-blue-500/30 hover:border-blue-400 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all shadow-md group relative overflow-hidden text-center"
                   >
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-600 to-cyan-500" />
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-600 to-cyan-500" />
                     
-                    <div className="font-mono text-2xl sm:text-3xl font-black tracking-wider text-blue-400 group-hover:scale-105 transition-transform">
+                    {/* Header: Lieu + Chrono */}
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-400 pb-2 border-b border-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        {ord.isExpress ? (
+                          <span className="text-amber-400 flex items-center gap-1 font-black">
+                            <Zap className="w-3.5 h-3.5" /> Comptoir
+                          </span>
+                        ) : (
+                          <span className="text-slate-300 font-black">Table {ord.tableNumber}</span>
+                        )}
+                      </span>
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-950/60 border border-blue-500/30 text-blue-300 font-mono text-[11px]">
+                        <Timer className="w-3 h-3 text-blue-400" />
+                        {getElapsedMinutes(ord.createdAt)}
+                      </span>
+                    </div>
+
+                    {/* XXL Giant Order Number */}
+                    <div className="my-3 font-mono text-4xl sm:text-5xl font-black tracking-widest text-blue-400 group-hover:scale-105 transition-transform drop-shadow-md">
                       {ord.shortId}
                     </div>
 
-                    <div className="mt-1 flex items-center justify-center gap-1.5 text-xs text-slate-400 font-bold">
-                      {ord.isExpress ? (
-                        <span className="text-amber-400 flex items-center gap-1">
-                          <Zap className="w-3 h-3" /> Comptoir
-                        </span>
-                      ) : (
-                        <span>Table {ord.tableNumber}</span>
-                      )}
-                    </div>
-
-                    {ord.customerName && (
-                      <div className="mt-1 text-[11px] font-bold text-slate-300 truncate">
-                        👤 {ord.customerName}
+                    {/* Status & Short Items Summary */}
+                    <div className="space-y-1.5">
+                      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                        En préparation
                       </div>
-                    )}
+                      <div className="bg-slate-900/80 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 font-medium truncate text-center">
+                        <span className="text-blue-400 font-bold mr-1">{ord.itemCount} art.</span>
+                        {ord.shortSummary ? `• ${ord.shortSummary}` : ''}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -366,29 +388,42 @@ export default function FastFoodPickupBoardPage() {
                 {readyOrders.map((ord) => (
                   <div
                     key={ord.id}
-                    className="bg-linear-to-br from-[#064E3B] to-[#022C22] border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-xl shadow-emerald-950/40 animate-in fade-in zoom-in-95 relative overflow-hidden"
+                    className="bg-linear-to-br from-[#064E3B] to-[#022C22] border-2 border-emerald-400 rounded-3xl p-5 sm:p-6 flex flex-col justify-between text-center shadow-xl shadow-emerald-950/50 animate-in fade-in zoom-in-95 relative overflow-hidden"
                   >
-                    <div className="flex items-center justify-between text-xs font-black text-emerald-300 uppercase tracking-widest pb-1 border-b border-emerald-500/30">
-                      <span>{ord.isExpress ? '⚡ RETRAIT GUICHET' : `TABLE ${ord.tableNumber}`}</span>
+                    <div className="absolute top-0 left-0 right-0 h-2 bg-linear-to-r from-emerald-400 via-teal-300 to-emerald-500 animate-pulse" />
+
+                    {/* Header: Lieu + Chrono + Statut */}
+                    <div className="flex items-center justify-between text-xs font-black text-emerald-300 uppercase tracking-widest pb-2 border-b border-emerald-500/30">
                       <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                        PRÊT !
+                        {ord.isExpress ? '⚡ RETRAIT GUICHET' : `TABLE ${ord.tableNumber}`}
                       </span>
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/40 border border-emerald-400/40 text-emerald-200 font-mono text-xs">
+                          <Timer className="w-3 h-3 text-emerald-400" />
+                          {getElapsedMinutes(ord.createdAt)}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-black text-[11px] flex items-center gap-1 shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
+                          PRÊT !
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="my-2 font-mono text-4xl sm:text-5xl font-black tracking-widest text-white drop-shadow-md">
+                    {/* Le numéro de commande en très grand (lisibilité à 10 mètres, remplace le nom du client) */}
+                    <div className="my-3 font-mono text-5xl sm:text-6xl md:text-7xl font-black tracking-widest text-white drop-shadow-[0_4px_16px_rgba(16,185,129,0.4)]">
                       {ord.shortId}
                     </div>
 
-                    {ord.customerName ? (
-                      <div className="inline-block bg-black/30 border border-emerald-400/40 px-3 py-1 rounded-xl text-xs font-black text-emerald-200 truncate max-w-full">
-                        🏷️ Client : {ord.customerName}
+                    {/* Résumé court des plats et nombre d'articles */}
+                    <div className="bg-black/35 border border-emerald-400/30 rounded-2xl px-3 py-2 text-xs sm:text-sm text-emerald-100 font-medium">
+                      <div className="flex items-center justify-center gap-2 font-bold text-emerald-300 mb-0.5">
+                        <ShoppingBag className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>{ord.itemCount} article{ord.itemCount > 1 ? 's' : ''} à retirer</span>
                       </div>
-                    ) : (
-                      <div className="text-[11px] text-emerald-200/80 font-bold">
-                        Munissez-vous de votre ticket de caisse
+                      <div className="text-emerald-200/90 text-xs truncate max-w-full">
+                        {ord.shortSummary}
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>

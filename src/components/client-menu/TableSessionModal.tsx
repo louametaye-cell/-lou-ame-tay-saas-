@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, User, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Users, User, ArrowRight, CheckCircle2, MapPin } from 'lucide-react';
 import { Language } from '@/types';
 
 interface TableSessionModalProps {
@@ -30,8 +30,9 @@ export const TableSessionModal: React.FC<TableSessionModalProps> = ({
       <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-orange-200 text-slate-900 space-y-5 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="text-center space-y-1.5">
-          <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-            📍 Table N° {formattedTable}
+          <span className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+            <MapPin className="w-3.5 h-3.5 text-orange-800" />
+            <span>Table N° {formattedTable}</span>
           </span>
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-950">
             Bienvenue chez {restaurantName}
@@ -99,7 +100,7 @@ export const TableSessionModal: React.FC<TableSessionModalProps> = ({
 
         {/* Footer info */}
         <p className="text-[11px] text-slate-500 text-center">
-          ✨ Synchronisation en direct sans application ni création de compte.
+          Synchronisation en direct sans application ni création de compte.
         </p>
       </div>
     </div>

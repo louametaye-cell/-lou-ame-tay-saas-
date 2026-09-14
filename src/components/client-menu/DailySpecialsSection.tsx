@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Clock, Star, Plus, Flame } from 'lucide-react';
+import { Clock, Star, Plus, Flame } from 'lucide-react';
 import { MenuItemType, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';
@@ -13,6 +13,7 @@ interface DailySpecialsSectionProps {
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
+  primaryColor?: string;
 }
 
 export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
@@ -22,6 +23,7 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
+  primaryColor,
 }) => {
   const t = getUIText(lang);
 
@@ -33,15 +35,15 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
 
   return (
     <section className="space-y-3">
-      {/* Header Title */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🌟</span>
-          <h2 className="text-base sm:text-lg font-black text-slate-950 tracking-tight">
+      {/* Header Title - Strict 1-Line Layout */}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" />
+          <h2 className="text-xs sm:text-sm md:text-base font-black text-slate-950 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
             {t.dailySpecialTitle}
           </h2>
         </div>
-        <span className="text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
+        <span className="shrink-0 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full whitespace-nowrap">
           {t.dailySpecialBadge}
         </span>
       </div>
@@ -75,8 +77,8 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
 
                 {/* Top Badge */}
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
-                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider animate-pulse">
-                    <Sparkles className="w-3 h-3" />
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider">
+                    <Flame className="w-3 h-3 text-slate-950 fill-slate-950" />
                     <span>Lou Ame Tay</span>
                   </span>
 
@@ -119,6 +121,7 @@ export const DailySpecialsSection: React.FC<DailySpecialsSectionProps> = ({
                         onQuickAdd(dish);
                       }}
                       className="min-h-[40px] px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs flex items-center gap-1 shadow-xs transition-all"
+                      style={primaryColor ? { backgroundColor: primaryColor, color: '#FFFFFF' } : undefined}
                       aria-label={`Ajouter ${dish.name}`}
                     >
                       <Plus className="w-4 h-4 stroke-[3]" />

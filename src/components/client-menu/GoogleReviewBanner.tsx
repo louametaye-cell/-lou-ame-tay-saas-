@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Star, ExternalLink, Sparkles } from 'lucide-react';
+import { Star, ExternalLink } from 'lucide-react';
 
 interface GoogleReviewBannerProps {
   googleReviewUrl?: string | null;

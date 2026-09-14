@@ -82,20 +82,24 @@ export default function DisplaySettingsPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setBaseUrl(window.location.origin);
-      const savedResto = localStorage.getItem('current_restaurant_subdomain') || localStorage.getItem('louametay_resto_subdomain') || 'mg-cafe-resto';
+      const savedResto = localStorage.getItem('current_restaurant_subdomain') || localStorage.getItem('louametay_resto_subdomain') || '';
       setRestaurantId(savedResto);
 
-      fetch(`/api/display/${savedResto}`)
-        .then((res) => res.json())
-        .then((json) => {
-          setData(json);
-        })
-        .catch((e) => {
-          console.error(e);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      if (savedResto) {
+        fetch(`/api/display/${savedResto}`)
+          .then((res) => res.json())
+          .then((json) => {
+            setData(json);
+          })
+          .catch((e) => {
+            console.error(e);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
+      }
     }
   }, []);
 

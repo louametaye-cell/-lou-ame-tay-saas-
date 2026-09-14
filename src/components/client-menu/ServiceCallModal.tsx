@@ -10,7 +10,8 @@ import {
   Utensils, 
   CheckCircle2, 
   Banknote, 
-  Smartphone 
+  Smartphone,
+  MapPin
 } from 'lucide-react';
 import { Language } from '@/types';
 import { getUIText } from '@/lib/translation-engine';
@@ -119,8 +120,9 @@ export const ServiceCallModal: React.FC<ServiceCallModalProps> = ({
               <h3 className="text-base font-black text-slate-900">
                 {lang === 'WO' ? 'Wo Serveer bi' : 'Appeler le Serveur'}
               </h3>
-              <p className="text-xs text-orange-600 font-bold">
-                📍 Table N° {formattedTable}
+              <p className="text-xs text-orange-600 font-bold flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-orange-600" />
+                <span>Table N° {formattedTable}</span>
               </p>
             </div>
           </div>

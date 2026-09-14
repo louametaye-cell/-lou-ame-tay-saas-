@@ -11,7 +11,6 @@ import {
   ArrowRight,
   ExternalLink,
   PhoneCall,
-  Sparkles,
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,7 +26,6 @@ export default function PublicPaymentPage() {
   const [paymentData, setPaymentData] = useState<any>(null);
   const [selectedProvider, setSelectedProvider] = useState<'WAVE' | 'ORANGE_MONEY'>('WAVE');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     async function loadPaymentDetails() {
@@ -63,34 +61,7 @@ export default function PublicPaymentPage() {
     loadPaymentDetails();
   }, [tenantId, planId, months]);
 
-  const handleSimulatePayment = async () => {
-    try {
-      setProcessing(true);
-      const res = await fetch('/api/payments/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenantId,
-          planId,
-          provider: selectedProvider,
-          periodMonths: months,
-          phone: '+221774587474',
-        }),
-      });
 
-      const data = await res.json();
-      if (data.success) {
-        setPaymentSuccess(true);
-        toast.success(data.message || 'Paiement validé avec succès !');
-      } else {
-        toast.error(data.error || 'Échec du paiement');
-      }
-    } catch (e) {
-      toast.error('Erreur réseau');
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -151,7 +122,7 @@ export default function PublicPaymentPage() {
       {/* Brand Header */}
       <div className="mb-6 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-orange-400 text-xs font-semibold mb-3">
-          <Sparkles className="w-3.5 h-3.5" />
+          <ShieldCheck className="w-3.5 h-3.5" />
           Paiement Sécurisé Mobile Money UEMOA
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -250,18 +221,7 @@ export default function PublicPaymentPage() {
           </div>
         )}
 
-        {/* Instant Simulation / Test button */}
-        <div className="mt-6 pt-5 border-t border-slate-200">
-          <button
-            type="button"
-            onClick={handleSimulatePayment}
-            disabled={processing}
-            className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-750 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center justify-center gap-2"
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            {processing ? 'Validation en cours...' : 'Tester la confirmation immédiate (Simulation directe)'}
-          </button>
-        </div>
+
 
         {/* Security Footer */}
         <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">

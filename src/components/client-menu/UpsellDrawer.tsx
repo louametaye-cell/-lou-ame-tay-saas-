@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Plus, ArrowRight, X, HeartHandshake } from 'lucide-react';
+import { Plus, ArrowRight, X, HeartHandshake } from 'lucide-react';
 import { MenuItemType, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -75,7 +75,7 @@ export const UpsellDrawer: React.FC<UpsellDrawerProps> = ({
       categoryId: 'boissons',
     };
     onAddUpsellItem(menuItem);
-    toast.success(`✨ « ${item.name} » ajouté en offre spéciale !`);
+    toast.success(`« ${item.name} » ajouté en offre spéciale !`);
     onContinueToCheckout();
   };
 
@@ -86,7 +86,7 @@ export const UpsellDrawer: React.FC<UpsellDrawerProps> = ({
         <div className="flex items-center justify-between border-b border-orange-100 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-2xl">
-              <Sparkles className="w-5 h-5" />
+              <HeartHandshake className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900 leading-tight">

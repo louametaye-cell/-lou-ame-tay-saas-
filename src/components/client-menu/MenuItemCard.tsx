@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Plus, Minus, Clock, Star, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, Minus, Clock, Star, AlertCircle, ChefHat } from 'lucide-react';
 import { MenuItemType, ALLERGEN_ICONS, Language, CurrencyCode, ExchangeRates } from '@/types';
 import { formatFCFA, formatConvertedPrice } from '@/lib/utils';
 import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
@@ -16,6 +16,7 @@ interface MenuItemCardProps {
   lang?: Language;
   currency?: CurrencyCode;
   exchangeRates?: ExchangeRates;
+  primaryColor?: string;
 }
 
 export const MenuItemCard: React.FC<MenuItemCardProps> = ({
@@ -27,6 +28,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
   lang = 'FR',
   currency = 'FCFA',
   exchangeRates,
+  primaryColor,
 }) => {
   const t = getUIText(lang);
   const convertedPrice = formatConvertedPrice(item.price, currency, lang, exchangeRates);
@@ -71,7 +73,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
           {isSpecial ? (
             <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider animate-pulse">
-              <Sparkles className="w-3.5 h-3.5" />
+              <ChefHat className="w-3.5 h-3.5" />
               <span>{t.specialOfTheDay}</span>
             </span>
           ) : (
@@ -177,7 +179,8 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
                   type="button"
                   onClick={() => onQuickAdd(item)}
                   disabled={isOutOfStock}
-                  className="min-h-[40px] min-w-[40px] rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg active:scale-95 transition-transform shadow-xs hover:bg-emerald-700"
+                  style={primaryColor ? { backgroundColor: primaryColor } : undefined}
+                  className="min-h-[40px] min-w-[40px] rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg active:scale-95 transition-transform shadow-xs hover:opacity-90"
                   aria-label="Augmenter"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
@@ -188,7 +191,8 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 type="button"
                 onClick={() => onQuickAdd(item)}
                 disabled={isOutOfStock}
-                className="min-h-[44px] px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm shadow-emerald-600/20"
+                style={primaryColor ? { backgroundColor: primaryColor } : undefined}
+                className="min-h-[44px] px-4 rounded-2xl bg-emerald-600 hover:opacity-90 disabled:bg-slate-300 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm"
                 aria-label={`Ajouter ${item.name} au panier`}
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
