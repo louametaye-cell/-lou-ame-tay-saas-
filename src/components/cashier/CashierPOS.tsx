@@ -1950,12 +1950,17 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                       );
                     } else {
                       return (
-                        <div className="p-3 bg-amber-100 border border-amber-300 rounded-xl text-amber-950 flex items-center justify-between">
-                          <span className="text-xs font-bold">
-                            ⚠️ Montant insuffisant (Manque) :
-                          </span>
-                          <span className="text-base font-black font-mono text-amber-900">
-                            {formatFCFA(Math.abs(change))}
+                        <div className="p-3 bg-rose-50 border-2 border-rose-500 rounded-2xl text-rose-950 flex items-center justify-between shadow-xs animate-in shake">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-rose-600 text-white rounded-xl">
+                              <AlertTriangle className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs font-black uppercase tracking-wider text-rose-800">
+                              Montant insuffisant (Manque) :
+                            </span>
+                          </div>
+                          <span className="text-lg sm:text-xl font-black font-mono text-rose-700">
+                            - {formatFCFA(Math.abs(change))}
                           </span>
                         </div>
                       );
