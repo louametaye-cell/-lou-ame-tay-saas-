@@ -1,0 +1,250 @@
+[
+  {
+    "tenant": "Anima Pizzeria",
+    "slug": "anima-pizzeria",
+    "cashierUrlTests": [
+      {
+        "path": "/dashboard",
+        "finalUrl": "https://www.louametay.com/r/tenant_anima_pizzeria/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/menu",
+        "finalUrl": "https://www.louametay.com/r/tenant_anima_pizzeria/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/stats",
+        "finalUrl": "https://www.louametay.com/r/tenant_anima_pizzeria/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/zones",
+        "finalUrl": "https://www.louametay.com/r/tenant_anima_pizzeria/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/waiters",
+        "finalUrl": "https://www.louametay.com/r/tenant_anima_pizzeria/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/branding",
+        "finalUrl": "https://www.louametay.com/r/tenant_anima_pizzeria/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      }
+    ],
+    "kitchenUrlTests": [
+      {
+        "tested": "Cuisine vers /dashboard",
+        "finalUrl": "https://www.louametay.com/login?redirect=%2Fdashboard",
+        "status": 200,
+        "isBlocked": false
+      },
+      {
+        "tested": "Cuisine vers /cashier",
+        "isLocked": true,
+        "isOrdersHidden": true,
+        "isIsolated": true
+      }
+    ]
+  },
+  {
+    "tenant": "Madiba Café Resto",
+    "slug": "madiba-restaurant",
+    "cashierUrlTests": [
+      {
+        "path": "/dashboard",
+        "finalUrl": "https://www.louametay.com/r/tenant_madiba_restau/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/menu",
+        "finalUrl": "https://www.louametay.com/r/tenant_madiba_restau/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/stats",
+        "finalUrl": "https://www.louametay.com/r/tenant_madiba_restau/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/zones",
+        "finalUrl": "https://www.louametay.com/r/tenant_madiba_restau/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/waiters",
+        "finalUrl": "https://www.louametay.com/r/tenant_madiba_restau/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/branding",
+        "finalUrl": "https://www.louametay.com/r/tenant_madiba_restau/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      }
+    ],
+    "kitchenUrlTests": [
+      {
+        "tested": "Cuisine vers /dashboard",
+        "finalUrl": "https://www.louametay.com/login?redirect=%2Fdashboard",
+        "status": 200,
+        "isBlocked": false
+      },
+      {
+        "tested": "Cuisine vers /cashier",
+        "isLocked": true,
+        "isOrdersHidden": true,
+        "isIsolated": true
+      }
+    ]
+  },
+  {
+    "tenant": "Sam's Prestige",
+    "slug": "sams-prestige",
+    "cashierUrlTests": [
+      {
+        "path": "/dashboard",
+        "finalUrl": "https://www.louametay.com/r/tenant_sams_restaurant/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/menu",
+        "finalUrl": "https://www.louametay.com/r/tenant_sams_restaurant/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/stats",
+        "finalUrl": "https://www.louametay.com/r/tenant_sams_restaurant/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/zones",
+        "finalUrl": "https://www.louametay.com/r/tenant_sams_restaurant/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/waiters",
+        "finalUrl": "https://www.louametay.com/r/tenant_sams_restaurant/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/branding",
+        "finalUrl": "https://www.louametay.com/r/tenant_sams_restaurant/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      }
+    ],
+    "kitchenUrlTests": [
+      {
+        "tested": "Cuisine vers /dashboard",
+        "finalUrl": "https://www.louametay.com/login?redirect=%2Fdashboard",
+        "status": 200,
+        "isBlocked": false
+      },
+      {
+        "tested": "Cuisine vers /cashier",
+        "isLocked": true,
+        "isOrdersHidden": true,
+        "isIsolated": true
+      }
+    ]
+  },
+  {
+    "tenant": "Hôtel Résidence Lat-Dior",
+    "slug": "hotel-lat-dior",
+    "cashierUrlTests": [
+      {
+        "path": "/dashboard",
+        "finalUrl": "https://www.louametay.com/r/tenant_hotel_lat_dior/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/menu",
+        "finalUrl": "https://www.louametay.com/r/tenant_hotel_lat_dior/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/stats",
+        "finalUrl": "https://www.louametay.com/r/tenant_hotel_lat_dior/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/zones",
+        "finalUrl": "https://www.louametay.com/r/tenant_hotel_lat_dior/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/waiters",
+        "finalUrl": "https://www.louametay.com/r/tenant_hotel_lat_dior/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      },
+      {
+        "path": "/dashboard/branding",
+        "finalUrl": "https://www.louametay.com/r/tenant_hotel_lat_dior/cashier?error=forbidden_admin",
+        "status": 200,
+        "hasAdminContent": false,
+        "isBlocked": true
+      }
+    ],
+    "kitchenUrlTests": [
+      {
+        "tested": "Cuisine vers /dashboard",
+        "finalUrl": "https://www.louametay.com/login?redirect=%2Fdashboard",
+        "status": 200,
+        "isBlocked": false
+      },
+      {
+        "tested": "Cuisine vers /cashier",
+        "isLocked": true,
+        "isOrdersHidden": true,
+        "isIsolated": true
+      }
+    ]
+  }
+]
