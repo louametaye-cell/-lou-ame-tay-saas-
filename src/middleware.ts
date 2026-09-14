@@ -77,6 +77,15 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('saas_token')?.value || request.cookies.get('token')?.value;
 
   if (!token && pathname.startsWith('/dashboard')) {
+    const cashierToken = request.cookies.get('cashier_token')?.value;
+    if (cashierToken) {
+      // Un caissier tente d'accéder à l'espace d'administration : redirection stricte vers son poste caisse
+      const tenantId = cashierToken.replace('cashier_session_', '');
+      const cashierUrl = new URL(tenantId ? `/r/${tenantId}/cashier` : '/cashier', request.url);
+      cashierUrl.searchParams.set('error', 'forbidden_admin');
+      return NextResponse.redirect(cashierUrl);
+    }
+
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
