@@ -6,6 +6,7 @@ import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitc
 import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
 import { KitchenHistory } from '@/components/KitchenHistory';
 import { History, LayoutGrid } from 'lucide-react';
+import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 
 export default function DashboardKitchenPage() {
   const [restaurantName, setRestaurantName] = useState('Écran Cuisine (KDS)');
@@ -60,7 +61,8 @@ export default function DashboardKitchenPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
+    <LockedFeatureGuard featureKey="KITCHEN_KDS">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* 1. KDS Fixed Header */}
       <KitchenHeader
         restaurantName={restaurantName}
@@ -142,5 +144,6 @@ export default function DashboardKitchenPage() {
         )}
       </main>
     </div>
+    </LockedFeatureGuard>
   );
 }

@@ -6,14 +6,42 @@ import { isAuthorizedTenant } from '@/lib/tenant-auth';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId');
-    if (!tenantId) {
+    const tenantIdParam = searchParams.get('tenantId') || searchParams.get('restaurantId');
+    if (!tenantIdParam) {
       return NextResponse.json({ error: 'tenantId est obligatoire' }, { status: 400 });
     }
 
-    if (!isAuthorizedTenant(req, tenantId)) {
+    const tenant = await prisma.tenant.findFirst({
+      where: {
+        OR: [{ id: tenantIdParam }, { subdomain: tenantIdParam }]
+      },
+      select: { id: true }
+    });
+
+    if (!tenant) {
+      return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+
+    // 🔒 Contrôle Paywall : La gestion des serveurs & badges QR nécessite TERANGA+
+    const { checkTenantFeatureAccess } = await import('@/lib/server-plan-guard');
+    const access = await checkTenantFeatureAccess(tenant.id, 'STAFF_WAITERS');
+    if (!access.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'La gestion des serveurs et badges QR personnels nécessite la formule TERANGA ou supérieure.',
+          paywall: access.paywall,
+          requiredPlan: access.requiredPlanName,
+          currentPlan: access.currentPlanName
+        },
+        { status: 403 }
+      );
+    }
+
+    if (!isAuthorizedTenant(req, tenant.id)) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
+
+    const tenantId = tenant.id;
 
     const waiters = await prisma.waiter.findMany({
       where: { tenantId, isActive: true },
@@ -43,6 +71,21 @@ export async function POST(req: Request) {
 
     if (!isAuthorizedTenant(req, tenantId)) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
+    }
+
+    // 🔒 Contrôle Paywall : La création de serveurs nécessite TERANGA+
+    const { checkTenantFeatureAccess } = await import('@/lib/server-plan-guard');
+    const access = await checkTenantFeatureAccess(tenantId, 'STAFF_WAITERS');
+    if (!access.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'La création de badges serveurs nécessite la formule TERANGA ou supérieure.',
+          paywall: access.paywall,
+          requiredPlan: access.requiredPlanName,
+          currentPlan: access.currentPlanName
+        },
+        { status: 403 }
+      );
     }
 
     if (!name) {

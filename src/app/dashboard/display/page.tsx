@@ -26,6 +26,7 @@ import {
   Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 
 interface DisplayData {
   restaurantId: string;
@@ -139,7 +140,8 @@ export default function DisplaySettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-8 space-y-8 text-slate-900">
+    <LockedFeatureGuard featureKey="TV_DISPLAY_SIMPLE">
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8 space-y-8 text-slate-900">
       
       {/* 1. HEADER */}
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
@@ -516,5 +518,6 @@ export default function DisplaySettingsPage() {
         )}
       </div>
     </div>
+    </LockedFeatureGuard>
   );
 }

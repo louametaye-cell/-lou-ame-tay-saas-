@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Users, Plus, Trash2, QrCode, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 
 export default function WaitersManagerPage() {
   const [waiters, setWaiters] = useState<any[]>([]);
@@ -130,7 +131,8 @@ export default function WaitersManagerPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <LockedFeatureGuard featureKey="STAFF_WAITERS">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
@@ -236,5 +238,6 @@ export default function WaitersManagerPage() {
         </table>
       </div>
     </div>
+    </LockedFeatureGuard>
   );
 }

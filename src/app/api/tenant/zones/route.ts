@@ -43,6 +43,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
+    // 🔒 Contrôle Paywall : La gestion des zones nécessite TERANGA+
+    const { checkTenantFeatureAccess } = await import('@/lib/server-plan-guard');
+    const access = await checkTenantFeatureAccess(tenant.id, 'ZONE_MANAGEMENT');
+    if (!access.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'La gestion avancée des zones nécessite la formule TERANGA ou supérieure.',
+          paywall: access.paywall,
+          requiredPlan: access.requiredPlanName,
+          currentPlan: access.currentPlanName
+        },
+        { status: 403 }
+      );
+    }
+
     if (!isAuthorizedTenant(req, tenant.id)) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
@@ -89,6 +104,21 @@ export async function POST(req: Request) {
 
     if (!isAuthorizedTenant(req, tenant.id)) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
+    }
+
+    // 🔒 Contrôle Paywall : La création de zones nécessite TERANGA+
+    const { checkTenantFeatureAccess } = await import('@/lib/server-plan-guard');
+    const access = await checkTenantFeatureAccess(tenant.id, 'ZONE_MANAGEMENT');
+    if (!access.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'La création de zones personnalisées nécessite la formule TERANGA ou supérieure.',
+          paywall: access.paywall,
+          requiredPlan: access.requiredPlanName,
+          currentPlan: access.currentPlanName
+        },
+        { status: 403 }
+      );
     }
 
     if (!name || !name.trim()) {

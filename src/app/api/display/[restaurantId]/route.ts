@@ -45,6 +45,9 @@ export async function GET(
         ],
       },
       include: {
+        plan: {
+          select: { slug: true, name: true }
+        },
         categories: {
           orderBy: { displayOrder: 'asc' },
           include: {
@@ -59,6 +62,23 @@ export async function GET(
 
     if (!tenant) {
       return NextResponse.json({ error: 'Restaurant non trouvé' }, { status: 404 });
+    }
+
+    // 🔒 Contrôle Paywall : L'Écran Menu TV nécessite XÉWEUL ou supérieur
+    const { hasAccessToFeature, getFeaturePaywallInfo } = await import('@/lib/plan-permissions');
+    const currentPlan = tenant.plan?.slug?.toLowerCase() || 'tambali';
+    if (!hasAccessToFeature(currentPlan, 'TV_DISPLAY_SIMPLE')) {
+      const paywall = getFeaturePaywallInfo('TV_DISPLAY_SIMPLE');
+      return NextResponse.json(
+        {
+          error: `La diffusion sur Écran Menu TV nécessite la formule ${paywall.requiredPlanName} ou supérieure.`,
+          paywall,
+          requiredPlan: paywall.requiredPlanName,
+          currentPlan: tenant.plan?.name || 'TÀMBALI',
+          isBlockedByPaywall: true
+        },
+        { status: 403 }
+      );
     }
 
     const branding = (tenant.branding as any) || {};

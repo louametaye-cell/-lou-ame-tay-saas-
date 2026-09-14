@@ -34,6 +34,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 404 });
     }
 
+    // 🔒 Contrôle Paywall : L'historique KDS nécessite XÉWEUL ou supérieur
+    const { checkTenantFeatureAccess } = await import('@/lib/server-plan-guard');
+    const access = await checkTenantFeatureAccess(resolvedTenantId, 'KITCHEN_KDS');
+    if (!access.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'L\'accès à l\'historique cuisine nécessite la formule XÉWEUL ou supérieure.',
+          paywall: access.paywall,
+          requiredPlan: access.requiredPlanName,
+          currentPlan: access.currentPlanName
+        },
+        { status: 403 }
+      );
+    }
+
     if (!isAuthorizedTenant(req, resolvedTenantId)) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }

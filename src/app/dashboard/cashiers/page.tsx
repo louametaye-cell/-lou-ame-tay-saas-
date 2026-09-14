@@ -25,6 +25,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { CashierType, CashierShift } from '@/types';
+import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 
 export default function CashiersManagementPage() {
   const [cashiers, setCashiers] = useState<CashierType[]>([]);
@@ -216,7 +217,8 @@ export default function CashiersManagementPage() {
   const eveningCount = cashiers.filter((c) => c.isActive && c.shift === 'EVENING').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-16">
+    <LockedFeatureGuard featureKey="STAFF_CASHIERS">
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-16">
       {/* Header Navigation */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -547,5 +549,6 @@ export default function CashiersManagementPage() {
         </section>
       </main>
     </div>
+    </LockedFeatureGuard>
   );
 }

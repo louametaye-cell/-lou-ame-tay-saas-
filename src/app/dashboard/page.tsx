@@ -49,6 +49,9 @@ import { formatFCFA } from '@/lib/utils';
 import { isDrinkOrBarItem } from '@/lib/order-routing';
 import { getAssignedServerForTable } from '@/lib/server-shift';
 import { ChangePasswordModal } from '@/components/dashboard/ChangePasswordModal';
+import { LockedFeatureCard } from '@/components/paywall/LockedFeatureCard';
+import { LockedHeaderButton } from '@/components/paywall/LockedHeaderButton';
+import { hasAccessToFeature } from '@/lib/plan-permissions';
 import { toast } from 'sonner';
 
 interface CurrentOrder {
@@ -87,6 +90,8 @@ export default function OperationalDashboardPage() {
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isTambaliPlan, setIsTambaliPlan] = useState(false);
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string>('tambali');
+  const [currentPlanName, setCurrentPlanName] = useState<string>('TÀMBALI');
 
   // KPIs
   const [kpis, setKpis] = useState({
@@ -195,6 +200,12 @@ export default function OperationalDashboardPage() {
             if (data.isTambali || data.plan?.slug?.toLowerCase() === 'tambali') {
               setIsTambaliPlan(true);
             }
+            if (data.plan?.slug) {
+              const slug = data.plan.slug.toLowerCase();
+              setCurrentPlanSlug(slug);
+              setCurrentPlanName(data.plan.name || slug.toUpperCase());
+              localStorage.setItem('current_restaurant_plan', slug);
+            }
             const rName = data.name || data.businessName;
             if (rName) {
               setRestaurantName(rName);
@@ -219,6 +230,10 @@ export default function OperationalDashboardPage() {
       const storedName = localStorage.getItem('current_restaurant_name');
       const storedSub = localStorage.getItem('current_restaurant_subdomain');
       const storedLogo = localStorage.getItem('current_restaurant_logo');
+      const storedPlan = localStorage.getItem('current_restaurant_plan');
+      if (storedPlan) {
+        setCurrentPlanSlug(storedPlan);
+      }
       if (storedId) {
         setRestaurantId(storedId);
         fetch(`/api/tenant/branding?restaurantId=${storedId}`)
@@ -226,6 +241,12 @@ export default function OperationalDashboardPage() {
           .then((data) => {
             if (data.isTambali || data.plan?.slug?.toLowerCase() === 'tambali') {
               setIsTambaliPlan(true);
+            }
+            if (data.plan?.slug) {
+              const slug = data.plan.slug.toLowerCase();
+              setCurrentPlanSlug(slug);
+              setCurrentPlanName(data.plan.name || slug.toUpperCase());
+              localStorage.setItem('current_restaurant_plan', slug);
             }
             const rName = data.name || data.businessName;
             if (rName) setRestaurantName(rName);
@@ -478,62 +499,66 @@ export default function OperationalDashboardPage() {
             </Link>
 
             {/* TV Display Public Menu Quick View */}
-            <Link
+            <LockedHeaderButton
+              featureKey="TV_DISPLAY_SIMPLE"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
               href="/dashboard/display"
-              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              label="🖥️ Écran TV"
               title="Configurer la diffusion sur écran TV / Vidéoprojecteur"
+              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+            />
+
+            {/* QSR Fast-Food Pickup Board Quick View */}
+            <LockedHeaderButton
+              featureKey="PICKUP_SCREEN"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
+              label="📢 Retrait Guichet"
+              title="Ouvrir l'Écran TV Retrait Commandes (Status Board Fast-Food)"
+              externalLink
+              className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+            />
+
+            {/* Cashier Counter Quick View */}
+            <LockedHeaderButton
+              featureKey="CASHIER_POS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
+              label="⚡ Caisse Express"
+              title="Ouvrir le Terminal Caisse POS de votre établissement"
+              externalLink
+              className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+            />
+
+            {/* Kitchen KDS Quick View */}
+            <LockedHeaderButton
+              featureKey="KITCHEN_KDS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
+              label="👨‍🍳 Écran Cuisine KDS"
+              title="Ouvrir l'Écran Cuisine KDS de votre établissement"
+              externalLink
+              className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+            />
+
+            {/* Consulter le menu client en ligne */}
+            <Link
+              href={`/r/${restaurantSubdomain || restaurantId}`}
+              target="_blank"
+              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Consulter le menu digital en ligne"
             >
-              <span>🖥️ Écran TV</span>
+              <span>👁️ Voir Menu Client</span>
             </Link>
 
-            {isTambaliPlan ? (
-              <>
-                <span className="hidden md:inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 text-xs font-bold px-3 py-2 rounded-2xl shadow-2xs">
-                  ✨ Formule TÀMBALI (Vitrine)
-                </span>
-                <Link
-                  href={`/r/${restaurantSubdomain || restaurantId}`}
-                  target="_blank"
-                  className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-                  title="Consulter le menu digital vitrine en ligne"
-                >
-                  <span>👁️ Voir Menu Client</span>
-                </Link>
-              </>
-            ) : (
-              <>
-                {/* QSR Fast-Food Pickup Board Quick View */}
-                <Link
-                  href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-                  title="Ouvrir l'Écran TV Retrait Commandes (Status Board Fast-Food)"
-                >
-                  <span>📢 Retrait Guichet</span>
-                </Link>
-
-                {/* Cashier Counter Quick View */}
-                <Link
-                  href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
-                  target="_blank"
-                  className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-                  title="Ouvrir le Terminal Caisse POS de votre établissement"
-                >
-                  <span>⚡ Caisse Express</span>
-                </Link>
-
-                {/* Kitchen KDS Quick View */}
-                <Link
-                  href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
-                  target="_blank"
-                  className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-                  title="Ouvrir l'Écran Cuisine KDS de votre établissement"
-                >
-                  <span>👨‍🍳 Écran Cuisine KDS</span>
-                </Link>
-              </>
-            )}
+            {/* Badge Formule Active */}
+            <span className="hidden md:inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 text-xs font-black px-3 py-2 rounded-2xl shadow-2xs">
+              ✨ Formule {currentPlanName}
+            </span>
 
             {/* Logout */}
             <button
@@ -954,123 +979,181 @@ export default function OperationalDashboardPage() {
           </div>
         </section>
 
-        {/* SECTION 5 : RACCOURCIS MODULES */}
-        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Link
-            href="/dashboard/branding"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-orange-500 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-orange-100 text-orange-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Palette className="w-6 h-6" />
+        {/* SECTION 5 : RACCOURCIS MODULES & PAYWALL PROGRESSIF */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                Modules Opérationnels & Fonctionnalités
+              </h3>
+              <p className="text-xs text-slate-500">
+                Accès direct aux modules inclus et aperçu valorisant des extensions de votre formule
+              </p>
             </div>
-            <h4 className="text-sm font-black text-slate-900">Studio de Marque</h4>
-            <p className="text-xs text-slate-500 mt-1">Couleurs, Google Fonts & Avis Maps</p>
-          </Link>
+            <span className="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full">
+              Formule active : <strong className="text-amber-800">{currentPlanName}</strong>
+            </span>
+          </div>
 
-          <Link
-            href="/dashboard/menu"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-amber-400 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Utensils className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Gestion du Menu</h4>
-            <p className="text-xs text-slate-500 mt-1">Plats, prix et formules combinées</p>
-          </Link>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* 1. Studio de Marque */}
+            <LockedFeatureCard
+              featureKey="STUDIO_BRANDING"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/branding"
+              title="Studio de Marque"
+              description="Couleurs, typographies Google Fonts et avis Maps"
+              icon={<Palette className="w-6 h-6" />}
+              iconBgColor="bg-orange-100"
+              iconColor="text-orange-800"
+            />
 
-          <Link
-            href="/dashboard/tables"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-emerald-400 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <QrCode className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Plan de Salle</h4>
-            <p className="text-xs text-slate-500 mt-1">Tables et QR codes HD prêts à imprimer</p>
-          </Link>
+            {/* 2. Gestion du Menu */}
+            <LockedFeatureCard
+              featureKey="MENU_MANAGEMENT"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/menu"
+              title="Gestion du Menu"
+              description="Plats, prix, photos illimitées et stocks en 1 clic"
+              icon={<Utensils className="w-6 h-6" />}
+              iconBgColor="bg-amber-100"
+              iconColor="text-amber-800"
+            />
 
-          <Link
-            href="/dashboard/zones"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-400 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <MapPin className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Zones & Espaces</h4>
-            <p className="text-xs text-slate-500 mt-1">Configuration des zones libres ou tables</p>
-          </Link>
+            {/* 3. Plan de Salle */}
+            <LockedFeatureCard
+              featureKey="TABLE_ORDERING"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/tables"
+              title="Plan de Salle & QR Tables"
+              description="Tables et QR codes HD prêts à imprimer"
+              icon={<QrCode className="w-6 h-6" />}
+              iconBgColor="bg-emerald-100"
+              iconColor="text-emerald-800"
+            />
 
-          <Link
-            href="/dashboard/waiters"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-indigo-400 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-indigo-100 text-indigo-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <Users className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Serveurs & Staff</h4>
-            <p className="text-xs text-slate-500 mt-1">Badges QR personnels pour vos serveurs</p>
-          </Link>
+            {/* 4. Caisse & Comptoir Express */}
+            <LockedFeatureCard
+              featureKey="CASHIER_POS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
+              title="Caisse & Comptoir Express"
+              description="Terminal caisse POS tactile et impression 80mm"
+              externalLink
+              icon={<Receipt className="w-6 h-6" />}
+              iconBgColor="bg-purple-100"
+              iconColor="text-purple-800"
+            />
 
-          <Link
-            href="/dashboard/stats"
-            className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-400 hover:shadow-sm transition-all group"
-          >
-            <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-              <BarChart3 className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-slate-900">Statistiques & Vues</h4>
-            <p className="text-xs text-slate-500 mt-1">Diagnostic des consultations et plats populaires</p>
-          </Link>
+            {/* 5. Équipe Caissiers */}
+            <LockedFeatureCard
+              featureKey="STAFF_CASHIERS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/cashiers"
+              title="Équipe Caissiers"
+              description="Codes PIN sécurisés et plannings matin/soir"
+              icon={<KeyRound className="w-6 h-6" />}
+              iconBgColor="bg-amber-100"
+              iconColor="text-amber-800"
+            />
 
-          {!isTambaliPlan && (
-            <>
-              <Link
-                href="/dashboard/kitchen"
-                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-orange-400 hover:shadow-sm transition-all group"
-              >
-                <div className="p-3 bg-orange-100 text-orange-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-                  <Store className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-black text-slate-900">Écran Cuisine KDS</h4>
-                <p className="text-xs text-slate-500 mt-1">Tickets en direct et impression 80mm</p>
-              </Link>
+            {/* 6. Clôtures & Caisses */}
+            <LockedFeatureCard
+              featureKey="CASHIER_POS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/cash-closures"
+              title="Clôtures & Caisses"
+              description="Fonds de caisse et rapports Z de fin de service"
+              icon={<Receipt className="w-6 h-6" />}
+              iconBgColor="bg-emerald-100"
+              iconColor="text-emerald-800"
+            />
 
-              <Link
-                href="/dashboard/cashiers"
-                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-amber-500 hover:shadow-sm transition-all group"
-              >
-                <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-                  <KeyRound className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-black text-slate-900">Équipe Caissiers</h4>
-                <p className="text-xs text-slate-500 mt-1">Codes PIN et plannings matin/soir</p>
-              </Link>
+            {/* 7. Écran Cuisine KDS */}
+            <LockedFeatureCard
+              featureKey="KITCHEN_KDS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/kitchen"
+              title="Écran Cuisine KDS"
+              description="Commandes en direct et alertes sonores rush"
+              icon={<Store className="w-6 h-6" />}
+              iconBgColor="bg-orange-100"
+              iconColor="text-orange-800"
+            />
 
-              <Link
-                href="/dashboard/cash-closures"
-                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-emerald-500 hover:shadow-sm transition-all group"
-              >
-                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-                  <Receipt className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-black text-slate-900">Clôtures & Caisses</h4>
-                <p className="text-xs text-slate-500 mt-1">Fonds de départ et rapports Z 80mm</p>
-              </Link>
+            {/* 8. Écran Retrait TV */}
+            <LockedFeatureCard
+              featureKey="PICKUP_SCREEN"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
+              title="Écran Retrait TV"
+              description="Status board retrait guichet et carillon sonore"
+              externalLink
+              icon={<Zap className="w-6 h-6" />}
+              iconBgColor="bg-blue-100"
+              iconColor="text-blue-800"
+            />
 
-              <Link
-                href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs hover:border-blue-500 hover:shadow-sm transition-all group"
-              >
-                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl w-fit mb-3 group-hover:scale-105 transition-transform">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-black text-slate-900">Écran Retrait TV</h4>
-                <p className="text-xs text-slate-500 mt-1">Carillon Ding-Dong & appels vocaux</p>
-              </Link>
-            </>
-          )}
+            {/* 9. Écran Menu TV */}
+            <LockedFeatureCard
+              featureKey="TV_DISPLAY_SIMPLE"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/display"
+              title="Écran Menu TV"
+              description="Diffusion dynamique sur grand écran / vidéoprojecteur"
+              icon={<Store className="w-6 h-6" />}
+              iconBgColor="bg-teal-100"
+              iconColor="text-teal-800"
+            />
+
+            {/* 10. Zones & Espaces */}
+            <LockedFeatureCard
+              featureKey="ZONE_MANAGEMENT"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/zones"
+              title="Zones & Espaces"
+              description="Configuration salle, terrasse, plage ou piscine"
+              icon={<MapPin className="w-6 h-6" />}
+              iconBgColor="bg-blue-100"
+              iconColor="text-blue-800"
+            />
+
+            {/* 11. Serveurs & Staff */}
+            <LockedFeatureCard
+              featureKey="STAFF_WAITERS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/waiters"
+              title="Serveurs & Staff"
+              description="Badges QR individuels et traçabilité des tables"
+              icon={<Users className="w-6 h-6" />}
+              iconBgColor="bg-indigo-100"
+              iconColor="text-indigo-800"
+            />
+
+            {/* 12. Statistiques & Vues */}
+            <LockedFeatureCard
+              featureKey="CONSULTATION_STATS"
+              currentPlanSlug={currentPlanSlug}
+              restaurantName={restaurantName}
+              href="/dashboard/stats"
+              title="Statistiques & Vues"
+              description="Diagnostic des consultations et plats populaires"
+              icon={<BarChart3 className="w-6 h-6" />}
+              iconBgColor="bg-blue-100"
+              iconColor="text-blue-800"
+            />
+          </div>
         </section>
       </main>
 

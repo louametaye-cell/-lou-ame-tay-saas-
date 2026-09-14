@@ -206,21 +206,52 @@ export default function FastFoodPickupBoardPage() {
   };
 
   if (isTambaliPlan) {
+    const whatsappUrl = `https://wa.me/221762312003?text=${encodeURIComponent(
+      `Bonjour Lou Ame Tay ?, je souhaite débloquer l'Écran de Retrait Guichet TV (Formule XÉWEUL à 35 000 FCFA/m) pour mon établissement ${restaurantId}.`
+    )}`;
+
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6 text-center">
-        <div className="max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-4 shadow-2xl">
-          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-3xl flex items-center justify-center mx-auto">
-            <Store className="w-8 h-8" />
+        <div className="max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="w-16 h-16 bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+            <Store className="w-8 h-8 stroke-[2.2]" />
           </div>
-          <h1 className="text-xl font-black text-white">Écran de Retrait Guichet</h1>
-          <p className="text-sm text-slate-400 leading-relaxed">
-            Cette fonctionnalité n'est pas incluse dans la formule vitrine <strong className="text-amber-300">TÀMBALI</strong>.
-            Elle est réservée aux établissements équipés d'une prise de commande numérique avec caisse et cuisine connectée.
-          </p>
-          <div className="pt-2">
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <span>Formule XÉWEUL requise</span>
+            </div>
+            <h1 className="text-xl font-black text-white">Écran de Retrait Guichet TV</h1>
+            <p className="text-xs text-amber-200/90 font-medium bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20 leading-relaxed text-left">
+              💡 Affichez les numéros de commande prêts sur écran TV avec carillon sonore et annonce vocale pour fluidifier le retrait.
+            </p>
+          </div>
+
+          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-left">
+            <div>
+              <span className="text-[11px] text-slate-400 block font-bold">Tarif formule XÉWEUL</span>
+              <span className="text-[10px] text-emerald-400 font-semibold">Sans engagement</span>
+            </div>
+            <div className="text-right">
+              <span className="font-mono text-xl font-black text-white">35 000</span>
+              <span className="text-[11px] text-slate-400 ml-1 font-bold">FCFA/m</span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 pt-1">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              <span>Mettre à niveau via WhatsApp</span>
+              <span>→</span>
+            </a>
+
             <a
               href={`/r/${restaurantId}`}
-              className="inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-2xl transition-all shadow-lg"
+              className="inline-flex items-center justify-center w-full py-2.5 px-4 text-slate-400 hover:text-white font-bold text-xs transition-colors"
             >
               Voir le Menu Digital
             </a>

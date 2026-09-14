@@ -16,7 +16,11 @@ export async function GET(req: Request) {
       where: {
         OR: [{ id: tenantId }, { subdomain: tenantId }]
       },
-      select: { id: true }
+      select: { 
+        id: true,
+        businessName: true,
+        plan: { select: { slug: true, name: true } }
+      }
     });
 
     if (!tenant) {
@@ -28,6 +32,22 @@ export async function GET(req: Request) {
       return NextResponse.json(
         { error: 'Accès non autorisé : Session gérant requise pour consulter les caissiers' },
         { status: 401 }
+      );
+    }
+
+    // 🔒 Contrôle Paywall : L'équipe caisse nécessite NIO FAR ou supérieur
+    const { hasAccessToFeature, getFeaturePaywallInfo } = await import('@/lib/plan-permissions');
+    const currentPlan = tenant.plan?.slug?.toLowerCase() || 'tambali';
+    if (!hasAccessToFeature(currentPlan, 'STAFF_CASHIERS')) {
+      const paywall = getFeaturePaywallInfo('STAFF_CASHIERS');
+      return NextResponse.json(
+        { 
+          error: `La gestion des caissiers nécessite la formule ${paywall.requiredPlanName} ou supérieure.`,
+          paywall,
+          requiredPlan: paywall.requiredPlanName,
+          currentPlan: tenant.plan?.name || 'TÀMBALI'
+        },
+        { status: 403 }
       );
     }
 
@@ -103,12 +123,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Resolve tenant
+    // Resolve tenant with plan
     const tenant = await prisma.tenant.findFirst({
       where: {
         OR: [{ id: rawTenantId }, { subdomain: rawTenantId }]
       },
-      select: { id: true }
+      select: { 
+        id: true,
+        businessName: true,
+        plan: { select: { slug: true, name: true } }
+      }
     });
 
     if (!tenant) {
@@ -121,6 +145,42 @@ export async function POST(req: Request) {
         { error: 'Accès non autorisé : Session gérant requise pour créer un caissier' },
         { status: 401 }
       );
+    }
+
+    // 🔒 Contrôle Paywall : La caisse nécessite au minimum NIO FAR
+    const { hasAccessToFeature, getFeaturePaywallInfo } = await import('@/lib/plan-permissions');
+    const currentPlan = tenant.plan?.slug?.toLowerCase() || 'tambali';
+    if (!hasAccessToFeature(currentPlan, 'STAFF_CASHIERS')) {
+      const paywall = getFeaturePaywallInfo('STAFF_CASHIERS');
+      return NextResponse.json(
+        { 
+          error: `La création de caissiers nécessite la formule ${paywall.requiredPlanName} ou supérieure.`,
+          paywall,
+          requiredPlan: paywall.requiredPlanName,
+          currentPlan: tenant.plan?.name || 'TÀMBALI'
+        },
+        { status: 403 }
+      );
+    }
+
+    // 🔒 Contrôle Paywall Multi-Guichets : Sous NIO FAR ou XÉWEUL, 1 seul caissier actif est autorisé
+    if (!hasAccessToFeature(currentPlan, 'MULTI_CASHIERS')) {
+      const activeCount = await prisma.cashier.count({
+        where: { tenantId: tenant.id, isActive: true }
+      });
+      if (activeCount >= 1) {
+        const paywall = getFeaturePaywallInfo('MULTI_CASHIERS');
+        return NextResponse.json(
+          {
+            error: `Votre formule actuelle (${tenant.plan?.name || 'Standard'}) est limitée à 1 seul guichet de caisse actif. Pour gérer plusieurs caissiers et postes d'encaissement simultanés, passez à la formule BAOBAB.`,
+            paywall,
+            requiredPlan: paywall.requiredPlanName,
+            currentPlan: tenant.plan?.name || 'Standard',
+            isMultiCashierQuotaReached: true
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Check PIN uniqueness for this tenant

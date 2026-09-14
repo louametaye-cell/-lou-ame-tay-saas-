@@ -39,11 +39,17 @@ export async function GET(
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    if (tenant.plan?.slug?.toLowerCase() === 'tambali') {
+    const { hasAccessToFeature, getFeaturePaywallInfo } = await import('@/lib/plan-permissions');
+    const currentPlan = tenant.plan?.slug?.toLowerCase() || 'tambali';
+    if (!hasAccessToFeature(currentPlan, 'PICKUP_SCREEN')) {
+      const paywall = getFeaturePaywallInfo('PICKUP_SCREEN');
       return NextResponse.json(
         { 
-          error: 'L\'écran de Retrait Guichet n\'est pas activé pour cet établissement sous formule vitrine TÀMBALI.',
-          isTambali: true 
+          error: `L'écran de Retrait Guichet nécessite la formule ${paywall.requiredPlanName} ou supérieure.`,
+          paywall,
+          requiredPlan: paywall.requiredPlanName,
+          currentPlan: tenant.plan?.name || 'TÀMBALI',
+          isBlockedByPaywall: true
         },
         { status: 403 }
       );

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 
 export default function ZonesManagerPage() {
   const [zones, setZones] = useState<any[]>([]);
@@ -89,7 +90,8 @@ export default function ZonesManagerPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <LockedFeatureGuard featureKey="ZONE_MANAGEMENT">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
           <MapPin className="text-orange-500" /> Gestion des Zones
@@ -170,5 +172,6 @@ export default function ZonesManagerPage() {
         </table>
       </div>
     </div>
+    </LockedFeatureGuard>
   );
 }
