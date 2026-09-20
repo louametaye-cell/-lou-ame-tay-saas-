@@ -141,8 +141,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 mb-3 shadow-xs">
                   <Zap className="w-4 h-4" strokeWidth={1.75} />
                 </div>
-                <h3 className="font-heading font-bold text-sm text-slate-900 mb-1">Gain de temps</h3>
-                <p className="text-xs text-slate-500 leading-relaxed font-normal">Optimisation des rotations et fluidification du service.</p>
+                <h3 className="font-heading font-bold text-sm text-slate-900 mb-1">Vos serveurs se concentrent sur le service</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">Vos serveurs se concentrent sur le service et l'accueil des clients.</p>
               </div>
             </div>
 

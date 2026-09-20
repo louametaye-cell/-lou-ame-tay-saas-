@@ -7,8 +7,10 @@ import { HeroSection } from '@/components/landing/HeroSection';
 import { MissionSection } from '@/components/landing/MissionSection';
 import { ProblemsSection } from '@/components/landing/ProblemsSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { DemoVideoSection } from '@/components/landing/DemoVideoSection';
 import { InteractiveLiveDemo } from '@/components/landing/InteractiveLiveDemo';
 import { RoiCalculator } from '@/components/landing/RoiCalculator';
+import { ProximitySection } from '@/components/landing/ProximitySection';
 import { WhyChooseUs } from '@/components/landing/WhyChooseUs';
 import { CustomerJourneySection } from '@/components/landing/CustomerJourneySection';
 import { PricingSection } from '@/components/landing/PricingSection';
@@ -91,13 +93,19 @@ export default function HomePage() {
         {/* 3. How it Works (3 Steps + 4 Key Screens) */}
         <HowItWorksSection />
 
+        {/* 3.5 Demo Video Section (Voyez Lou Ame Tay? en action - 30s) */}
+        <DemoVideoSection />
+
         {/* 4. Interactive Live Simulator (Phone Order to Kitchen Screen Sync) */}
         <InteractiveLiveDemo />
 
         {/* 5. ROI & Profitability Calculator in FCFA */}
         <RoiCalculator />
 
-        {/* 6. Why Choose Us (Hyper-Proximité Thiès & Dakar + Comparatif) */}
+        {/* 5.5 Proximity Section (Notre différence : l'hyper-proximité Thiès & Dakar) */}
+        <ProximitySection />
+
+        {/* 6. Why Choose Us (Hyper-Proximité + Comparatif) */}
         <WhyChooseUs />
 
         {/* 7. Customer Journey & WhatsApp Onboarding (J0 -> J45) */}
@@ -124,23 +132,6 @@ export default function HomePage() {
       <Footer 
         onOpenQrModal={() => setIsQrModalOpen(true)} 
       />
-
-      {/* Floating Action WhatsApp Button (Bottom Right) */}
-      <aside aria-label="Bouton WhatsApp flottant" className="fixed bottom-6 right-6 z-40">
-        <a
-          id="floating-whatsapp-btn"
-          href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20informations."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all group"
-          title="Échanger sur WhatsApp (+221 76 231 20 03)"
-        >
-          <MessageCircle className="w-6 h-6 fill-current" />
-          <span className="hidden sm:inline font-bold text-xs">
-            Assistance WhatsApp 🇸🇳
-          </span>
-        </a>
-      </aside>
 
       {/* 14-Day Free Trial Sign-up Modal */}
       <FreeTrialModal

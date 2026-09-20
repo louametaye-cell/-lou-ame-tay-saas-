@@ -15,33 +15,33 @@ export const WhyChooseUs: React.FC = () => {
   const pillars = [
     {
       icon: Flag,
-      title: 'Adapté au marché sénégalais',
+      title: 'Conçu au Sénégal, pour le Sénégal',
       subtitle: 'Conçu localement',
-      description: 'Optimisé pour les réseaux mobiles locaux. Gestion multi-langues, affichage en FCFA et prise en compte des spécificités de service au Sénégal.'
+      description: 'Menu QR code multilingue et tarifs FCFA adaptés aux habitudes locales.'
     },
     {
       icon: Clock,
-      title: 'Optimisation du temps de service',
+      title: 'Vos serveurs se concentrent sur le service',
       subtitle: 'Efficacité opérationnelle',
-      description: 'Vos équipes réduisent les déplacements inutiles en salle et se concentrent sur l\'accueil et la fluidité de la prise de commande.'
+      description: 'Moins de déplacements inutiles en salle et accueil chaleureux de vos clients.'
     },
     {
       icon: TrendingUp,
-      title: 'Valorisation de la carte',
+      title: 'Encaissez plus par table, sans effort',
       subtitle: 'Visuels & Suggestions',
-      description: 'Présentation claire des plats avec photos HD et options personnalisées, incitant naturellement à la découverte de vos spécialités.'
+      description: 'Photos de plats attrayantes qui incitent naturellement aux commandes complémentaires.'
     },
     {
       icon: HeartHandshake,
       title: 'Support local 7j/7',
       subtitle: 'Présence à Thiès & Dakar',
-      description: 'Assistance réactive sur place et via WhatsApp par une équipe locale qui connaît les enjeux de votre établissement.'
+      description: 'Équipe locale disponible sur place et sur WhatsApp 7 jours sur 7.'
     },
     {
       icon: Leaf,
-      title: 'Réduction de l\'empreinte papier',
-      subtitle: 'Économie & RSE',
-      description: 'Élimination des coûts de réimpression récurrents et suppression du papier jetable dans le déroulé quotidien du service.'
+      title: 'Moins de papier, plus de marge',
+      subtitle: 'Économie & Marge',
+      description: 'Suppression des frais de réimpression et réduction de l\'usage du papier.'
     }
   ];
 
@@ -160,28 +160,50 @@ export const WhyChooseUs: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {COMPETITOR_COMPARISONS.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="p-3.5 text-slate-900 font-medium">
-                      {row.feature}
-                    </td>
-                    <td className="p-3.5 text-[#00A86B] font-bold text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Check className="w-4 h-4 text-[#00A86B]" strokeWidth={2} />
-                        <span>{String(row.louAmeTay)}</span>
-                      </div>
-                    </td>
-                    <td className="p-3.5 text-slate-500 text-center">
-                      {String(row.scaniFood)}
-                    </td>
-                    <td className="p-3.5 text-slate-500 text-center">
-                      {String(row.xolalMenu)}
-                    </td>
-                    <td className="p-3.5 text-slate-400 text-center">
-                      {String(row.menuPapier)}
-                    </td>
-                  </tr>
-                ))}
+                {COMPETITOR_COMPARISONS.map((row, rIdx) => {
+                  const isKdsRow = row.feature.includes('KDS') || row.feature.includes('Écran Cuisine');
+                  return (
+                    <tr key={rIdx} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="p-3.5 text-slate-900 font-medium">
+                        {row.feature}
+                      </td>
+                      <td className="p-3.5 text-[#00A86B] font-bold text-center">
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1">
+                            <Check className="w-4 h-4 text-[#00A86B]" strokeWidth={2} />
+                            <span>{String(row.louAmeTay)}</span>
+                          </div>
+                          {isKdsRow && (
+                            <span className="text-emerald-700 italic text-xs block font-normal leading-tight mt-0.5">
+                              Économie de 40 000 FCFA vs concurrents qui facturent le KDS en option.
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3.5 text-slate-500 text-center">
+                        {isKdsRow ? (
+                          <span className="text-red-600 text-xs bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md inline-block font-semibold">
+                            {String(row.scaniFood)}
+                          </span>
+                        ) : (
+                          String(row.scaniFood)
+                        )}
+                      </td>
+                      <td className="p-3.5 text-slate-500 text-center">
+                        {isKdsRow ? (
+                          <span className="text-red-600 text-xs bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md inline-block font-semibold">
+                            {String(row.xolalMenu)}
+                          </span>
+                        ) : (
+                          String(row.xolalMenu)
+                        )}
+                      </td>
+                      <td className="p-3.5 text-slate-400 text-center">
+                        {String(row.menuPapier)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

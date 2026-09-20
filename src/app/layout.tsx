@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from 'sonner';
+import { WhatsAppFloat } from '@/components/WhatsAppFloat';
 
 export const metadata: Metadata = {
   title: 'Lou Ame Tay ? 🍽️ - Menu Digital & Commande à Table Sénégal',
@@ -47,6 +48,7 @@ export default function RootLayout({
     <html lang="fr" className="light scroll-smooth">
       <body className="antialiased selection:bg-amber-500 selection:text-white min-h-screen bg-[#F8FAFC] text-slate-900">
         {children}
+        <WhatsAppFloat />
         <Toaster position="top-center" richColors closeButton />
       </body>
     </html>

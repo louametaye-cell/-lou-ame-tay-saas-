@@ -585,8 +585,8 @@ export const COMPETITOR_COMPARISONS: CompetitorComparison[] = [
   {
     feature: 'Écran Cuisine (KDS) en direct inclus',
     louAmeTay: 'Inclus dès 15 000 FCFA',
-    scaniFood: 'Non',
-    xolalMenu: 'Option payante',
+    scaniFood: 'Non inclus (+40 000 FCFA)',
+    xolalMenu: 'Non inclus (+40 000 FCFA)',
     menuPapier: 'Bons papier perdus',
     isHighlight: true
   }
@@ -638,6 +638,11 @@ export const FAQS: FaqItem[] = [
     category: 'Technique',
     question: 'Que se passe-t-il si la connexion internet est faible au restaurant ?',
     answer: 'Lou Ame Tay est optimisé pour les réseaux 3G/4G sénégalais (Orange, Free, Expresso). La page est ultra-légère (moins de 1 Mo) et se charge en moins de 2 secondes même avec une connexion ralentie.'
+  },
+  {
+    category: 'Technique',
+    question: 'Que se passe-t-il si la connexion internet est coupée ?',
+    answer: 'Le menu client fonctionne même avec une connexion 3G faible. L\'écran cuisine (KDS) peut fonctionner en réseau local au sein du restaurant. Dès que la connexion revient, toutes les commandes prises hors ligne sont synchronisées automatiquement sur Supabase. Aucune commande n\'est perdue.'
   },
   {
     category: 'Matériel',

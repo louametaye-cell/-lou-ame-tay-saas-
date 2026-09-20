@@ -8,29 +8,29 @@ export const MissionSection: React.FC = () => {
       id: 'pillar-1',
       icon: Globe,
       badge: 'Hospitalité',
-      title: 'Levier Digital Universel',
-      description: 'Offrir à chaque restaurateur, hôtelier et gérant du secteur CHRECA un outil simple et accessible.'
+      title: 'Un menu qui parle à tous vos clients',
+      description: 'Menu QR code fluide et accessible instantanément sur mobile.'
     },
     {
       id: 'pillar-2',
       icon: RefreshCw,
       badge: 'Efficacité',
       title: 'Réduction du Papier',
-      description: 'Diminuer l\'usage des cartes papier imprimées et simplifier la transmission des commandes.'
+      description: 'Moins d\'impressions papier et transmission directe des commandes.'
     },
     {
       id: 'pillar-3',
       icon: Leaf,
-      badge: 'Démarche RSE',
+      badge: 'Moins de papier, plus de marge',
       title: 'Préservation de l\'Environnement',
-      description: 'Contribuer à la réduction des déchets récurrents à travers une digitalisation sobre.'
+      description: 'Réduction des coûts d\'impression récurrents et des déchets papier.'
     },
     {
       id: 'pillar-4',
       icon: Award,
-      badge: 'Souveraineté Tech 🇸🇳',
+      badge: 'Conçu au Sénégal, pour le Sénégal',
       title: 'Conçu et hébergé au Sénégal',
-      description: 'Une solution développée localement pour répondre précisément aux attentes du marché.'
+      description: 'Solution 100% locale adaptée aux besoins réels des restaurateurs.'
     }
   ];
 

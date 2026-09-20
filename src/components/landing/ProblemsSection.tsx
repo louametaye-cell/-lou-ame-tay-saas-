@@ -41,7 +41,7 @@ const PROBLEMS_DATA: ProblemItem[] = [
     solutionTitle: 'Carte digitale modifiable en temps réel',
     solutionFull: 'Votre carte est 100% numérique et accessible via QR code. Vous ajustez vos prix, modifiez les visuels ou mettez en avant les suggestions du jour en quelques secondes depuis votre smartphone.',
     impactMetric: '0 FCFA de réimpression',
-    rseBadge: 'Réduction de l\'empreinte papier',
+    rseBadge: 'Moins de papier, plus de marge',
     icon: FileX
   },
   {
@@ -68,7 +68,7 @@ const PROBLEMS_DATA: ProblemItem[] = [
     problemFull: "L'attente initiale avant la prise en charge par un serveur peut créer de l'impatience chez les clients pressés et limiter le volume de clients servis sur un service.",
     solutionTitle: 'Accès instantané à la carte dès l\'installation',
     solutionFull: 'Dès son arrivée à table, le client flashe le QR code et consulte la carte sans délai. Il peut préparer sa commande rapidement, libérant du temps au personnel pour l\'accueil.',
-    impactMetric: 'Optimisation du temps de service',
+    impactMetric: 'Vos serveurs se concentrent sur le service',
     rseBadge: 'Fluidité du parcours client',
     icon: Hourglass
   },
@@ -82,7 +82,7 @@ const PROBLEMS_DATA: ProblemItem[] = [
     problemFull: 'Rien n\'est plus insatisfaisant pour un client que de choisir un plat pour apprendre quelques minutes plus tard que la cuisine n\'en dispose plus en réserve.',
     solutionTitle: 'Mise en rupture instantanée depuis le smartphone',
     solutionFull: 'Dès qu\'un plat est épuisé, vous cliquez sur "Indisponible" depuis votre tableau de bord. Le produit est automatiquement masqué ou indiqué indisponible sur l\'ensemble des cartes scannées.',
-    impactMetric: 'Gestion des ruptures en temps réel',
+    impactMetric: 'Fini les plats épuisés annoncés trop tard',
     rseBadge: 'Gestion optimisée des stocks',
     icon: PackageX
   }
