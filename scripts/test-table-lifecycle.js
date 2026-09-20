@@ -92,9 +92,10 @@ async function run() {
     const tableCard12 = page.locator(`div[data-table-number="${TEST_TABLE}"]`);
     await tableCard12.waitFor({ state: 'visible', timeout: 10000 });
 
-    const isLibre = await tableCard12.locator('text=Libre').isVisible();
+    const isLibre = await tableCard12.locator('text=Table Libre & Dressée').isVisible();
+    const lifecycleFree = await tableCard12.getAttribute('data-table-lifecycle');
     const hasClient = await tableCard12.locator('text=Amadou Diallo').isVisible();
-    console.log(`✓ Table 12 statut affiché : Libre = ${isLibre} | Ancien client masqué = ${!hasClient}`);
+    console.log(`✓ Table 12 statut affiché : Libre = ${isLibre} (cycle=${lifecycleFree}) | Ancien client masqué = ${!hasClient}`);
 
     // Scroll vers la Table 12 pour une capture nette
     await tableCard12.scrollIntoViewIfNeeded();
@@ -145,7 +146,8 @@ async function run() {
 
     const clientNameVisible = await tableCard12.locator('text=Amadou Diallo').isVisible();
     const orderNumVisible = await tableCard12.locator(`text=#${createdOrder.id.slice(-5).toUpperCase()}`).isVisible();
-    console.log(`✓ Table 12 passée en OCCUPÉE : Nom client visible = ${clientNameVisible} | #Commande = ${orderNumVisible}`);
+    const lifecycleOccupied = await tableCard12.getAttribute('data-table-lifecycle');
+    console.log(`✓ Table 12 passée en OCCUPÉE : Nom client visible = ${clientNameVisible} | #Commande = ${orderNumVisible} | (cycle=${lifecycleOccupied})`);
 
     await saveScreenshots(page, 'cycle_table_2_occupee.png');
 
@@ -176,7 +178,8 @@ async function run() {
     const toCleanBadge = await tableCard12.locator('text=À LIBÉRER').first().isVisible();
     const actionBtn = tableCard12.locator('button:has-text("Table Prête (Remettre en service)")').first();
     const isActionBtnVisible = await actionBtn.isVisible();
-    console.log(`✓ Table 12 passée en À LIBÉRER : Badge jaune visible = ${toCleanBadge} | Bouton action visible = ${isActionBtnVisible}`);
+    const lifecycleToClean = await tableCard12.getAttribute('data-table-lifecycle');
+    console.log(`✓ Table 12 passée en À LIBÉRER : Badge jaune visible = ${toCleanBadge} | Bouton action visible = ${isActionBtnVisible} | (cycle=${lifecycleToClean})`);
 
     await saveScreenshots(page, 'cycle_table_3_a_liberer.png');
 
@@ -198,9 +201,10 @@ async function run() {
     await page.waitForTimeout(2500);
 
     // Vérifier que la Table 12 est redevenue LIBRE et que le nom d'Amadou Diallo a disparu
-    const isLibreAgain = await tableCard12.locator('text=Libre').isVisible();
+    const isLibreAgain = await tableCard12.locator('text=Table Libre & Dressée').isVisible();
+    const lifecycleFreeAgain = await tableCard12.getAttribute('data-table-lifecycle');
     const isOldClientRemoved = !(await tableCard12.locator('text=Amadou Diallo').isVisible());
-    console.log(`✓ Table 12 remise en service : Statut = Libre (${isLibreAgain}) | Ancien client disparu = ${isOldClientRemoved}`);
+    console.log(`✓ Table 12 remise en service : Statut = Libre (${isLibreAgain}, cycle=${lifecycleFreeAgain}) | Ancien client disparu = ${isOldClientRemoved}`);
 
     await saveScreenshots(page, 'cycle_table_4_remise_en_service_libre.png');
 

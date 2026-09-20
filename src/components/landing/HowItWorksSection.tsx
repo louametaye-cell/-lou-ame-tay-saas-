@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
-  QrCode, 
-  Smartphone, 
+  ScanLine, 
+  Utensils, 
   ChefHat, 
+  Smartphone, 
   LayoutDashboard, 
   Building2, 
   CheckCircle2, 
   ArrowRight, 
-  Clock, 
   Bell, 
-  Flame,
-  Layers,
-  Settings,
-  DollarSign,
-  Check,
-  MapPin,
-  UtensilsCrossed,
-  Coffee
+  Check, 
+  MapPin, 
+  UtensilsCrossed, 
+  Coffee 
 } from 'lucide-react';
 
 export const HowItWorksSection: React.FC = () => {
@@ -88,12 +85,19 @@ export const HowItWorksSection: React.FC = () => {
   const activeScreen = screensInfo.find(s => s.id === activeScreenTab)!;
 
   return (
-    <section id="comment-ca-marche" className="py-20 bg-[#F8F9FA] border-b border-gray-100 relative">
+    <section id="comment-ca-marche" className="py-20 bg-[#F8F9FA] border-b border-gray-100 relative overflow-hidden">
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 bg-green-50 text-[#00A86B] px-3.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider border border-green-200/60">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto space-y-4"
+        >
+          <div className="inline-flex items-center gap-2 bg-emerald-50 text-[#00A86B] px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-emerald-200/60 shadow-xs">
+            <ScanLine className="w-3.5 h-3.5 text-[#00A86B]" />
             <span>Simplicité absolue</span>
           </div>
           
@@ -105,15 +109,29 @@ export const HowItWorksSection: React.FC = () => {
             En 3 clics, vos clients commandent depuis leur table. La commande arrive directement en cuisine. 
             Simple, rapide et sans contact inutile.
           </p>
-        </div>
+        </motion.div>
 
         {/* 3 Core Steps Process Cards */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative">
           
+          {/* Connector Dotted Line for Desktop */}
+          <div className="hidden md:block absolute top-[4.5rem] left-[15%] right-[15%] h-0.5 border-t-2 border-dashed border-emerald-200 z-0 pointer-events-none" />
+
           {/* Step 1 */}
-          <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#00A86B] transition-all">
-            <div className="w-12 h-12 rounded-xl bg-green-50 text-[#00A86B] flex items-center justify-center font-black text-xl mb-6">
-              1
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#00A86B] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 z-10 overflow-hidden"
+          >
+            {/* Watermark Step Number */}
+            <span className="text-gray-900/10 font-black text-7xl absolute top-2 right-4 select-none pointer-events-none transition-transform group-hover:scale-110">
+              01
+            </span>
+
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#00A86B] flex items-center justify-center font-black text-xl mb-6 shadow-inner group-hover:bg-[#00A86B] group-hover:text-white transition-colors duration-300">
+              <ScanLine className="w-7 h-7" />
             </div>
             <span className="text-xs font-extrabold text-[#00A86B] tracking-wider uppercase block mb-1">
               Étape 1 : Le client s'assoit
@@ -121,15 +139,26 @@ export const HowItWorksSection: React.FC = () => {
             <h3 className="font-heading font-bold text-xl text-gray-900 mb-2">
               Il scanne le QR Code
             </h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <p className="text-sm text-gray-500 leading-relaxed relative z-10">
               Posé sur la table (autocollant ou chevalet rigide). L'appareil photo ouvre la carte en 1 seconde. Aucune application à installer.
             </p>
-          </div>
+          </motion.div>
 
           {/* Step 2 */}
-          <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#FF6B00] transition-all">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 text-[#FF6B00] flex items-center justify-center font-black text-xl mb-6">
-              2
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#FF6B00] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 z-10 overflow-hidden"
+          >
+            {/* Watermark Step Number */}
+            <span className="text-gray-900/10 font-black text-7xl absolute top-2 right-4 select-none pointer-events-none transition-transform group-hover:scale-110">
+              02
+            </span>
+
+            <div className="w-14 h-14 rounded-2xl bg-orange-50 text-[#FF6B00] flex items-center justify-center font-black text-xl mb-6 shadow-inner group-hover:bg-[#FF6B00] group-hover:text-white transition-colors duration-300">
+              <Utensils className="w-7 h-7" />
             </div>
             <span className="text-xs font-extrabold text-[#FF6B00] tracking-wider uppercase block mb-1">
               Étape 2 : Il choisit avec envie
@@ -137,15 +166,26 @@ export const HowItWorksSection: React.FC = () => {
             <h3 className="font-heading font-bold text-xl text-gray-900 mb-2">
               Il compose son repas
             </h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <p className="text-sm text-gray-500 leading-relaxed relative z-10">
               Photos alléchantes, prix en FCFA, descriptions des plats locaux et suggestions de boissons fraîches (Bissap, Bouye, sodas).
             </p>
-          </div>
+          </motion.div>
 
           {/* Step 3 */}
-          <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#00A86B] transition-all">
-            <div className="w-12 h-12 rounded-xl bg-green-50 text-[#00A86B] flex items-center justify-center font-black text-xl mb-6">
-              3
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white rounded-2xl p-7 border border-gray-200 shadow-xs relative group hover:border-[#00A86B] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 z-10 overflow-hidden"
+          >
+            {/* Watermark Step Number */}
+            <span className="text-gray-900/10 font-black text-7xl absolute top-2 right-4 select-none pointer-events-none transition-transform group-hover:scale-110">
+              03
+            </span>
+
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#00A86B] flex items-center justify-center font-black text-xl mb-6 shadow-inner group-hover:bg-[#00A86B] group-hover:text-white transition-colors duration-300">
+              <ChefHat className="w-7 h-7" />
             </div>
             <span className="text-xs font-extrabold text-[#00A86B] tracking-wider uppercase block mb-1">
               Étape 3 : Le service démarre
@@ -153,23 +193,29 @@ export const HowItWorksSection: React.FC = () => {
             <h3 className="font-heading font-bold text-xl text-gray-900 mb-2">
               La commande file en cuisine
             </h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <p className="text-sm text-gray-500 leading-relaxed relative z-10">
               Le cuisinier ou le gérant reçoit la commande avec le numéro exact de table. Les plats sont préparés sans le moindre malentendu.
             </p>
-          </div>
+          </motion.div>
 
         </div>
 
         {/* Section The 4 Main Screens (Ecrans de la solution) */}
         <div className="mt-20">
-          <div className="text-center max-w-2xl mx-auto mb-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-2xl mx-auto mb-10"
+          >
             <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-gray-900">
               Les 4 écrans de la solution <span className="text-[#FF6B00]">clé en main</span>
             </h3>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm sm:text-base text-gray-500 mt-2">
               Une technologie complète pour chaque maillon de votre restaurant : du client jusqu'à vos comptes.
             </p>
-          </div>
+          </motion.div>
 
           {/* Screen Tabs Bar */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
@@ -181,18 +227,18 @@ export const HowItWorksSection: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveScreenTab(tab.id)}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                  className={`p-4 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between cursor-pointer ${
                     isCurrent
-                      ? 'bg-white border-[#00A86B] shadow-md ring-2 ring-[#00A86B]/20'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
+                      ? 'bg-white border-[#00A86B] shadow-md ring-2 ring-[#00A86B]/20 scale-[1.02]'
+                      : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className={`p-2 rounded-lg ${isCurrent ? 'bg-[#00A86B] text-white' : 'bg-gray-100 text-gray-700'}`}>
+                    <div className={`p-2 rounded-lg transition-colors ${isCurrent ? 'bg-[#00A86B] text-white' : 'bg-emerald-50 text-[#00A86B]'}`}>
                       <TabIcon className="w-5 h-5" />
                     </div>
                     <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                      isCurrent ? 'bg-green-50 text-[#00A86B]' : 'bg-gray-100 text-gray-600'
+                      isCurrent ? 'bg-emerald-50 text-[#00A86B] border border-emerald-200' : 'bg-gray-100 text-gray-600'
                     }`}>
                       {tab.badge}
                     </span>
@@ -207,14 +253,20 @@ export const HowItWorksSection: React.FC = () => {
           </div>
 
           {/* Active Screen Interactive Showcase Card */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden p-6 sm:p-10">
+          <motion.div 
+            key={activeScreenTab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden p-6 sm:p-10"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
               {/* Screen Description Details */}
               <div className="lg:col-span-6 space-y-6">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-green-50 text-[#00A86B] text-xs font-bold border border-green-200">
-                    
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#00A86B] text-xs font-bold border border-emerald-200">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#00A86B]" />
                     <span>{activeScreen.badge}</span>
                   </div>
                   <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-gray-900">
@@ -240,7 +292,7 @@ export const HowItWorksSection: React.FC = () => {
                 <div className="pt-2">
                   <a
                     href="#demo-live"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#00A86B] hover:bg-[#00925d] px-6 py-3 rounded-xl shadow-md shadow-[#00A86B]/20 transition-all"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#00A86B] hover:bg-[#00925d] px-6 py-3 rounded-xl shadow-md shadow-[#00A86B]/20 transition-all hover:scale-[1.02]"
                   >
                     <span>Tester cet écran en direct</span>
                     <ArrowRight className="w-4 h-4" />
@@ -406,7 +458,7 @@ export const HowItWorksSection: React.FC = () => {
               </div>
 
             </div>
-          </div>
+          </motion.div>
 
         </div>
 

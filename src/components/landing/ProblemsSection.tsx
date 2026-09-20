@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileX, 
   Users, 
-  Clock, 
-  AlertTriangle, 
+  Hourglass, 
+  PackageX, 
   CheckCircle2, 
   XCircle, 
   ChevronDown, 
-  ChevronUp, 
-  Zap, 
   ArrowRight, 
   Leaf, 
   Sparkles,
@@ -50,7 +49,7 @@ const PROBLEMS_DATA: ProblemItem[] = [
     rseBadge: 'Zéro papier jeté (Démarche Éco-Responsable)',
     icon: FileX,
     gradientBg: 'from-[#00A86B]/10 to-[#00A86B]/5',
-    iconBg: 'bg-rose-50 border-rose-200',
+    iconBg: 'bg-rose-100 border-rose-300',
     iconColor: 'text-rose-600'
   },
   {
@@ -67,8 +66,8 @@ const PROBLEMS_DATA: ProblemItem[] = [
     rseBadge: 'Qualité de service & sérénité de l\'équipe',
     icon: Users,
     gradientBg: 'from-[#FF6B00]/10 to-[#FF6B00]/5',
-    iconBg: 'bg-amber-50 border-amber-200',
-    iconColor: 'text-[#FF6B00]'
+    iconBg: 'bg-amber-100 border-amber-300',
+    iconColor: 'text-amber-700'
   },
   {
     id: 'prob-waiting',
@@ -82,10 +81,10 @@ const PROBLEMS_DATA: ProblemItem[] = [
     solutionFull: 'Dès que le client s\'assied à sa table, il flashe le QR code et consulte le menu immédiatement. Il passe sa commande en quelques secondes, ce qui libère vos serveurs pour l\'accueil et l\'encaissement.',
     impactMetric: '+25% de rotation des tables',
     rseBadge: 'Fluidité & Bien-être client',
-    icon: Clock,
-    gradientBg: 'from-blue-500/10 to-blue-500/5',
-    iconBg: 'bg-blue-50 border-blue-200',
-    iconColor: 'text-blue-600'
+    icon: Hourglass,
+    gradientBg: 'from-orange-500/10 to-orange-500/5',
+    iconBg: 'bg-orange-100 border-orange-300',
+    iconColor: 'text-orange-600'
   },
   {
     id: 'prob-stock',
@@ -99,15 +98,14 @@ const PROBLEMS_DATA: ProblemItem[] = [
     solutionFull: 'Dès qu\'une assiette ou un ingrédient est épuisé, vous appuyez sur "Mettre en rupture" depuis votre téléphone. Le plat est automatiquement masqué ou grisé sur tous les menus scannés en salle.',
     impactMetric: 'Zéro déception client',
     rseBadge: 'Anti-Gaspillage Alimentaire RSE',
-    icon: AlertTriangle,
-    gradientBg: 'from-emerald-500/10 to-emerald-500/5',
-    iconBg: 'bg-emerald-50 border-emerald-200',
-    iconColor: 'text-[#00A86B]'
+    icon: PackageX,
+    gradientBg: 'from-red-500/10 to-red-500/5',
+    iconBg: 'bg-red-100 border-red-300',
+    iconColor: 'text-red-600'
   }
 ];
 
 export const ProblemsSection: React.FC = () => {
-  // Expanded card state: set first item expanded by default
   const [expandedId, setExpandedId] = useState<string | null>('prob-paper');
   const [activeTabMap, setActiveTabMap] = useState<{ [key: string]: 'solution' | 'problem' }>({
     'prob-paper': 'solution',
@@ -134,8 +132,14 @@ export const ProblemsSection: React.FC = () => {
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-[#FF6B00] text-xs font-bold uppercase tracking-wider">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto space-y-4"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-[#FF6B00] text-xs font-bold uppercase tracking-wider shadow-xs">
             <Flame className="w-4 h-4 text-[#FF6B00]" />
             <span>Frictions Terrain ➔ Solutions Concrètes</span>
           </div>
@@ -145,24 +149,28 @@ export const ProblemsSection: React.FC = () => {
           </h2>
 
           <p className="text-base sm:text-lg text-gray-600 font-normal leading-relaxed max-w-2xl mx-auto">
-            Découvrez comment **Lou Ame Tay ?** résout les 4 plus grands défis quotidiens des établissements de restauration, d'hôtellerie et du tourisme au Sénégal.
+            Découvrez comment <strong className="text-[#1A1A1A]">Lou Ame Tay ?</strong> résout les 4 plus grands défis quotidiens des établissements de restauration, d'hôtellerie et du tourisme au Sénégal.
           </p>
 
           <p className="text-xs font-semibold text-gray-500 italic pt-1">
             👉 Cliquez sur une carte ci-dessous pour découvrir la solution et son impact métier :
           </p>
-        </div>
+        </motion.div>
 
         {/* 4 Interactive Accordion Cards */}
         <div className="mt-12 space-y-4 max-w-5xl mx-auto">
-          {PROBLEMS_DATA.map((item) => {
+          {PROBLEMS_DATA.map((item, index) => {
             const isExpanded = expandedId === item.id;
             const activeTab = activeTabMap[item.id] || 'solution';
             const IconComp = item.icon;
 
             return (
-              <div
+              <motion.div
                 key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
                 onClick={() => toggleExpand(item.id)}
                 className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden cursor-pointer ${
                   isExpanded
@@ -217,97 +225,110 @@ export const ProblemsSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Collapsible Content Area (Revealed on Click) */}
-                {isExpanded && (
-                  <div className="px-5 pb-6 sm:px-7 sm:pb-8 pt-0 border-t border-gray-100 bg-[#FAFAFA]/70 animate-in fade-in slide-in-from-top-2 duration-300">
-                    
-                    {/* Interactive Tab Selector (Before vs After) */}
-                    <div className="pt-4 flex items-center justify-between gap-4 flex-wrap">
-                      <div className="bg-gray-200/70 p-1 rounded-xl inline-flex text-xs font-bold text-gray-700">
-                        <button
-                          onClick={(e) => setTab(item.id, 'solution', e)}
-                          className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                            activeTab === 'solution'
-                              ? 'bg-[#00A86B] text-white shadow-sm'
-                              : 'hover:text-gray-900'
-                          }`}
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Avec Lou Ame Tay (Solution)</span>
-                        </button>
-                        <button
-                          onClick={(e) => setTab(item.id, 'problem', e)}
-                          className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                            activeTab === 'problem'
-                              ? 'bg-rose-600 text-white shadow-sm'
-                              : 'hover:text-gray-900'
-                          }`}
-                        >
-                          <XCircle className="w-4 h-4" />
-                          <span>Méthode Papier (Problème)</span>
-                        </button>
+                {/* Collapsible Content Area */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="px-5 pb-6 sm:px-7 sm:pb-8 pt-0 border-t border-gray-100 bg-[#FAFAFA]/70"
+                    >
+                      {/* Interactive Tab Selector (Before vs After) */}
+                      <div className="pt-4 flex items-center justify-between gap-4 flex-wrap">
+                        <div className="bg-gray-200/70 p-1 rounded-xl inline-flex text-xs font-bold text-gray-700">
+                          <button
+                            onClick={(e) => setTab(item.id, 'solution', e)}
+                            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                              activeTab === 'solution'
+                                ? 'bg-[#00A86B] text-white shadow-sm'
+                                : 'hover:text-gray-900'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Avec Lou Ame Tay (Solution)</span>
+                          </button>
+                          <button
+                            onClick={(e) => setTab(item.id, 'problem', e)}
+                            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                              activeTab === 'problem'
+                                ? 'bg-rose-600 text-white shadow-sm'
+                                : 'hover:text-gray-900'
+                            }`}
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>Méthode Papier (Problème)</span>
+                          </button>
+                        </div>
+
+                        {/* RSE Badge */}
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                          <Leaf className="w-3.5 h-3.5 text-emerald-600" />
+                          {item.rseBadge}
+                        </span>
                       </div>
 
-                      {/* RSE Badge */}
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
-                        <Leaf className="w-3.5 h-3.5 text-emerald-600" />
-                        {item.rseBadge}
-                      </span>
-                    </div>
+                      {/* Dynamic Tab Body Content */}
+                      <div className="mt-5">
+                        {activeTab === 'solution' ? (
+                          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm space-y-3">
+                            <div className="flex items-center gap-2 text-[#00A86B]">
+                              <Sparkles className="w-5 h-5" />
+                              <h4 className="font-heading font-extrabold text-base sm:text-lg text-gray-900">
+                                {item.solutionTitle}
+                              </h4>
+                            </div>
+                            <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed">
+                              {item.solutionFull}
+                            </p>
 
-                    {/* Dynamic Tab Body Content */}
-                    <div className="mt-5">
-                      {activeTab === 'solution' ? (
-                        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-emerald-200 shadow-sm space-y-3">
-                          <div className="flex items-center gap-2 text-[#00A86B]">
-                            <Sparkles className="w-5 h-5" />
-                            <h4 className="font-heading font-extrabold text-base sm:text-lg text-gray-900">
-                              {item.solutionTitle}
-                            </h4>
+                            <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 text-xs">
+                              <span className="text-gray-500 font-semibold flex items-center gap-1">
+                                <ShieldCheck className="w-4 h-4 text-[#00A86B]" />
+                                Gain mesuré : <strong className="text-[#00A86B] font-extrabold">{item.impactMetric}</strong>
+                              </span>
+
+                              <a
+                                href="#demo-live"
+                                className="bg-[#00A86B] hover:bg-[#00925d] text-white font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm hover:scale-[1.02]"
+                              >
+                                <span>Tester cette fonction en direct</span>
+                                <ArrowRight className="w-4 h-4" />
+                              </a>
+                            </div>
                           </div>
-                          <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed">
-                            {item.solutionFull}
-                          </p>
-
-                          <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 text-xs">
-                            <span className="text-gray-500 font-semibold flex items-center gap-1">
-                              <ShieldCheck className="w-4 h-4 text-[#00A86B]" />
-                              Gain mesuré : <strong className="text-[#00A86B] font-extrabold">{item.impactMetric}</strong>
-                            </span>
-
-                            <a
-                              href="#demo-live"
-                              className="bg-[#00A86B] hover:bg-[#00925d] text-white font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
-                            >
-                              <span>Tester cette fonction en direct</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </a>
+                        ) : (
+                          <div className="bg-rose-50/70 p-5 sm:p-6 rounded-2xl border border-rose-200 space-y-3">
+                            <div className="flex items-center gap-2 text-rose-700">
+                              <XCircle className="w-5 h-5" />
+                              <h4 className="font-heading font-extrabold text-base sm:text-lg text-rose-950">
+                                Friction actuelle du papier au quotidien
+                              </h4>
+                            </div>
+                            <p className="text-xs sm:text-sm text-rose-900 font-normal leading-relaxed">
+                              {item.problemFull}
+                            </p>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="bg-rose-50/70 p-5 sm:p-6 rounded-2xl border border-rose-200 space-y-3">
-                          <div className="flex items-center gap-2 text-rose-700">
-                            <XCircle className="w-5 h-5" />
-                            <h4 className="font-heading font-extrabold text-base sm:text-lg text-rose-950">
-                              Friction actuelle du papier au quotidien
-                            </h4>
-                          </div>
-                          <p className="text-xs sm:text-sm text-rose-900 font-normal leading-relaxed">
-                            {item.problemFull}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
 
-                  </div>
-                )}
-              </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Bottom Banner */}
-        <div className="mt-14 max-w-4xl mx-auto bg-[#1A1A1A] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-gray-800">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mt-14 max-w-4xl mx-auto bg-[#1A1A1A] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-gray-800"
+        >
           <div className="space-y-1 text-center sm:text-left">
             <span className="text-xs font-bold text-[#FF6B00] uppercase tracking-wider">Constat sur le terrain au Sénégal 🇸🇳</span>
             <p className="text-sm sm:text-base font-bold text-gray-200">
@@ -317,12 +338,12 @@ export const ProblemsSection: React.FC = () => {
 
           <a
             href="#calculateur"
-            className="bg-[#00A86B] hover:bg-[#00925d] text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-xl shrink-0 shadow-lg transition-all flex items-center gap-2"
+            className="bg-[#00A86B] hover:bg-[#00925d] text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-xl shrink-0 shadow-lg transition-all flex items-center gap-2 hover:scale-[1.03]"
           >
             <TrendingUp className="w-4 h-4" />
             <span>Calculer mes économies FCFA</span>
           </a>
-        </div>
+        </motion.div>
 
       </div>
     </section>

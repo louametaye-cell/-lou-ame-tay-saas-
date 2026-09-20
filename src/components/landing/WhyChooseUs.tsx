@@ -4,60 +4,57 @@ import {
   MapPin, 
   Clock, 
   TrendingUp, 
-  Headphones, 
   ShieldCheck,
-  Zap,
-  Smartphone,
   Check,
-  X,
-  Building2,
-  Handshake,
-  Leaf
+  Flag,
+  HeartHandshake,
+  Leaf,
+  Sparkles
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { COMPETITOR_COMPARISONS } from '@/components/landing/data/mockData';
-import { IconBadge } from '@/components/ui/IconBadge';
 
 export const WhyChooseUs: React.FC = () => {
   const pillars = [
     {
-      flag: '🇸🇳',
-      icon: null,
+      icon: Flag,
+      iconBg: 'bg-emerald-100 text-[#00A86B]',
       title: '100% Conçu pour le Sénégal',
       subtitle: 'Adapté aux réalités du terrain',
       description: 'Optimisé pour les connexions mobiles Orange, Free et Expresso. Affichage des prix en FCFA, devises locales, et intégration des habitudes de commande sénégalaises.',
-      accent: 'border-green-200 bg-white'
+      accent: 'border-emerald-200 hover:border-[#00A86B] bg-white'
     },
     {
-      flag: null,
       icon: Clock,
+      iconBg: 'bg-amber-100 text-amber-700',
       title: 'Gain de temps spectaculaire',
       subtitle: 'Plus de va-et-vient inutiles',
       description: 'Vos serveurs ne passent plus leur temps à porter des menus physiques et à répéter les plats. Ils se concentrent sur un accueil chaleureux (Teranga) et le service.',
-      accent: 'border-orange-200 bg-white'
+      accent: 'border-amber-200 hover:border-[#FF6B00] bg-white'
     },
     {
-      flag: null,
       icon: TrendingUp,
+      iconBg: 'bg-green-100 text-emerald-800',
       title: 'Augmentation du ticket moyen',
       subtitle: '+25% de ventes additionnelles',
       description: 'Les clients sont tentés par les belles photos HD de vos grillades, pastels, jus de bissap et desserts maison. Ils commandent spontanément plus d\'extras.',
-      accent: 'border-green-200 bg-white'
+      accent: 'border-emerald-200 hover:border-[#00A86B] bg-white'
     },
     {
-      flag: null,
-      icon: Handshake,
+      icon: HeartHandshake,
+      iconBg: 'bg-purple-100 text-purple-700',
       title: 'Assistance locale & Proximité',
       subtitle: 'Basés à Thiès & Dakar',
       description: 'Pas de centre d\'appel à l\'autre bout du monde. Notre équipe se déplace dans votre restaurant pour former vos équipes et reste joignable 7j/7 sur WhatsApp.',
-      accent: 'border-gray-200 bg-white'
+      accent: 'border-purple-200 hover:border-purple-500 bg-white'
     },
     {
-      flag: null,
       icon: Leaf,
+      iconBg: 'bg-teal-100 text-teal-700',
       title: 'Impact RSE & Éco-Responsable',
       subtitle: 'Zéro déchet papier & 0 rature',
       description: 'Supprimez le gaspillage récurrent de menus papier jetés. Un engagement écologique concret qui valorise la marque de votre restaurant.',
-      accent: 'border-[#00A86B]/30 bg-emerald-50/20'
+      accent: 'border-teal-200 hover:border-teal-500 bg-emerald-50/20'
     }
   ];
 
@@ -66,8 +63,15 @@ export const WhyChooseUs: React.FC = () => {
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto space-y-4"
+        >
           <div className="inline-flex items-center gap-2 bg-green-50 text-[#00A86B] px-3.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider border border-green-200/60">
+            <Sparkles className="w-4 h-4 text-[#00A86B]" />
             <span>Différenciation & Proximité</span>
           </div>
 
@@ -78,19 +82,25 @@ export const WhyChooseUs: React.FC = () => {
           <p className="text-base sm:text-lg text-gray-500 font-normal leading-relaxed">
             15 ans d'expérience terrain en restauration et digitalisation à Thiès, Mbour, Saly et Dakar.
           </p>
-        </div>
+        </motion.div>
 
         {/* Super Power Proximity Banner */}
-        <div className="mt-10 max-w-5xl mx-auto bg-gradient-to-r from-emerald-900 to-green-950 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mt-10 max-w-5xl mx-auto bg-gradient-to-r from-emerald-800 via-emerald-900 to-green-950 text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden border border-emerald-700/50"
+        >
           <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-2xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center shrink-0 border border-white/20">
+            <div className="w-16 h-16 rounded-2xl bg-white/15 text-white flex items-center justify-center shrink-0 border border-white/30 ring-4 ring-white/10 animate-pulse">
               <MapPin className="w-8 h-8 text-amber-400" />
             </div>
             
             <div className="flex-1 text-center md:text-left space-y-2">
-              <span className="text-xs font-black uppercase tracking-widest text-[#00A86B] bg-white px-3 py-1 rounded-md inline-block">
+              <span className="text-xs font-black uppercase tracking-widest text-[#00A86B] bg-white px-3.5 py-1 rounded-md inline-block shadow-sm">
                 Notre Super-Pouvoir : L'Hyper-Proximité
               </span>
               <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-white">
@@ -105,38 +115,43 @@ export const WhyChooseUs: React.FC = () => {
               href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'aimerais%20une%20visite%20dans%20mon%20restaurant."
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 bg-[#FF6B00] hover:bg-[#e05e00] active:scale-95 text-white font-bold text-sm px-6 py-4 rounded-xl shadow-lg transition-all text-center cursor-pointer"
+              className="shrink-0 bg-[#FF6B00] hover:bg-[#e05e00] hover:scale-105 active:scale-95 text-white font-bold text-sm px-7 py-4 rounded-xl shadow-lg shadow-orange-950/40 transition-all text-center cursor-pointer"
             >
               Prendre RDV sur place
             </a>
           </div>
-        </div>
+        </motion.div>
 
         {/* 5 Pillars Grid */}
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {pillars.map((pillar, idx) => (
-            <div
-              key={idx}
-              className={`p-7 rounded-2xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${pillar.accent}`}
-            >
-              <div className="mb-4">
-                {pillar.flag ? (
-                  <span className="text-3xl">{pillar.flag}</span>
-                ) : pillar.icon ? (
-                  <IconBadge icon={pillar.icon} size="lg" />
-                ) : null}
-              </div>
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">
-                {pillar.subtitle}
-              </span>
-              <h3 className="font-heading font-bold text-lg sm:text-xl text-gray-900 mb-2">
-                {pillar.title}
-              </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                {pillar.description}
-              </p>
-            </div>
-          ))}
+          {pillars.map((pillar, idx) => {
+            const IconComponent = pillar.icon;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+                className={`p-7 rounded-2xl border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl ${pillar.accent}`}
+              >
+                <div className="mb-5">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold shadow-xs ${pillar.iconBg}`}>
+                    <IconComponent className="w-6 h-6" />
+                  </div>
+                </div>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">
+                  {pillar.subtitle}
+                </span>
+                <h3 className="font-heading font-bold text-lg sm:text-xl text-gray-900 mb-2">
+                  {pillar.title}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {pillar.description}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Competitor Comparison Table */}
