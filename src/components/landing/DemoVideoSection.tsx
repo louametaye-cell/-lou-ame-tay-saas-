@@ -47,12 +47,15 @@ export const DemoVideoSection: React.FC = () => {
               loop
               muted
               playsInline
+              controls
+              controlsList="nodownload"
+              preload="metadata"
               className="w-full h-full object-cover"
               onError={() => setHasVideoError(true)}
-              src="/demo-louametay.mp4"
             >
-              {/* Fallback if browser doesn't support video */}
               <source src="/demo-louametay.mp4" type="video/mp4" />
+              <source src="/videos%20demo%20scan%20qr%20code.mp4" type="video/mp4" />
+              Votre navigateur ne prend pas en charge la lecture de vidéos HTML5.
             </video>
           ) : null}
 
