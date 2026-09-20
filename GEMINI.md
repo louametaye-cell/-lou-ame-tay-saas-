@@ -99,3 +99,22 @@ Toute nouvelle interface utilisateur doit respecter : code couleur cohérent et 
 ### 10.9 — Autorisation de déploiement
 Ne jamais déployer en production un changement touchant les paiements, la caisse, les tarifs, la sécurité des accès, ou les données de clients réels sans validation humaine explicite obtenue au préalable dans la conversation. Pour tout autre changement (texte, design, contenu), le déploiement peut suivre un rythme plus rapide.
 
+---
+
+## Section 11 — Intégrité Financière & Détection Automatique des Failles Comptables (Compétence Maîtresse Permanente)
+
+Cette compétence se déclenche AUTOMATIQUEMENT à chaque fois qu'une fonctionnalité nouvelle ou modifiée touche à un statut de commande, un calcul financier, une action caisse, ou une route API liée à l'argent. Elle ne doit jamais être désactivée.
+
+### 11.1 — La Question Maîtresse (Bloquante Avant Tout Code)
+> *"Est-ce que cette nouvelle fonctionnalité introduit un nouvel état de commande, une nouvelle action, ou un nouveau chemin de code qui pourrait faire apparaître une commande dans un calcul financier (caisse du jour, clôture Z, total encaissé, rapport de ventes) alors qu'elle ne devrait pas y être ?"*
+Si la réponse est "oui" ou "peut-être" : **bloquer l'implémentation** et poser les verrous financiers en premier, avant tout développement.
+
+### 11.2 — Les 5 Chemins Financiers à Auditer Systématiquement
+1. **CA en Direct (`CashierPOS.tsx`)** : filtre `.filter((o) => o.paymentStatus === 'PAID' && o.status !== 'CANCELLED')`.
+2. **Clôture Z & Rapport de Session (`api/cashier/session/route.ts`)** : `status: { not: 'CANCELLED' }` au niveau RACINE du `where`, jamais seulement dans une branche d'un `OR`.
+3. **Route d'Encaissement (`api/cashier/orders/[id]/pay/route.ts`)** : vérification explicite que `order.status !== 'CANCELLED'` avant tout encaissement.
+4. **Historique Cuisine (`api/kitchen/history/route.ts`)** : `where: { status: { not: 'CANCELLED' } }` pour ne pas fausser les analyses.
+5. **Statistiques & Dashboards (`api/stats`)** : exclusion systématique des statuts non-commerciaux de toute somme ou agrégation financière.
+
+### 11.3 — Matrice d'Audit Obligatoire
+Avant chaque implémentation touchant aux statuts ou aux flux d'argent, remplir la matrice des 5 points + Écran TV (/pickup) + Ticket client, et tester les 4 scénarios de collision (action simultanée client/caissier, rechargement pendant clôture Z, mutation d'état pendant requête, paiement Wave/OM orphelin).
