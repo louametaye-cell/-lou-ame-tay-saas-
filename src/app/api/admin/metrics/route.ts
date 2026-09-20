@@ -3,6 +3,8 @@ import { saasStorage } from '@/lib/saas-storage';
 import { getRedisCacheStats } from '@/lib/redis-cache';
 import os from 'os';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/metrics
 // Métriques temps réel pour anticiper les pannes et piloter la charge 1000 restaurants
 export async function GET() {
