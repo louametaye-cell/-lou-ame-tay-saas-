@@ -4,8 +4,22 @@ import React, { useState } from 'react';
 import { Play, CheckCircle2, ArrowRight, Smartphone, ChefHat, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const DemoVideoSection: React.FC = () => {
+interface DemoVideoSectionProps {
+  youtubeId?: string;
+}
+
+export const DemoVideoSection: React.FC<DemoVideoSectionProps> = ({ youtubeId }) => {
   const [hasVideoError, setHasVideoError] = useState(false);
+
+  // Helper to extract YouTube video ID if full URL is passed
+  const getYoutubeEmbedId = (idOrUrl?: string) => {
+    if (!idOrUrl) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = idOrUrl.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : idOrUrl;
+  };
+
+  const activeYoutubeId = getYoutubeEmbedId(youtubeId);
 
   return (
     <section id="demo-video" className="py-20 bg-slate-50 border-b border-slate-200/80 relative">
@@ -40,8 +54,15 @@ export const DemoVideoSection: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="max-w-4xl mx-auto bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 shadow-md relative group aspect-video flex items-center justify-center"
         >
-          {/* <!-- VIDÉO À AJOUTER dans /public/demo-louametay.mp4 --> */}
-          {!hasVideoError ? (
+          {activeYoutubeId ? (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${activeYoutubeId}?rel=0&autoplay=0`}
+              title="Démo vidéo Lou Ame Tay"
+              className="w-full h-full border-0 rounded-2xl"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
+          ) : !hasVideoError ? (
             <video
               autoPlay
               loop
