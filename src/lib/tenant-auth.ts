@@ -6,7 +6,7 @@ import { isAuthorizedSuperAdmin } from './admin-auth';
  * 1. Un Super-Admin (droits transversaux complets)
  * 2. Un Gérant de restaurant possédant le cookie 'saas_token' ou l'en-tête correspondant à son tenantId.
  */
-export function isAuthorizedTenant(req: Request, targetTenantId: string): boolean {
+export function isAuthorizedTenant(req: Request, targetTenantId: string, targetSubdomain?: string): boolean {
   if (!targetTenantId) return false;
 
   // 1. Le Super-Admin MDA Arts Work est toujours autorisé
@@ -14,28 +14,30 @@ export function isAuthorizedTenant(req: Request, targetTenantId: string): boolea
     return true;
   }
 
+  const validIdentifiers = [targetTenantId];
+  if (targetSubdomain && targetSubdomain !== targetTenantId) {
+    validIdentifiers.push(targetSubdomain);
+  }
+
+  const matchesAny = (val: string) => {
+    return validIdentifiers.some(
+      (id) =>
+        val === id ||
+        val === `resto_session_${id}` ||
+        val === `cashier_session_${id}` ||
+        val === `kds_session_${id}` ||
+        val.includes(id)
+    );
+  };
+
   // 2. Cookie HTTP 'saas_token' ou 'token'
   try {
     const cookieHeader = req.headers.get('cookie') || '';
     const cookiesList = cookieHeader.split(';').map((c) => c.trim());
     for (const c of cookiesList) {
-      if (c.startsWith('saas_token=')) {
-        const val = decodeURIComponent(c.replace('saas_token=', ''));
-        if (
-          val === `resto_session_${targetTenantId}` ||
-          val === targetTenantId ||
-          val.includes(targetTenantId)
-        ) {
-          return true;
-        }
-      }
-      if (c.startsWith('token=')) {
-        const val = decodeURIComponent(c.replace('token=', ''));
-        if (
-          val === `resto_session_${targetTenantId}` ||
-          val === targetTenantId ||
-          val.includes(targetTenantId)
-        ) {
+      if (c.startsWith('saas_token=') || c.startsWith('token=') || c.startsWith('cashier_token=') || c.startsWith('kds_token=')) {
+        const val = decodeURIComponent(c.split('=')[1] || '');
+        if (matchesAny(val)) {
           return true;
         }
       }
@@ -46,50 +48,28 @@ export function isAuthorizedTenant(req: Request, targetTenantId: string): boolea
   const authHeader = req.headers.get('authorization') || '';
   if (authHeader.startsWith('Bearer ')) {
     const bearer = authHeader.replace('Bearer ', '').trim();
-    if (
-      bearer === `resto_session_${targetTenantId}` ||
-      bearer === targetTenantId ||
-      bearer.includes(targetTenantId)
-    ) {
+    if (matchesAny(bearer)) {
       return true;
     }
   }
 
   // 4. En-tête personnalisé x-tenant-token
   const xTenantToken = req.headers.get('x-tenant-token');
-  if (
-    xTenantToken === targetTenantId ||
-    xTenantToken === `resto_session_${targetTenantId}` ||
-    (xTenantToken && xTenantToken.includes(targetTenantId))
-  ) {
+  if (xTenantToken && matchesAny(xTenantToken)) {
     return true;
   }
 
   // 5. Jeton de session Caissier opérationnel (validé sous code PIN)
   const cashierToken = req.headers.get('x-cashier-token');
-  if (cashierToken && (cashierToken === `cashier_session_${targetTenantId}` || cashierToken.includes(targetTenantId))) {
+  if (cashierToken && matchesAny(cashierToken)) {
     return true;
   }
 
   // 6. Jeton de poste Cuisine KDS opérationnel
   const kdsToken = req.headers.get('x-kds-token');
-  if (kdsToken && (kdsToken === `kds_session_${targetTenantId}` || kdsToken.includes(targetTenantId))) {
+  if (kdsToken && matchesAny(kdsToken)) {
     return true;
   }
-
-  // Vérification des cookies opérationnels (cashier_token ou kds_token)
-  try {
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookiesList = cookieHeader.split(';').map((c) => c.trim());
-    for (const c of cookiesList) {
-      if (c.startsWith('cashier_token=') || c.startsWith('kds_token=')) {
-        const val = decodeURIComponent(c.split('=')[1] || '');
-        if (val.includes(targetTenantId)) {
-          return true;
-        }
-      }
-    }
-  } catch {}
 
   return false;
 }

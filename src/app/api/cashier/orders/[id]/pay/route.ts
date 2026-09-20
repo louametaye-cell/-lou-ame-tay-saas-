@@ -41,6 +41,14 @@ export async function POST(
       return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
     }
 
+    // 🔒 SÉCURITÉ FINANCIÈRE : Interdiction formelle d'encaisser une commande annulée
+    if (order.status === 'CANCELLED') {
+      return NextResponse.json(
+        { error: 'Cette commande a été annulée par le client et ne peut plus être encaissée.' },
+        { status: 400 }
+      );
+    }
+
     // 2. Vérification des autorisations :
     // Soit gérant/super-admin authentifié, soit caissier rattaché à ce tenantId
     let isAuthorized = isAuthorizedTenant(req, order.tenantId);
@@ -127,6 +135,15 @@ export async function POST(
         console.warn('Erreur lors de la résolution automatique du waiterCall:', err);
       }
     }
+
+    // 6. Invalidation temps réel des caches Redis (Dashboard KPIs & Commandes Live)
+    try {
+      const { invalidateDashboardStatsCache, invalidateLiveOrdersCache } = await import('@/lib/cache');
+      await Promise.all([
+        invalidateDashboardStatsCache(order.tenantId),
+        invalidateLiveOrdersCache(order.tenantId),
+      ]);
+    } catch (cacheErr) {}
 
     return NextResponse.json({
       success: true,

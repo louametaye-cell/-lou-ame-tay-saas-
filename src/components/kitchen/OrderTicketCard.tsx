@@ -68,7 +68,9 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
   return (
     <article
       className={`bg-white rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-md ${
-        isExpressOrder
+        order.status === 'CANCELLED'
+          ? 'border-rose-600 bg-rose-50/30 ring-4 ring-rose-500/30'
+          : isExpressOrder
           ? 'border-purple-400 bg-purple-50/10'
           : is100PercentBar
           ? 'border-blue-300 bg-blue-50/20'
@@ -81,10 +83,20 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           : 'border-slate-200 opacity-85'
       }`}
     >
+      {/* ⚠️ Bannière clignotante rouge si commande annulée par le client */}
+      {order.status === 'CANCELLED' && (
+        <div className="bg-rose-600 text-white px-3 py-2 text-center text-xs font-black uppercase tracking-wider animate-pulse flex items-center justify-center gap-1.5 shadow-inner">
+          <span>⚠️</span>
+          <span>COMMANDE ANNULÉE PAR LE CLIENT — NE PAS PRÉPARER</span>
+        </div>
+      )}
+
       {/* 1. Header Box with Table Number, Chrono & Payment */}
       <div
         className={`p-4 flex items-center justify-between gap-2 ${
-          isExpressOrder
+          order.status === 'CANCELLED'
+            ? 'bg-rose-950 text-white'
+            : isExpressOrder
             ? 'bg-slate-900 text-amber-400'
             : is100PercentBar
             ? 'bg-blue-600 text-white'
@@ -259,6 +271,12 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           </button>
 
           {/* Status Progression Button */}
+          {order.status === 'CANCELLED' && (
+            <div className="flex-1 min-h-[46px] bg-rose-100 border-2 border-rose-400 text-rose-950 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2">
+              <span>🛑 Annulée dans les délais</span>
+            </div>
+          )}
+
           {order.status === 'PENDING' && (
             <button
               type="button"

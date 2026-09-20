@@ -291,51 +291,22 @@ export const PRICING_PLANS: PricingPlan[] = [
     ctaType: 'trial'
   },
   {
-    id: 'baobab',
-    wolofName: 'BAOBAB',
-    name: 'L\'arbre majestueux',
-    priceMonthly: 46800,
+    id: 'sur-mesure',
+    wolofName: 'SUR MESURE',
+    name: 'Grands comptes & Multi-sites',
+    badge: 'Sur Devis',
+    priceMonthly: 'Sur devis',
     popular: false,
-    description: 'Fastfood à forte affluence, établissements multi-comptoirs',
+    description: 'Fast-foods multi-comptoirs, hôtels, lounges & complexes multi-restaurants',
     features: [
-      { text: 'Tout le pack Xéweul', included: true, highlight: true },
-      { text: 'Gestion multi-guichets/multi-points de commande', included: true },
-      { text: 'Écran Menu multi-écrans', included: true },
-      { text: 'Export de données avancé', included: true }
+      { text: 'Tout le pack Xéweul et plus encore', included: true, highlight: true },
+      { text: 'Gestion multi-guichets & multi-caissiers', included: true },
+      { text: 'QR personnel par serveur avec traçabilité', included: true },
+      { text: 'Gestion multi-zones (piscine, room-service...)', included: true },
+      { text: 'Gestion multi-sites & export avancé', included: true },
+      { text: 'Accompagnement sur place & Support VIP dédié', included: true }
     ],
-    ctaText: 'Choisir Baobab',
-    ctaType: 'trial'
-  },
-  {
-    id: 'teranga',
-    wolofName: 'TERANGA',
-    name: 'Hospitalité',
-    priceMonthly: 65000,
-    popular: false,
-    description: 'Hôtels, lounges et grandes terrasses',
-    features: [
-      { text: 'Tout le pack Baobab', included: true, highlight: true },
-      { text: 'QR personnel par serveur avec traçabilité', included: true, highlight: true },
-      { text: 'Gestion multi-zones (piscine, plage, room-service)', included: true },
-      { text: 'Écran Menu par zone', included: true }
-    ],
-    ctaText: 'Choisir Teranga',
-    ctaType: 'trial'
-  },
-  {
-    id: 'buur',
-    wolofName: 'BUUR',
-    name: 'Roi',
-    priceMonthly: 80000,
-    popular: false,
-    description: 'Grands hôtels, complexes multi-restaurants',
-    features: [
-      { text: 'Tout le pack Teranga', included: true, highlight: true },
-      { text: 'Gestion multi-sites (plusieurs points de restauration)', included: true },
-      { text: 'Export des performances staff avancé', included: true },
-      { text: 'Support VIP dédié', included: true }
-    ],
-    ctaText: 'Choisir Buur',
+    ctaText: 'Demander un devis sur-mesure',
     ctaType: 'quote'
   },
   {

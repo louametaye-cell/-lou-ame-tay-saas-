@@ -148,7 +148,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
                     {!isEvent && (
                       <span className={`text-[11px] font-semibold block mt-1 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
-                        + 50 000 FCFA (Frais d'installation uniques)
+                        {typeof price === 'number' ? "+ 50 000 FCFA (Frais d'installation uniques)" : "Étude & installation personnalisées"}
                       </span>
                     )}
 
@@ -206,7 +206,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
                   {!isEvent && (
                     <p className={`text-[11px] text-center mt-2.5 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
-                      14 jours d'essai gratuit • Sans carte bancaire
+                      {typeof price === 'number' ? "14 jours d'essai gratuit • Sans carte bancaire" : "Réponse sous 24h • Devis gratuit sans engagement"}
                     </p>
                   )}
                 </div>

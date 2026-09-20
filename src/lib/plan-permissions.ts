@@ -429,34 +429,45 @@ export const FEATURES_CATALOG: Record<FeatureKey, FeaturePaywall> = {
 };
 
 /**
- * Normalise et retourne le niveau d'un pack donné.
+ * Normalise et retourne le niveau hiérarchique d'un pack donné.
+ * Robuste face aux slugs, noms complets ("BAOBAB (L'arbre majestueux)"), IDs ("plan_baobab") et accents.
  */
-export function getPlanLevel(slug?: string | null): number {
-  if (!slug) return 1; // Défaut TÀMBALI
-  const cleanSlug = slug.toLowerCase().trim() as PlanSlug;
-  const plan = PLANS_REGISTRY[cleanSlug];
-  if (!plan) return 1;
-  return plan.level;
+export function getPlanLevel(slugOrName?: string | null): number {
+  if (!slugOrName) return 1; // Défaut TÀMBALI
+  const raw = String(slugOrName).toLowerCase().trim();
+
+  // 1. Correspondance directe dans le registre
+  const plan = PLANS_REGISTRY[raw as PlanSlug];
+  if (plan) return plan.level;
+
+  // 2. Correspondance par sous-chaîne pour gérer les noms complets et IDs
+  if (raw.includes('buur')) return 6;
+  if (raw.includes('teranga') || raw.includes('téranga')) return 5;
+  if (raw.includes('baobab')) return 4;
+  if (raw.includes('xeweul') || raw.includes('xéweul')) return 3;
+  if (raw.includes('nio-far') || raw.includes('nio far') || raw.includes('niofar')) return 2;
+  if (raw.includes('ndaje') || raw.includes('ndajé')) return 0; // Cas spécial événementiel
+
+  return 1; // Défaut TÀMBALI
 }
 
 /**
- * 🔒 VÉRIFICATION CENTRALE DES DROITS D'ACCÈS PAR FONCTIONNALITÉ
+ * 🔒 VÉRIFICATION CENTRALE DES DROITS D'ACCÈS PAR FONCTIONNALITÉ (HIÉRARCHIE STRICTE)
  * 
- * @param currentPlanSlug - Le slug du plan du restaurant (ex: 'tambali', 'nio-far', 'xeweul', etc.)
+ * @param currentPlanSlug - Le slug ou nom du plan du restaurant (ex: 'baobab', 'BAOBAB', 'xeweul', etc.)
  * @param featureKey - La fonctionnalité à vérifier
- * @returns boolean - true si la fonctionnalité est incluse et débloquée, false sinon
+ * @returns boolean - true si la fonctionnalité est incluse et débloquée (niveau >= niveau requis), false sinon
  */
 export function hasAccessToFeature(
   currentPlanSlug: string | undefined | null,
   featureKey: FeatureKey
 ): boolean {
-  const cleanPlanSlug = (currentPlanSlug || 'tambali').toLowerCase().trim() as PlanSlug;
+  const raw = (currentPlanSlug || 'tambali').toLowerCase().trim();
   const feature = FEATURES_CATALOG[featureKey];
   if (!feature) return false;
 
   // Cas particulier : Pack NDAJÉ (Prestation événementielle isolée)
-  if (cleanPlanSlug === 'ndaje') {
-    // NDAJÉ a ses propres règles isolées :
+  if (raw.includes('ndaje') || raw.includes('ndajé')) {
     const ndajeAllowed: FeatureKey[] = [
       'MENU_MANAGEMENT',
       'TABLE_ORDERING',
@@ -467,8 +478,8 @@ export function hasAccessToFeature(
     return ndajeAllowed.includes(featureKey);
   }
 
-  // Échelle standard par niveau hiérarchique :
-  const userLevel = getPlanLevel(cleanPlanSlug);
+  // Échelle standard par niveau hiérarchique (>=) :
+  const userLevel = getPlanLevel(raw);
   const requiredLevel = getPlanLevel(feature.requiredPlan);
 
   return userLevel >= requiredLevel;

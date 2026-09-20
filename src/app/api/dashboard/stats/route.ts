@@ -47,17 +47,22 @@ export async function GET(req: Request) {
     const todayOrders = await (prisma as any).order.findMany({
       where: {
         tenantId,
-        createdAt: { gte: today }
+        createdAt: { gte: today },
+        status: { not: 'CANCELLED' }
       },
       include: { items: true }
     });
 
-    const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + (Number(o.totalAmount) || 0), 0);
+    // 🔒 SÉPARATION STRICTE STATUTS MÉTIER / STATUTS FINANCIERS (Règle 10.4) :
+    // Le Chiffre d'Affaires réel (CA du Jour) NE PEUT COMPTER QUE les commandes dont paymentStatus === 'PAID'.
+    // Un statut opérationnel (SERVED, READY, PREPARING) ne doit JAMAIS être comptabilisé dans le CA avant encaissement effectif.
+    const paidOrders = todayOrders.filter((o: any) => o.paymentStatus === 'PAID');
+    const todayRevenue = paidOrders.reduce((sum: number, o: any) => sum + (Number(o.totalAmount) || 0), 0);
     const todayOrdersCount = todayOrders.length;
     
     // Calculate covers (sum of item quantities or estimation)
     const todayCovers = todayOrders.reduce((sum: number, o: any) => {
-      const itemsCount = o.items.reduce((s: number, i: any) => s + (i.quantity || 1), 0);
+      const itemsCount = (o.items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0);
       return sum + Math.max(itemsCount, 1);
     }, 0);
 

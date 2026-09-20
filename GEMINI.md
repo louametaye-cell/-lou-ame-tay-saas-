@@ -68,3 +68,34 @@ La plateforme est utilisée par des personnes de tous niveaux d'alphabétisation
   1. `npx tsc --noEmit` ➡️ 0 erreur.
   2. Scripts Playwright / Puppeteer réels avec captures d'écran HD.
   3. Tests sur les 4 comptes réels (Anima Pizzeria, Madiba, Sam's Prestige, Lat-Dior).
+## Section 10 — Discipline QA et Sécurité Renforcée (Standards Obligatoires)
+
+Ces règles s'appliquent à CHAQUE session de travail sur Lou Ame Tay, sans exception, et doivent être suivies même si l'utilisateur ne les rappelle pas explicitement dans son prompt.
+
+### 10.1 — Interdiction de déclarer un correctif "terminé" sans preuve
+Ne jamais utiliser "✅ Complet", "✅ Certifié", "100% conforme" ou équivalent sans preuve concrète jointe dans la même réponse : capture d'écran réelle de l'interface (pas un script qui interroge directement la base de données), log de terminal complet, ou résultat de requête brut.
+
+### 10.2 — Diagnostic avant correction
+Face à un bug signalé, toujours identifier et expliquer la cause racine exacte AVANT de proposer ou d'appliquer une correction. Si un correctif précédent s'est révélé incomplet, expliquer explicitement pourquoi le test précédent n'a pas détecté le problème.
+
+### 10.3 — Vérification systématique sur les 4 comptes réels
+Un bug détecté sur un compte doit être vérifié et corrigé sur TOUS les comptes réels actifs (actuellement : anima-pizzeria, madiba-restaurant, sams-prestige, hotel-lat-dior), pas seulement celui où il a été signalé. Le préciser explicitement dans chaque rapport.
+
+### 10.4 — Séparation stricte statuts métier / statuts financiers
+Un statut opérationnel (préparé, prêt, servi) ne doit JAMAIS modifier, directement ou indirectement, un statut de paiement (paymentStatus). Le passage à "payé/encaissé" ne peut résulter que d'une action explicite et manuelle d'un caissier, avec saisie du montant reçu. Vérifier ce principe à chaque nouvelle fonctionnalité touchant les commandes.
+
+### 10.5 — Hiérarchie des packs, jamais une égalité stricte
+Le système de packs (Tàmbali < Nio Far < Xéweul < Baobab < Teranga < Buur, Ndajé à part) doit toujours être vérifié par NIVEAU HIÉRARCHIQUE ("le pack actuel est-il au moins celui requis ?"), jamais par égalité stricte ("le pack est-il exactement celui-ci ?"). Un compte sur un pack supérieur a TOUJOURS accès à tout ce qu'un pack inférieur contient. Vérifier cette logique sur TOUTE nouvelle vérification d'accès ajoutée au système.
+
+### 10.6 — Cloisonnement des rôles au niveau serveur, jamais seulement visuel
+Toute séparation entre espace Admin, Caisse et Cuisine doit être appliquée au niveau du contrôle d'accès serveur/middleware, jamais seulement par le masquage d'un lien dans l'interface. Tester explicitement l'accès direct par URL et par appel API pour confirmer le refus (401/403).
+
+### 10.7 — Discipline sur les prix et les changements tarifaires
+Ne jamais faire évoluer un prix, un pourcentage, ou une date d'échéance sans le signaler explicitement comme un changement par rapport à la dernière valeur validée. Tout tarif préférentiel accordé à un client doit être borné dans le temps avec une date de réexamen documentée, jamais laissé "à vie" par défaut.
+
+### 10.8 — Charte d'accessibilité universelle
+Toute nouvelle interface utilisateur doit respecter : code couleur cohérent et unique (vert=validé, orange=attente, rouge=urgence, bleu=en cours), icônes avant texte pour toute action critique, nombres/prix en grand format, confirmation d'action visuelle et/ou sonore, position cohérente des boutons d'action similaires sur tous les écrans.
+
+### 10.9 — Autorisation de déploiement
+Ne jamais déployer en production un changement touchant les paiements, la caisse, les tarifs, la sécurité des accès, ou les données de clients réels sans validation humaine explicite obtenue au préalable dans la conversation. Pour tout autre changement (texte, design, contenu), le déploiement peut suivre un rythme plus rapide.
+

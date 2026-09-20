@@ -37,20 +37,14 @@ export async function GET(
     }
 
     // Seules les commandes du repas actif pour ce restaurant précis sont retournées.
-    // Une commande entièrement servie (SERVED) ET payée (PAID), ou annulée, appartient à un repas terminé
-    // et ne doit jamais être rattachée à un nouveau convive s'installant à cette table.
+    // Les commandes payées sont conservées dans la fenêtre des 2h du repas afin que le convive
+    // voie en temps réel la confirmation de son encaissement et son reçu officiel soldé.
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const dbOrders = await (prisma as any).order.findMany({
       where: {
         tenantId: validTenantId,
         tableNumber: tableNum,
         createdAt: { gte: twoHoursAgo },
-        NOT: {
-          AND: [
-            { status: 'SERVED' },
-            { paymentStatus: 'PAID' },
-          ],
-        },
         status: { not: 'CANCELLED' },
       },
       include: {

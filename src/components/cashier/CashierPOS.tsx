@@ -30,7 +30,9 @@ import {
   Zap,
   Phone,
   UtensilsCrossed,
-  X
+  X,
+  MessageCircle,
+  Loader2
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
@@ -80,6 +82,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [amountReceivedInput, setAmountReceivedInput] = useState<string>('');
   const [transactionRefInput, setTransactionRefInput] = useState<string>('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
   // Waiter Calls / Bill Requests State
   const [waiterCalls, setWaiterCalls] = useState<any[]>([]);
@@ -354,18 +357,24 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           console.error("Erreur d'impression ticket:", printErr);
         }
 
+        setIsPaymentSuccess(true);
+
         toast.success(`Encaissement validé : ${formatFCFA(total)} (${paymentMethod})`, {
           description: changeGiven > 0 ? `Monnaie rendue au client : ${formatFCFA(changeGiven)}` : 'Règlement exact perçu',
         });
-
-        setIsPaymentModalOpen(false);
-        setOrderToPay(null);
 
         const activeRestoId = restaurantId || localStorage.getItem('current_restaurant_id');
         if (activeRestoId) {
           fetchActiveSession(activeRestoId);
           fetchWaiterCalls();
         }
+
+        // Maintenir l'état vert éclatant de succès 1.2s pour confirmation visuelle instantanée
+        setTimeout(() => {
+          setIsPaymentModalOpen(false);
+          setOrderToPay(null);
+          setIsPaymentSuccess(false);
+        }, 1200);
       } else {
         toast.error(data.error || "Erreur lors de l'encaissement de la commande");
       }
@@ -418,6 +427,33 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     toast.info(`🔔 Appel client Table ${order.tableNumber || 'Comptoir'} !`, {
       description: order.customerName ? `Client : ${order.customerName}` : 'Commande prête à retirer',
     });
+  };
+
+  const handleSendWhatsAppReceipt = (order: OrderType) => {
+    const itemsList = order.items
+      .map((item) => `• ${item.quantity}x ${item.name} (${formatFCFA((item.price || 0) * (item.quantity || 1))})`)
+      .join('\n');
+
+    const tableLabel = order.tableNumber && order.tableNumber > 0 ? `Table ${order.tableNumber}` : 'Comptoir';
+    const effectiveTotal = (order as any).totalAmount ?? order.total ?? 0;
+    const receiptUrl = typeof window !== 'undefined' ? `${window.location.origin}/receipt/${order.id}` : '';
+
+    const message =
+      `🧾 *REÇU NUMÉRIQUE OFFICIEL - ${restaurantName.toUpperCase()}*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🎯 Commande N° : *#${order.id.slice(-4).toUpperCase()}*\n` +
+      `📍 Service : ${tableLabel}\n` +
+      `${order.customerName ? `👤 Client : ${order.customerName}\n` : ''}` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `*DÉTAILS DES CONSOMMATIONS :*\n${itemsList}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `💰 *TOTAL RÉGLÉ : ${formatFCFA(effectiveTotal)}*\n` +
+      `✅ Statut : Encaissé (${order.paymentMethod || 'Espèces'})\n\n` +
+      `🌿 *Merci de préserver nos arbres — Ticket 100% numérique 🌱*\n` +
+      `🔗 Consulter mon reçu certifié : ${receiptUrl}`;
+
+    const encoded = encodeURIComponent(message);
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
   };
 
   // Cashier PIN Login Handlers
@@ -599,9 +635,12 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     setIsPinModalOpen(true);
   };
 
-  // Filter Orders : Une commande reste active en caisse tant qu'elle n'est pas payée et clôturée (SERVED + PAID)
+  // Filter Orders : Une commande reste active en caisse tant qu'elle n'est pas payée et clôturée (SERVED + PAID) et NON annulée
   const activeOrders = useMemo(() => {
     return orders.filter((order) => {
+      // 🔒 SÉCURITÉ FINANCIÈRE : Les commandes annulées ne figurent jamais dans la file d'encaissement
+      if (order.status === 'CANCELLED') return false;
+
       const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0;
       const isPaidAndClosed = order.status === 'SERVED' && order.paymentStatus === 'PAID';
 
@@ -617,16 +656,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     return orders.filter((o) => o.status === 'READY');
   }, [orders]);
 
-  // Caisse du Jour & Ventes Express : UNIQUEMENT les commandes effectivement ENCAISSÉES (PAID)
+  // Caisse du Jour & Ventes Express : UNIQUEMENT les commandes effectivement ENCAISSÉES (PAID) et NON annulées
   const totalRevenue = useMemo(() => {
     return orders
-      .filter((o) => o.paymentStatus === 'PAID')
+      .filter((o) => o.paymentStatus === 'PAID' && o.status !== 'CANCELLED')
       .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
   const expressRevenue = useMemo(() => {
     return orders
-      .filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && o.paymentStatus === 'PAID')
+      .filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && o.paymentStatus === 'PAID' && o.status !== 'CANCELLED')
       .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
@@ -1274,15 +1313,27 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handlePrintReceipt(order)}
-                        className="w-full min-h-[46px] px-4 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
-                        title="Réimprimer le ticket de caisse 80mm"
-                      >
-                        <Printer className="w-4 h-4" />
-                        <span>Réimprimer Ticket 80mm</span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handlePrintReceipt(order)}
+                          className="min-h-[46px] px-3 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+                          title="Réimprimer le ticket de caisse 80mm"
+                        >
+                          <Printer className="w-4 h-4 shrink-0" />
+                          <span>Ticket 80mm</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSendWhatsAppReceipt(order)}
+                          className="min-h-[46px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+                          title="Envoyer le reçu numérique par WhatsApp"
+                        >
+                          <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+                          <span>Reçu WhatsApp</span>
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <>
@@ -2012,17 +2063,36 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   type="submit"
                   disabled={
                     isProcessingPayment ||
+                    isPaymentSuccess ||
                     (paymentMethod === 'CASH' &&
                       Number(amountReceivedInput) < getOrderTotal(orderToPay))
                   }
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className={`flex-1 py-3 ${
+                    isPaymentSuccess
+                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 shadow-lg scale-[1.02]'
+                      : isProcessingPayment
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  } disabled:bg-slate-300 disabled:cursor-not-allowed font-black text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95`}
                 >
-                  <Printer className="w-4 h-4" />
-                  <span>
-                    {isProcessingPayment
-                      ? 'Encaissement en cours...'
-                      : 'Valider & Imprimer Ticket 80mm'}
-                  </span>
+                  {isPaymentSuccess ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
+                      <span className="text-sm font-black tracking-wide uppercase">
+                        ✓ ENCAISSEMENT RÉUSSI !
+                      </span>
+                    </>
+                  ) : isProcessingPayment ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Encaissement en cours...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="w-4 h-4" />
+                      <span>Valider & Imprimer Ticket 80mm</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

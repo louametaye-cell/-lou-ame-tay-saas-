@@ -286,9 +286,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                         <option value="tambali">TÀMBALI - Commencer (15 000 FCFA/mois)</option>
                         <option value="nio_far">NIO FAR - On est ensemble (25 000 FCFA/mois)</option>
                         <option value="xeweul">XÉWEUL - Bonne affaire (35 000 FCFA/mois)</option>
-                        <option value="baobab">BAOBAB (46 800 FCFA/mois)</option>
-                        <option value="teranga">TERANGA - Hospitalité (65 000 FCFA/mois)</option>
-                        <option value="buur">BUUR - Roi (80 000 FCFA/mois)</option>
+                        <option value="sur_mesure">SUR MESURE - Grands Comptes & Multi-sites (Sur devis)</option>
                         <option value="ndaje">NDAJÉ - Événementiel (Sur devis)</option>
                         <option value="demo">Simple demande de démonstration</option>
                       </select>

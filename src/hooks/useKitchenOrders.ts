@@ -18,11 +18,13 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
   } = options;
 
   const [orders, setOrders] = useState<OrderType[]>([]);
+  const [recentlyCancelledOrders, setRecentlyCancelledOrders] = useState<OrderType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
 
   const previousPendingIds = useRef<Set<string>>(new Set());
+  const knownActiveOrderIds = useRef<Set<string>>(new Set());
   const isInitialLoad = useRef(true);
 
   // Fetch orders from API
@@ -56,6 +58,42 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
             }
           );
         }
+
+        // 🛑 Détecter si une commande qui était affichée vient d'être annulée par le client
+        const newlyCancelled = incomingOrders.filter(
+          (o) => o.status === 'CANCELLED' && knownActiveOrderIds.current.has(o.id)
+        );
+
+        if (newlyCancelled.length > 0) {
+          setRecentlyCancelledOrders((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const fresh = newlyCancelled.filter((n) => !existingIds.has(n.id));
+            return [...prev, ...fresh];
+          });
+
+          newlyCancelled.forEach((c) => {
+            const tableStr = c.tableNumber && c.tableNumber > 0 ? `Table ${c.tableNumber}` : 'Comptoir';
+            toast.error(`⚠️ COMMANDE ANNULÉE PAR LE CLIENT (${tableStr}) !`, {
+              description: `Commande #${c.id.slice(-6).toUpperCase()} • Ne pas préparer les plats`,
+              duration: 5000,
+            });
+
+            // Retrait automatique après 4.5s
+            setTimeout(() => {
+              setRecentlyCancelledOrders((prev) => prev.filter((p) => p.id !== c.id));
+              knownActiveOrderIds.current.delete(c.id);
+            }, 4500);
+          });
+        }
+
+        // Mettre à jour les commandes actives connues affichées
+        incomingOrders.forEach((o) => {
+          if (o.status === 'PENDING' || o.status === 'PREPARING' || o.status === 'READY') {
+            knownActiveOrderIds.current.add(o.id);
+          } else if (o.status === 'SERVED') {
+            knownActiveOrderIds.current.delete(o.id);
+          }
+        });
 
         previousPendingIds.current = new Set(currentPending.map((o) => o.id));
         isInitialLoad.current = false;
@@ -172,6 +210,7 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
 
   return {
     orders,
+    recentlyCancelledOrders,
     isLoading,
     isConnected,
     lastSyncTime,

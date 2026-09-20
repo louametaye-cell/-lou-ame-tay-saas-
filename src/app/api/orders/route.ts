@@ -33,14 +33,20 @@ export async function GET(req: Request) {
             { subdomain: candidate },
           ],
         },
-        select: { id: true },
+        select: { id: true, subdomain: true },
       });
       if (dbTenant) {
         resolvedTenantId = dbTenant.id;
+        if (!isAuthorizedTenant(req, dbTenant.id, dbTenant.subdomain)) {
+          return NextResponse.json(
+            { error: 'Accès non autorisé : Session d\'exploitation requise (Gérant, Caisse ou Cuisine)' },
+            { status: 401 }
+          );
+        }
       }
     }
 
-    if (!resolvedTenantId || !isAuthorizedTenant(req, resolvedTenantId)) {
+    if (!resolvedTenantId) {
       return NextResponse.json(
         { error: 'Accès non autorisé : Session d\'exploitation requise (Gérant, Caisse ou Cuisine)' },
         { status: 401 }

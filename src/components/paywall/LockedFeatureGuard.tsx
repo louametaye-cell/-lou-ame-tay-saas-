@@ -29,7 +29,13 @@ export const LockedFeatureGuard: React.FC<LockedFeatureGuardProps> = ({
   featureKey,
   children,
 }) => {
-  const [currentPlanSlug, setCurrentPlanSlug] = useState<string>('tambali');
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('current_restaurant_plan');
+      if (stored) return stored;
+    }
+    return 'tambali';
+  });
   const [restaurantName, setRestaurantName] = useState<string>('Mon Restaurant');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -37,19 +43,28 @@ export const LockedFeatureGuard: React.FC<LockedFeatureGuardProps> = ({
     if (typeof window !== 'undefined') {
       const storedId = localStorage.getItem('current_restaurant_id') || '';
       const storedName = localStorage.getItem('current_restaurant_name') || 'Mon Restaurant';
+      const storedPlan = localStorage.getItem('current_restaurant_plan');
       setRestaurantName(storedName);
+      if (storedPlan) setCurrentPlanSlug(storedPlan);
 
       if (storedId) {
         fetch(`/api/tenant/branding?restaurantId=${encodeURIComponent(storedId)}`)
           .then((r) => r.json())
           .then((data) => {
-            const slug = data.plan?.slug?.toLowerCase() || (data.isTambali ? 'tambali' : 'tambali');
-            setCurrentPlanSlug(slug);
+            if (data.plan?.slug) {
+              const slug = data.plan.slug.toLowerCase();
+              setCurrentPlanSlug(slug);
+              localStorage.setItem('current_restaurant_plan', slug);
+            } else if (data.isTambali) {
+              setCurrentPlanSlug('tambali');
+            }
             if (data.businessName || data.name) {
               setRestaurantName(data.businessName || data.name);
             }
           })
-          .catch(() => {})
+          .catch((err) => {
+            console.warn('[LockedFeatureGuard] Branding fetch error:', err);
+          })
           .finally(() => setIsLoading(false));
       } else {
         setIsLoading(false);

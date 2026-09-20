@@ -162,9 +162,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   // 🔒 Déterminer si la prise de commande numérique est activée (TÀMBALI = vitrine pure, sans commande numérique)
   const isOrderingEnabled = restaurant.isOrderingEnabled ?? (!restaurant.isTambali && restaurant.planSlug !== 'tambali');
 
-  // Real-time polling to sync order status (PENDING -> PREPARING -> READY -> SERVED)
+  // Real-time polling to sync order status (PENDING -> PREPARING -> READY -> SERVED -> PAID)
   useEffect(() => {
-    if (!isOrderingEnabled || (sessionOrders.length === 0 && !activeOrder)) return;
+    if (!isOrderingEnabled) return;
 
     const pollLiveOrders = async () => {
       try {
@@ -189,6 +189,11 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                   // 🔒 Verrouillage automatique sur l'écran "Bon Appétit !"
                   setIsOrderSuccessOpen(true);
                 }
+                // 🔒 Confirmation en direct du règlement en caisse (Règle 10.4 & 10.8)
+                if (prevOrd && prevOrd.paymentStatus !== 'PAID' && updatedOrd.paymentStatus === 'PAID') {
+                  toast.success(`💳 Votre règlement a été validé en caisse ! Reçu officiel disponible. Merci ! 😊`);
+                  setIsOrderSuccessOpen(true);
+                }
               });
 
               localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(mappedOrders));
@@ -198,9 +203,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             // Update activeOrder if matched
             if (activeOrder) {
               const matched = data.orders.find((o: OrderType) => o.id === activeOrder.id);
-              if (matched && matched.status !== activeOrder.status) {
+              if (matched && (matched.status !== activeOrder.status || matched.paymentStatus !== activeOrder.paymentStatus)) {
                 setActiveOrder(matched);
-                if (matched.status === 'SERVED') {
+                if (matched.status === 'SERVED' || matched.paymentStatus === 'PAID') {
                   setIsOrderSuccessOpen(true);
                 }
               }
@@ -213,7 +218,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     pollLiveOrders();
     const interval = setInterval(pollLiveOrders, 3500);
     return () => clearInterval(interval);
-  }, [tableNumber, restaurant.id, activeOrder, sessionOrders.length, isExpress]);
+  }, [tableNumber, restaurant.id, activeOrder, isOrderingEnabled, isExpress]);
 
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const lastSubmitRef = useRef<number>(0);
@@ -834,7 +839,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       {/* 11. Live Order Status & Digital Receipt Tracker (Strictement désactivé sur formule vitrine TÀMBALI) */}
       {isOrderingEnabled && (
         <OrderSuccessTracker
-          order={activeOrder}
+          order={activeOrder || (sessionOrders.length > 0 ? sessionOrders[sessionOrders.length - 1] : null)}
           sessionOrders={sessionOrders}
           isOpen={isOrderSuccessOpen}
           onClose={() => setIsOrderSuccessOpen(false)}
@@ -845,10 +850,26 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             setIsOrderSuccessOpen(false);
             setIsMobileMoneyOpen(true);
           }}
+          onOrderCancelled={(orderId) => {
+            setActiveOrder((prev) => (prev?.id === orderId ? { ...prev, status: 'CANCELLED' } : prev));
+            setSessionOrders((prev) =>
+              prev.map((o) => (o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
+            );
+            try {
+              const saved = localStorage.getItem(`louametay_session_orders_${tableNumber}`);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                const updated = parsed.map((o: any) => (o.id === orderId ? { ...o, status: 'CANCELLED' } : o));
+                localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(updated));
+              }
+            } catch (e) {}
+          }}
           lang={currentLang}
           currency={currentCurrency}
           exchangeRates={exchangeRates}
           restaurantName={restaurant.name}
+          restaurantSlug={restaurant.subdomain}
+          googleReviewUrl={(restaurant as any).branding?.googleReviewUrl || (restaurant as any).googleReviewUrl}
         />
       )}
 

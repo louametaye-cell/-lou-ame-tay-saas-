@@ -11,16 +11,29 @@ import { hasAccessToFeature, getFeaturePaywallInfo, buildUpgradeWhatsAppUrl, PLA
 
 interface KitchenKDSViewProps {
   initialRestaurantId?: string;
+  initialPlanSlug?: string;
+  initialRestaurantName?: string;
 }
 
-export default function KitchenKDSView({ initialRestaurantId }: KitchenKDSViewProps = {}) {
-  const [restaurantName, setRestaurantName] = useState('Écran Cuisine (KDS)');
-  const [restaurantId, setRestaurantId] = useState<string | undefined>(undefined);
+export default function KitchenKDSView({ 
+  initialRestaurantId,
+  initialPlanSlug,
+  initialRestaurantName
+}: KitchenKDSViewProps = {}) {
+  const [restaurantName, setRestaurantName] = useState(initialRestaurantName || 'Écran Cuisine (KDS)');
+  const [restaurantId, setRestaurantId] = useState<string | undefined>(initialRestaurantId);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
   const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
-  const [isLoadingDetails, setIsLoadingDetails] = useState(true);
-  const [currentPlanSlug, setCurrentPlanSlug] = useState<string>('tambali');
+  const [isLoadingDetails, setIsLoadingDetails] = useState(!initialPlanSlug);
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string>(() => {
+    if (initialPlanSlug) return initialPlanSlug;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('current_restaurant_plan');
+      if (stored) return stored;
+    }
+    return 'tambali';
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -37,30 +50,41 @@ export default function KitchenKDSView({ initialRestaurantId }: KitchenKDSViewPr
       }
 
       const storedName = localStorage.getItem('current_restaurant_name');
-      if (storedName) setRestaurantName(storedName);
+      if (storedName && !initialRestaurantName) setRestaurantName(storedName);
+
+      const storedPlan = localStorage.getItem('current_restaurant_plan');
+      if (storedPlan && !initialPlanSlug) setCurrentPlanSlug(storedPlan);
 
       if (effectiveId) {
         fetch(`/api/tenant/branding?restaurantId=${encodeURIComponent(effectiveId)}`)
           .then((r) => r.json())
           .then((d) => {
-            const slug = d.plan?.slug?.toLowerCase() || (d.isTambali ? 'tambali' : 'tambali');
-            setCurrentPlanSlug(slug);
+            if (d.plan?.slug) {
+              const slug = d.plan.slug.toLowerCase();
+              setCurrentPlanSlug(slug);
+              localStorage.setItem('current_restaurant_plan', slug);
+            } else if (d.isTambali) {
+              setCurrentPlanSlug('tambali');
+            }
             const rName = d.name || d.restaurant?.name || d.businessName;
             if (rName) {
               setRestaurantName(rName);
               localStorage.setItem('current_restaurant_name', rName);
             }
           })
-          .catch(() => {})
+          .catch((err) => {
+            console.warn('[KitchenKDSView] Branding fetch notice:', err);
+          })
           .finally(() => setIsLoadingDetails(false));
       } else {
         setIsLoadingDetails(false);
       }
     }
-  }, [initialRestaurantId]);
+  }, [initialRestaurantId, initialPlanSlug, initialRestaurantName]);
 
   const {
     orders,
+    recentlyCancelledOrders,
     isLoading,
     isConnected,
     updateOrderStatus,
@@ -265,6 +289,7 @@ export default function KitchenKDSView({ initialRestaurantId }: KitchenKDSViewPr
         {activeTab === 'LIVE' && (
           <OrderTicketGrid
             orders={orders}
+            recentlyCancelledOrders={recentlyCancelledOrders}
             onUpdateStatus={updateOrderStatus}
             restaurantName={restaurantName}
             activeFilter={activeFilter}

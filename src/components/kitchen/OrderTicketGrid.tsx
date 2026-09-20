@@ -9,6 +9,7 @@ import { isKitchenDish } from '@/lib/order-routing';
 
 interface OrderTicketGridProps {
   orders: OrderType[];
+  recentlyCancelledOrders?: OrderType[];
   onUpdateStatus: (orderId: string, status: OrderStatus) => Promise<boolean>;
   restaurantName?: string;
   activeFilter: KitchenFilter;
@@ -16,12 +17,13 @@ interface OrderTicketGridProps {
 
 export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
   orders,
+  recentlyCancelledOrders = [],
   onUpdateStatus,
   restaurantName,
   activeFilter,
 }) => {
   const filteredOrders = useMemo(() => {
-    return orders
+    const liveOrders = orders
       .filter((order) => {
         // Exclude cancelled orders
         if (order.status === 'CANCELLED') return false;
@@ -44,14 +46,24 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
 
         // 'ALL' filter: show pending, preparing and ready orders
         return order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
-      })
-      .sort((a, b) => {
-        // PENDING first, then by oldest createdAt
-        if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
-        if (b.status === 'PENDING' && a.status !== 'PENDING') return 1;
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       });
-  }, [orders, activeFilter]);
+
+    // Si une commande était affichée et vient d'être annulée, on l'affiche avec son badge rouge d'alerte
+    const cancelledVisible = recentlyCancelledOrders.filter((c) => {
+      if (activeFilter === 'PREPARING' || activeFilter === 'READY') return false;
+      return true;
+    });
+
+    return [...cancelledVisible, ...liveOrders].sort((a, b) => {
+      // Les commandes récemment annulées en premier pour alerte visuelle immédiate
+      if (a.status === 'CANCELLED' && b.status !== 'CANCELLED') return -1;
+      if (b.status === 'CANCELLED' && a.status !== 'CANCELLED') return 1;
+      // PENDING first, then by oldest createdAt
+      if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+      if (b.status === 'PENDING' && a.status !== 'PENDING') return 1;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+  }, [orders, recentlyCancelledOrders, activeFilter]);
 
   if (filteredOrders.length === 0) {
     return (
