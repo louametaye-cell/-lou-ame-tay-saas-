@@ -11,7 +11,6 @@ import { DemoVideoSection } from '@/components/landing/DemoVideoSection';
 import { InteractiveLiveDemo } from '@/components/landing/InteractiveLiveDemo';
 import { RoiCalculator } from '@/components/landing/RoiCalculator';
 import { ProximitySection } from '@/components/landing/ProximitySection';
-import { WhyChooseUs } from '@/components/landing/WhyChooseUs';
 import { CustomerJourneySection } from '@/components/landing/CustomerJourneySection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
@@ -104,9 +103,6 @@ export default function HomePage() {
 
         {/* 5.5 Proximity Section (Notre différence : l'hyper-proximité Thiès & Dakar) */}
         <ProximitySection />
-
-        {/* 6. Why Choose Us (Hyper-Proximité + Comparatif) */}
-        <WhyChooseUs />
 
         {/* 7. Customer Journey & WhatsApp Onboarding (J0 -> J45) */}
         <CustomerJourneySection />

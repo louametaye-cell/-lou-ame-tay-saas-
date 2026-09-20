@@ -27,6 +27,12 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
             Formules d'abonnement flexibles éditées par <strong>Médias Graphisme Sénégal</strong>. Facturation mensuelle ou annuelle, avec règlement par Wave ou Orange Money.
           </p>
 
+          <div className="pt-1 flex items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-800 text-xs px-3 py-1 rounded-full font-semibold shadow-xs">
+              🔥 Écran Cuisine (KDS) inclus
+            </span>
+          </div>
+
           {/* Pack Installation & Mise en Service Initiale Banner */}
           <div className="mt-6 p-5 rounded-xl bg-slate-50 border border-slate-200 text-left max-w-3xl mx-auto shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

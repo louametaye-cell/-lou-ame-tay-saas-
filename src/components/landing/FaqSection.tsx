@@ -33,6 +33,12 @@ export const FaqSection: React.FC = () => {
           <p className="text-base text-slate-600 font-normal leading-relaxed">
             Réponses claires et directes sur la mise en service, les équipements et le fonctionnement au Sénégal.
           </p>
+
+          <div className="pt-1 flex items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-800 text-xs px-3 py-1 rounded-full font-semibold shadow-xs">
+              📱 Paiement Wave & Orange Money acceptés
+            </span>
+          </div>
         </motion.div>
 
         {/* FAQ Accordion List */}
