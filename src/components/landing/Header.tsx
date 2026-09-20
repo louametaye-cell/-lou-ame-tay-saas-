@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
           : 'bg-white border-b border-gray-100 h-20 flex items-center'
       }`}
     >
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between">
           {/* Brand Logo */}
           <a

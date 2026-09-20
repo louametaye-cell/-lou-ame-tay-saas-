@@ -37,14 +37,23 @@ export async function GET(
     }
 
     // Seules les commandes du repas actif pour ce restaurant précis sont retournées.
-    // Les commandes payées sont conservées dans la fenêtre des 2h du repas afin que le convive
-    // voie en temps réel la confirmation de son encaissement et son reçu officiel soldé.
+    // Si la table a été remise en service (clearedAt), les commandes antérieures ne sont pas retournées.
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const tableRecord = await (prisma as any).table.findFirst({
+      where: { tenantId: validTenantId, tableNumber: tableNum },
+      select: { clearedAt: true }
+    });
+
+    let minCreatedAt = twoHoursAgo;
+    if (tableRecord?.clearedAt && new Date(tableRecord.clearedAt) > twoHoursAgo) {
+      minCreatedAt = new Date(tableRecord.clearedAt);
+    }
+
     const dbOrders = await (prisma as any).order.findMany({
       where: {
         tenantId: validTenantId,
         tableNumber: tableNum,
-        createdAt: { gte: twoHoursAgo },
+        createdAt: { gte: minCreatedAt },
         status: { not: 'CANCELLED' },
       },
       include: {

@@ -51,7 +51,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       id="hero" 
       className="relative pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#F8F9FA] border-b border-gray-100"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
         {/* Main Split Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-start">

@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 interface TableStatus {
   id?: string;
   number: number;
-  status: 'FREE' | 'OCCUPIED' | 'CALL_WAITER' | 'BILL_REQUESTED';
+  status: 'FREE' | 'OCCUPIED' | 'TO_CLEAN' | 'CALL_WAITER' | 'BILL_REQUESTED';
   activeOrder?: OrderType;
   zoneName?: string;
   label?: string;
@@ -170,11 +170,26 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const tables: TableStatus[] = dbTables.length > 0
     ? dbTables.map((t: any) => {
         const num = t.tableNumber;
-        const activeOrder = orders.find(
-          (o) => o.tableNumber === num && (o.status === 'PENDING' || o.status === 'PREPARING')
-        );
+        const clearedTime = t.clearedAt ? new Date(t.clearedAt).getTime() : null;
+        const tableOrders = orders.filter((o) => {
+          if (o.tableNumber !== num || o.status === 'CANCELLED') return false;
+          if (!clearedTime) return true;
+          return new Date(o.createdAt).getTime() > clearedTime;
+        });
+
+        const unpaidOrder = tableOrders.find((o) => o.paymentStatus !== 'PAID');
+        const allPaid = tableOrders.length > 0 && tableOrders.every((o) => o.paymentStatus === 'PAID');
+
         let status: TableStatus['status'] = 'FREE';
-        if (activeOrder) status = 'OCCUPIED';
+        let activeOrder: OrderType | undefined = undefined;
+
+        if (unpaidOrder) {
+          status = 'OCCUPIED';
+          activeOrder = unpaidOrder;
+        } else if (allPaid) {
+          status = 'TO_CLEAN';
+          activeOrder = tableOrders[tableOrders.length - 1];
+        }
 
         return {
           id: t.id,
@@ -187,11 +202,22 @@ export const TableManager: React.FC<TableManagerProps> = ({
       })
     : Array.from({ length: tableCount }, (_, i) => {
         const num = i + 1;
-        const activeOrder = orders.find(
-          (o) => o.tableNumber === num && (o.status === 'PENDING' || o.status === 'PREPARING')
+        const tableOrders = orders.filter(
+          (o) => o.tableNumber === num && o.status !== 'CANCELLED'
         );
+        const unpaidOrder = tableOrders.find((o) => o.paymentStatus !== 'PAID');
+        const allPaid = tableOrders.length > 0 && tableOrders.every((o) => o.paymentStatus === 'PAID');
+
         let status: TableStatus['status'] = 'FREE';
-        if (activeOrder) status = 'OCCUPIED';
+        let activeOrder: OrderType | undefined = undefined;
+
+        if (unpaidOrder) {
+          status = 'OCCUPIED';
+          activeOrder = unpaidOrder;
+        } else if (allPaid) {
+          status = 'TO_CLEAN';
+          activeOrder = tableOrders[tableOrders.length - 1];
+        }
 
         return {
           number: num,
@@ -202,6 +228,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
 
   const freeCount = tables.filter((t) => t.status === 'FREE').length;
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED').length;
+  const toCleanCount = tables.filter((t) => t.status === 'TO_CLEAN').length;
 
   const getTableUrl = (num: number) => {
     return `${baseUrl}/r/${effectiveSubdomain || 'menu'}/${num}`;
@@ -245,6 +272,8 @@ export const TableManager: React.FC<TableManagerProps> = ({
         <TableServiceLiveStatus
           orders={orders}
           tableCount={tableCount}
+          dbTables={dbTables}
+          onRefreshTables={fetchDbTables}
           onRefreshOrders={fetchLiveOrders}
           restaurantId={effectiveRestaurantId}
         />

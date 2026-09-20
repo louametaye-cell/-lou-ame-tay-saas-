@@ -35,6 +35,8 @@ import { toast } from 'sonner';
 interface TableServiceLiveStatusProps {
   orders: OrderType[];
   tableCount?: number;
+  dbTables?: any[];
+  onRefreshTables?: () => void;
   onRefreshOrders?: () => void;
   restaurantId?: string;
 }
@@ -42,10 +44,19 @@ interface TableServiceLiveStatusProps {
 export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   orders,
   tableCount = 12,
+  dbTables,
+  onRefreshTables,
   onRefreshOrders,
   restaurantId,
 }) => {
   const effectiveTenantId = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || '' : '');
+
+  // Confirmation inline de libération de table
+  const [confirmingReleaseTable, setConfirmingReleaseTable] = useState<number | null>(null);
+  const [isReleasingTable, setIsReleasingTable] = useState<boolean>(false);
+
+  // Filtre par état de cycle de vie (3 états : FREE, OCCUPIED, TO_CLEAN)
+  const [lifeCycleFilter, setLifeCycleFilter] = useState<'ALL' | 'FREE' | 'OCCUPIED' | 'TO_CLEAN'>('ALL');
 
   // Liste des membres du shift
   const [shiftMembers, setShiftMembers] = useState<ServerShiftMember[]>(() => {
@@ -233,13 +244,73 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
     }
   };
 
-  // Build tables view with active orders
+  // Remise en service manuelle d'une table (Nettoyée & Libre)
+  const handleReleaseTable = async (tableNum: number) => {
+    try {
+      setIsReleasingTable(true);
+      const res = await fetch('/api/tenant/tables/release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: effectiveTenantId,
+          tableNumber: tableNum,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`✨ Table ${tableNum < 10 ? '0' + tableNum : tableNum} remise en service !`, {
+          description: 'La table est prête et propre pour accueillir les prochains clients.',
+        });
+        setConfirmingReleaseTable(null);
+        if (onRefreshTables) onRefreshTables();
+        if (onRefreshOrders) onRefreshOrders();
+      } else {
+        toast.error(data.error || 'Erreur lors de la remise en service de la table');
+      }
+    } catch (e) {
+      toast.error('Erreur réseau lors de la remise en service');
+    } finally {
+      setIsReleasingTable(false);
+    }
+  };
+
+  // Build tables view with active orders and lifecycle statuses
   const activeTablesList = useMemo(() => {
     return Array.from({ length: tableCount }, (_, i) => {
       const tableNum = i + 1;
-      const activeOrder = orders.find(
-        (o) => o.tableNumber === tableNum && o.status !== 'CANCELLED'
-      );
+      const dbTable = dbTables?.find((d: any) => d.tableNumber === tableNum);
+      const clearedAtTime = dbTable?.clearedAt ? new Date(dbTable.clearedAt).getTime() : null;
+
+      // 1. Filtrer les commandes pour cette table (non annulées)
+      const tableOrders = orders.filter((o) => {
+        if (o.tableNumber !== tableNum || o.status === 'CANCELLED') return false;
+        if (!clearedAtTime) return true;
+        return new Date(o.createdAt).getTime() > clearedAtTime;
+      });
+
+      // 2. Vérifier s'il y a des commandes non soldées
+      const unpaidOrders = tableOrders.filter((o) => o.paymentStatus !== 'PAID');
+      const latestUnpaidOrder = unpaidOrders.length > 0 ? unpaidOrders[unpaidOrders.length - 1] : undefined;
+
+      // 3. Vérifier les commandes payées
+      const paidOrders = tableOrders.filter((o) => o.paymentStatus === 'PAID');
+      const latestPaidOrder = paidOrders.length > 0 ? paidOrders[paidOrders.length - 1] : undefined;
+
+      // 🎯 DÉTERMINATION DES 3 ÉTATS DU CYCLE DE VIE MÉTIER :
+      // - FREE : aucune commande active après clearedAt -> Carte verte, sans nom de client
+      // - OCCUPIED : commande(s) active(s) non payée(s) -> Carte rouge/orange, nom et #cmd
+      // - TO_CLEAN : addition payée, client parti, table à nettoyer -> Carte jaune, badge "À remettre en service"
+      let lifeCycleStatus: 'FREE' | 'OCCUPIED' | 'TO_CLEAN' = 'FREE';
+      let activeOrder: OrderType | undefined = undefined;
+
+      if (latestUnpaidOrder) {
+        lifeCycleStatus = 'OCCUPIED';
+        activeOrder = latestUnpaidOrder;
+      } else if (tableOrders.length > 0 && paidOrders.length === tableOrders.length) {
+        lifeCycleStatus = 'TO_CLEAN';
+        activeOrder = latestPaidOrder;
+      }
+
       const assignedServer = tableServerMap[tableNum] || 'Non assigné';
 
       let kitchenItems: any[] = [];
@@ -249,8 +320,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
 
       if (activeOrder && activeOrder.items) {
         activeOrder.items.forEach((it, idx) => {
-          const itemKey = `${activeOrder.id}_${it.id || idx}`;
-          const isServed = Boolean(servedItemsMap[itemKey] || activeOrder.status === 'SERVED');
+          const itemKey = `${activeOrder!.id}_${it.id || idx}`;
+          const isServed = Boolean(servedItemsMap[itemKey] || activeOrder!.status === 'SERVED');
           const isBar = isDrinkOrBarItem(it);
 
           const decoratedItem = {
@@ -279,6 +350,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
 
       return {
         tableNum,
+        dbTable,
+        lifeCycleStatus,
         activeOrder,
         assignedServer,
         kitchenItems,
@@ -289,7 +362,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
         isAllServed,
       };
     });
-  }, [orders, tableCount, tableServerMap, servedItemsMap]);
+  }, [orders, tableCount, tableServerMap, servedItemsMap, dbTables]);
 
   return (
     <div className="space-y-6">
@@ -437,113 +510,362 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
         )}
       </div>
 
-      {/* 2. Zone / Floor Plan Filter Tabs */}
-      <div className="flex items-center justify-between gap-2 flex-wrap bg-white p-2 rounded-2xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setActiveZoneFilter('ALL')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-              activeZoneFilter === 'ALL'
-                ? 'bg-amber-500 text-slate-950 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            🍽️ Toutes les Tables ({tableCount})
-          </button>
-
-          {zones.map((zone) => (
+      {/* 2. Cycle de Vie des Tables & Filtres de Salle */}
+      <div className="space-y-3 bg-white p-3 sm:p-4 rounded-3xl border border-slate-200 shadow-2xs">
+        {/* Ligne 1 : Compteurs et Filtres des 3 États Métier */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
             <button
-              key={zone.id}
               type="button"
-              onClick={() => setActiveZoneFilter(zone.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-                activeZoneFilter === zone.id
-                  ? 'bg-[#0F172A] text-amber-400 shadow-2xs'
+              onClick={() => setLifeCycleFilter('ALL')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                lifeCycleFilter === 'ALL'
+                  ? 'bg-slate-900 text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              📍 {zone.name}
+              <span>🍽️ Toutes les Tables</span>
+              <span className="bg-slate-700/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
+                {tableCount}
+              </span>
             </button>
-          ))}
+
+            <button
+              type="button"
+              onClick={() => setLifeCycleFilter('FREE')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                lifeCycleFilter === 'FREE'
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              <span>🟢 Libres</span>
+              <span className="bg-emerald-700/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
+                {activeTablesList.filter((t) => t.lifeCycleStatus === 'FREE').length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLifeCycleFilter('OCCUPIED')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                lifeCycleFilter === 'OCCUPIED'
+                  ? 'bg-amber-500 text-slate-950 shadow-2xs'
+                  : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200'
+              }`}
+            >
+              <span>🟡 Occupées</span>
+              <span className="bg-amber-600/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
+                {activeTablesList.filter((t) => t.lifeCycleStatus === 'OCCUPIED').length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLifeCycleFilter('TO_CLEAN')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                lifeCycleFilter === 'TO_CLEAN'
+                  ? 'bg-orange-600 text-white shadow-2xs'
+                  : 'text-orange-950 bg-orange-50 hover:bg-orange-100 border border-orange-200'
+              }`}
+            >
+              <span>🧹 À Libérer (À nettoyer)</span>
+              <span className="bg-orange-700/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
+                {activeTablesList.filter((t) => t.lifeCycleStatus === 'TO_CLEAN').length}
+              </span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Synchronisation live</span>
+          </div>
         </div>
 
-        <span className="text-xs font-bold text-slate-500 hidden sm:inline px-2">
-          {tableCount} tables configurées
-        </span>
+        {/* Ligne 2 : Filtres de Zones / Salles */}
+        {zones.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider pr-1">
+              Salles / Zones :
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveZoneFilter('ALL')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                activeZoneFilter === 'ALL'
+                  ? 'bg-slate-200 text-slate-900 font-black'
+                  : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              Toutes les zones
+            </button>
+            {zones.map((zone) => (
+              <button
+                key={zone.id}
+                type="button"
+                onClick={() => setActiveZoneFilter(zone.id)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  activeZoneFilter === zone.id
+                    ? 'bg-amber-100 text-amber-900 font-black border border-amber-300'
+                    : 'text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                📍 {zone.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 3. Tables Grid with Waiter Assignment & Live Service Status */}
+      {/* 3. Grille des Tables avec Cycle de Vie (3 États Clairs) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeTablesList
           .filter((t) => {
-            if (activeZoneFilter === 'ALL') return true;
-            const targetZone = zones.find((z) => z.id === activeZoneFilter);
-            if (!targetZone) return true;
-            if (targetZone.tables && targetZone.tables.length > 0) {
-              return targetZone.tables.some((zt: any) => zt.tableNumber === t.tableNum);
+            // Filtre par Zone
+            if (activeZoneFilter !== 'ALL') {
+              const targetZone = zones.find((z) => z.id === activeZoneFilter);
+              if (targetZone && targetZone.tables && targetZone.tables.length > 0) {
+                const inZone = targetZone.tables.some((zt: any) => zt.tableNumber === t.tableNum);
+                if (!inZone) return false;
+              }
+            }
+            // Filtre par Statut de Cycle de Vie
+            if (lifeCycleFilter !== 'ALL') {
+              return t.lifeCycleStatus === lifeCycleFilter;
             }
             return true;
           })
           .map((t) => {
-          const hasOrder = Boolean(t.activeOrder);
+            const hasOrder = Boolean(t.activeOrder);
 
-          return (
-            <div
-              key={t.tableNum}
-              className={`bg-white rounded-3xl border-2 p-4 sm:p-5 transition-all shadow-xs flex flex-col justify-between gap-3 relative ${
-                t.isAllServed
-                  ? 'border-emerald-400 bg-emerald-50/10'
-                  : hasOrder
-                  ? 'border-amber-400 bg-amber-50/10 ring-1 ring-amber-400/50'
-                  : 'border-slate-200'
-              }`}
-            >
-              {/* Header: Table Number + Assigned Server Dropdown */}
-              <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base sm:text-lg font-black text-slate-950 font-mono">
-                      TABLE {t.tableNum < 10 ? `0${t.tableNum}` : t.tableNum}
+            // =================================================================
+            // ÉTAT 1 : LIBRE (Verte, sans nom de client, prête à accueillir)
+            // =================================================================
+            if (t.lifeCycleStatus === 'FREE') {
+              return (
+                <div
+                  key={t.tableNum}
+                  data-table-number={t.tableNum}
+                  data-table-lifecycle="FREE"
+                  className="bg-white rounded-3xl border-2 border-emerald-400 hover:border-emerald-500 p-4 sm:p-5 transition-all shadow-xs flex flex-col justify-between gap-4 relative group hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-2 border-b border-emerald-100 pb-3">
+                    <div>
+                      <span className="text-base sm:text-lg font-black text-emerald-950 font-mono">
+                        TABLE {t.tableNum < 10 ? `0${t.tableNum}` : t.tableNum}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-black uppercase tracking-wider block mt-0.5">
+                        {t.dbTable?.zone?.name || 'Salle Principale'}
+                      </span>
+                    </div>
+
+                    {/* Server assignment dropdown */}
+                    <div className="text-right space-y-0.5">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                        Serveur dédié
+                      </span>
+                      <select
+                        value={t.assignedServer}
+                        onChange={(e) => handleAssignServer(t.tableNum, e.target.value)}
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer shadow-2xs"
+                      >
+                        <option value="Non assigné">Non assigné</option>
+                        {shiftMembers.map((m) => (
+                          <option key={m.id} value={m.name}>
+                            👤 {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Body : Table Libre et prête */}
+                  <div className="py-6 text-center space-y-2.5">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-2xs transition-transform group-hover:scale-105">
+                      <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-emerald-950">Table Libre &amp; Dressée</h4>
+                      <p className="text-xs text-emerald-700 font-medium">Prête à accueillir de nouveaux clients</p>
+                    </div>
+                    <span className="text-[11px] text-slate-500 font-bold block pt-1">
+                      Serveur : {t.assignedServer}
                     </span>
-                    {hasOrder && (
-                      <span className="text-[11px] font-bold text-slate-400 font-mono">
-                        #{t.activeOrder!.id.slice(-5).toUpperCase()}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="pt-2 border-t border-emerald-100 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Statut Table</span>
+                    <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-black px-2.5 py-0.5 rounded-lg text-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                      <span>Libre</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // =================================================================
+            // ÉTAT 3 : À LIBÉRER (Addition payée, client parti, table à nettoyer)
+            // =================================================================
+            if (t.lifeCycleStatus === 'TO_CLEAN') {
+              return (
+                <div
+                  key={t.tableNum}
+                  data-table-number={t.tableNum}
+                  data-table-lifecycle="TO_CLEAN"
+                  className="bg-gradient-to-b from-amber-50 via-white to-amber-50/60 rounded-3xl border-2 border-amber-500 shadow-md ring-2 ring-amber-300/60 p-4 sm:p-5 transition-all flex flex-col justify-between gap-3 relative"
+                >
+                  <div className="flex items-start justify-between gap-2 border-b border-amber-200 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base sm:text-lg font-black text-slate-950 font-mono">
+                          TABLE {t.tableNum < 10 ? `0${t.tableNum}` : t.tableNum}
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md border border-amber-500 shadow-2xs">
+                          À LIBÉRER
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-bold block mt-0.5">
+                        {t.dbTable?.zone?.name || 'Salle Principale'}
+                      </span>
+                    </div>
+
+                    <div className="text-right space-y-0.5">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                        Serveur dédié
+                      </span>
+                      <span className="text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded-xl border border-slate-200 inline-block">
+                        👤 {t.assignedServer}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Body : Encart d'invitation au nettoyage et remise en service */}
+                  <div className="space-y-3 py-1">
+                    <div className="p-3 bg-amber-100/90 border border-amber-300 rounded-2xl space-y-1.5 text-left">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-800 shrink-0" />
+                        <span className="text-xs font-black text-amber-950 uppercase tracking-wide">
+                          Addition Réglée en Caisse ✓
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-900 font-medium leading-relaxed">
+                        Le repas précédent est soldé. Nettoyez et dressez la table, puis confirmez qu&apos;elle est prête pour le prochain client.
+                      </p>
+                      {t.activeOrder?.customerName && (
+                        <p className="text-[11px] text-slate-500 font-bold border-t border-amber-200/80 pt-1">
+                          Dernier client : {t.activeOrder.customerName} (#{t.activeOrder.id.slice(-5).toUpperCase()})
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Action Manuelle avec Confirmation (Bouton VERT >= 48px) */}
+                    {confirmingReleaseTable === t.tableNum ? (
+                      <div className="p-3 bg-white border-2 border-emerald-500 rounded-2xl space-y-2 shadow-md animate-in fade-in">
+                        <p className="text-xs font-black text-slate-900 text-center">
+                          Confirmer la remise en service de la Table {t.tableNum} ?
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            disabled={isReleasingTable}
+                            onClick={() => handleReleaseTable(t.tableNum)}
+                            className="min-h-[46px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-4 h-4 stroke-[3]" />
+                            <span>✓ Prête</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingReleaseTable(null)}
+                            className="min-h-[46px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <span>✕ Annuler</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingReleaseTable(t.tableNum)}
+                        className="w-full min-h-[48px] py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4 stroke-[2.5]" />
+                        <span>Table Prête (Remettre en service)</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Statut Table</span>
+                    <span className="bg-amber-200 text-amber-950 font-black border border-amber-300 px-2.5 py-0.5 rounded-lg text-xs flex items-center gap-1">
+                      <span>🧹 À Nettoyer</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // =================================================================
+            // ÉTAT 2 : OCCUPÉE (Client en cours, commande(s) active(s))
+            // =================================================================
+            return (
+              <div
+                key={t.tableNum}
+                data-table-number={t.tableNum}
+                data-table-lifecycle="OCCUPIED"
+                className={`bg-white rounded-3xl border-2 p-4 sm:p-5 transition-all shadow-xs flex flex-col justify-between gap-3 relative ${
+                  t.isAllServed
+                    ? 'border-emerald-400 bg-emerald-50/10'
+                    : 'border-amber-400 bg-amber-50/10 ring-1 ring-amber-400/50'
+                }`}
+              >
+                {/* Header: Table Number + Order # + Customer Name */}
+                <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base sm:text-lg font-black text-slate-950 font-mono">
+                        TABLE {t.tableNum < 10 ? `0${t.tableNum}` : t.tableNum}
+                      </span>
+                      {hasOrder && (
+                        <span className="text-[11px] font-bold text-slate-400 font-mono">
+                          #{t.activeOrder!.id.slice(-5).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Customer Name if provided */}
+                    {hasOrder && t.activeOrder?.customerName && (
+                      <span className="text-[11px] font-black text-slate-800 flex items-center gap-1 mt-0.5">
+                        <User className="w-3 h-3 text-orange-600" />
+                        <span>{t.activeOrder.customerName}</span>
                       </span>
                     )}
                   </div>
 
-                  {/* Customer Name if provided */}
-                  {hasOrder && t.activeOrder?.customerName && (
-                    <span className="text-[11px] font-black text-slate-700 flex items-center gap-1 mt-0.5">
-                      <User className="w-3 h-3 text-orange-600" />
-                      <span>{t.activeOrder.customerName}</span>
+                  {/* Server assignment dropdown */}
+                  <div className="text-right space-y-0.5">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                      Serveur dédié
                     </span>
-                  )}
+                    <select
+                      value={t.assignedServer}
+                      onChange={(e) => handleAssignServer(t.tableNum, e.target.value)}
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 cursor-pointer shadow-2xs"
+                    >
+                      <option value="Non assigné">Non assigné</option>
+                      {shiftMembers.map((m) => (
+                        <option key={m.id} value={m.name}>
+                          👤 {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* Server assignment dropdown */}
-                <div className="text-right space-y-0.5">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase">
-                    Serveur dédié
-                  </span>
-                  <select
-                    value={t.assignedServer}
-                    onChange={(e) => handleAssignServer(t.tableNum, e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 cursor-pointer shadow-2xs"
-                  >
-                    <option value="Non assigné">Non assigné</option>
-                    {shiftMembers.map((m) => (
-                      <option key={m.id} value={m.name}>
-                        👤 {m.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Body: Items Status (Cuisine vs Bar) */}
-              {hasOrder ? (
+                {/* Body: Items Status (Cuisine vs Bar) */}
                 <div className="space-y-3 flex-1">
                   {/* Progress Bar */}
                   <div className="space-y-1">
@@ -574,7 +896,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                     <div className="space-y-1.5">
                       <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                         <Utensils className="w-3.5 h-3.5 text-orange-600" />
-                        <span>Cuisine (Plats chauds &amp; grillades)</span>
+                        <span>Cuisine (Plats chauds)</span>
                       </span>
 
                       <div className="space-y-1 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 text-xs">
@@ -607,8 +929,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                             <span
                               className={`text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 ${
                                 it.isServed
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-amber-100 text-amber-900 border border-amber-300'
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-amber-100 text-amber-900 border border-amber-300'
                               }`}
                             >
                               {it.isServed ? '✅ Servi' : '⏳ En Cuisine'}
@@ -624,7 +946,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                     <div className="space-y-1.5">
                       <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                         <Wine className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Comptoir Bar (Boissons fraîches)</span>
+                        <span>Bar (Boissons fraîches)</span>
                       </span>
 
                       <div className="space-y-1 bg-blue-50/50 p-2.5 rounded-2xl border border-blue-200 text-xs">
@@ -669,19 +991,10 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="py-8 text-center text-xs text-slate-400 space-y-1">
-                  <span>Table libre</span>
-                  <span className="block text-[11px] text-slate-500 font-medium">
-                    Assignée à {t.assignedServer}
-                  </span>
-                </div>
-              )}
 
-              {/* Footer Indicator */}
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span className="text-slate-500">Statut Table</span>
-                {hasOrder ? (
+                {/* Footer Indicator */}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Statut Table</span>
                   <span
                     className={`font-black px-2.5 py-0.5 rounded-lg ${
                       t.isAllServed
@@ -689,15 +1002,12 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                         : 'bg-amber-100 text-amber-900'
                     }`}
                   >
-                    {t.isAllServed ? '🟢 Tout Servi' : '🟡 Service en cours'}
+                    {t.isAllServed ? '🟢 Tout Servi' : '🟡 Repas en cours'}
                   </span>
-                ) : (
-                  <span className="font-bold text-slate-500">⚪ Libre</span>
-                )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Edit Waiter Modal */}

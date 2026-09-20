@@ -11,7 +11,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
   return (
     <section id="tarifs" className="py-20 bg-white relative border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -297,7 +297,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
         })()}
 
         {/* 1 Option Component: Extra Tables */}
-        <div className="mt-8 max-w-5xl mx-auto bg-[#F8F9FA] rounded-2xl p-6 border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="mt-8 max-w-[1536px] mx-auto bg-[#F8F9FA] rounded-2xl p-6 border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-green-50 text-[#00A86B] flex items-center justify-center shrink-0 border border-green-200">
               <Plus className="w-6 h-6" />
@@ -322,7 +322,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
         </div>
 
         {/* Local Payment Badges & WhatsApp Support Strip */}
-        <div className="mt-10 max-w-5xl mx-auto bg-white rounded-2xl p-6 border border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-700 shadow-xs">
+        <div className="mt-10 max-w-[1536px] mx-auto bg-white rounded-2xl p-6 border border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-700 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 bg-[#1DC3F4]/10 text-[#0089BA] px-3 py-1.5 rounded-lg font-bold">
               <span>🌊 Wave</span>

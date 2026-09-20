@@ -142,7 +142,7 @@ export const InteractiveLiveDemo: React.FC = () => {
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-[#00A86B]/5 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#FF6B00]/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">

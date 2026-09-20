@@ -47,7 +47,7 @@ export const MissionSection: React.FC = () => {
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#00A86B]/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-[#FF6B00]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
         
         {/* Main Banner / Headline */}
         <div className="max-w-4xl mx-auto text-center space-y-6">

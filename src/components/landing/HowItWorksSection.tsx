@@ -89,7 +89,7 @@ export const HowItWorksSection: React.FC = () => {
 
   return (
     <section id="comment-ca-marche" className="py-20 bg-[#F8F9FA] border-b border-gray-100 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
