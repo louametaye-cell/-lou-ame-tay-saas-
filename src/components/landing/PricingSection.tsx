@@ -152,6 +152,12 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                       </span>
                     )}
 
+                    {plan.id === 'sur-mesure' && (
+                      <span className="text-[11px] font-extrabold text-[#00A86B] block mt-1.5 bg-green-50/80 px-2.5 py-1 rounded-md border border-green-200/80">
+                        (Inclut les formules Baobab, Teranga, Buur & projets sur-mesure)
+                      </span>
+                    )}
+
                     {typeof price === 'number' && billingCycle === 'annual' && !isEvent && (
                       <span className="text-[11px] text-[#00A86B] font-semibold block mt-1">
                         Facturé {(price * 12).toLocaleString('fr-FR')} FCFA / an (2 mois offerts)
