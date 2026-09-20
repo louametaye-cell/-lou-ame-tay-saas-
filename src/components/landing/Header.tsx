@@ -67,25 +67,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
 
           {/* Right Action Buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            <button
-              id="header-qr-preview-btn"
-              onClick={onOpenQrModal}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 bg-[#F8F9FA] hover:bg-gray-100 border border-gray-200/80 px-3 py-2 rounded-xl transition-all cursor-pointer"
-              title="Tester les QR codes pour table"
-            >
-              <QrCode className="w-4 h-4 text-[#00A86B]" />
-              <span>QR Table</span>
-            </button>
-
             <a
               id="header-whatsapp-btn"
-              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20renseignements%20sur%20votre%20menu%20digital."
+              href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20renseignements%20sur%20votre%20menu%20digital."
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00A86B] hover:text-[#008957] bg-green-50 hover:bg-green-100 px-3 py-2 rounded-xl transition-all"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#25D366] hover:bg-[#20ba5a] px-3.5 py-2 rounded-xl transition-all shadow-xs"
             >
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden lg:inline">WhatsApp</span>
+              <MessageCircle className="w-4 h-4 fill-current" />
+              <span>WhatsApp (+221 77 845 87 47)</span>
             </a>
 
             <button
@@ -136,24 +126,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
           </div>
 
           <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenQrModal();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold bg-gray-100 text-gray-800 rounded-xl"
-            >
-              <QrCode className="w-4 h-4 text-[#00A86B]" />
-              Générateur de QR code de table
-            </button>
             <a
-              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9mo%20pour%20mon%20restaurant."
+              href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9mo%20pour%20mon%20restaurant."
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-[#25D366] text-white rounded-xl shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold bg-[#25D366] text-white rounded-xl shadow-sm"
             >
-              <MessageCircle className="w-4 h-4" />
-              Échanger sur WhatsApp (+221 76 231 20 03)
+              <MessageCircle className="w-4 h-4 fill-current" />
+              Échanger sur WhatsApp (+221 77 845 87 47)
             </a>
             <button
               onClick={() => {

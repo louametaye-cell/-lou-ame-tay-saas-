@@ -28,25 +28,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
               L'outil de digitalisation tout-en-un pour les restaurants, hôtels et maquis au Sénégal. Conçu par des experts du terrain.
             </p>
 
-            {/* Social & Action Icons in Circles */}
+            {/* Social & WhatsApp Direct Action Icon */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay"
+                href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-slate-800 hover:bg-emerald-600 p-2.5 rounded-full text-emerald-400 hover:text-white transition-colors cursor-pointer"
-                title="WhatsApp Commercial"
+                className="bg-[#25D366] hover:bg-[#20ba5a] p-2.5 rounded-full text-white transition-colors cursor-pointer shadow-xs"
+                title="WhatsApp Direct +221 77 845 87 47"
               >
                 <MessageCircle className="w-4 h-4 fill-current" />
               </a>
-              <button
-                type="button"
-                onClick={onOpenQrModal}
-                className="bg-slate-800 hover:bg-emerald-600 p-2.5 rounded-full text-emerald-400 hover:text-white transition-colors cursor-pointer"
-                title="Générateur QR Code Table"
-              >
-                <QrCode className="w-4 h-4" />
-              </button>
             </div>
           </div>
 
@@ -138,14 +130,15 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
               </p>
 
               <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={onOpenQrModal}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg text-sm transition-colors cursor-pointer"
+                <a
+                  href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20QR%20code%20ou%20obtenir%20des%20informations."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                 >
-                  <Printer className="w-4 h-4" />
-                  <span>Imprimer un modèle QR Table</span>
-                </button>
+                  <MessageCircle className="w-4 h-4 fill-current" />
+                  <span>WhatsApp (+221 77 845 87 47)</span>
+                </a>
               </div>
             </div>
           </div>
