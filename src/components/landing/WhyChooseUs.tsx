@@ -1,15 +1,12 @@
 import React from 'react';
 import { 
-  CheckCircle2, 
-  MapPin, 
+  Check, 
+  Flag, 
   Clock, 
   TrendingUp, 
-  ShieldCheck,
-  Check,
-  Flag,
-  HeartHandshake,
-  Leaf,
-  Sparkles
+  HeartHandshake, 
+  Leaf, 
+  X 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { COMPETITOR_COMPARISONS } from '@/components/landing/data/mockData';
@@ -18,104 +15,87 @@ export const WhyChooseUs: React.FC = () => {
   const pillars = [
     {
       icon: Flag,
-      iconBg: 'bg-emerald-100 text-[#00A86B]',
-      title: '100% Conçu pour le Sénégal',
-      subtitle: 'Adapté aux réalités du terrain',
-      description: 'Optimisé pour les connexions mobiles Orange, Free et Expresso. Affichage des prix en FCFA, devises locales, et intégration des habitudes de commande sénégalaises.',
-      accent: 'border-emerald-200 hover:border-[#00A86B] bg-white'
+      title: 'Adapté au marché sénégalais',
+      subtitle: 'Conçu localement',
+      description: 'Optimisé pour les réseaux mobiles locaux. Gestion multi-langues, affichage en FCFA et prise en compte des spécificités de service au Sénégal.'
     },
     {
       icon: Clock,
-      iconBg: 'bg-amber-100 text-amber-700',
-      title: 'Gain de temps spectaculaire',
-      subtitle: 'Plus de va-et-vient inutiles',
-      description: 'Vos serveurs ne passent plus leur temps à porter des menus physiques et à répéter les plats. Ils se concentrent sur un accueil chaleureux (Teranga) et le service.',
-      accent: 'border-amber-200 hover:border-[#FF6B00] bg-white'
+      title: 'Optimisation du temps de service',
+      subtitle: 'Efficacité opérationnelle',
+      description: 'Vos équipes réduisent les déplacements inutiles en salle et se concentrent sur l\'accueil et la fluidité de la prise de commande.'
     },
     {
       icon: TrendingUp,
-      iconBg: 'bg-green-100 text-emerald-800',
-      title: 'Augmentation du ticket moyen',
-      subtitle: '+25% de ventes additionnelles',
-      description: 'Les clients sont tentés par les belles photos HD de vos grillades, pastels, jus de bissap et desserts maison. Ils commandent spontanément plus d\'extras.',
-      accent: 'border-emerald-200 hover:border-[#00A86B] bg-white'
+      title: 'Valorisation de la carte',
+      subtitle: 'Visuels & Suggestions',
+      description: 'Présentation claire des plats avec photos HD et options personnalisées, incitant naturellement à la découverte de vos spécialités.'
     },
     {
       icon: HeartHandshake,
-      iconBg: 'bg-purple-100 text-purple-700',
-      title: 'Assistance locale & Proximité',
-      subtitle: 'Basés à Thiès & Dakar',
-      description: 'Pas de centre d\'appel à l\'autre bout du monde. Notre équipe se déplace dans votre restaurant pour former vos équipes et reste joignable 7j/7 sur WhatsApp.',
-      accent: 'border-purple-200 hover:border-purple-500 bg-white'
+      title: 'Support local 7j/7',
+      subtitle: 'Présence à Thiès & Dakar',
+      description: 'Assistance réactive sur place et via WhatsApp par une équipe locale qui connaît les enjeux de votre établissement.'
     },
     {
       icon: Leaf,
-      iconBg: 'bg-teal-100 text-teal-700',
-      title: 'Impact RSE & Éco-Responsable',
-      subtitle: 'Zéro déchet papier & 0 rature',
-      description: 'Supprimez le gaspillage récurrent de menus papier jetés. Un engagement écologique concret qui valorise la marque de votre restaurant.',
-      accent: 'border-teal-200 hover:border-teal-500 bg-emerald-50/20'
+      title: 'Réduction de l\'empreinte papier',
+      subtitle: 'Économie & RSE',
+      description: 'Élimination des coûts de réimpression récurrents et suppression du papier jetable dans le déroulé quotidien du service.'
     }
   ];
 
   return (
-    <section id="pourquoi-nous" className="py-20 bg-[#F8F9FA] border-b border-gray-100 relative">
+    <section id="pourquoi-nous" className="py-24 bg-slate-50/50 border-b border-slate-200/80 relative">
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
         {/* Section Header */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-3xl mx-auto space-y-4"
+          transition={{ duration: 0.4 }}
+          className="text-center max-w-3xl mx-auto space-y-3"
         >
-          <div className="inline-flex items-center gap-2 bg-green-50 text-[#00A86B] px-3.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider border border-green-200/60">
-            <Sparkles className="w-4 h-4 text-[#00A86B]" />
-            <span>Différenciation & Proximité</span>
-          </div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#00A86B] block">
+            Accompagnement & Proximité
+          </span>
 
-          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold text-[#1A1A1A] tracking-tight">
-            Votre voisin de confiance à <span className="text-[#00A86B]">Thiès & Dakar</span>
+          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Une présence locale à <span className="text-[#00A86B]">Thiès & Dakar</span>
           </h2>
 
-          <p className="text-base sm:text-lg text-gray-500 font-normal leading-relaxed">
-            15 ans d'expérience terrain en restauration et digitalisation à Thiès, Mbour, Saly et Dakar.
+          <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+            Une solution pensée pour répondre aux exigences réelles des établissements de restauration et d'hôtellerie au Sénégal.
           </p>
         </motion.div>
 
         {/* Super Power Proximity Banner */}
         <motion.div 
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mt-10 max-w-5xl mx-auto bg-gradient-to-r from-emerald-800 via-emerald-900 to-green-950 text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden border border-emerald-700/50"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mt-12 max-w-4xl mx-auto bg-[#064E3B] text-white rounded-2xl p-8 sm:p-10 shadow-sm relative overflow-hidden border border-emerald-900"
         >
-          <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-16 h-16 rounded-2xl bg-white/15 text-white flex items-center justify-center shrink-0 border border-white/30 ring-4 ring-white/10 animate-pulse">
-              <MapPin className="w-8 h-8 text-amber-400" />
-            </div>
-            
-            <div className="flex-1 text-center md:text-left space-y-2">
-              <span className="text-xs font-black uppercase tracking-widest text-[#00A86B] bg-white px-3.5 py-1 rounded-md inline-block shadow-sm">
-                Notre Super-Pouvoir : L'Hyper-Proximité
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div className="space-y-2 max-w-2xl">
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-300 block">
+                Notre différence : l'hyper-proximité
               </span>
-              <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-white">
-                « Nous ne sommes pas une startup à l'autre bout du monde. Nous sommes vos voisins à Thiès. »
+              <h3 className="font-heading font-bold text-xl sm:text-2xl text-white leading-snug">
+                Un accompagnement direct et humain dans votre établissement.
               </h3>
-              <p className="text-sm sm:text-base text-emerald-100 leading-relaxed font-normal">
-                Si vous avez une question, un menu à modifier ou un nouveau serveur à former, nous venons directement vous aider en personne dans votre restaurant, pas au travers d'un formulaire impersonnel.
+              <p className="text-sm text-emerald-100/90 leading-relaxed font-normal">
+                Notre équipe intervient directement sur place pour la configuration, la création de vos cartes et la formation de votre personnel à Thiès, Dakar et sur la Petite Côte.
               </p>
             </div>
 
             <a
-              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'aimerais%20une%20visite%20dans%20mon%20restaurant."
+              href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'aimerais%20une%20présentation%20dans%20mon%20établissement."
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 bg-[#FF6B00] hover:bg-[#e05e00] hover:scale-105 active:scale-95 text-white font-bold text-sm px-7 py-4 rounded-xl shadow-lg shadow-orange-950/40 transition-all text-center cursor-pointer"
+              className="shrink-0 bg-white hover:bg-slate-100 text-[#064E3B] font-bold text-sm px-6 py-3.5 rounded-xl transition-colors text-center cursor-pointer shadow-xs"
             >
               Prendre RDV sur place
             </a>
@@ -123,79 +103,81 @@ export const WhyChooseUs: React.FC = () => {
         </motion.div>
 
         {/* 5 Pillars Grid */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
           {pillars.map((pillar, idx) => {
             const IconComponent = pillar.icon;
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.08 }}
-                className={`p-7 rounded-2xl border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl ${pillar.accent}`}
+                transition={{ duration: 0.3, delay: idx * 0.06 }}
+                className="p-6 rounded-xl border border-slate-200 bg-white shadow-xs hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between"
               >
-                <div className="mb-5">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold shadow-xs ${pillar.iconBg}`}>
-                    <IconComponent className="w-6 h-6" />
+                <div>
+                  <div className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 mb-4 shadow-xs">
+                    <IconComponent className="w-5 h-5" strokeWidth={1.75} />
                   </div>
+
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                    {pillar.subtitle}
+                  </span>
+                  <h3 className="font-heading font-bold text-base text-slate-900 mb-2">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                    {pillar.description}
+                  </p>
                 </div>
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 block mb-1">
-                  {pillar.subtitle}
-                </span>
-                <h3 className="font-heading font-bold text-lg sm:text-xl text-gray-900 mb-2">
-                  {pillar.title}
-                </h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  {pillar.description}
-                </p>
               </motion.div>
             );
           })}
         </div>
 
         {/* Competitor Comparison Table */}
-        <div className="mt-16 max-w-5xl mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6 sm:p-8">
+        <div className="mt-16 max-w-4xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden p-6 sm:p-8">
           <div className="mb-6">
-            <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-gray-900">
-              Pourquoi choisir Lou Ame Tay plutôt qu'une autre solution ?
+            <h3 className="font-heading font-bold text-xl text-slate-900">
+              Pourquoi choisir Lou Ame Tay ?
             </h3>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Comparatif direct entre Lou Ame Tay, les plateformes génériques distantes et le menu papier traditionnel.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Comparatif factuel entre Lou Ame Tay, les plateformes distantes et le menu papier traditionnel.
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[620px]">
+            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[580px]">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="p-3.5 font-bold text-gray-700 w-1/3">Critère</th>
-                  <th className="p-3.5 font-extrabold text-[#00A86B] bg-green-50/80 border-x border-green-200 text-center">
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="p-3.5 font-bold text-slate-700 w-1/3">Critère</th>
+                  <th className="p-3.5 font-bold text-[#00A86B] text-center">
                     Lou Ame Tay 🇸🇳
                   </th>
-                  <th className="p-3.5 font-semibold text-gray-500 text-center">Plateformes en ligne A</th>
-                  <th className="p-3.5 font-semibold text-gray-500 text-center">Logiciels distants B</th>
-                  <th className="p-3.5 font-semibold text-gray-500 text-center">Menu Papier classique</th>
+                  <th className="p-3.5 font-medium text-slate-500 text-center">Plateformes distantes A</th>
+                  <th className="p-3.5 font-medium text-slate-500 text-center">Logiciels en ligne B</th>
+                  <th className="p-3.5 font-medium text-slate-500 text-center">Menu Papier classique</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {COMPETITOR_COMPARISONS.map((row, rIdx) => (
-                  <tr key={rIdx} className={row.isHighlight ? 'bg-emerald-50/20 font-medium' : 'hover:bg-gray-50/50'}>
-                    <td className="p-3.5 text-gray-900 font-semibold flex items-center gap-1.5">
-                      
-                      <span>{row.feature}</span>
+                  <tr key={rIdx} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="p-3.5 text-slate-900 font-medium">
+                      {row.feature}
                     </td>
-                    <td className="p-3.5 text-[#00A86B] font-bold bg-green-50/40 border-x border-green-100 text-center flex items-center justify-center gap-1">
-                      <Check className="w-4 h-4 text-[#00A86B]" />
-                      <span>{String(row.louAmeTay)}</span>
+                    <td className="p-3.5 text-[#00A86B] font-bold text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Check className="w-4 h-4 text-[#00A86B]" strokeWidth={2} />
+                        <span>{String(row.louAmeTay)}</span>
+                      </div>
                     </td>
-                    <td className="p-3.5 text-gray-600 text-center">
+                    <td className="p-3.5 text-slate-500 text-center">
                       {String(row.scaniFood)}
                     </td>
-                    <td className="p-3.5 text-gray-600 text-center">
+                    <td className="p-3.5 text-slate-500 text-center">
                       {String(row.xolalMenu)}
                     </td>
-                    <td className="p-3.5 text-gray-500 text-center">
+                    <td className="p-3.5 text-slate-400 text-center">
                       {String(row.menuPapier)}
                     </td>
                   </tr>
@@ -206,23 +188,23 @@ export const WhyChooseUs: React.FC = () => {
         </div>
 
         {/* Trust numbers banner */}
-        <div className="mt-12 bg-white rounded-2xl p-8 border border-gray-200 shadow-xs">
+        <div className="mt-12 max-w-4xl mx-auto bg-white rounded-2xl p-8 border border-slate-200 shadow-xs">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl sm:text-4xl font-heading font-black text-[#00A86B]">15 ans</div>
-              <span className="text-xs font-semibold text-gray-500 mt-1 block">D'expérience terrain au Sénégal</span>
+              <div className="text-3xl font-heading font-extrabold text-slate-900">15 ans</div>
+              <span className="text-xs text-slate-500 mt-1 block font-normal">D'expérience dans l'IT au Sénégal</span>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-heading font-black text-[#FF6B00]">+45</div>
-              <span className="text-xs font-semibold text-gray-500 mt-1 block">Restaurants & Fast-foods partenaires</span>
+              <div className="text-3xl font-heading font-extrabold text-[#00A86B]">+45</div>
+              <span className="text-xs text-slate-500 mt-1 block font-normal">Établissements accompagnés</span>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-heading font-black text-[#00A86B]">0 FCFA</div>
-              <span className="text-xs font-semibold text-gray-500 mt-1 block">Frais de réimpression papier</span>
+              <div className="text-3xl font-heading font-extrabold text-slate-900">0 FCFA</div>
+              <span className="text-xs text-slate-500 mt-1 block font-normal">Coût de réimpression papier</span>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-heading font-black text-[#1A1A1A]">24h</div>
-              <span className="text-xs font-semibold text-gray-500 mt-1 block">Délai moyen de mise en service</span>
+              <div className="text-3xl font-heading font-extrabold text-[#00A86B]">24h</div>
+              <span className="text-xs text-slate-500 mt-1 block font-normal">Délai moyen de mise en service</span>
             </div>
           </div>
         </div>

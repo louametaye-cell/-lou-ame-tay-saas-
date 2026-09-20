@@ -4,22 +4,17 @@ import {
   ArrowRight, 
   QrCode, 
   CheckCircle2, 
-  Star, 
-  Flame, 
   Smartphone, 
   Clock, 
-  TrendingUp, 
   ShieldCheck, 
-  ChefHat,
-  Eye,
-  Plus,
-  LayoutDashboard,
-  Zap,
-  Rocket
+  ChefHat, 
+  Plus, 
+  LayoutDashboard, 
+  Zap, 
+  Rocket 
 } from 'lucide-react';
 import { INITIAL_MENU_ITEMS } from '@/components/landing/data/mockData';
 import { OfficialLogo } from './OfficialLogo';
-import { IconBadge } from '@/components/ui/IconBadge';
 
 interface HeroSectionProps {
   onOpenTrial: () => void;
@@ -49,7 +44,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   return (
     <section 
       id="hero" 
-      className="relative pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#F8F9FA] border-b border-gray-100"
+      className="relative pt-28 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-slate-50/50 border-b border-slate-200/80"
     >
       <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-10">
         
@@ -60,39 +55,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="lg:col-span-7 flex flex-col items-start pt-2">
             
             {/* Top Official Brand Badge */}
-            <div className="flex items-center gap-3 bg-white p-2 sm:p-2.5 pr-4 rounded-2xl border border-emerald-200/80 shadow-xs mb-6 hover:border-emerald-400 transition-all">
+            <div className="inline-flex items-center gap-2.5 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-xs mb-6">
               <OfficialLogo variant="icon-only" size="sm" />
-              <div className="flex flex-col">
-                <span className="text-[11px] font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
-                  <span>Lou Ame Tay ?</span>
-                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">SaaS 100% Sénégalais 🇸🇳</span>
-                </span>
-                <span className="text-[10px] text-gray-500 font-medium">
-                  Restauration • Hôtellerie • Tourisme au Sénégal
-                </span>
-              </div>
+              <span className="text-xs font-semibold text-slate-700">
+                Lou Ame Tay ? • SaaS 100% Sénégalais 🇸🇳
+              </span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] mb-6 tracking-tight text-[#1A1A1A]">
-              La transition digitale de la <span className="text-[#00A86B]">restauration</span>, de l'hôtellerie et du tourisme.
+            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] mb-6 tracking-tight text-slate-900">
+              La transition digitale de la <span className="text-[#00A86B]">restauration</span> et de l'hôtellerie.
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-xl leading-relaxed font-normal">
-              Une campagne de digitalisation responsable, pensée et conçue au Sénégal. Vos clients scannent le QR code et commandent directement depuis leur smartphone sans aucun papier.
+            <p className="text-base sm:text-lg text-slate-600 mb-8 max-w-xl leading-relaxed font-normal">
+              Une solution de commande sur table par QR code, conçue pour optimiser la gestion de vos cartes, réduire l'usage du papier et fluidifier le service.
             </p>
 
-            {/* 2 Big Action Buttons as requested */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-8">
+            {/* 2 Big Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-8">
               <a
                 id="hero-cta-discover-btn"
                 href="#comment-ca-marche"
-                className="bg-[#00A86B] hover:bg-[#00925d] active:scale-95 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-green-900/10 transition-all text-center"
+                className="bg-[#00A86B] hover:bg-[#008957] active:scale-98 text-white px-7 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors text-center text-sm shadow-xs"
               >
-                <Rocket className="w-5 h-5" />
                 <span>Découvrir la solution</span>
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" strokeWidth={2} />
               </a>
 
               <a
@@ -100,131 +88,110 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20r%C3%A9server%20une%20d%C3%A9mo%20de%2010%20minutes."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white border-2 border-[#FF6B00] text-[#FF6B00] hover:bg-orange-50 active:scale-95 px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-center"
+                className="bg-white border border-slate-300 text-slate-800 hover:bg-slate-100 active:scale-98 px-7 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors text-center text-sm shadow-xs"
               >
-                <PhoneCall className="w-5 h-5" />
+                <PhoneCall className="w-4 h-4 text-slate-600" strokeWidth={1.75} />
                 <span>Demander une démo</span>
               </a>
             </div>
 
             {/* Reassurance pills */}
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-gray-500 mb-8">
-              <span className="flex items-center gap-1.5 font-medium">
-                <ShieldCheck className="w-4 h-4 text-[#00A86B]" />
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs text-slate-500 mb-8">
+              <span className="flex items-center gap-1.5 font-medium bg-white px-3 py-1 rounded-full border border-slate-200">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#00A86B]" strokeWidth={2} />
                 14 jours d'essai gratuit
               </span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <CheckCircle2 className="w-4 h-4 text-[#00A86B]" />
+              <span className="flex items-center gap-1.5 font-medium bg-white px-3 py-1 rounded-full border border-slate-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#00A86B]" strokeWidth={2} />
                 Sans engagement
               </span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <Clock className="w-4 h-4 text-[#00A86B]" />
-                Installé en 15 minutes
+              <span className="flex items-center gap-1.5 font-medium bg-white px-3 py-1 rounded-full border border-slate-200">
+                <Clock className="w-3.5 h-3.5 text-[#00A86B]" strokeWidth={2} />
+                Mise en service rapide
               </span>
             </div>
 
-            {/* Split Feature Tiles Grid (Recipe 11 split pattern) */}
-            <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-px bg-gray-200/80 border border-gray-200/80 rounded-2xl overflow-hidden shadow-xs mt-2">
-              <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="mb-3">
-                  <IconBadge icon={Smartphone} size="md" />
+            {/* Split Feature Tiles Grid */}
+            <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-px bg-slate-200 border border-slate-200 rounded-xl overflow-hidden shadow-xs mt-2">
+              <div className="bg-white p-5 hover:bg-slate-50/50 transition-colors">
+                <div className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 mb-3 shadow-xs">
+                  <Smartphone className="w-4 h-4" strokeWidth={1.75} />
                 </div>
-                <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Menu Client</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Scan, choix et commande en 3 clics par vos clients.</p>
+                <h3 className="font-heading font-bold text-sm text-slate-900 mb-1">Menu Client</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">Consultation et sélection par le client depuis sa table.</p>
               </div>
 
-              <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="mb-3">
-                  <IconBadge icon={ChefHat} size="md" />
+              <div className="bg-white p-5 hover:bg-slate-50/50 transition-colors">
+                <div className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 mb-3 shadow-xs">
+                  <ChefHat className="w-4 h-4" strokeWidth={1.75} />
                 </div>
-                <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Écran Cuisine</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Transmission instantanée pour zéro erreur de service.</p>
+                <h3 className="font-heading font-bold text-sm text-slate-900 mb-1">Écran Cuisine</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">Transmission instantanée des bons en zone de préparation.</p>
               </div>
 
-              <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="mb-3">
-                  <IconBadge icon={LayoutDashboard} size="md" />
+              <div className="bg-white p-5 hover:bg-slate-50/50 transition-colors">
+                <div className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 mb-3 shadow-xs">
+                  <LayoutDashboard className="w-4 h-4" strokeWidth={1.75} />
                 </div>
-                <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Dashboard</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Gérez vos prix et stocks en temps réel depuis Thiès.</p>
+                <h3 className="font-heading font-bold text-sm text-slate-900 mb-1">Tableau de bord</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">Ajustement des tarifs et disponibilités en temps réel.</p>
               </div>
 
-              <div className="bg-white p-6 hover:bg-[#FAFBFB] transition-colors">
-                <div className="mb-3">
-                  <IconBadge icon={Zap} size="md" />
+              <div className="bg-white p-5 hover:bg-slate-50/50 transition-colors">
+                <div className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 mb-3 shadow-xs">
+                  <Zap className="w-4 h-4" strokeWidth={1.75} />
                 </div>
-                <h3 className="font-heading font-bold text-base text-gray-900 mb-1">Gain de Temps</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Optimisez la rotation de vos tables jusqu'à +25%.</p>
+                <h3 className="font-heading font-bold text-sm text-slate-900 mb-1">Gain de temps</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">Optimisation des rotations et fluidification du service.</p>
               </div>
             </div>
 
           </div>
 
-          {/* Right Column: Split Aside Phone Simulator & Live Ordering (iPhone 17 Pro Max Reference) */}
+          {/* Right Column: Phone Simulator */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
             
-            {/* iPhone 17 Pro Max Ultra-Sleek Minimalist Shell */}
-            <div className="relative w-full max-w-[330px] sm:max-w-[350px] mx-auto select-none">
+            {/* iPhone Shell */}
+            <div className="relative w-full max-w-[320px] sm:max-w-[340px] mx-auto select-none">
               
-              {/* Ultra-thin Metallic Bezel (4px total padding) */}
-              <div className="relative bg-[#1A1B1E] p-[4px] rounded-[50px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-[#3E4046]/70">
+              <div className="relative bg-slate-900 p-[3px] rounded-[44px] shadow-sm border border-slate-700">
                 
-                {/* Precision Side Buttons */}
-                <div className="absolute -left-[4px] top-24 w-[3px] h-7 bg-[#2E3034] rounded-l-xs" />
-                <div className="absolute -left-[4px] top-36 w-[3px] h-10 bg-[#2E3034] rounded-l-xs" />
-                <div className="absolute -left-[4px] top-48 w-[3px] h-10 bg-[#2E3034] rounded-l-xs" />
-                <div className="absolute -right-[4px] top-32 w-[3px] h-14 bg-[#2E3034] rounded-r-xs" />
-
-                {/* Edge-to-Edge Display Screen */}
-                <div className="bg-[#F8F9FA] rounded-[46px] overflow-hidden text-gray-900 flex flex-col h-[590px] relative border border-black/10">
+                {/* Display Screen */}
+                <div className="bg-white rounded-[40px] overflow-hidden text-slate-900 flex flex-col h-[570px] relative border border-slate-200">
                   
-                  {/* Dynamic Island (Compact pill notch as in reference photo) */}
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-5 bg-black rounded-full z-30 flex items-center justify-end px-2.5 shadow-sm">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#0E0F12] border border-[#24262A] flex items-center justify-center">
-                      <div className="w-1 h-1 rounded-full bg-emerald-500/80 animate-pulse" />
-                    </div>
-                  </div>
+                  {/* Dynamic Island Notch */}
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-900 rounded-full z-30" />
 
                   {/* Top Header Restaurant Info */}
-                  <div className="bg-[#00A86B] p-4 pt-9 text-white shadow-sm">
+                  <div className="bg-[#00A86B] p-4 pt-8 text-white shadow-xs">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-heading font-extrabold text-base tracking-tight">Le Teranga Grill</span>
-                          <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-bold">4.9 ★</span>
+                          <span className="font-heading font-bold text-sm tracking-tight">Le Teranga Grill</span>
                         </div>
-                        <p className="text-[11px] text-emerald-100">Thiès • Restaurant & Grillades</p>
+                        <p className="text-[10px] text-emerald-100 font-normal">Thiès • Grillades & Cuisine locale</p>
                       </div>
 
                       {/* Table badge */}
                       <div className="flex flex-col items-end">
-                        <span className="text-[9px] text-emerald-100 uppercase font-semibold">Votre Table</span>
-                        <div className="bg-white text-[#00A86B] font-extrabold text-xs px-2.5 py-1 rounded-full shadow-xs">
-                          <span>Table #{phoneActiveTable}</span>
+                        <span className="text-[9px] text-emerald-100 font-medium">Table</span>
+                        <div className="bg-white text-[#00A86B] font-bold text-xs px-2 py-0.5 rounded shadow-xs">
+                          <span>#04</span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Search / Status bar */}
-                    <div className="mt-3 flex items-center justify-between text-[11px] bg-white/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 text-white font-medium">
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping inline-block" />
-                        Cuisine ouverte • Service en continu
-                      </span>
-                      <span className="text-emerald-200">10-15 min</span>
                     </div>
                   </div>
 
                   {/* Category navigation pills */}
-                  <div className="flex items-center gap-1.5 p-2 bg-white border-b border-gray-100 overflow-x-auto text-[11px] font-semibold text-gray-600 no-scrollbar">
+                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border-b border-slate-100 overflow-x-auto text-[11px] font-medium text-slate-600 no-scrollbar">
                     {(['tous', 'plats', 'grillades', 'boissons'] as const).map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`px-3 py-1 rounded-full capitalize transition-all shrink-0 flex items-center gap-1 ${
+                        className={`px-2.5 py-1 rounded-md capitalize transition-colors shrink-0 ${
                           selectedCategory === cat
-                            ? 'bg-[#00A86B] text-white shadow-xs'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            ? 'bg-[#00A86B] text-white font-bold'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
                         }`}
                       >
                         <span>{cat === 'tous' ? 'Tous' : cat}</span>
@@ -233,31 +200,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
 
                   {/* Dish list inside simulated phone */}
-                  <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                  <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {filteredDishes.map((dish) => (
                       <div
                         key={dish.id}
-                        className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-xs hover:border-[#00A86B]/40 transition-all flex gap-2.5 items-center group"
+                        className="bg-white p-2 rounded-lg border border-slate-200 shadow-xs flex gap-2.5 items-center"
                       >
                         <img
                           src={dish.image}
                           alt={dish.name}
-                          className="w-16 h-16 rounded-xl object-cover shrink-0 border border-gray-100"
+                          className="w-14 h-14 rounded-md object-cover shrink-0 border border-slate-100"
                           loading="lazy"
                         />
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-xs text-gray-900 truncate">{dish.name}</h4>
-                          <p className="text-[10px] text-gray-500 line-clamp-1 mt-0.5">{dish.description}</p>
+                          <h4 className="font-bold text-xs text-slate-900 truncate">{dish.name}</h4>
+                          <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5 font-normal">{dish.description}</p>
                           
-                          <div className="flex items-center justify-between mt-1.5">
-                            <span className="text-xs font-extrabold text-[#FF6B00]">
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs font-bold text-slate-900">
                               {dish.price.toLocaleString('fr-FR')} FCFA
                             </span>
                             <button
                               onClick={() => handleSimulatedOrderClick(dish.name)}
-                              className="bg-[#00A86B] hover:bg-[#00925d] text-white text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 active:scale-90 transition-transform cursor-pointer"
+                              className="bg-[#00A86B] hover:bg-[#008957] text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 active:scale-95 transition-transform cursor-pointer"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-3 h-3" strokeWidth={2} />
                               <span>Ajouter</span>
                             </button>
                           </div>
@@ -268,59 +235,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                   {/* Interactive Toast Notification */}
                   {addedItemName && (
-                    <div className="absolute bottom-20 left-6 right-6 bg-[#1A1A1A] text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 z-20">
-                      <span className="truncate">✓ {addedItemName} ajouté !</span>
-                      <span className="text-[#00A86B] text-[10px]">Table #{phoneActiveTable}</span>
+                    <div className="absolute bottom-16 left-4 right-4 bg-slate-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-sm flex items-center justify-between z-20">
+                      <span className="truncate">✓ {addedItemName} ajouté</span>
+                      <span className="text-emerald-400 text-[10px]">Table #04</span>
                     </div>
                   )}
 
                   {/* Phone Bottom Cart Bar */}
-                  <div className="p-3 bg-white border-t border-gray-100 flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] text-gray-500 block">Panier actif (Table #{phoneActiveTable})</span>
-                        <span className="text-xs font-extrabold text-gray-900">2 articles • 6 500 FCFA</span>
-                      </div>
-                      <a
-                        href="#demo-live"
-                        className="bg-[#FF6B00] hover:bg-[#e05e00] text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm flex items-center gap-1 active:scale-95 transition-transform"
-                      >
-                        <span>Commander</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </a>
+                  <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-normal">Panier actif</span>
+                      <span className="font-bold text-slate-900">6 500 FCFA</span>
                     </div>
-
-                    {/* iOS Home Indicator Bar */}
-                    <div className="w-32 h-1 bg-gray-900/40 rounded-full mx-auto mt-1" />
+                    <a
+                      href="#demo-live"
+                      className="bg-[#00A86B] hover:bg-[#008957] text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <span>Commander</span>
+                      <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+                    </a>
                   </div>
 
                 </div>
 
-              </div>
-
-              {/* iPhone Floating Glass Widget (Left) */}
-              <div className="absolute -left-6 top-16 bg-white/95 backdrop-blur-md border border-white/80 rounded-2xl p-2.5 shadow-2xl flex items-center gap-2.5 max-w-[185px] z-30">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#FF6B00] flex items-center justify-center shrink-0 font-bold">
-                  <QrCode className="w-4.5 h-4.5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-900 block leading-tight">Flash & Commande</span>
-                  <span className="text-[9px] text-gray-500">Sans installer d'app</span>
-                </div>
-              </div>
-
-              {/* iPhone Floating Glass Widget (Right) */}
-              <div className="absolute -right-6 bottom-20 bg-white/95 backdrop-blur-md border border-white/80 rounded-2xl p-2.5 shadow-2xl flex items-center gap-2 max-w-[185px] z-30">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-[#00A86B] flex items-center justify-center shrink-0">
-                  <ChefHat className="w-4.5 h-4.5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-gray-900 block">Écran Cuisine KDS</span>
-                  <span className="text-[9px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <span>Temps réel</span>
-                    <Zap className="w-2.5 h-2.5" />
-                  </span>
-                </div>
               </div>
 
             </div>
