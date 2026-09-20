@@ -86,11 +86,10 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
           </div>
         </div>
 
-        {/* Pricing Cards Grid (7 formulas) */}
+        {/* Pricing Cards Grid (4 standard formulas) */}
         <div className="mt-12 max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 items-stretch">
-          {PRICING_PLANS.map((plan) => {
+          {PRICING_PLANS.filter(plan => !plan.isEvent).map((plan) => {
             const isPremium = plan.popular;
-            const isEvent = plan.isEvent;
             const price = typeof plan.priceMonthly === 'number' && billingCycle === 'annual' && plan.priceAnnualMonthly 
               ? plan.priceAnnualMonthly 
               : plan.priceMonthly;
@@ -101,22 +100,19 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                 className={`rounded-2xl p-8 flex flex-col justify-between transition-all duration-200 relative ${
                   isPremium
                     ? 'bg-white border-2 border-[#00A86B] shadow-xl ring-4 ring-[#00A86B]/10 md:-translate-y-2'
-                    : isEvent
-                    ? 'bg-gray-900 border-2 border-gray-800 text-white shadow-lg'
                     : 'bg-[#F8F9FA] border border-gray-200 hover:bg-white hover:border-gray-300'
                 }`}
               >
                 {/* Badge */}
-                {(plan.badge || isPremium || isEvent) && (
+                {(plan.badge || isPremium) && (
                   <div className={`absolute -top-3.5 left-8 text-[10px] font-extrabold px-3.5 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1 ${
-                    isPremium ? 'bg-[#00A86B] text-white' : isEvent ? 'bg-[#FF6B00] text-white' : 'bg-gray-800 text-white'
+                    isPremium ? 'bg-[#00A86B] text-white' : 'bg-gray-800 text-white'
                   }`}>
-                    
                     <span>{plan.badge || plan.name}</span>
                   </div>
                 )}
 
-                <div className={isEvent ? 'text-gray-100' : 'text-gray-900'}>
+                <div className="text-gray-900">
                   {/* Plan Name & Desc */}
                   <div className="mb-6 pt-2">
                     {plan.wolofName && (
@@ -124,33 +120,31 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                         {plan.wolofName}
                       </h3>
                     )}
-                    <p className={`font-semibold text-sm mb-2 ${isEvent ? 'text-gray-300' : 'text-[#00A86B]'}`}>
+                    <p className="font-semibold text-sm mb-2 text-[#00A86B]">
                       {plan.name}
                     </p>
-                    <p className={`text-xs sm:text-sm leading-relaxed min-h-[50px] ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed min-h-[50px]">
                       {plan.description}
                     </p>
                   </div>
 
                   {/* Price Tag */}
-                  <div className={`mb-6 pb-6 border-b ${isEvent ? 'border-gray-700' : 'border-gray-200/80'}`}>
+                  <div className="mb-6 pb-6 border-b border-gray-200/80">
                     <div className="flex items-baseline gap-1">
                       <span className="font-heading font-black text-4xl">
                         {typeof price === 'number' ? price.toLocaleString('fr-FR') : price}
                       </span>
                       {typeof price === 'number' && (
                         <>
-                          <span className={`text-sm font-extrabold ${isEvent ? 'text-gray-300' : 'text-[#00A86B]'}`}>FCFA</span>
-                          <span className={`text-xs ml-1 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>/ mois</span>
+                          <span className="text-sm font-extrabold text-[#00A86B]">FCFA</span>
+                          <span className="text-xs text-gray-500 ml-1">/ mois</span>
                         </>
                       )}
                     </div>
 
-                    {!isEvent && (
-                      <span className={`text-[11px] font-semibold block mt-1 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {typeof price === 'number' ? "+ 50 000 FCFA (Frais d'installation uniques)" : "Étude & installation personnalisées"}
-                      </span>
-                    )}
+                    <span className="text-[11px] font-semibold block mt-1 text-gray-500">
+                      {typeof price === 'number' ? "+ 50 000 FCFA (Frais d'installation uniques)" : "Étude & installation personnalisées"}
+                    </span>
 
                     {plan.id === 'sur-mesure' && (
                       <span className="text-[11px] font-extrabold text-[#00A86B] block mt-1.5 bg-green-50/80 px-2.5 py-1 rounded-md border border-green-200/80">
@@ -158,7 +152,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                       </span>
                     )}
 
-                    {typeof price === 'number' && billingCycle === 'annual' && !isEvent && (
+                    {typeof price === 'number' && billingCycle === 'annual' && (
                       <span className="text-[11px] text-[#00A86B] font-semibold block mt-1">
                         Facturé {(price * 12).toLocaleString('fr-FR')} FCFA / an (2 mois offerts)
                       </span>
@@ -167,16 +161,14 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
                   {/* Features List */}
                   <div className="space-y-3.5 mb-8">
-                    <span className={`text-[11px] font-extrabold uppercase tracking-wider block ${isEvent ? 'text-gray-400' : 'text-gray-400'}`}>
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider block text-gray-400">
                       Détails de la formule :
                     </span>
                     {plan.features.map((feature, fIdx) => (
                       <div key={fIdx} className="flex items-start gap-3 text-xs sm:text-sm">
                         {feature.included ? (
                           <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${
-                            feature.highlight 
-                              ? (isEvent ? 'bg-[#FF6B00] text-white' : 'bg-[#00A86B] text-white') 
-                              : (isEvent ? 'bg-gray-800 text-gray-300' : 'bg-green-50 text-[#00A86B]')
+                            feature.highlight ? 'bg-[#00A86B] text-white' : 'bg-green-50 text-[#00A86B]'
                           }`}>
                             <Check className="w-3.5 h-3.5" />
                           </div>
@@ -185,7 +177,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                             <X className="w-3.5 h-3.5" />
                           </div>
                         )}
-                        <span className={`${feature.included ? (isEvent ? 'text-gray-200' : 'text-gray-800') : (isEvent ? 'text-gray-500 line-through' : 'text-gray-400 line-through')} ${feature.highlight ? (isEvent ? 'font-bold text-white' : 'font-bold text-gray-950') : 'font-normal'}`}>
+                        <span className={`${feature.included ? 'text-gray-800' : 'text-gray-400 line-through'} ${feature.highlight ? 'font-bold text-gray-950' : 'font-normal'}`}>
                           {feature.text}
                         </span>
                       </div>
@@ -199,9 +191,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                     id={`pricing-btn-${plan.id}`}
                     onClick={() => onSelectPlan(plan.id)}
                     className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      isEvent
-                        ? 'bg-white hover:bg-gray-100 active:scale-98 text-gray-900 shadow-white/20'
-                        : isPremium
+                      isPremium
                         ? 'bg-[#00A86B] hover:bg-[#00925d] active:scale-98 text-white shadow-[#00A86B]/25'
                         : 'bg-gray-900 hover:bg-black active:scale-98 text-white'
                     }`}
@@ -210,17 +200,101 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
-                  {!isEvent && (
-                    <p className={`text-[11px] text-center mt-2.5 ${isEvent ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {typeof price === 'number' ? "14 jours d'essai gratuit • Sans carte bancaire" : "Réponse sous 24h • Devis gratuit sans engagement"}
-                    </p>
-                  )}
+                  <p className="text-[11px] text-center mt-2.5 text-gray-500">
+                    {typeof price === 'number' ? "14 jours d'essai gratuit • Sans carte bancaire" : "Réponse sous 24h • Devis gratuit sans engagement"}
+                  </p>
                 </div>
 
               </div>
             );
           })}
         </div>
+
+        {/* Grande Bannière VIP Formule NDAJÉ (Dîners de Gala, Mariages & Soirées Événementielles) */}
+        {(() => {
+          const eventPlan = PRICING_PLANS.find(p => p.isEvent);
+          if (!eventPlan) return null;
+
+          return (
+            <div id="formule-ndaje-banner" className="mt-10 max-w-[1400px] mx-auto bg-gray-900 border-2 border-gray-800 rounded-3xl p-6 sm:p-10 text-white shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-12">
+              {/* Overlay Gradient Background */}
+              <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-gradient-to-br from-[#FF6B00]/25 via-[#00A86B]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+              {/* Left Column: Event Plan Details & CTAs */}
+              <div className="flex-1 space-y-6 z-10">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="bg-[#FF6B00] text-white text-[10px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5" />
+                    <span>Offre Événementielle • Rendez-vous</span>
+                  </span>
+                  <span className="text-xs text-gray-400 font-semibold bg-gray-800/80 px-3 py-1 rounded-full border border-gray-700">
+                    Prestation ponctuelle sans abonnement
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="font-heading font-black text-3xl sm:text-4xl text-white tracking-tight flex items-center gap-3">
+                    <span>{eventPlan.wolofName}</span>
+                    <span className="text-xl font-extrabold text-[#FF6B00]">— {eventPlan.name}</span>
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-300 mt-2 leading-relaxed max-w-2xl">
+                    {eventPlan.description}. Idéal pour vos <strong>dîners de gala, mariages, soirées VIP & séminaires d'entreprise</strong> à Dakar, Thiès et sur l'ensemble du territoire sénégalais.
+                  </p>
+                </div>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                  {eventPlan.features.map((feature, fIdx) => (
+                    <div key={fIdx} className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-200">
+                      <div className="p-1 rounded-full bg-[#FF6B00]/20 text-[#FF6B00] shrink-0">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                      <span className={feature.highlight ? 'font-bold text-white' : ''}>
+                        {feature.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Price Tag & Action CTA */}
+                <div className="pt-4 flex flex-col sm:flex-row items-start sm:items-center gap-5 border-t border-gray-800">
+                  <div>
+                    <span className="text-xs text-gray-400 block font-semibold uppercase">Tarif Prestation Événement</span>
+                    <span className="font-heading font-black text-3xl text-white">Sur devis</span>
+                  </div>
+
+                  <button
+                    id={`pricing-btn-${eventPlan.id}`}
+                    onClick={() => onSelectPlan(eventPlan.id)}
+                    className="py-3.5 px-8 rounded-xl font-bold text-sm bg-white hover:bg-gray-100 active:scale-98 text-gray-900 shadow-lg shadow-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <span>{eventPlan.ctaText}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: High-Res Gala Event Photo Showcase */}
+              <div className="w-full lg:w-[480px] shrink-0 z-10">
+                <div className="relative rounded-2xl overflow-hidden border-2 border-gray-700/60 shadow-2xl group">
+                  <img
+                    src="/images/gala_event_qr_menu.jpg"
+                    alt="Menu QR Code pour Dîner de Gala et Événements VIP Lou Ame Tay"
+                    className="w-full h-64 sm:h-80 object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-5">
+                    <span className="text-xs font-bold bg-[#FF6B00] text-white px-3 py-0.5 rounded-full w-fit mb-1 shadow-sm">
+                      Menu QR à chaque table d'invités
+                    </span>
+                    <p className="text-xs text-gray-200 font-medium leading-normal">
+                      Chevalets plexiglas & habillage personnalisé aux couleurs de votre événement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 1 Option Component: Extra Tables */}
         <div className="mt-8 max-w-5xl mx-auto bg-[#F8F9FA] rounded-2xl p-6 border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-6">
