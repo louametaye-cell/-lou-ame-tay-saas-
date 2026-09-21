@@ -9,7 +9,6 @@ import {
   ExternalLink, 
   QrCode, 
   Share2, 
-  Sparkles,
   ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';

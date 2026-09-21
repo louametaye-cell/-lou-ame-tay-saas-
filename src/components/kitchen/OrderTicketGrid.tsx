@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { ChefHat, Sparkles, CheckCircle } from 'lucide-react';
+import { ChefHat, CheckCircle } from 'lucide-react';
 import { OrderType, OrderStatus } from '@/types';
 import { OrderTicketCard } from './OrderTicketCard';
 import { KitchenFilter } from './KitchenHeader';

@@ -6,7 +6,7 @@ import { useKitchenOrders } from '@/hooks/useKitchenOrders';
 import { KitchenHeader, KitchenFilter, OrderTicketGrid } from '@/components/kitchen';
 import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
 import { KitchenHistory } from '@/components/KitchenHistory';
-import { History, LayoutGrid, ChefHat, AlertTriangle, Lock, Sparkles, ArrowRight, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { History, LayoutGrid, ChefHat, AlertTriangle, Lock, ShieldCheck, ArrowRight, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { hasAccessToFeature, getFeaturePaywallInfo, buildUpgradeWhatsAppUrl, PLANS_REGISTRY } from '@/lib/plan-permissions';
 
 interface KitchenKDSViewProps {
@@ -135,7 +135,7 @@ export default function KitchenKDSView({
 
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              <Sparkles className="w-3 h-3 text-amber-400" />
+              <ShieldCheck className="w-3 h-3 text-amber-400" />
               <span>Formule {paywall.requiredPlanName} requise</span>
             </div>
             <h1 className="text-xl font-black text-white">{paywall.name}</h1>

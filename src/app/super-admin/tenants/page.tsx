@@ -7,7 +7,6 @@ import {
   ArrowLeft, 
   Layers, 
   XCircle, 
-  Sparkles, 
   Phone, 
   RefreshCw, 
   Search,

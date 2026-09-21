@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { X, Clock, Star, Plus, Minus, Sparkles, MessageSquare } from 'lucide-react';
+import { X, Clock, Star, Plus, Minus, ChefHat, MessageSquare } from 'lucide-react';
 import { MenuItemType, ALLERGEN_ICONS, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
@@ -81,7 +81,7 @@ export const DishModal: React.FC<DishModalProps> = ({
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white">
               {isSpecial && (
                 <span className="bg-[#FF6B00] text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1">
-                  <Sparkles className="w-4 h-4" />
+                  <ChefHat className="w-4 h-4" />
                   <span>{t.specialOfTheDay}</span>
                 </span>
               )}

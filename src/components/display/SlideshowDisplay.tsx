@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Maximize2, Minimize2, Sparkles, QrCode } from 'lucide-react';
+import { Clock, Maximize2, Minimize2, ChefHat, QrCode, LayoutGrid, UtensilsCrossed } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatFCFA } from '@/lib/utils';
 
@@ -146,20 +146,22 @@ export const SlideshowDisplay: React.FC<SlideshowDisplayProps> = ({
                     priority
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-600/40 to-emerald-600/40 text-7xl">
-                    🍽️
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
+                    <ChefHat className="w-20 h-20 text-amber-400/60 mb-2" />
+                    <span className="text-xs text-slate-400 font-bold tracking-wider uppercase">Spécialité Maison</span>
                   </div>
                 )}
 
                 {slide.isSpecial && (
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 animate-bounce">
-                    <Sparkles className="w-3.5 h-3.5" />
+                  <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black text-xs sm:text-sm px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
+                    <ChefHat className="w-4 h-4" />
                     <span>SPÉCIALITÉ DU CHEF</span>
                   </div>
                 )}
 
-                <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md text-amber-300 text-xs font-black px-3 py-1 rounded-xl border border-white/10">
-                  📂 {slide.category}
+                <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-md text-amber-300 text-xs font-black px-3.5 py-1.5 rounded-xl border border-white/15 flex items-center gap-1.5">
+                  <LayoutGrid className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{slide.category}</span>
                 </div>
               </div>
 

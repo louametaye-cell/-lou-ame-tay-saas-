@@ -7,7 +7,6 @@ import {
   ArrowLeft, 
   CheckCircle2, 
   XCircle, 
-  Sparkles, 
   ShieldCheck, 
   Save, 
   Plus, 

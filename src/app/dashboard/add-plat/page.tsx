@@ -98,13 +98,13 @@ export default function AddPlatPage() {
           description,
           price: Number(price),
           category,
-          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+          imageUrl: imageUrl && imageUrl.trim() ? imageUrl.trim() : null,
           allergens: selectedAllergens,
         }),
       });
 
       if (res.ok) {
-        toast.success('✨ Plat ajouté directement à votre menu et enregistré !');
+        toast.success('Plat ajouté directement à votre menu et enregistré !');
         setName('');
         setWolofName('');
         setDescription('');

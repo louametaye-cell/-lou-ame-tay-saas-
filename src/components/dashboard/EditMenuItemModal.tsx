@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, 
-  Sparkles, 
+  ChefHat, 
+  Languages, 
   Image as ImageIcon, 
   Clock, 
   Flame, 
@@ -153,11 +154,11 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
       }
 
       onItemSaved(updated);
-      toast.success(`✨ Plat « ${name} » mis à jour avec succès !`);
+      toast.success(`Plat « ${name} » mis à jour avec succès !`);
       onClose();
     } catch (err) {
       onItemSaved(updated);
-      toast.success(`✨ Plat « ${name} » enregistré en local !`);
+      toast.success(`Plat « ${name} » enregistré en local !`);
       onClose();
     } finally {
       setIsSaving(false);
@@ -439,7 +440,7 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
                           : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                     >
-                      <Sparkles className={`w-3.5 h-3.5 ${isSpecialOfTheDay ? 'fill-amber-500 text-amber-500' : ''}`} />
+                      <ChefHat className={`w-3.5 h-3.5 ${isSpecialOfTheDay ? 'text-amber-600' : ''}`} />
                       <span>{isSpecialOfTheDay ? 'Plat du Jour' : 'Standard'}</span>
                     </button>
                   </div>
@@ -498,8 +499,8 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
                   disabled={isTranslating}
                   className="py-1.5 px-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{isTranslating ? 'Traduction en cours...' : 'Générer avec l\'IA'}</span>
+                  <Languages className="w-3.5 h-3.5" />
+                  <span>{isTranslating ? 'Traduction en cours...' : 'Traduire automatiquement'}</span>
                 </button>
               </div>
 

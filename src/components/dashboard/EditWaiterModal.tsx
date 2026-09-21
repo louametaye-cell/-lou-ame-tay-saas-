@@ -9,7 +9,6 @@ import {
   Trash2, 
   ArrowRightLeft, 
   Check, 
-  Sparkles,
   ShieldAlert
 } from 'lucide-react';
 import { ServerShiftMember, ServerShiftStatus } from '@/lib/server-shift';
@@ -76,7 +75,7 @@ export const EditWaiterModal: React.FC<EditWaiterModalProps> = ({
     };
 
     onSaveMember(updated);
-    toast.success(`✨ Fiche de ${name} mise à jour avec succès !`);
+    toast.success(`Fiche de ${name} mise à jour avec succès !`);
     onClose();
   };
 

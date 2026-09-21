@@ -11,7 +11,6 @@ import {
   Maximize2, 
   Minimize2, 
   Store,
-  Sparkles,
   Zap,
   ShoppingBag,
   Timer

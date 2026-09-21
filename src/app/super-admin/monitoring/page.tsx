@@ -8,7 +8,6 @@ import {
   RefreshCw, 
   Store, 
   Layers, 
-  Sparkles, 
   CheckCircle2, 
   AlertTriangle, 
   XCircle, 

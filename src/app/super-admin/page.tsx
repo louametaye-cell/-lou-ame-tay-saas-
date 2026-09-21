@@ -19,7 +19,6 @@ import {
   Layers, 
   ArrowUpRight, 
   RefreshCw, 
-  Sparkles,
   ChefHat,
   QrCode,
   TrendingUp,
@@ -32,7 +31,6 @@ import {
   Settings,
   MessageCircle,
   Headphones,
-  Bot,
   Trash2,
   Upload,
   Key,
@@ -408,8 +406,8 @@ export default function SuperAdminDashboardPage() {
                     : 'bg-white text-slate-900 border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                <Bot className="w-4 h-4 text-[#FF6B00]" />
-                <span>{isSupportOpen ? 'Fermer SAV IA' : '🤖 SAV IA 24/7'}</span>
+                <Headphones className="w-4 h-4 text-[#FF6B00]" />
+                <span>{isSupportOpen ? 'Fermer Support' : 'Support MDA 24/7'}</span>
               </button>
 
               <button
@@ -1213,7 +1211,7 @@ export default function SuperAdminDashboardPage() {
                       <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" />
+                        <Plus className="w-4 h-4" />
                         <span>Créer le Restaurant Client</span>
                       </>
                     )}

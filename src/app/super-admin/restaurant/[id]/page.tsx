@@ -15,7 +15,6 @@ import {
   Clock, 
   ExternalLink, 
   ChefHat, 
-  Sparkles, 
   RefreshCw, 
   QrCode, 
   DollarSign,

@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
-import { Sparkles, Clock, QrCode, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
+import { ChefHat, UtensilsCrossed, Clock, QrCode, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
 import { formatFCFA } from '@/lib/utils';
 
 interface ClassicDisplayProps {
@@ -135,18 +135,18 @@ export const ClassicDisplay: React.FC<ClassicDisplayProps> = ({
                   }`}
                 >
                   {/* Thumbnail */}
-                  <div className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700/50">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700/50">
                     {item.imageUrl ? (
                       <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl bg-slate-800 text-slate-500">
-                        🍲
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50">
+                        <UtensilsCrossed className="w-8 h-8 text-slate-500/70" />
                       </div>
                     )}
 
                     {item.isSpecialOfTheDay && item.isAvailable && (
-                      <div className="absolute top-1 left-1 bg-amber-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-xs flex items-center gap-0.5">
-                        <Sparkles className="w-2.5 h-2.5" />
+                      <div className="absolute top-1 left-1 bg-amber-400 text-slate-950 text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-md shadow-md flex items-center gap-1">
+                        <ChefHat className="w-3 h-3" />
                         <span>DU JOUR</span>
                       </div>
                     )}
@@ -161,21 +161,21 @@ export const ClassicDisplay: React.FC<ClassicDisplayProps> = ({
                     </div>
 
                     {item.description && (
-                      <p className="text-[11px] sm:text-xs text-slate-400 line-clamp-1 mt-0.5 font-medium">
+                      <p className="text-xs text-slate-400 line-clamp-1 mt-0.5 font-medium">
                         {item.description}
                       </p>
                     )}
 
                     {/* Price & Stock Badge */}
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm sm:text-base font-black font-mono text-emerald-400">
+                      <span className="text-base sm:text-lg font-black font-mono text-emerald-400">
                         {formatFCFA(item.price)}
                       </span>
 
                       {!item.isAvailable && (
-                        <span className="text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>Rupture</span>
+                        <span className="text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2.5 py-0.5 rounded-md flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>RUPTURE</span>
                         </span>
                       )}
                     </div>

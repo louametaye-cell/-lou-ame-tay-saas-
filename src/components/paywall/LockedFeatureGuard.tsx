@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Lock, 
-  Sparkles, 
+  ShieldCheck, 
   CheckCircle2, 
   ArrowRight, 
   MessageCircle, 
@@ -112,7 +112,7 @@ export const LockedFeatureGuard: React.FC<LockedFeatureGuardProps> = ({
         {/* Badge & Titre */}
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
             <span>Formule {paywall.requiredPlanName} requise</span>
           </div>
 

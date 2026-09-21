@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Maximize2, Minimize2, Sparkles, QrCode } from 'lucide-react';
+import { Clock, Maximize2, Minimize2, ChefHat, QrCode, LayoutGrid, UtensilsCrossed } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatFCFA } from '@/lib/utils';
 import { SlideItem, getAllergenEmoji } from './SlideshowDisplay';
@@ -147,20 +147,21 @@ export const QuadrantDisplay: React.FC<QuadrantDisplayProps> = ({
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-orange-600/30 to-emerald-600/30">
-                        🍽️
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
+                        <UtensilsCrossed className="w-10 h-10 text-slate-500/70" />
                       </div>
                     )}
 
                     {slide.isSpecial && (
-                      <div className="absolute top-3 left-3 bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
+                      <div className="absolute top-3 left-3 bg-amber-400 text-slate-950 font-black text-xs px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5">
+                        <ChefHat className="w-3.5 h-3.5" />
                         <span>SPÉCIALITÉ</span>
                       </div>
                     )}
 
-                    <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-xs text-[10px] text-amber-300 font-bold px-2 py-0.5 rounded-md">
-                      {slide.category}
+                    <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-xs text-xs text-amber-300 font-black px-2.5 py-1 rounded-lg border border-white/10 flex items-center gap-1">
+                      <LayoutGrid className="w-3 h-3 text-amber-400" />
+                      <span>{slide.category}</span>
                     </div>
                   </div>
 

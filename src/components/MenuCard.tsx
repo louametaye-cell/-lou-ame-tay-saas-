@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Plus, Minus, Clock, Star, Sparkles } from 'lucide-react';
+import { Plus, Minus, Clock, Star, ChefHat } from 'lucide-react';
 import { MenuItemType, ALLERGEN_ICONS, Language } from '@/types';
 import { formatFCFA } from '@/lib/utils';
 import { getUIText, translateAllergenLabel } from '@/lib/translation-engine';
@@ -66,7 +66,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none">
           {isSpecial && (
             <span className="bg-[#FF6B00] text-white text-xs font-black px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider animate-pulse">
-              <Sparkles className="w-4 h-4" />
+              <ChefHat className="w-4 h-4" />
               <span>{t.specialOfTheDay}</span>
             </span>
           )}

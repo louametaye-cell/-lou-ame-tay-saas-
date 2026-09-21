@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Bot, 
   Send, 
   User, 
   Headphones, 
@@ -11,7 +10,6 @@ import {
   AlertTriangle, 
   Plus, 
   RefreshCw, 
-  Sparkles,
   MessageSquare,
   ShieldCheck,
   PhoneCall
@@ -153,19 +151,19 @@ export const SupportAIAssistant: React.FC = () => {
       <div className="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-indigo-600 text-slate-900 rounded-2xl shadow-lg shadow-indigo-500/20">
-            <Bot className="w-6 h-6" />
+            <Headphones className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                Service Après-Vente (SAV) & Assistance IA 24/7
+                Service Après-Vente (SAV) & Assistance MDA 24/7
               </h3>
               <span className="bg-indigo-950 text-indigo-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-indigo-500/30">
-                IA Active 24/7
+                Support Dédié 24/7
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Résolution instantanée des pannes, questions techniques et gestion des tickets restaurateurs
+              Résolution immédiate des questions techniques et accompagnement de vos équipes
             </p>
           </div>
         </div>
@@ -180,8 +178,8 @@ export const SupportAIAssistant: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <Bot className="w-4 h-4" />
-            <span>Chatbot IA 24/7</span>
+            <Headphones className="w-4 h-4" />
+            <span>Assistance Directe</span>
           </button>
 
           <button
@@ -218,7 +216,7 @@ export const SupportAIAssistant: React.FC = () => {
                         : 'bg-emerald-600 text-slate-900'
                     }`}
                   >
-                    {isAi ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                    {isAi ? <Headphones className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   </div>
 
                   <div
@@ -239,8 +237,8 @@ export const SupportAIAssistant: React.FC = () => {
 
             {isAiTyping && (
               <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold p-2">
-                <Sparkles className="w-4 h-4 animate-spin" />
-                <span>L&apos;IA Lou Ame Tay réfléchit et formule sa réponse...</span>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Recherche de la meilleure solution...</span>
               </div>
             )}
           </div>

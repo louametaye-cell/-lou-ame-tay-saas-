@@ -11,9 +11,7 @@ import {
   AlertCircle, 
   Send, 
   User, 
-  Bot, 
   MessageSquare,
-  Sparkles,
   X,
   Store
 } from 'lucide-react';
@@ -283,8 +281,8 @@ export default function TicketsPage() {
                 {selectedTicket.aiSuggestedSolution && (
                   <div className="bg-indigo-50 border border-indigo-100 p-3.5 rounded-2xl text-indigo-950">
                     <div className="flex items-center gap-1.5 text-indigo-700 font-bold mb-1">
-                      <Bot className="w-4 h-4" />
-                      <span>Réponse immédiate IA 24/7 :</span>
+                      <Headphones className="w-4 h-4" />
+                      <span>Assistance Support MDA 24/7 :</span>
                     </div>
                     <p>{selectedTicket.aiSuggestedSolution}</p>
                   </div>

@@ -9,7 +9,7 @@ import {
   Trash2, 
   Check, 
   Building, 
-  Sparkles,
+  ShieldCheck,
   Phone,
   MapPin,
   Users,
@@ -441,7 +441,7 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
           {/* SECTION 2 : FORMULE ET TARIFICATION SAAS */}
           <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200/90 shadow-2xs">
             <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#FF6B00]" />
+              <ShieldCheck className="w-4 h-4 text-[#FF6B00]" />
               <span>2. Formule & Validité de l&apos;Abonnement</span>
             </h3>
 

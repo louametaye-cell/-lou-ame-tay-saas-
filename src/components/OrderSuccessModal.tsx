@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, Clock, Utensils, Sparkles, ChefHat, BellRing, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Clock, Utensils, ChefHat, BellRing, ArrowRight } from 'lucide-react';
 import { OrderType, Language } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
 import { getUIText } from '@/lib/translation-engine';

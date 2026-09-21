@@ -12,7 +12,7 @@ import {
   MessageSquareQuote, 
   Bluetooth,
   Wine,
-  Sparkles
+  RotateCcw
 } from 'lucide-react';
 import { OrderType, OrderStatus } from '@/types';
 import { formatFCFA } from '@/lib/utils';
@@ -60,6 +60,38 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
     setIsBluetoothPrinting(false);
     if (success) {
       toast.success('🖨️ Impression Bluetooth ESC/POS réussie !');
+    }
+  };
+
+  const [isReleasingTable, setIsReleasingTable] = useState(false);
+
+  const handleReleaseTable = async () => {
+    if (!order.tableNumber) return;
+    const confirmRelease = window.confirm(
+      `Confirmer la libération de la Table ${formattedTable} ?\nLa table sera marquée comme Libre pour accueillir de nouveaux clients.`
+    );
+    if (!confirmRelease) return;
+
+    try {
+      setIsReleasingTable(true);
+      const res = await fetch('/api/tenant/tables/release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: (order as any).tenantId || (order as any).restaurantId,
+          tableNumber: order.tableNumber,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`🧹 Table ${formattedTable} libérée avec succès (remise en service) !`);
+      } else {
+        toast.error(data.error || 'Erreur lors de la libération de la table');
+      }
+    } catch (err) {
+      toast.error('Erreur réseau lors de la libération de la table');
+    } finally {
+      setIsReleasingTable(false);
     }
   };
 
@@ -269,6 +301,20 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
             <Printer className="w-4 h-4 text-orange-600" />
             <span className="hidden sm:inline">Ticket 80mm</span>
           </button>
+
+          {/* Quick Release Table Action for Tables */}
+          {!isExpressOrder && order.tableNumber > 0 && (
+            <button
+              type="button"
+              onClick={handleReleaseTable}
+              disabled={isReleasingTable}
+              className="min-h-[46px] px-3 bg-white hover:bg-rose-50 hover:text-rose-700 active:scale-95 text-slate-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200 shadow-2xs cursor-pointer"
+              title={`Libérer la Table ${formattedTable} (remise en service immédiate)`}
+            >
+              <RotateCcw className="w-4 h-4 text-slate-500" />
+              <span className="hidden sm:inline">Libérer Table</span>
+            </button>
+          )}
 
           {/* Status Progression Button */}
           {order.status === 'CANCELLED' && (

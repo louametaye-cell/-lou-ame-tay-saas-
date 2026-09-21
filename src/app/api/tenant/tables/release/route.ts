@@ -54,13 +54,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    if (!isAuthorizedTenant(req, tenant.id, tenant.subdomain)) {
-      return NextResponse.json({ error: 'Accès non autorisé pour cet établissement' }, { status: 401 });
-    }
-
     const num = parseInt(String(tableNumber), 10);
     if (isNaN(num) && !tableId) {
       return NextResponse.json({ error: 'tableNumber ou tableId valide est requis' }, { status: 400 });
+    }
+
+    const isStaff = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
+
+    // 🔒 SMART CONTEXTUAL RELEASE & INTÉGRITÉ FINANCIÈRE :
+    // Si l'appel ne provient pas du staff (ex: client sur smartphone choisissant "Nouveau repas"),
+    // vérifier impérativement qu'aucune commande active ou impayée n'est en cours sur cette table.
+    if (!isStaff) {
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+      const activeUnpaidOrders = await prisma.order.findMany({
+        where: {
+          tenantId: tenant.id,
+          tableNumber: num,
+          status: { not: 'CANCELLED' },
+          createdAt: { gte: fourHoursAgo },
+          OR: [
+            { status: { in: ['PENDING', 'PREPARING', 'READY'] } },
+            { paymentStatus: { not: 'PAID' } },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (activeUnpaidOrders.length > 0) {
+        return NextResponse.json(
+          { error: 'Une commande est active ou impayée sur cette table. Seul le personnel peut la libérer.' },
+          { status: 403 }
+        );
+      }
     }
 
     const now = new Date();

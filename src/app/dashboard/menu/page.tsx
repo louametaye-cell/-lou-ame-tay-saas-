@@ -9,7 +9,7 @@ import {
   ToggleLeft, 
   ToggleRight, 
   Clock, 
-  Sparkles, 
+  Languages, 
   CheckCircle2, 
   AlertCircle,
   Search,
@@ -196,12 +196,12 @@ export default function DashboardMenuManagementPage() {
       const data = await res.json();
       if (data.translations) {
         setTranslations(data.translations);
-        toast.success('✨ Traduction IA instantanée effectuée (EN, ES, IT) !');
+        toast.success('Traduction instantanée effectuée (EN, ES, IT) !');
       } else {
         throw new Error();
       }
     } catch (e) {
-      toast.error('Erreur lors de la traduction IA');
+      toast.error('Erreur lors de la traduction');
     } finally {
       setIsTranslating(false);
     }
@@ -239,7 +239,7 @@ export default function DashboardMenuManagementPage() {
         throw new Error(data.error || 'Erreur lors de l\'ajout du plat');
       }
 
-      toast.success(`✨ Plat "${name}" ajouté avec succès au menu !`);
+      toast.success(`Plat "${name}" ajouté avec succès au menu !`);
       setIsAddModalOpen(false);
       fetchMenu();
 
@@ -666,8 +666,8 @@ export default function DashboardMenuManagementPage() {
                     disabled={isTranslating}
                     className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{isTranslating ? 'Traduction...' : '🌐 Traduction IA (Google)'}</span>
+                    <Languages className="w-3.5 h-3.5" />
+                    <span>{isTranslating ? 'Traduction...' : 'Traduire automatiquement'}</span>
                   </button>
                 </div>
 

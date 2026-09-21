@@ -8,7 +8,6 @@ import {
   VolumeX, 
   RefreshCw, 
   Clock, 
-  Sparkles, 
   Flame, 
   ArrowLeft, 
   LayoutDashboard, 

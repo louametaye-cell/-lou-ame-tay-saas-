@@ -13,7 +13,6 @@ import {
   Clock, 
   Flame,
   Calendar,
-  Sparkles,
   Store
 } from 'lucide-react';
 import { 

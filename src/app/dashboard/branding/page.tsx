@@ -6,7 +6,6 @@ import {
   Palette, 
   Type, 
   Image as ImageIcon, 
-  Sparkles, 
   Save, 
   ArrowLeft, 
   CheckCircle2, 
@@ -384,7 +383,7 @@ export default function BrandStudioPage() {
           <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <Palette className="w-4 h-4 text-amber-500" />
                 <span>Palettes Prédéfinies (1 Clic)</span>
               </h3>
               <span className="text-[11px] text-slate-400 font-medium">Design Graphique MGD</span>

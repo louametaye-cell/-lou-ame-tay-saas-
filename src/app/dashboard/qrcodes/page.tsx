@@ -12,7 +12,6 @@ import {
   ShieldCheck, 
   Store, 
   ArrowLeft, 
-  Sparkles,
   Phone,
   MapPin,
   DollarSign,

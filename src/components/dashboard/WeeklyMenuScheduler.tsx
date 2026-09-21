@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Calendar, 
-  Sparkles, 
   Save, 
   Utensils, 
   Moon, 

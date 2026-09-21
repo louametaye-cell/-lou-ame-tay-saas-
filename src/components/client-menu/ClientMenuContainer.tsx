@@ -20,6 +20,7 @@ import { CallWaiterModal } from './CallWaiterModal';
 import { GoogleReviewBanner } from './GoogleReviewBanner';
 import { RestaurantFooterInfo } from './RestaurantFooterInfo';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
+import { TableWelcomeModal } from './TableWelcomeModal';
 import { 
   RestaurantType, 
   MenuItemType, 
@@ -29,7 +30,7 @@ import {
   CurrencyCode, 
   ExchangeRates 
 } from '@/types';
-import { DEFAULT_EXCHANGE_RATES } from '@/lib/utils';
+import { DEFAULT_EXCHANGE_RATES, formatFCFA } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
 import { 
   getUIText, 
@@ -38,7 +39,7 @@ import {
 } from '@/lib/translation-engine';
 import { useMenuSchedule } from '@/hooks/useMenuSchedule';
 import { toast } from 'sonner';
-import { Clock } from 'lucide-react';
+import { Clock, Users } from 'lucide-react';
 
 interface ClientMenuContainerProps {
   initialRestaurant: RestaurantType;
@@ -128,6 +129,19 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const [activeOrder, setActiveOrder] = useState<OrderType | null>(null);
   const [isCallWaiterOpen, setIsCallWaiterOpen] = useState(false);
 
+  // 🔒 Smart Contextual Release States (Cas 2 : Table mal libérée & scans simultanés)
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+  const [welcomeModalData, setWelcomeModalData] = useState<{
+    elapsedMinutes?: number;
+    lastOrderTotal?: number;
+    sessionId?: string;
+  } | null>(null);
+  const [joinedSessionBanner, setJoinedSessionBanner] = useState<{
+    isJoined: boolean;
+    count: number;
+    total: number;
+  } | null>(null);
+
   const [isMounted, setIsMounted] = useState(false);
   // Table session accumulated orders with 2-Hour TTL Auto-Reset (chargé côté client pour éliminer toute erreur d'hydratation SSR)
   const [sessionOrders, setSessionOrders] = useState<OrderType[]>([]);
@@ -193,9 +207,108 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             }
           }
         } catch (e) {}
+      } else {
+        // 🔒 SMART CONTEXTUAL RELEASE (Nouveau smartphone sans historique local sur cette table)
+        fetch(`/api/orders/table/${tableNumber}/status?restaurantId=${restaurant.id}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((statusData) => {
+            if (!statusData || !statusData.success) return;
+
+            if (statusData.status === 'ACTIVE' && statusData.orders && statusData.orders.length > 0) {
+              // CAS 2 : Commande active en cours -> Rejoindre automatiquement la session existante
+              const mapped: OrderType[] = statusData.orders.map((ord: any) => ({
+                ...ord,
+                total: Number(ord.total ?? ord.totalAmount ?? 0),
+                totalAmount: Number(ord.totalAmount ?? ord.total ?? 0),
+              }));
+              setSessionOrders(mapped);
+              setActiveOrder(mapped[mapped.length - 1]);
+              try {
+                localStorage.setItem(scopedOrdersKey, JSON.stringify(mapped));
+                localStorage.setItem(scopedTimeKey, Date.now().toString());
+              } catch (e) {}
+              setJoinedSessionBanner({
+                isJoined: true,
+                count: statusData.totalItems || mapped.length,
+                total: statusData.totalAmount || 0,
+              });
+            } else if (statusData.status === 'PAID_RECENT') {
+              // CAS 3 : Zone Jaune (repas soldé entre 15 et 45 min) -> Afficher la modale de bienvenue et de choix
+              setWelcomeModalData({
+                elapsedMinutes: statusData.elapsedMinutes,
+                lastOrderTotal: statusData.lastOrderTotal,
+                sessionId: statusData.sessionId,
+              });
+              setIsWelcomeModalOpen(true);
+            }
+          })
+          .catch(() => {});
       }
     }
   }, [tableNumber, restaurant?.id]);
+
+  const handleJoinExistingMeal = async () => {
+    try {
+      const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.orders && data.orders.length > 0) {
+          const mapped: OrderType[] = data.orders.map((ord: any) => ({
+            ...ord,
+            total: Number(ord.total ?? ord.totalAmount ?? 0),
+            totalAmount: Number(ord.totalAmount ?? ord.total ?? 0),
+          }));
+          setSessionOrders(mapped);
+          setActiveOrder(mapped[mapped.length - 1]);
+          const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+          const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+          try {
+            localStorage.setItem(scopedOrdersKey, JSON.stringify(mapped));
+            localStorage.setItem(scopedTimeKey, Date.now().toString());
+          } catch (e) {}
+          const total = mapped.reduce((s, o) => s + (o.totalAmount || o.total || 0), 0);
+          const count = mapped.reduce((s, o) => s + (o.items?.length || 1), 0);
+          setJoinedSessionBanner({ isJoined: true, count, total });
+          toast.success(`👥 Vous avez rejoint la Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber} !`);
+        }
+      }
+    } catch (e) {}
+    setIsWelcomeModalOpen(false);
+  };
+
+  const isReleasingTableRef = useRef<boolean>(false);
+
+  const handleStartFreshMeal = async () => {
+    try {
+      isReleasingTableRef.current = true;
+      await fetch('/api/tenant/tables/release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: restaurant.id,
+          tableNumber,
+        }),
+      });
+      const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+      const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+      try {
+        localStorage.removeItem(scopedOrdersKey);
+        localStorage.removeItem(scopedTimeKey);
+      } catch (e) {}
+      setSessionOrders([]);
+      setActiveOrder(null);
+      setJoinedSessionBanner(null);
+      setIsOrderSuccessOpen(false);
+      toast.success(`✨ Bienvenue ! Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber} prête pour votre nouveau repas.`);
+    } catch (e) {
+      toast.error('Erreur lors de la préparation de la table');
+    } finally {
+      setIsWelcomeModalOpen(false);
+      setTimeout(() => {
+        isReleasingTableRef.current = false;
+      }, 2500);
+    }
+  };
 
   // 🔒 Déterminer si la prise de commande numérique est activée (TÀMBALI = vitrine pure, sans commande numérique)
   const isOrderingEnabled = restaurant.isOrderingEnabled ?? (!restaurant.isTambali && restaurant.planSlug !== 'tambali');
@@ -206,7 +319,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
     const pollLiveOrders = async () => {
       try {
-        if (!restaurant?.id) return;
+        if (!restaurant?.id || isReleasingTableRef.current) return;
         const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
         const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
 
@@ -626,6 +739,35 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         primaryColor={primaryColor}
       />
 
+      {/* 1.4. Smart Contextual Release — Bandeau Informatif Session Rejointe */}
+      {joinedSessionBanner?.isJoined && !isExpress && (
+        <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3">
+          <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-lg border-2 border-emerald-500/40 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-2xl shrink-0 border border-emerald-400/30">
+                <Users className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <span>👥</span>
+                  <span>Vous avez rejoint la Table {tableNumber < 10 ? '0' + tableNumber : tableNumber}</span>
+                </div>
+                <div className="text-xs text-slate-200 mt-0.5">
+                  <strong className="text-white font-bold">{joinedSessionBanner.count} article(s)</strong> déjà commandé(s) • Solde en cours : <strong className="text-emerald-300 font-bold">{formatFCFA(joinedSessionBanner.total)}</strong>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOrderSuccessOpen(true)}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all shrink-0 ml-auto cursor-pointer"
+            >
+              Voir la note ^
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 1.5. Brand Banner Header (Si configurée) */}
       {bannerUrl && !searchQuery && (
         <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3">
@@ -1018,6 +1160,17 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         restaurantId={restaurant.id}
         customerName={customerName}
         isExpress={isExpress}
+      />
+
+      {/* 13. Smart Contextual Release — Modale de Bienvenue & Choix Zone Jaune (Table mal libérée) */}
+      <TableWelcomeModal
+        isOpen={isWelcomeModalOpen}
+        tableNumber={tableNumber}
+        restaurantName={restaurant.name}
+        elapsedMinutes={welcomeModalData?.elapsedMinutes || 20}
+        lastOrderTotal={welcomeModalData?.lastOrderTotal}
+        onJoinMeal={handleJoinExistingMeal}
+        onStartNewMeal={handleStartFreshMeal}
       />
     </div>
   );

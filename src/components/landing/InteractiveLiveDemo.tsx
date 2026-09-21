@@ -512,7 +512,7 @@ export const InteractiveLiveDemo: React.FC = () => {
         <div className="mt-12 text-center">
           <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-emerald-50 border border-emerald-200 px-6 py-4 rounded-2xl text-emerald-950">
             <span className="font-bold text-sm">
-              ✨ Convaincu par la rapidité ? Nous configurons votre vrai menu en 24h chrono.
+              ⚡ Convaincu par la rapidité ? Nous configurons votre vrai menu en 24h chrono.
             </span>
             <a
               href="#contact"

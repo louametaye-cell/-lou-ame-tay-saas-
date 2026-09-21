@@ -138,7 +138,7 @@ export async function POST(req: Request) {
         name: name.trim(),
         description: description?.trim() || '',
         price: Number(price),
-        imageUrl: imageUrl?.trim() || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+        imageUrl: imageUrl?.trim() || '/images/dish-placeholder.svg',
         isAvailable: Boolean(isAvailable),
         isDailySpecial: specialFlag,
       },

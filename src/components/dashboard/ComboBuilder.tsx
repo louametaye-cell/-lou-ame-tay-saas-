@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { 
   Plus, 
   Trash2, 
-  Sparkles, 
   Layers, 
   UtensilsCrossed, 
   Check, 
@@ -103,7 +102,7 @@ export const ComboBuilder: React.FC<ComboBuilderProps> = ({
       <div className="flex items-center justify-between gap-3 flex-wrap bg-white border border-slate-200 p-5 rounded-3xl shadow-xs">
         <div className="space-y-0.5">
           <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500" />
+            <UtensilsCrossed className="w-5 h-5 text-amber-500" />
             <span>Moteur de Formules & Menus Midi / Soir</span>
           </h3>
           <p className="text-xs text-slate-500">

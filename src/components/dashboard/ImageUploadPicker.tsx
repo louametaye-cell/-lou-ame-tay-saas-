@@ -4,7 +4,6 @@ import React, { useState, useRef } from 'react';
 import { 
   UploadCloud, 
   Link as LinkIcon, 
-  Sparkles, 
   Check, 
   Image as ImageIcon, 
   X, 
@@ -138,8 +137,8 @@ export const ImageUploadPicker: React.FC<ImageUploadPickerProps> = ({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-            <span>🖼️ Galerie HD Sénégal</span>
+            <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+            <span>Galerie HD Sénégal</span>
           </button>
 
           <button

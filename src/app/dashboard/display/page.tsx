@@ -11,7 +11,6 @@ import {
   Monitor, 
   Film, 
   LayoutGrid, 
-  Sparkles, 
   ArrowLeft, 
   Layers,
   Lock,
