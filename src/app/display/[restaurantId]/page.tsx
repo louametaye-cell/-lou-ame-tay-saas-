@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { ClassicDisplay } from '@/components/display/ClassicDisplay';
 import { SlideshowDisplay } from '@/components/display/SlideshowDisplay';
 import { QuadrantDisplay } from '@/components/display/QuadrantDisplay';
+import { FullscreenDisplay } from '@/components/display/FullscreenDisplay';
 
 interface DisplayMenuData {
   restaurantId: string;
@@ -18,7 +19,7 @@ interface DisplayMenuData {
   isEnabled?: boolean;
   displaySettings?: {
     isEnabled: boolean;
-    mode: 'classic' | 'slideshow' | 'quadrant';
+    mode: 'classic' | 'slideshow' | 'quadrant' | 'fullscreen';
     slideDuration?: number;
     maxScreens?: number;
   };
@@ -161,6 +162,23 @@ export default function DisplayMenuPage({
   // Priorité : Paramètre d'URL 'mode' si fourni, sinon le mode imposé par le Super-Admin (par défaut 'slideshow')
   const mode = searchParams.get('mode') || data.displaySettings?.mode || 'slideshow';
   const orderMenuUrl = `${baseUrl}/r/${data.subdomain || restaurantId}`;
+
+  // Mode 4 : Plein Écran Immersif Total (Image plein écran 100vw + prix FCFA + description + QR code géant)
+  if (mode === 'fullscreen') {
+    return (
+      <FullscreenDisplay
+        slides={data.items || []}
+        categories={data.categories || []}
+        initialCategory={searchParams.get('category')}
+        restaurantName={data.restaurantName}
+        restaurantLogo={data.logoUrl}
+        currentTime={currentTime}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
+        orderMenuUrl={orderMenuUrl}
+      />
+    );
+  }
 
   // Mode 2 : Diaporama (Slideshow 1 plat)
   if (mode === 'slideshow') {

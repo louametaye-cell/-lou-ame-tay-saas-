@@ -22,7 +22,8 @@ import {
   Volume2,
   ChefHat,
   ShoppingBag,
-  Zap
+  Zap,
+  Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
@@ -34,13 +35,30 @@ interface DisplayData {
   isEnabled: boolean;
   displaySettings?: {
     isEnabled: boolean;
-    mode: 'classic' | 'slideshow' | 'quadrant';
+    mode: 'classic' | 'slideshow' | 'quadrant' | 'fullscreen';
     slideDuration?: number;
     maxScreens?: number;
   };
 }
 
-const DISPLAY_MODES_INFO = {
+const DISPLAY_MODES_INFO: Record<string, {
+  name: string;
+  icon: any;
+  emoji: string;
+  badge: string;
+  description: string;
+  idealFor: string;
+  cadence: string;
+}> = {
+  fullscreen: {
+    name: 'Mode Plein Écran Immersif (Showcase 100% Écran)',
+    icon: Maximize2,
+    emoji: '✨',
+    badge: 'Ultra Visuel & Épuré',
+    description: 'Affiche la photo du plat en plein écran total avec nom du plat, prix géant FCFA, description et QR Code de commande directe.',
+    idealFor: 'Grands téléviseurs en salle, vitrines de rue, comptoirs et halls d\'accueil',
+    cadence: 'Rotation automatique plein écran toutes les 7 secondes',
+  },
   slideshow: {
     name: 'Mode Diaporama (1 Plat Grand Format)',
     icon: Film,
@@ -356,10 +374,20 @@ export default function DisplaySettingsPage() {
                           <button
                             type="button"
                             onClick={() => openDisplay(url)}
-                            className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+                            className="py-2 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                             <span>Projeter</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => openDisplay(`${url}${url.includes('?') ? '&' : '?'}mode=fullscreen`)}
+                            className="py-2 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+                            title="Lancer le mode Plein Écran Immersif (Showcase 100% Écran avec QR Code)"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                            <span>Plein Écran ✨</span>
                           </button>
                         </div>
                       </div>
