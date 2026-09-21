@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MessageCircle, Phone, Mail, MapPin, QrCode, Printer } from 'lucide-react';
+import { MessageCircle, Phone, Mail, MapPin } from 'lucide-react';
 import { OfficialLogo } from './OfficialLogo';
 
 interface FooterProps {
@@ -128,18 +128,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
                 <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span className="text-slate-400">contact@louametay.com</span>
               </p>
-
-              <div className="pt-2">
-                <a
-                  href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20QR%20code%20ou%20obtenir%20des%20informations."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
-                >
-                  <MessageCircle className="w-4 h-4 fill-current" />
-                  <span>WhatsApp (+221 77 458 74 74)</span>
-                </a>
-              </div>
             </div>
           </div>
 
