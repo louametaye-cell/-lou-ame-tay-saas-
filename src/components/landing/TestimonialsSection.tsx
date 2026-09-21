@@ -81,19 +81,6 @@ export const TestimonialsSection: React.FC = () => {
           ))}
         </div>
 
-        {/* Partners badge strip */}
-        <div className="mt-16 text-center">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-gray-400 block mb-6">
-            Présents dans les plus grands pôles gastronomiques du Sénégal
-          </span>
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6 text-xs font-semibold text-gray-600">
-            <span className="bg-[#F8F9FA] border border-gray-200 px-4 py-2 rounded-xl">📍 Dakar (Almadies, Point E, Plateau)</span>
-            <span className="bg-[#F8F9FA] border border-gray-200 px-4 py-2 rounded-xl">📍 Thiès (Dixième, Randoulène)</span>
-            <span className="bg-[#F8F9FA] border border-gray-200 px-4 py-2 rounded-xl">📍 Mbour & Saly Portudal</span>
-            <span className="bg-[#F8F9FA] border border-gray-200 px-4 py-2 rounded-xl">📍 Saint-Louis du Sénégal</span>
-          </div>
-        </div>
-
       </div>
     </section>
   );
