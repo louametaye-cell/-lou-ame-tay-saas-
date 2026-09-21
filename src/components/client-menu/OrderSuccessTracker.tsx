@@ -290,7 +290,7 @@ export const OrderSuccessTracker: React.FC<OrderSuccessTrackerProps> = ({
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `💰 *TOTAL : ${formatFCFA(totalBalance)}*\n\n` +
       `🌿 *Merci de préserver nos arbres — Ticket 100% numérique 🌱*\n` +
-      `✨ Généré par Lou Ame Tay ?`;
+      `🇸🇳 Propulsé par Lou Ame Tay ?`;
 
     const encoded = encodeURIComponent(message);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
