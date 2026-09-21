@@ -1248,7 +1248,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                 >
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-base sm:text-lg font-black tracking-tight">
-                      {isExpress ? '⚡ COMPTOIR' : `TABLE ${order.tableNumber}`}
+                      {isExpress ? '⚡ COMPTOIR' : (order.locationDetail || `TABLE ${order.tableNumber}`)}
                     </span>
                     <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
                       order.status === 'PENDING' && !isExpress ? 'bg-black/10 text-slate-950' : 'bg-white/15 text-white'

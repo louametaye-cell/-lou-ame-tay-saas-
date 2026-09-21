@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search, Bell, X, Receipt, Droplets, HelpCircle, CheckCircle2, Globe, MapPin, Zap } from 'lucide-react';
+import { Search, Bell, X, Receipt, Droplets, HelpCircle, CheckCircle2, Globe, MapPin, Zap, User } from 'lucide-react';
 import { Language } from '@/types';
 import { getUIText } from '@/lib/translation-engine';
 import { ServiceCallModal } from './ServiceCallModal';
@@ -18,6 +18,9 @@ interface TableStickyHeaderProps {
   lang?: Language;
   onLanguageChange?: (lang: Language) => void;
   primaryColor?: string;
+  isSeparateBilling?: boolean;
+  guestName?: string;
+  onOpenSeparateBillModal?: () => void;
 }
 
 const LANGUAGES: { code: Language; label: string; flag: string }[] = [
@@ -39,6 +42,9 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
   lang = 'FR',
   onLanguageChange,
   primaryColor,
+  isSeparateBilling = false,
+  guestName,
+  onOpenSeparateBillModal,
 }) => {
   const t = getUIText(lang);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -84,14 +90,32 @@ export const TableStickyHeader: React.FC<TableStickyHeaderProps> = ({
                   <Zap className="w-4 h-4 text-slate-950 fill-slate-950 shrink-0" />
                   <span>Comptoir / Bar</span>
                 </div>
+              ) : isSeparateBilling ? (
+                <button
+                  type="button"
+                  onClick={onOpenSeparateBillModal}
+                  className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black px-3 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 transition-all cursor-pointer border border-blue-500"
+                  title="Addition individuelle active — Cliquez pour modifier ou revenir en commun"
+                >
+                  <User className="w-4 h-4 text-blue-200 shrink-0" />
+                  <span className="truncate max-w-[85px]">{guestName || 'Moi'}</span>
+                  <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-white font-mono text-[11px]">
+                    T.{formattedTable}
+                  </span>
+                </button>
               ) : (
-                <div className="bg-emerald-600 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={onOpenSeparateBillModal}
+                  className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black px-3.5 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 transition-all cursor-pointer border border-emerald-500"
+                  title={`Table ${formattedTable} — Cliquez pour choisir l'addition séparée`}
+                >
                   <MapPin className="w-4 h-4 text-white shrink-0" />
                   <span>{t.table}</span>
                   <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-white font-mono">
                     {formattedTable}
                   </span>
-                </div>
+                </button>
               )}
 
               <button

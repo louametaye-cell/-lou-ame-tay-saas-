@@ -21,6 +21,8 @@ import { GoogleReviewBanner } from './GoogleReviewBanner';
 import { RestaurantFooterInfo } from './RestaurantFooterInfo';
 import { RestaurantClosedView } from '@/components/RestaurantClosedView';
 import { TableWelcomeModal } from './TableWelcomeModal';
+import { SeparateBillModal } from './SeparateBillModal';
+import { nanoid } from 'nanoid';
 import { 
   RestaurantType, 
   MenuItemType, 
@@ -39,7 +41,7 @@ import {
 } from '@/lib/translation-engine';
 import { useMenuSchedule } from '@/hooks/useMenuSchedule';
 import { toast } from 'sonner';
-import { Clock, Users } from 'lucide-react';
+import { Clock, Users, User } from 'lucide-react';
 
 interface ClientMenuContainerProps {
   initialRestaurant: RestaurantType;
@@ -142,6 +144,12 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     total: number;
   } | null>(null);
 
+  // 🔒 Cas 3 : Scans simultanés & Additions Séparées (Mon addition personnelle)
+  const [isSeparateBillModalOpen, setIsSeparateBillModalOpen] = useState(false);
+  const [isSeparateBilling, setIsSeparateBilling] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestId, setGuestId] = useState('');
+
   const [isMounted, setIsMounted] = useState(false);
   // Table session accumulated orders with 2-Hour TTL Auto-Reset (chargé côté client pour éliminer toute erreur d'hydratation SSR)
   const [sessionOrders, setSessionOrders] = useState<OrderType[]>([]);
@@ -165,8 +173,32 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
       if (!restaurant?.id) return;
 
-      const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
-      const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+      // Vérifier si ce smartphone a activé le mode "Addition Séparée" (Cas 3)
+      const guestKey = `louametay_guest_session_${restaurant.id}_table_${tableNumber}`;
+      let isSep = false;
+      let currentGName = '';
+      let currentGId = '';
+      const savedGuest = localStorage.getItem(guestKey);
+      if (savedGuest) {
+        try {
+          const parsedGuest = JSON.parse(savedGuest);
+          if (parsedGuest && parsedGuest.isSeparate) {
+            isSep = true;
+            currentGName = parsedGuest.guestName || '';
+            currentGId = parsedGuest.guestId || '';
+            setIsSeparateBilling(true);
+            setGuestName(currentGName);
+            setGuestId(currentGId);
+          }
+        } catch (e) {}
+      }
+
+      const scopedOrdersKey = isSep && currentGId
+        ? `louametay_session_orders_${restaurant.id}_table_${tableNumber}_guest_${currentGId}`
+        : `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+      const scopedTimeKey = isSep && currentGId
+        ? `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}_guest_${currentGId}`
+        : `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
 
       const savedTime = localStorage.getItem(scopedTimeKey);
       if (savedTime) {
@@ -276,6 +308,63 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     setIsWelcomeModalOpen(false);
   };
 
+  const handleSelectSeparateBill = (name: string) => {
+    const newGuestId = guestId || nanoid(6);
+    setGuestId(newGuestId);
+    setGuestName(name);
+    setIsSeparateBilling(true);
+    setJoinedSessionBanner(null);
+    setCustomerName(name);
+
+    if (typeof window !== 'undefined' && restaurant?.id) {
+      const guestKey = `louametay_guest_session_${restaurant.id}_table_${tableNumber}`;
+      localStorage.setItem(
+        guestKey,
+        JSON.stringify({ isSeparate: true, guestName: name, guestId: newGuestId })
+      );
+
+      const separateScopedKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}_guest_${newGuestId}`;
+      const separateTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}_guest_${newGuestId}`;
+      const existingSeparate = localStorage.getItem(separateScopedKey);
+      if (existingSeparate) {
+        try {
+          const parsed = JSON.parse(existingSeparate);
+          setSessionOrders(parsed);
+          setActiveOrder(parsed[parsed.length - 1] || null);
+        } catch (e) {
+          setSessionOrders([]);
+          setActiveOrder(null);
+        }
+      } else {
+        setSessionOrders([]);
+        setActiveOrder(null);
+        localStorage.setItem(separateScopedKey, JSON.stringify([]));
+        localStorage.setItem(separateTimeKey, Date.now().toString());
+      }
+    }
+    toast.success(`👤 Addition Séparée activée pour ${name} ! Vos commandes seront sur votre note personnelle.`);
+  };
+
+  const handleSelectCommonBill = () => {
+    setIsSeparateBilling(false);
+    setGuestName('');
+    if (typeof window !== 'undefined' && restaurant?.id) {
+      const guestKey = `louametay_guest_session_${restaurant.id}_table_${tableNumber}`;
+      localStorage.removeItem(guestKey);
+
+      const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+      const saved = localStorage.getItem(scopedOrdersKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setSessionOrders(parsed);
+          setActiveOrder(parsed[parsed.length - 1] || null);
+        } catch (e) {}
+      }
+    }
+    toast.info(`👥 Vous avez rejoint la note commune de la Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber}.`);
+  };
+
   const isReleasingTableRef = useRef<boolean>(false);
 
   const handleStartFreshMeal = async () => {
@@ -320,18 +409,29 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     const pollLiveOrders = async () => {
       try {
         if (!restaurant?.id || isReleasingTableRef.current) return;
-        const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
-        const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+        const scopedOrdersKey = isSeparateBilling && guestId
+          ? `louametay_session_orders_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+          : `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+        const scopedTimeKey = isSeparateBilling && guestId
+          ? `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+          : `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
 
         const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id}`);
         if (res.ok) {
           const data = await res.json();
           if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
-            const mappedOrders: OrderType[] = data.orders.map((ord: any) => ({
+            let mappedOrders: OrderType[] = data.orders.map((ord: any) => ({
               ...ord,
               total: Number(ord.total ?? ord.totalAmount ?? 0),
               totalAmount: Number(ord.totalAmount ?? ord.total ?? 0),
             }));
+
+            // 🔒 En mode addition séparée : isoler uniquement les commandes passées par cet invité
+            if (isSeparateBilling && guestName) {
+              mappedOrders = mappedOrders.filter(
+                (o: any) => o.customerName === guestName || (o.locationDetail && o.locationDetail.includes(guestName))
+              );
+            }
 
             setSessionOrders((prev) => {
               // Check if any order transitioned to SERVED
@@ -377,7 +477,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             const hasOngoing = mappedOrders.some(
               (o: any) => ['PENDING', 'PREPARING', 'READY'].includes(o.status) || o.paymentStatus !== 'PAID'
             );
-            const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+            const userClosedKey = isSeparateBilling && guestId
+              ? `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+              : `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
             let wasExplicitlyClosed = false;
             try {
               wasExplicitlyClosed = sessionStorage.getItem(userClosedKey) === 'true';
@@ -425,7 +527,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     pollLiveOrders();
     const interval = setInterval(pollLiveOrders, 3500);
     return () => clearInterval(interval);
-  }, [tableNumber, restaurant?.id, activeOrder, isOrderingEnabled, isExpress]);
+  }, [tableNumber, restaurant?.id, activeOrder, isOrderingEnabled, isExpress, isSeparateBilling, guestName, guestId]);
 
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const lastSubmitRef = useRef<number>(0);
@@ -566,18 +668,26 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     if (isSubmittingOrder) return;
     setIsSubmittingOrder(true);
     try {
+      const finalCustomerName = isSeparateBilling && guestName
+        ? guestName
+        : (customerName.trim() || undefined);
+
+      const finalLocationDetail = isSeparateBilling && guestName
+        ? `TABLE ${tableNumber < 10 ? '0' + tableNumber : tableNumber} • ${guestName} (Séparé)`
+        : orderContext?.locationDetail;
+
       const orderPayload = {
         restaurantId: restaurant.id,
         tableNumber: isExpress ? 0 : tableNumber,
         orderType: isExpress ? 'EXPRESS' : 'TABLE',
-        customerName: customerName.trim() || undefined,
+        customerName: finalCustomerName,
         customerNote: customerNote.trim() || undefined,
         paymentMethod,
         transactionRef,
         total: getTotalPrice(),
         waiterId: orderContext?.waiterId,
         zoneId: orderContext?.zoneId,
-        locationDetail: orderContext?.locationDetail,
+        locationDetail: finalLocationDetail,
         items: items.map((i) => ({
           menuItemId: i.menuItem.id,
           name: i.menuItem.name,
@@ -612,7 +722,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             restaurantId: restaurant.id,
             tableNumber: isExpress ? 0 : tableNumber,
             orderType: isExpress ? 'EXPRESS' : 'TABLE',
-            customerName: customerName.trim() || null,
+            customerName: finalCustomerName || null,
             customerNote: customerNote.trim() || null,
             paymentMethod,
             status: 'PENDING',
@@ -633,7 +743,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       lastSubmitRef.current = Date.now();
       if (typeof window !== 'undefined' && restaurant.id) {
         try {
-          const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+          const userClosedKey = isSeparateBilling && guestId
+            ? `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+            : `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
           sessionStorage.setItem(userClosedKey, 'false');
         } catch (e) {}
       }
@@ -642,8 +754,12 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       setSessionOrders((prev) => {
         const updated = [...prev, placedOrder];
         if (typeof window !== 'undefined' && restaurant.id) {
-          const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
-          const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+          const scopedOrdersKey = isSeparateBilling && guestId
+            ? `louametay_session_orders_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+            : `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+          const scopedTimeKey = isSeparateBilling && guestId
+            ? `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+            : `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
           localStorage.setItem(scopedOrdersKey, JSON.stringify(updated));
           localStorage.setItem(scopedTimeKey, Date.now().toString());
         }
@@ -665,12 +781,22 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   const handleStartNewMeal = () => {
     if (typeof window !== 'undefined') {
       if (restaurant.id) {
-        const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
-        const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+        const scopedOrdersKey = isSeparateBilling && guestId
+          ? `louametay_session_orders_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+          : `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+        const scopedTimeKey = isSeparateBilling && guestId
+          ? `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+          : `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
         localStorage.removeItem(scopedOrdersKey);
         localStorage.removeItem(scopedTimeKey);
+
+        const guestKey = `louametay_guest_session_${restaurant.id}_table_${tableNumber}`;
+        localStorage.removeItem(guestKey);
+
         try {
-          const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+          const userClosedKey = isSeparateBilling && guestId
+            ? `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+            : `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
           sessionStorage.removeItem(userClosedKey);
         } catch (e) {}
       }
@@ -682,6 +808,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     clearCart();
     setActiveOrder(null);
     setSessionOrders([]);
+    setIsSeparateBilling(false);
+    setGuestName('');
+    setGuestId('');
     setIsOrderSuccessOpen(false);
     toast.success('Nouvelle session de table démarrée ! Votre panier est vierge.');
   };
@@ -737,10 +866,13 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lang={currentLang}
         onLanguageChange={handleLanguageChange}
         primaryColor={primaryColor}
+        isSeparateBilling={isSeparateBilling}
+        guestName={guestName}
+        onOpenSeparateBillModal={() => setIsSeparateBillModalOpen(true)}
       />
 
       {/* 1.4. Smart Contextual Release — Bandeau Informatif Session Rejointe */}
-      {joinedSessionBanner?.isJoined && !isExpress && (
+      {joinedSessionBanner?.isJoined && !isExpress && !isSeparateBilling && (
         <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3">
           <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-lg border-2 border-emerald-500/40 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-3">
@@ -757,13 +889,63 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOrderSuccessOpen(true)}
-              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all shrink-0 ml-auto cursor-pointer"
-            >
-              Voir la note ^
-            </button>
+            <div className="flex items-center gap-2 shrink-0 ml-auto flex-wrap">
+              <button
+                type="button"
+                onClick={() => setIsSeparateBillModalOpen(true)}
+                className="min-h-[44px] px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <User className="w-4 h-4 text-blue-300" />
+                <span>Addition séparée ?</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOrderSuccessOpen(true)}
+                className="min-h-[44px] px-4 py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span>Voir la note ^</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1.4.B Cas 3 : Mode Addition Séparée Actif */}
+      {isSeparateBilling && !isExpress && (
+        <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3">
+          <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-4 rounded-3xl shadow-lg border-2 border-blue-500/50 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-500/20 text-blue-300 rounded-2xl shrink-0 border border-blue-400/30">
+                <User className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-black uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                  <span>👤</span>
+                  <span>Addition Séparée • {guestName || 'Mon Compte'} (Table {tableNumber < 10 ? '0' + tableNumber : tableNumber})</span>
+                </div>
+                <div className="text-xs text-slate-200 mt-0.5">
+                  Vos commandes sont isolées sur votre propre note personnelle.
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 ml-auto flex-wrap">
+              <button
+                type="button"
+                onClick={() => setIsSeparateBillModalOpen(true)}
+                className="min-h-[44px] px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all cursor-pointer"
+              >
+                Modifier
+              </button>
+              {sessionOrders.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsOrderSuccessOpen(true)}
+                  className="min-h-[44px] px-4 py-2 bg-blue-500 hover:bg-blue-400 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span>Mon Ticket ({formatFCFA(sessionOrders.reduce((acc, o) => acc + (o.total || 0), 0))}) ^</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1116,7 +1298,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
           onOrderMore={() => {
             setIsOrderSuccessOpen(false);
             try {
-              const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+              const userClosedKey = isSeparateBilling && guestId
+                ? `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+                : `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
               sessionStorage.setItem(userClosedKey, 'true');
             } catch (e) {}
           }}
@@ -1133,7 +1317,9 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             );
             try {
               if (restaurant.id) {
-                const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+                const scopedOrdersKey = isSeparateBilling && guestId
+                  ? `louametay_session_orders_${restaurant.id}_table_${tableNumber}_guest_${guestId}`
+                  : `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
                 const saved = localStorage.getItem(scopedOrdersKey);
                 if (saved) {
                   const parsed = JSON.parse(saved);
@@ -1171,6 +1357,17 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         lastOrderTotal={welcomeModalData?.lastOrderTotal}
         onJoinMeal={handleJoinExistingMeal}
         onStartNewMeal={handleStartFreshMeal}
+      />
+
+      {/* 14. Cas 3 : Modale Choix Note Commune ou Addition Séparée */}
+      <SeparateBillModal
+        isOpen={isSeparateBillModalOpen}
+        onClose={() => setIsSeparateBillModalOpen(false)}
+        tableNumber={tableNumber}
+        currentGuestName={guestName}
+        isCurrentlySeparate={isSeparateBilling}
+        onSelectCommonBill={handleSelectCommonBill}
+        onSelectSeparateBill={handleSelectSeparateBill}
       />
     </div>
   );
