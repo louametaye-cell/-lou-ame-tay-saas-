@@ -34,15 +34,22 @@ async function run() {
   const tenantId = tenant.id;
   const TEST_TABLE = 12;
 
-  // 0. Réinitialiser la Table 12 en statut FREE avec clearedAt = now()
-  const now = new Date();
+  // 0. Réinitialiser la Table 12 en statut FREE sans commande antérieure
+  await prisma.orderItem.deleteMany({
+    where: { order: { tenantId, tableNumber: TEST_TABLE } }
+  });
+  await prisma.order.deleteMany({
+    where: { tenantId, tableNumber: TEST_TABLE }
+  });
+
+  const oneHourAgo = new Date(Date.now() - 3600000);
   const existingTable = await prisma.table.findFirst({
     where: { tenantId, tableNumber: TEST_TABLE }
   });
   if (existingTable) {
     await prisma.table.update({
       where: { id: existingTable.id },
-      data: { status: 'FREE', clearedAt: now }
+      data: { status: 'FREE', clearedAt: oneHourAgo }
     });
   } else {
     await prisma.table.create({
@@ -50,7 +57,7 @@ async function run() {
         tenantId,
         tableNumber: TEST_TABLE,
         status: 'FREE',
-        clearedAt: now
+        clearedAt: oneHourAgo
       }
     });
   }
@@ -136,18 +143,16 @@ async function run() {
 
     console.log(`✓ Commande active créée pour Table 12 : ID #${createdOrder.id.slice(-5).toUpperCase()} (${createdOrder.customerName})`);
 
-    // Rafraîchir la page ou attendre la synchro
+    // Rafraîchir la page et attendre que la carte passe en OCCUPIED
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(3000);
-
-    await tableCard12.waitFor({ state: 'visible', timeout: 10000 });
-    await tableCard12.scrollIntoViewIfNeeded();
+    const occupiedCard = page.locator(`div[data-table-number="${TEST_TABLE}"][data-table-lifecycle="OCCUPIED"]`);
+    await occupiedCard.waitFor({ state: 'visible', timeout: 15000 });
+    await occupiedCard.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
 
-    const clientNameVisible = await tableCard12.locator('text=Amadou Diallo').isVisible();
-    const orderNumVisible = await tableCard12.locator(`text=#${createdOrder.id.slice(-5).toUpperCase()}`).isVisible();
-    const lifecycleOccupied = await tableCard12.getAttribute('data-table-lifecycle');
-    console.log(`✓ Table 12 passée en OCCUPÉE : Nom client visible = ${clientNameVisible} | #Commande = ${orderNumVisible} | (cycle=${lifecycleOccupied})`);
+    const clientNameVisible = await occupiedCard.locator('text=Amadou Diallo').isVisible();
+    const orderNumVisible = await occupiedCard.locator(`text=#${createdOrder.id.slice(-5).toUpperCase()}`).isVisible();
+    console.log(`✓ Table 12 passée en OCCUPÉE : Nom client visible = ${clientNameVisible} | #Commande = ${orderNumVisible}`);
 
     await saveScreenshots(page, 'cycle_table_2_occupee.png');
 
@@ -167,19 +172,17 @@ async function run() {
 
     console.log(`✓ Commande #${createdOrder.id.slice(-5).toUpperCase()} marquée comme PAID (Encaissée en caisse).`);
 
-    // Rafraîchir la page
+    // Rafraîchir la page et attendre que la carte passe en TO_CLEAN
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(3000);
-
-    await tableCard12.waitFor({ state: 'visible', timeout: 10000 });
-    await tableCard12.scrollIntoViewIfNeeded();
+    const toCleanCard = page.locator(`div[data-table-number="${TEST_TABLE}"][data-table-lifecycle="TO_CLEAN"]`);
+    await toCleanCard.waitFor({ state: 'visible', timeout: 15000 });
+    await toCleanCard.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
 
-    const toCleanBadge = await tableCard12.locator('text=À LIBÉRER').first().isVisible();
-    const actionBtn = tableCard12.locator('button:has-text("Table Prête (Remettre en service)")').first();
+    const toCleanBadge = await toCleanCard.locator('text=À LIBÉRER').first().isVisible();
+    const actionBtn = toCleanCard.locator('button:has-text("Table Prête (Remettre en service)")').first();
     const isActionBtnVisible = await actionBtn.isVisible();
-    const lifecycleToClean = await tableCard12.getAttribute('data-table-lifecycle');
-    console.log(`✓ Table 12 passée en À LIBÉRER : Badge jaune visible = ${toCleanBadge} | Bouton action visible = ${isActionBtnVisible} | (cycle=${lifecycleToClean})`);
+    console.log(`✓ Table 12 passée en À LIBÉRER : Badge jaune visible = ${toCleanBadge} | Bouton action visible = ${isActionBtnVisible}`);
 
     await saveScreenshots(page, 'cycle_table_3_a_liberer.png');
 
@@ -192,19 +195,23 @@ async function run() {
     await page.waitForTimeout(600);
 
     // Vérifier la confirmation inline
-    const confirmBtn = tableCard12.locator('button:has-text("✓ Prête")').first();
+    const confirmBtn = toCleanCard.locator('button:has-text("Prête")').first();
     await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
-    console.log('✓ Confirmation inline affichée : bouton [✓ Prête] actif.');
+    console.log('✓ Confirmation inline affichée : bouton [Prête] actif.');
 
     // Confirmer
     await confirmBtn.click();
-    await page.waitForTimeout(2500);
+
+    // Attendre que la carte repasse en FREE
+    const freeCardAgain = page.locator(`div[data-table-number="${TEST_TABLE}"][data-table-lifecycle="FREE"]`);
+    await freeCardAgain.waitFor({ state: 'visible', timeout: 15000 });
+    await freeCardAgain.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
 
     // Vérifier que la Table 12 est redevenue LIBRE et que le nom d'Amadou Diallo a disparu
-    const isLibreAgain = await tableCard12.locator('text=Table Libre & Dressée').isVisible();
-    const lifecycleFreeAgain = await tableCard12.getAttribute('data-table-lifecycle');
-    const isOldClientRemoved = !(await tableCard12.locator('text=Amadou Diallo').isVisible());
-    console.log(`✓ Table 12 remise en service : Statut = Libre (${isLibreAgain}, cycle=${lifecycleFreeAgain}) | Ancien client disparu = ${isOldClientRemoved}`);
+    const isLibreAgain = await freeCardAgain.locator('text=Table Libre & Dressée').isVisible();
+    const isOldClientRemoved = !(await freeCardAgain.locator('text=Amadou Diallo').isVisible());
+    console.log(`✓ Table 12 remise en service : Statut = Libre (${isLibreAgain}) | Ancien client disparu = ${isOldClientRemoved}`);
 
     await saveScreenshots(page, 'cycle_table_4_remise_en_service_libre.png');
 
