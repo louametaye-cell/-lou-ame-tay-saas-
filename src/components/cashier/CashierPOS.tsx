@@ -1195,7 +1195,13 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeOrders.length === 0 ? (
           <div className="col-span-full py-14 text-center text-slate-500 space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
-            <span className="text-4xl block">{activeFilter === 'SERVED' ? '✅' : '✨'}</span>
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+              {activeFilter === 'SERVED' ? (
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              ) : (
+                <Receipt className="w-8 h-8 text-slate-400" />
+              )}
+            </div>
             <h3 className="text-base font-bold text-slate-800">
               {activeFilter === 'SERVED' ? 'Aucune commande servie pour l\'instant' : 'Aucune commande en attente'}
             </h3>
@@ -1212,7 +1218,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   onClick={() => setActiveFilter('SERVED')}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-2xl text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer"
                 >
-                  <span>✅ {orders.filter((o) => o.status === 'SERVED').length} commande(s) servie(s) et clôturée(s) aujourd'hui</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{orders.filter((o) => o.status === 'SERVED').length} commande(s) servie(s) et clôturée(s) aujourd&apos;hui</span>
                   <span className="underline font-bold">Consulter &amp; Réimprimer Ticket &rarr;</span>
                 </button>
               </div>
