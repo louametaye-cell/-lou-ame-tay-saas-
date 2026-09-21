@@ -24,7 +24,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
           </h2>
 
           <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
-            Formules d'abonnement flexibles éditées par <strong>Médias Graphisme Sénégal</strong>. Facturation mensuelle ou annuelle, avec règlement par Wave ou Orange Money.
+            Formules d'abonnement flexibles sans engagement. Facturation mensuelle ou annuelle, avec règlement par Wave ou Orange Money.
           </p>
 
           <div className="pt-1 flex items-center justify-center gap-2">
