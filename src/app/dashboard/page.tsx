@@ -20,7 +20,7 @@ import {
   ShoppingBag, 
   Users, 
   RefreshCw, 
-  Sparkles, 
+  ShieldCheck, 
   Palette,
   Zap, 
   X, 
@@ -226,45 +226,63 @@ export default function OperationalDashboardPage() {
     }
 
     if (!activeId) {
-      const storedId = localStorage.getItem('current_restaurant_id');
-      const storedName = localStorage.getItem('current_restaurant_name');
-      const storedSub = localStorage.getItem('current_restaurant_subdomain');
-      const storedLogo = localStorage.getItem('current_restaurant_logo');
-      const storedPlan = localStorage.getItem('current_restaurant_plan');
-      if (storedPlan) {
-        setCurrentPlanSlug(storedPlan);
-      }
-      if (storedId) {
-        setRestaurantId(storedId);
-        fetch(`/api/tenant/branding?restaurantId=${storedId}`)
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.isTambali || data.plan?.slug?.toLowerCase() === 'tambali') {
-              setIsTambaliPlan(true);
+      // 🌐 CLOUD AUTH : Résolution automatique via cookie sécurisé HTTP-Only
+      fetch('/api/auth/me')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && data.authenticated && data.restaurant) {
+            const resto = data.restaurant;
+            setRestaurantId(resto.id);
+            setRestaurantName(resto.name || 'Mon Restaurant');
+            setRestaurantSubdomain(resto.subdomain || '');
+            if (resto.logoUrl) setRestaurantLogo(resto.logoUrl);
+            if (resto.planSlug) setCurrentPlanSlug(resto.planSlug);
+            if (resto.planName) setCurrentPlanName(resto.planName);
+            if (resto.isTambali) setIsTambaliPlan(true);
+
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('current_restaurant_id', resto.id);
+              localStorage.setItem('current_restaurant_name', resto.name);
+              localStorage.setItem('current_restaurant_subdomain', resto.subdomain);
+              if (resto.logoUrl) localStorage.setItem('current_restaurant_logo', resto.logoUrl);
+              if (resto.planSlug) localStorage.setItem('current_restaurant_plan', resto.planSlug);
             }
-            if (data.plan?.slug) {
-              const slug = data.plan.slug.toLowerCase();
-              setCurrentPlanSlug(slug);
-              setCurrentPlanName(data.plan.name || slug.toUpperCase());
-              localStorage.setItem('current_restaurant_plan', slug);
-            }
-            const rName = data.name || data.businessName;
-            if (rName) setRestaurantName(rName);
-            const rLogo = data.logoUrl || '';
-            if (rLogo) {
-              setRestaurantLogo(rLogo);
-              localStorage.setItem('current_restaurant_logo', rLogo);
-            }
-            if (data.subdomain) {
-              setRestaurantSubdomain(data.subdomain);
-              localStorage.setItem('current_restaurant_subdomain', data.subdomain);
-            }
-          })
-          .catch(() => {});
-      }
-      if (storedName) setRestaurantName(storedName);
-      if (storedSub) setRestaurantSubdomain(storedSub);
-      if (storedLogo) setRestaurantLogo(storedLogo);
+            return;
+          }
+
+          // Fallback localStorage si non résolu par cookie
+          const storedId = localStorage.getItem('current_restaurant_id');
+          const storedName = localStorage.getItem('current_restaurant_name');
+          const storedSub = localStorage.getItem('current_restaurant_subdomain');
+          const storedLogo = localStorage.getItem('current_restaurant_logo');
+          const storedPlan = localStorage.getItem('current_restaurant_plan');
+          if (storedPlan) setCurrentPlanSlug(storedPlan);
+          if (storedId) {
+            setRestaurantId(storedId);
+            fetch(`/api/tenant/branding?restaurantId=${storedId}`)
+              .then((r) => r.json())
+              .then((bData) => {
+                if (bData.isTambali || bData.plan?.slug?.toLowerCase() === 'tambali') {
+                  setIsTambaliPlan(true);
+                }
+                if (bData.plan?.slug) {
+                  const slug = bData.plan.slug.toLowerCase();
+                  setCurrentPlanSlug(slug);
+                  setCurrentPlanName(bData.plan.name || slug.toUpperCase());
+                }
+                const rName = bData.name || bData.businessName;
+                if (rName) setRestaurantName(rName);
+                const rLogo = bData.logoUrl || '';
+                if (rLogo) setRestaurantLogo(rLogo);
+                if (bData.subdomain) setRestaurantSubdomain(bData.subdomain);
+              })
+              .catch(() => {});
+          }
+          if (storedName) setRestaurantName(storedName);
+          if (storedSub) setRestaurantSubdomain(storedSub);
+          if (storedLogo) setRestaurantLogo(storedLogo);
+        })
+        .catch(() => {});
     }
 
     const now = new Date();
@@ -355,10 +373,10 @@ export default function OperationalDashboardPage() {
     } catch (e) {}
   };
 
-  // Auto-refresh every 10 seconds
+  // Auto-refresh every 5 seconds (Live Cloud Sync)
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 10000);
+    const interval = setInterval(fetchDashboardData, 5000);
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
 
@@ -557,7 +575,8 @@ export default function OperationalDashboardPage() {
 
             {/* Badge Formule Active */}
             <span className="hidden md:inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 text-xs font-black px-3 py-2 rounded-2xl shadow-2xs">
-              ✨ Formule {currentPlanName}
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+              <span>Formule {currentPlanName}</span>
             </span>
 
             {/* Logout */}

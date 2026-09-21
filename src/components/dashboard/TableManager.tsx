@@ -99,7 +99,10 @@ export const TableManager: React.FC<TableManagerProps> = ({
 
     fetchLiveOrders();
     fetchDbTables();
-    const interval = setInterval(fetchLiveOrders, 5000);
+    const interval = setInterval(() => {
+      fetchLiveOrders();
+      fetchDbTables();
+    }, 4000);
     return () => clearInterval(interval);
   }, [effectiveRestaurantId]);
 

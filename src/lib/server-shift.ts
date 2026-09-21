@@ -1,6 +1,6 @@
 // ==============================================================================
 // GESTION CENTRALISÉE DES SHIFTS DE SERVEURS & ATTRIBUTION DES TABLES
-// Lou Ame Tay ? - Traçabilité & Organisation Opérationnelle
+// Lou Ame Tay ? - Traçabilité Cloud & Synchronisation Temps Réel Multi-Écrans
 // ==============================================================================
 
 export type ServerShiftStatus = 'ACTIVE' | 'BREAK' | 'OFF';
@@ -17,31 +17,124 @@ export interface ServerShiftMember {
 
 export const DEFAULT_SHIFT_MEMBERS: ServerShiftMember[] = [];
 
-function getStorageKeyMembers(tenantId?: string): string {
-  const tid = tenantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || 'global';
-  return `louametay_server_shift_members_${tid}`;
-}
+// Cache en mémoire pour synchronisation ultra-rapide
+const memoryShiftCache: Record<string, ServerShiftMember[]> = {};
+const memoryTableMapCache: Record<string, Record<number, string>> = {};
 
-function getStorageKeyTableMap(tenantId?: string): string {
-  const tid = tenantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || 'global';
-  return `louametay_table_server_shift_${tid}`;
+function getEffectiveTenantId(tenantId?: string): string {
+  return (
+    tenantId ||
+    (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') ||
+    'global'
+  );
 }
 
 /**
- * Récupère la liste des serveurs du shift actif pour un restaurant donné
+ * 🌐 CLOUD SYNC : Récupère le shift actif depuis l'API Cloud PostgreSQL
  */
-export function getServerShiftMembers(tenantId?: string): ServerShiftMember[] {
-  if (typeof window === 'undefined') return [];
+export async function fetchCloudServerShift(
+  tenantId?: string
+): Promise<{ members: ServerShiftMember[]; tableServerMap: Record<number, string> }> {
+  const tid = getEffectiveTenantId(tenantId);
+  if (!tid || tid === 'global') {
+    return { members: memoryShiftCache[tid] || [], tableServerMap: memoryTableMapCache[tid] || {} };
+  }
+
   try {
-    const key = getStorageKeyMembers(tenantId);
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        return parsed;
+    const res = await fetch(`/api/tenant/shift?restaurantId=${encodeURIComponent(tid)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        const members: ServerShiftMember[] = Array.isArray(data.members) ? data.members : [];
+        const tableServerMap: Record<number, string> =
+          typeof data.tableServerMap === 'object' && data.tableServerMap !== null
+            ? data.tableServerMap
+            : {};
+
+        memoryShiftCache[tid] = members;
+        memoryTableMapCache[tid] = tableServerMap;
+
+        // Backup local de secours en cas de perte totale de réseau
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`louametay_server_shift_members_${tid}`, JSON.stringify(members));
+            localStorage.setItem(`louametay_table_server_shift_${tid}`, JSON.stringify(tableServerMap));
+          } catch {}
+        }
+
+        return { members, tableServerMap };
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Erreur synchronisation Cloud shift:', e);
+  }
+
+  return { members: getServerShiftMembers(tid), tableServerMap: getTableServerMap(tid) };
+}
+
+/**
+ * 🌐 CLOUD SYNC : Enregistre le shift actif vers l'API Cloud PostgreSQL
+ */
+export async function saveCloudServerShift(
+  members: ServerShiftMember[],
+  tableServerMap: Record<number, string>,
+  tenantId?: string
+): Promise<boolean> {
+  const tid = getEffectiveTenantId(tenantId);
+  memoryShiftCache[tid] = members;
+  memoryTableMapCache[tid] = tableServerMap;
+
+  // Backup local immédiat
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`louametay_server_shift_members_${tid}`, JSON.stringify(members));
+      localStorage.setItem(`louametay_table_server_shift_${tid}`, JSON.stringify(tableServerMap));
+    } catch {}
+  }
+
+  if (!tid || tid === 'global') return true;
+
+  try {
+    const res = await fetch('/api/tenant/shift', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-tenant-token': `resto_session_${tid}`,
+      },
+      body: JSON.stringify({
+        restaurantId: tid,
+        members,
+        tableServerMap,
+      }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('Erreur sauvegarde Cloud shift:', e);
+    return false;
+  }
+}
+
+/**
+ * Récupère la liste des serveurs du shift (mémoire puis fallback)
+ */
+export function getServerShiftMembers(tenantId?: string): ServerShiftMember[] {
+  const tid = getEffectiveTenantId(tenantId);
+  if (memoryShiftCache[tid] && memoryShiftCache[tid].length > 0) {
+    return memoryShiftCache[tid];
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(`louametay_server_shift_members_${tid}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          memoryShiftCache[tid] = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {}
+  }
   return [];
 }
 
@@ -49,31 +142,37 @@ export function getServerShiftMembers(tenantId?: string): ServerShiftMember[] {
  * Enregistre la liste des serveurs du shift
  */
 export function saveServerShiftMembers(members: ServerShiftMember[], tenantId?: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    const key = getStorageKeyMembers(tenantId);
-    localStorage.setItem(key, JSON.stringify(members));
-  } catch (e) {}
+  const tid = getEffectiveTenantId(tenantId);
+  memoryShiftCache[tid] = members;
+
+  const currentMap = getTableServerMap(tid);
+  // Persistance asynchrone dans le Cloud en arrière-plan
+  saveCloudServerShift(members, currentMap, tid).catch(() => {});
 }
 
 /**
  * Récupère la table de correspondance Table -> Nom du Serveur
  */
 export function getTableServerMap(tenantId?: string): Record<number, string> {
-  if (typeof window === 'undefined') {
-    return {};
+  const tid = getEffectiveTenantId(tenantId);
+  if (memoryTableMapCache[tid] && Object.keys(memoryTableMapCache[tid]).length > 0) {
+    return memoryTableMapCache[tid];
   }
 
-  try {
-    const key = getStorageKeyTableMap(tenantId);
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {}
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(`louametay_table_server_shift_${tid}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed === 'object' && parsed !== null) {
+          memoryTableMapCache[tid] = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {}
+  }
 
-  // Construit depuis les membres du shift du restaurant
-  const members = getServerShiftMembers(tenantId);
+  const members = getServerShiftMembers(tid);
   const map: Record<number, string> = {};
   members.forEach((m) => {
     (m.assignedTables || []).forEach((tbl) => {
@@ -81,6 +180,7 @@ export function getTableServerMap(tenantId?: string): Record<number, string> {
     });
   });
 
+  memoryTableMapCache[tid] = map;
   return map;
 }
 
@@ -93,16 +193,15 @@ export function getAssignedServerForTable(tableNumber: number, tenantId?: string
 }
 
 /**
- * Assigne une table à un serveur
+ * Assigne une table à un serveur avec persistance Cloud
  */
 export function assignTableToServer(tableNumber: number, serverName: string, tenantId?: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    const key = getStorageKeyTableMap(tenantId);
-    const map = getTableServerMap(tenantId);
-    map[tableNumber] = serverName;
-    localStorage.setItem(key, JSON.stringify(map));
-  } catch (e) {}
+  const tid = getEffectiveTenantId(tenantId);
+  const map = { ...getTableServerMap(tid), [tableNumber]: serverName };
+  memoryTableMapCache[tid] = map;
+
+  const members = getServerShiftMembers(tid);
+  saveCloudServerShift(members, map, tid).catch(() => {});
 }
 
 /**
@@ -111,6 +210,6 @@ export function assignTableToServer(tableNumber: number, serverName: string, ten
 export function getAssignedServerIdForTable(tableNumber: number, tenantId?: string): string {
   const serverName = getAssignedServerForTable(tableNumber, tenantId);
   const members = getServerShiftMembers(tenantId);
-  const member = members.find(m => m.name === serverName);
+  const member = members.find((m) => m.name === serverName);
   return member ? member.id : '';
 }

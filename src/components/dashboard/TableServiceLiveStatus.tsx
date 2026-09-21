@@ -12,7 +12,12 @@ import {
   ShieldCheck, 
   ChevronRight, 
   AlertCircle,
-  Sparkles,
+  Receipt,
+  CheckCheck,
+  Check,
+  X,
+  LayoutGrid,
+  RotateCcw,
   DollarSign,
   Edit2,
   Phone,
@@ -27,7 +32,9 @@ import {
   getServerShiftMembers, 
   saveServerShiftMembers, 
   getTableServerMap,
-  assignTableToServer 
+  assignTableToServer,
+  fetchCloudServerShift,
+  saveCloudServerShift
 } from '@/lib/server-shift';
 import { EditWaiterModal } from './EditWaiterModal';
 import { toast } from 'sonner';
@@ -90,29 +97,24 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
       })
       .catch(() => {});
 
-    // Fetch tenant waiters from DB
-    fetch(`/api/tenant/waiters?tenantId=${encodeURIComponent(effectiveTenantId)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.waiters && Array.isArray(data.waiters)) {
-          const dbWaiters = data.waiters;
-          const current = getServerShiftMembers();
-          if (current.length === 0 && dbWaiters.length > 0) {
-            const mapped: ServerShiftMember[] = dbWaiters.map((w: any) => ({
-              id: w.id,
-              name: w.name,
-              phone: w.phone || undefined,
-              shiftHours: '11h00 - 23h30 (Journée Complète)',
-              periodType: 'FULL_DAY',
-              status: 'ACTIVE',
-              assignedTables: [],
-            }));
-            setShiftMembers(mapped);
-            saveServerShiftMembers(mapped);
-          }
+    // 🌐 CLOUD SYNC : Chargement et synchronisation temps réel du shift et des assignations
+    const syncCloudShift = async () => {
+      try {
+        const { members, tableServerMap: cloudMap } = await fetchCloudServerShift(effectiveTenantId);
+        if (members && members.length > 0) {
+          setShiftMembers(members);
         }
-      })
-      .catch(() => {});
+        if (cloudMap && Object.keys(cloudMap).length > 0) {
+          setTableServerMap(cloudMap);
+        }
+      } catch (err) {
+        console.error('Erreur synchronisation shift Cloud:', err);
+      }
+    };
+
+    syncCloudShift();
+    const shiftInterval = setInterval(syncCloudShift, 5000);
+    return () => clearInterval(shiftInterval);
   }, [effectiveTenantId]);
 
   // Formulaire d'ajout rapide
@@ -135,14 +137,15 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
   });
 
   // Save server map to local storage
+  // Save server map to Cloud DB
   const handleAssignServer = (tableNum: number, serverName: string) => {
     const updated = { ...tableServerMap, [tableNum]: serverName };
     setTableServerMap(updated);
-    assignTableToServer(tableNum, serverName);
+    assignTableToServer(tableNum, serverName, effectiveTenantId);
     toast.success(`👤 Table ${tableNum} assignée à ${serverName}`);
   };
 
-  // Add a new server to the shift
+  // Add a new server to the shift (Cloud DB)
   const handleAddWaiter = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWaiterName.trim()) return;
@@ -159,24 +162,23 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
 
     const updated = [...shiftMembers, newMember];
     setShiftMembers(updated);
-    saveServerShiftMembers(updated);
+    saveCloudServerShift(updated, tableServerMap, effectiveTenantId);
 
     setNewWaiterName('');
     setNewWaiterPhone('');
     setIsAddWaiterOpen(false);
-    toast.success(`✨ Serveur « ${newMember.name} » ajouté au shift`);
+    toast.success(`Serveur « ${newMember.name} » ajouté au shift`);
   };
 
-  // Save member edits
+  // Save member edits (Cloud DB)
   const handleSaveMember = (updated: ServerShiftMember) => {
     const nextList = shiftMembers.map((m) => (m.id === updated.id ? updated : m));
     setShiftMembers(nextList);
-    saveServerShiftMembers(nextList);
 
     // Update table names if name changed
+    let newMap = { ...tableServerMap };
     const oldName = shiftMembers.find((m) => m.id === updated.id)?.name;
     if (oldName && oldName !== updated.name) {
-      const newMap = { ...tableServerMap };
       Object.keys(newMap).forEach((k) => {
         const num = Number(k);
         if (newMap[num] === oldName) {
@@ -185,18 +187,18 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
       });
       setTableServerMap(newMap);
     }
+    saveCloudServerShift(nextList, newMap, effectiveTenantId);
   };
 
-  // Delete a server member
+  // Delete a server member (Cloud DB)
   const handleDeleteMember = (memberId: string) => {
     const target = shiftMembers.find((m) => m.id === memberId);
     const nextList = shiftMembers.filter((m) => m.id !== memberId);
     setShiftMembers(nextList);
-    saveServerShiftMembers(nextList);
 
     // Unassign tables
+    let newMap = { ...tableServerMap };
     if (target) {
-      const newMap = { ...tableServerMap };
       Object.keys(newMap).forEach((k) => {
         const num = Number(k);
         if (newMap[num] === target.name) {
@@ -205,9 +207,10 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
       });
       setTableServerMap(newMap);
     }
+    saveCloudServerShift(nextList, newMap, effectiveTenantId);
   };
 
-  // Transfer all tables from one member to another
+  // Transfer all tables from one member to another (Cloud DB)
   const handleTransferTables = (fromMemberId: string, toMemberId: string) => {
     const fromMember = shiftMembers.find((m) => m.id === fromMemberId);
     const toMember = shiftMembers.find((m) => m.id === toMemberId);
@@ -222,9 +225,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
     });
 
     setTableServerMap(newMap);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('louametay_table_server_shift', JSON.stringify(newMap));
-    }
+    saveCloudServerShift(shiftMembers, newMap, effectiveTenantId);
   };
 
   // Toggle single item served status
@@ -258,7 +259,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`✨ Table ${tableNum < 10 ? '0' + tableNum : tableNum} remise en service !`, {
+        toast.success(`Table ${tableNum < 10 ? '0' + tableNum : tableNum} remise en service !`, {
           description: 'La table est prête et propre pour accueillir les prochains clients.',
         });
         setConfirmingReleaseTable(null);
@@ -487,7 +488,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                 <option value="11h00 - 16h30 (Service Midi)">☀️ Midi (11h00 - 16h30)</option>
                 <option value="17h00 - 00h30 (Service Soirée)">🌙 Soirée (17h00 - 00h30)</option>
                 <option value="11h00 - 23h30 (Journée Complète)">⚡ Journée Complète (11h00 - 23h30)</option>
-                <option value="12h00 - 20h00 (Renfort)">✨ Renfort (12h00 - 20h00)</option>
+                <option value="12h00 - 20h00 (Renfort)">🔄 Renfort (12h00 - 20h00)</option>
               </select>
             </div>
 
@@ -524,7 +525,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                   : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              <span>🍽️ Toutes les Tables</span>
+              <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+              <span>Toutes les Tables</span>
               <span className="bg-slate-700/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
                 {tableCount}
               </span>
@@ -539,7 +541,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                   : 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
               }`}
             >
-              <span>🟢 Libres</span>
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Libres</span>
               <span className="bg-emerald-700/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
                 {activeTablesList.filter((t) => t.lifeCycleStatus === 'FREE').length}
               </span>
@@ -554,7 +557,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                   : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200'
               }`}
             >
-              <span>🟡 Occupées</span>
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>Occupées</span>
               <span className="bg-amber-600/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
                 {activeTablesList.filter((t) => t.lifeCycleStatus === 'OCCUPIED').length}
               </span>
@@ -569,7 +573,8 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                   : 'text-orange-950 bg-orange-50 hover:bg-orange-100 border border-orange-200'
               }`}
             >
-              <span>🧹 À Libérer (À nettoyer)</span>
+              <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+              <span>À Libérer</span>
               <span className="bg-orange-700/30 text-xs px-1.5 py-0.2 rounded-md font-mono">
                 {activeTablesList.filter((t) => t.lifeCycleStatus === 'TO_CLEAN').length}
               </span>
@@ -672,7 +677,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                         <option value="Non assigné">Non assigné</option>
                         {shiftMembers.map((m) => (
                           <option key={m.id} value={m.name}>
-                            👤 {m.name}
+                            {m.name}
                           </option>
                         ))}
                       </select>
@@ -735,8 +740,9 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                       <span className="text-[10px] text-slate-400 block font-bold uppercase">
                         Serveur dédié
                       </span>
-                      <span className="text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded-xl border border-slate-200 inline-block">
-                        👤 {t.assignedServer}
+                      <span className="text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded-xl border border-slate-200 inline-flex items-center gap-1">
+                        <User className="w-3 h-3 text-slate-500" />
+                        <span>{t.assignedServer}</span>
                       </span>
                     </div>
                   </div>
@@ -745,9 +751,9 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                   <div className="space-y-3 py-1">
                     <div className="p-3 bg-amber-100/90 border border-amber-300 rounded-2xl space-y-1.5 text-left">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-800 shrink-0" />
+                        <Receipt className="w-4 h-4 text-amber-800 shrink-0" />
                         <span className="text-xs font-black text-amber-950 uppercase tracking-wide">
-                          Addition Réglée en Caisse ✓
+                          Addition Réglée en Caisse
                         </span>
                       </div>
                       <p className="text-xs text-amber-900 font-medium leading-relaxed">
@@ -773,15 +779,16 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                             onClick={() => handleReleaseTable(t.tableNum)}
                             className="min-h-[46px] bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
                           >
-                            <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-                            <span>✓ Prête</span>
+                            <Check className="w-4 h-4 stroke-[3]" />
+                            <span>Prête</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmingReleaseTable(null)}
                             className="min-h-[46px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
                           >
-                            <span>✕ Annuler</span>
+                            <X className="w-4 h-4" />
+                            <span>Annuler</span>
                           </button>
                         </div>
                       </div>
@@ -791,7 +798,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                         onClick={() => setConfirmingReleaseTable(t.tableNum)}
                         className="w-full min-h-[48px] py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
-                        <Sparkles className="w-4 h-4 stroke-[2.5]" />
+                        <CheckCheck className="w-5 h-5 stroke-[2.5]" />
                         <span>Table Prête (Remettre en service)</span>
                       </button>
                     )}
@@ -800,8 +807,9 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                   {/* Footer */}
                   <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-xs">
                     <span className="text-slate-500 font-medium">Statut Table</span>
-                    <span className="bg-amber-200 text-amber-950 font-black border border-amber-300 px-2.5 py-0.5 rounded-lg text-xs flex items-center gap-1">
-                      <span>🧹 À Nettoyer</span>
+                    <span className="bg-amber-200 text-amber-950 font-black border border-amber-300 px-2.5 py-0.5 rounded-lg text-xs flex items-center gap-1.5">
+                      <RotateCcw className="w-3.5 h-3.5 text-amber-900" />
+                      <span>À remettre en service</span>
                     </span>
                   </div>
                 </div>
@@ -858,7 +866,7 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                       <option value="Non assigné">Non assigné</option>
                       {shiftMembers.map((m) => (
                         <option key={m.id} value={m.name}>
-                          👤 {m.name}
+                          {m.name}
                         </option>
                       ))}
                     </select>
@@ -933,7 +941,17 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                                     : 'bg-amber-100 text-amber-900 border border-amber-300'
                               }`}
                             >
-                              {it.isServed ? '✅ Servi' : '⏳ En Cuisine'}
+                              {it.isServed ? (
+                                <span className="flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-white" />
+                                  <span>Servi</span>
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-amber-700" />
+                                  <span>En Cuisine</span>
+                                </span>
+                              )}
                             </span>
                           </div>
                         ))}
@@ -983,7 +1001,17 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                                   : 'bg-blue-600 text-white'
                               }`}
                             >
-                              {it.isServed ? '✅ Servie' : '🥤 À Servir'}
+                              {it.isServed ? (
+                                <span className="flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-white" />
+                                  <span>Servie</span>
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <Wine className="w-3 h-3 text-white" />
+                                  <span>À Servir</span>
+                                </span>
+                              )}
                             </span>
                           </div>
                         ))}
@@ -996,13 +1024,23 @@ export const TableServiceLiveStatus: React.FC<TableServiceLiveStatusProps> = ({
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                   <span className="text-slate-500">Statut Table</span>
                   <span
-                    className={`font-black px-2.5 py-0.5 rounded-lg ${
+                    className={`font-black px-2.5 py-0.5 rounded-lg text-xs ${
                       t.isAllServed
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-amber-100 text-amber-900'
                     }`}
                   >
-                    {t.isAllServed ? '🟢 Tout Servi' : '🟡 Repas en cours'}
+                    {t.isAllServed ? (
+                      <span className="flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Tout Servi</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Repas en cours</span>
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
