@@ -135,29 +135,67 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
-      const savedTime = localStorage.getItem(`louametay_meal_timestamp_${tableNumber}`);
+      // 🔒 NETTOYAGE D'INTÉGRITÉ MULTI-TENANT PROACTIF & DÉFINITIF :
+      // Éradiquer immédiatement toute ancienne clé globale non cloisonnée (^louametay_session_orders_\d+$)
+      // pour garantir qu'aucune commande résiduelle d'un autre restaurant ne puisse contaminer un smartphone.
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && (/^louametay_session_orders_\d+$/.test(k) || /^louametay_meal_timestamp_\d+$/.test(k))) {
+            localStorage.removeItem(k);
+          }
+        }
+        localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
+        localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+      } catch (e) {}
+
+      if (!restaurant?.id) return;
+
+      const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+      const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+
+      const savedTime = localStorage.getItem(scopedTimeKey);
       if (savedTime) {
         const elapsed = Date.now() - parseInt(savedTime, 10);
         // Si la session date de plus de 2 heures, réinitialisation automatique pour le nouveau repas
         if (elapsed > 2 * 60 * 60 * 1000) {
-          localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
-          localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+          localStorage.removeItem(scopedOrdersKey);
+          localStorage.removeItem(scopedTimeKey);
           setSessionOrders([]);
           return;
         }
       }
 
-      const saved = localStorage.getItem(`louametay_session_orders_${tableNumber}`);
+      const saved = localStorage.getItem(scopedOrdersKey);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             setSessionOrders(parsed);
+            const latest = parsed[parsed.length - 1];
+            setActiveOrder(latest);
+
+            // 🔒 REPRISE DE SESSION & VISIBILITÉ TICKET IMMÉDIATE :
+            // Si le client a une commande en cours de traitement ou d'encaissement,
+            // et qu'il n'a pas explicitement réduit le ticket lors de cette consultation,
+            // afficher immédiatement le ticket numérique pour lui donner un retour instantané sans stress !
+            const hasOngoingOrder = parsed.some(
+              (o: any) => ['PENDING', 'PREPARING', 'READY'].includes(o.status) || o.paymentStatus !== 'PAID'
+            );
+            const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+            let wasExplicitlyClosed = false;
+            try {
+              wasExplicitlyClosed = sessionStorage.getItem(userClosedKey) === 'true';
+            } catch (e) {}
+
+            if (hasOngoingOrder && !wasExplicitlyClosed) {
+              setIsOrderSuccessOpen(true);
+            }
           }
         } catch (e) {}
       }
     }
-  }, [tableNumber]);
+  }, [tableNumber, restaurant?.id]);
 
   // 🔒 Déterminer si la prise de commande numérique est activée (TÀMBALI = vitrine pure, sans commande numérique)
   const isOrderingEnabled = restaurant.isOrderingEnabled ?? (!restaurant.isTambali && restaurant.planSlug !== 'tambali');
@@ -168,7 +206,10 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
 
     const pollLiveOrders = async () => {
       try {
-        if (!restaurant.id) return;
+        if (!restaurant?.id) return;
+        const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+        const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+
         const res = await fetch(`/api/orders/table/${tableNumber}?restaurantId=${restaurant.id}`);
         if (res.ok) {
           const data = await res.json();
@@ -196,20 +237,73 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
                 }
               });
 
-              localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(mappedOrders));
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(scopedOrdersKey, JSON.stringify(mappedOrders));
+              }
               return mappedOrders;
             });
 
-            // Update activeOrder if matched
+            // 🔒 MISE À JOUR DE LA COMMANDE ACTIVE
             if (activeOrder) {
-              const matched = data.orders.find((o: OrderType) => o.id === activeOrder.id);
-              if (matched && (matched.status !== activeOrder.status || matched.paymentStatus !== activeOrder.paymentStatus)) {
-                setActiveOrder(matched);
-                if (matched.status === 'SERVED' || matched.paymentStatus === 'PAID') {
-                  setIsOrderSuccessOpen(true);
+              const matched = mappedOrders.find((o: OrderType) => o.id === activeOrder.id);
+              if (matched) {
+                if (matched.status !== activeOrder.status || matched.paymentStatus !== activeOrder.paymentStatus) {
+                  setActiveOrder(matched);
                 }
+              } else if (mappedOrders.length > 0) {
+                setActiveOrder(mappedOrders[mappedOrders.length - 1]);
               }
+            } else if (mappedOrders.length > 0) {
+              setActiveOrder(mappedOrders[mappedOrders.length - 1]);
             }
+
+            // 🔒 RÉOUVERTURE DU TICKET EN DIRECT (TANT QUE LA COMMANDE EST EN COURS) :
+            // Si une commande est en attente, en préparation ou prête (ou impayée),
+            // et que le client n'a pas délibérément cliqué sur "Fermer" pendant cette visite,
+            // ouvrir automatiquement le ticket officiel pour qu'il soit immédiatement sous ses yeux !
+            const hasOngoing = mappedOrders.some(
+              (o: any) => ['PENDING', 'PREPARING', 'READY'].includes(o.status) || o.paymentStatus !== 'PAID'
+            );
+            const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+            let wasExplicitlyClosed = false;
+            try {
+              wasExplicitlyClosed = sessionStorage.getItem(userClosedKey) === 'true';
+            } catch (e) {}
+
+            if (hasOngoing && !wasExplicitlyClosed) {
+              setIsOrderSuccessOpen(true);
+            }
+          } else if (data.orders && Array.isArray(data.orders) && data.orders.length === 0) {
+            // 🔒 RÉCONCILIATION CLOUD SÉCURISÉE AVEC FENÊTRE DE GRÂCE :
+            // Si une commande a été soumise récemment (moins de 2 minutes), ne jamais purger sur un retour vide transitoire !
+            const now = Date.now();
+            const isRecentSubmission = (now - lastSubmitRef.current) < 120000;
+            if (isRecentSubmission) {
+              return;
+            }
+
+            setSessionOrders((prev) => {
+              // Si prev contient des commandes encore en cours (PENDING/PREPARING/READY), ne pas purger prématurément
+              const hasActiveCooking = prev.some((o: any) => ['PENDING', 'PREPARING', 'READY'].includes(o.status));
+              if (hasActiveCooking) {
+                return prev;
+              }
+
+              if (prev.length > 0) {
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem(scopedOrdersKey);
+                  localStorage.removeItem(scopedTimeKey);
+                  try {
+                    localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
+                    localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+                  } catch (e) {}
+                }
+                return [];
+              }
+              return prev;
+            });
+            // 🔒 RÈGLE D'OR : Le polling ne force JAMAIS la fermeture brutale du ticket à l'écran du client !
+            // Seule une action explicite de l'utilisateur ferme la modale.
           }
         }
       } catch (err) {}
@@ -218,7 +312,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
     pollLiveOrders();
     const interval = setInterval(pollLiveOrders, 3500);
     return () => clearInterval(interval);
-  }, [tableNumber, restaurant.id, activeOrder, isOrderingEnabled, isExpress]);
+  }, [tableNumber, restaurant?.id, activeOrder, isOrderingEnabled, isExpress]);
 
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const lastSubmitRef = useRef<number>(0);
@@ -423,12 +517,22 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
             })),
           };
 
+      lastSubmitRef.current = Date.now();
+      if (typeof window !== 'undefined' && restaurant.id) {
+        try {
+          const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+          sessionStorage.setItem(userClosedKey, 'false');
+        } catch (e) {}
+      }
+
       setActiveOrder(placedOrder);
       setSessionOrders((prev) => {
         const updated = [...prev, placedOrder];
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(updated));
-          localStorage.setItem(`louametay_meal_timestamp_${tableNumber}`, Date.now().toString());
+        if (typeof window !== 'undefined' && restaurant.id) {
+          const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+          const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+          localStorage.setItem(scopedOrdersKey, JSON.stringify(updated));
+          localStorage.setItem(scopedTimeKey, Date.now().toString());
         }
         return updated;
       });
@@ -447,8 +551,20 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
   // Start fresh meal session (resets table orders & storage for next customer/meal)
   const handleStartNewMeal = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
-      localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+      if (restaurant.id) {
+        const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+        const scopedTimeKey = `louametay_meal_timestamp_${restaurant.id}_table_${tableNumber}`;
+        localStorage.removeItem(scopedOrdersKey);
+        localStorage.removeItem(scopedTimeKey);
+        try {
+          const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+          sessionStorage.removeItem(userClosedKey);
+        } catch (e) {}
+      }
+      try {
+        localStorage.removeItem(`louametay_session_orders_${tableNumber}`);
+        localStorage.removeItem(`louametay_meal_timestamp_${tableNumber}`);
+      } catch (e) {}
     }
     clearCart();
     setActiveOrder(null);
@@ -744,7 +860,13 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         <ActiveOrderFloatingPill
           orders={sessionOrders}
           tableNumber={tableNumber}
-          onOpenTracker={() => setIsOrderSuccessOpen(true)}
+          onOpenTracker={() => {
+            try {
+              const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+              sessionStorage.setItem(userClosedKey, 'false');
+            } catch (e) {}
+            setIsOrderSuccessOpen(true);
+          }}
         />
       )}
 
@@ -842,8 +964,20 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
           order={activeOrder || (sessionOrders.length > 0 ? sessionOrders[sessionOrders.length - 1] : null)}
           sessionOrders={sessionOrders}
           isOpen={isOrderSuccessOpen}
-          onClose={() => setIsOrderSuccessOpen(false)}
-          onOrderMore={() => setIsOrderSuccessOpen(false)}
+          onClose={() => {
+            setIsOrderSuccessOpen(false);
+            try {
+              const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+              sessionStorage.setItem(userClosedKey, 'true');
+            } catch (e) {}
+          }}
+          onOrderMore={() => {
+            setIsOrderSuccessOpen(false);
+            try {
+              const userClosedKey = `louametay_tracker_closed_${restaurant.id}_table_${tableNumber}`;
+              sessionStorage.setItem(userClosedKey, 'true');
+            } catch (e) {}
+          }}
           onStartNewMeal={handleStartNewMeal}
           onCallWaiter={() => setIsCallWaiterOpen(true)}
           onPayOnline={(amount) => {
@@ -856,11 +990,14 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
               prev.map((o) => (o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
             );
             try {
-              const saved = localStorage.getItem(`louametay_session_orders_${tableNumber}`);
-              if (saved) {
-                const parsed = JSON.parse(saved);
-                const updated = parsed.map((o: any) => (o.id === orderId ? { ...o, status: 'CANCELLED' } : o));
-                localStorage.setItem(`louametay_session_orders_${tableNumber}`, JSON.stringify(updated));
+              if (restaurant.id) {
+                const scopedOrdersKey = `louametay_session_orders_${restaurant.id}_table_${tableNumber}`;
+                const saved = localStorage.getItem(scopedOrdersKey);
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  const updated = parsed.map((o: any) => (o.id === orderId ? { ...o, status: 'CANCELLED' } : o));
+                  localStorage.setItem(scopedOrdersKey, JSON.stringify(updated));
+                }
               }
             } catch (e) {}
           }}

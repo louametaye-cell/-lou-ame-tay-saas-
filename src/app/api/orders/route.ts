@@ -315,6 +315,18 @@ export async function POST(req: Request) {
       console.warn('Cache invalidation non-blocking error:', cacheErr);
     }
 
+    // 🔒 CYCLE DE VIE DE TABLE : Passer la table à 'OCCUPIED' et réinitialiser clearedAt dès la première commande
+    if (!isExpress && cleanTableNum > 0) {
+      try {
+        await (prisma as any).table.updateMany({
+          where: { tenantId: validTenantId, tableNumber: cleanTableNum },
+          data: { status: 'OCCUPIED', clearedAt: null }
+        });
+      } catch (tableErr) {
+        console.warn('Erreur non-bloquante mise à jour statut table OCCUPIED:', tableErr);
+      }
+    }
+
     logPerformance(`POST /api/orders (${newOrder.id})`, timer.elapsedMs(), `Table ${newOrder.tableNumber}`);
 
     const mappedNewOrder = {

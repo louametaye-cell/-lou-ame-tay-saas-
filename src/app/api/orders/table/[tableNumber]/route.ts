@@ -37,23 +37,22 @@ export async function GET(
     }
 
     // Seules les commandes du repas actif pour ce restaurant précis sont retournées.
-    // Si la table a été remise en service (clearedAt), les commandes antérieures ne sont pas retournées.
+    // Si la table a été remise en service (clearedAt) ou est marquée FREE/AVAILABLE,
+    // aucune commande antérieure n'est retournée au nouveau client.
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const tableRecord = await (prisma as any).table.findFirst({
       where: { tenantId: validTenantId, tableNumber: tableNum },
-      select: { clearedAt: true }
+      select: { id: true, clearedAt: true, status: true }
     });
 
-    let minCreatedAt = twoHoursAgo;
-    if (tableRecord?.clearedAt && new Date(tableRecord.clearedAt) > twoHoursAgo) {
-      minCreatedAt = new Date(tableRecord.clearedAt);
-    }
+    const clearedTime = tableRecord?.clearedAt ? new Date(tableRecord.clearedAt) : null;
 
+    // Récupérer les commandes de cette table sur les 2 dernières heures (hors annulées)
     const dbOrders = await (prisma as any).order.findMany({
       where: {
         tenantId: validTenantId,
         tableNumber: tableNum,
-        createdAt: { gte: minCreatedAt },
+        createdAt: { gte: twoHoursAgo },
         status: { not: 'CANCELLED' },
       },
       include: {
@@ -63,7 +62,40 @@ export async function GET(
       take: 20,
     });
 
-    const mappedOrders = (dbOrders || []).map((o: any) => ({
+    // Filtrer les commandes pour ne retourner QUE celles du repas actif :
+    // 1. Commande opérationnelle (PENDING, PREPARING, READY) ou impayée (paymentStatus !== 'PAID') : TOUJOURS active.
+    // 2. Commande soldée (SERVED & PAID) : visible pendant 30 minutes après règlement pour consultation du reçu,
+    //    sauf si la table a été explicitement remise en service (clearedAt postérieur à la commande).
+    const activeSessionOrders = (dbOrders || []).filter((o: any) => {
+      const isStillOperational = ['PENDING', 'PREPARING', 'READY'].includes(o.status);
+      const isUnpaid = o.paymentStatus !== 'PAID';
+
+      if (isStillOperational || isUnpaid) {
+        if (clearedTime && new Date(o.createdAt) < clearedTime) {
+          return false;
+        }
+        return true;
+      }
+
+      // Commande payée et servie
+      if (clearedTime && new Date(o.createdAt) < clearedTime) {
+        return false;
+      }
+      const orderAgeMinutes = (Date.now() - new Date(o.createdAt).getTime()) / (1000 * 60);
+      return orderAgeMinutes <= 30;
+    });
+
+    // Synchronisation automatique de l'état de la table si des commandes sont actives
+    if (tableRecord && activeSessionOrders.length > 0 && tableRecord.status === 'FREE') {
+      try {
+        await (prisma as any).table.update({
+          where: { id: tableRecord.id },
+          data: { status: 'OCCUPIED' }
+        });
+      } catch (e) {}
+    }
+
+    const mappedOrders = activeSessionOrders.map((o: any) => ({
       ...o,
       total: Number(o.totalAmount ?? o.total ?? 0),
       totalAmount: Number(o.totalAmount ?? o.total ?? 0),
