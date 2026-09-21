@@ -88,23 +88,23 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-400">
               <li className="flex items-center gap-2">
-                <span className="text-emerald-500">📍</span>
+                <MapPin className="w-4 h-4 text-[#00A86B] shrink-0" strokeWidth={1.75} />
                 <span>Thiès (Siège & Agence)</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-emerald-500">📍</span>
+                <MapPin className="w-4 h-4 text-[#00A86B] shrink-0" strokeWidth={1.75} />
                 <span>Dakar (Almadies, Plateau, Point E)</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-emerald-500">📍</span>
+                <MapPin className="w-4 h-4 text-[#00A86B] shrink-0" strokeWidth={1.75} />
                 <span>Mbour & Saly Portudal</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-emerald-500">📍</span>
+                <MapPin className="w-4 h-4 text-[#00A86B] shrink-0" strokeWidth={1.75} />
                 <span>Somone, Toubab Dialaw</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-emerald-500">📍</span>
+                <MapPin className="w-4 h-4 text-[#00A86B] shrink-0" strokeWidth={1.75} />
                 <span>Saint-Louis & Partout au Sénégal</span>
               </li>
             </ul>
