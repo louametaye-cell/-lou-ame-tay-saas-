@@ -69,13 +69,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
           <div className="hidden sm:flex items-center gap-3">
             <a
               id="header-whatsapp-btn"
-              href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20renseignements%20sur%20votre%20menu%20digital."
+              href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20suis%20restaurateur%20et%20je%20souhaite%20des%20renseignements%20sur%20votre%20menu%20digital."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#25D366] hover:bg-[#20ba5a] px-3.5 py-2 rounded-xl transition-all shadow-xs"
             >
               <MessageCircle className="w-4 h-4 fill-current" />
-              <span>WhatsApp (+221 77 845 87 47)</span>
+              <span>WhatsApp (+221 77 458 74 74)</span>
             </a>
 
             <button
@@ -127,13 +127,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenTrial, onOpenQrModal }) =>
 
           <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
             <a
-              href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9mo%20pour%20mon%20restaurant."
+              href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9mo%20pour%20mon%20restaurant."
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold bg-[#25D366] text-white rounded-xl shadow-sm"
             >
               <MessageCircle className="w-4 h-4 fill-current" />
-              Échanger sur WhatsApp (+221 77 845 87 47)
+              Échanger sur WhatsApp (+221 77 458 74 74)
             </a>
             <button
               onClick={() => {

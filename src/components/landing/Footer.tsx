@@ -122,22 +122,22 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
               </p>
               <p className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="text-slate-400 font-mono">+221 77 845 87 47</span>
+                <span className="text-slate-400 font-mono">+221 77 458 74 74</span>
               </p>
               <p className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="text-slate-400">contact@louametay.sn</span>
+                <span className="text-slate-400">contact@louametay.com</span>
               </p>
 
               <div className="pt-2">
                 <a
-                  href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20QR%20code%20ou%20obtenir%20des%20informations."
+                  href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20QR%20code%20ou%20obtenir%20des%20informations."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                 >
                   <MessageCircle className="w-4 h-4 fill-current" />
-                  <span>WhatsApp (+221 77 845 87 47)</span>
+                  <span>WhatsApp (+221 77 458 74 74)</span>
                 </a>
               </div>
             </div>
@@ -205,7 +205,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQrModal }) => {
                   <p><strong>Éditeur du service :</strong> Agence Digitale Lou Ame Tay, Thiès, Sénégal.</p>
                   <p><strong>Directeur de publication :</strong> Équipe Lou Ame Tay Sénégal.</p>
                   <p><strong>Hébergement :</strong> Serveurs Cloud haute disponibilité certifiés SSL/HTTPS.</p>
-                  <p><strong>Contact :</strong> contact@louametay.sn | +221 77 845 87 47.</p>
+                  <p><strong>Contact :</strong> contact@louametay.com | +221 77 458 74 74.</p>
                 </>
               )}
               {legalModalContent === 'cgv' && (

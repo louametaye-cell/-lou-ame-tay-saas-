@@ -166,13 +166,13 @@ export const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ isOpen, onCl
           </button>
 
           <a
-            href="https://wa.me/221778458747?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code%20pour%20mon%20restaurant."
+            href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20commander%20mes%20chevalets%20et%20stickers%20QR%20code%20pour%20mon%20restaurant."
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white py-3 rounded-xl text-xs font-bold transition-colors shadow-md"
           >
             <MessageCircle className="w-4 h-4 fill-current" />
-            <span>Commander sur WhatsApp (+221 77 845 87 47)</span>
+            <span>Commander sur WhatsApp (+221 77 458 74 74)</span>
           </a>
         </div>
 

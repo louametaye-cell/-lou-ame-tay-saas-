@@ -110,7 +110,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                     Téléphone Fixe / Mobile
                   </span>
                   <span className="font-bold text-sm sm:text-base text-gray-900">
-                    +221 77 130 36 78 / +221 77 45 87 47 4
+                    +221 77 130 36 78 / +221 77 458 74 74
                   </span>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                     Email Officiel
                   </span>
                   <span className="font-bold text-sm sm:text-base text-gray-900">
-                    contact@louametay.sn
+                    contact@louametay.com
                   </span>
                 </div>
               </div>
