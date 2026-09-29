@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const DEFAULT_FEATURES = [
+const DEFAULT_FEATURES = [
   { id: 'feat_menu', keyName: 'MENU_DIGITAL', label: 'Menu digital avec photos illimitées', category: 'CORE', valueType: 'BOOLEAN' },
   { id: 'feat_stocks', keyName: 'STOCK_MANAGEMENT', label: 'Gestion des stocks en 1 clic', category: 'CORE', valueType: 'BOOLEAN' },
   { id: 'feat_studio', keyName: 'STUDIO_CUSTOMIZATION', label: 'Personnalisation logo/couleurs (Studio)', category: 'CORE', valueType: 'BOOLEAN' },

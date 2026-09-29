@@ -822,6 +822,32 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           </div>
         </header>
 
+        {currentSession && (
+          <div className="flex bg-white rounded-2xl shadow-sm border border-slate-200 p-1 gap-1 shrink-0">
+            <button
+              onClick={() => setActiveMode('QR_ORDERS')}
+              className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all ${
+                activeMode === 'QR_ORDERS'
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-transparent text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              Commandes (QR / Table)
+            </button>
+            <button
+              onClick={() => setActiveMode('NEW_ORDER')}
+              className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
+                activeMode === 'NEW_ORDER'
+                  ? 'bg-amber-400 text-slate-900 shadow-md'
+                  : 'bg-transparent text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              Nouveau Ticket (Comptoir / Sur Place)
+            </button>
+          </div>
+        )}
+
+
         {/* Carte Centrale de Connexion & Pavé PIN */}
         <main className="max-w-md mx-auto w-full my-auto py-6">
           <div className="bg-slate-950/90 backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
@@ -1084,6 +1110,32 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           </button>
         </div>
       </header>
+
+        {currentSession && (
+          <div className="flex bg-white rounded-2xl shadow-sm border border-slate-200 p-1 gap-1 shrink-0">
+            <button
+              onClick={() => setActiveMode('QR_ORDERS')}
+              className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all ${
+                activeMode === 'QR_ORDERS'
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-transparent text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              Commandes (QR / Table)
+            </button>
+            <button
+              onClick={() => setActiveMode('NEW_ORDER')}
+              className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
+                activeMode === 'NEW_ORDER'
+                  ? 'bg-amber-400 text-slate-900 shadow-md'
+                  : 'bg-transparent text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              Nouveau Ticket (Comptoir / Sur Place)
+            </button>
+          </div>
+        )}
+
 
       {/* 1.5. BANDEAU DES DEMANDES D'ADDITION ET APPELS DE SALLE */}
       {waiterCalls.length > 0 && (
