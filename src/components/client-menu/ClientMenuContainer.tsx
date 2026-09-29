@@ -654,12 +654,12 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       return;
     }
 
-    // If Wave or OM selected, offer direct checkout flow
-    if (paymentMethod === 'WAVE' || paymentMethod === 'ORANGE_MONEY') {
-      setIsCartOpen(false);
-      setIsMobileMoneyOpen(true);
-      return;
-    }
+    // If Wave or OM selected, offer direct checkout flow (Désactivé pour la v1.0, on traite en caisse)
+    // if (paymentMethod === 'WAVE' || paymentMethod === 'ORANGE_MONEY') {
+    //   setIsCartOpen(false);
+    //   setIsMobileMoneyOpen(true);
+    //   return;
+    // }
 
     await executeOrderPlacement();
   };

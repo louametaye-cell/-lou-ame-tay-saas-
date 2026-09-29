@@ -36,6 +36,8 @@ import {
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
+import { TactileGrid } from './TactileGrid';
+import { CashierCart, CashierCartItem } from './CashierCart';
 import { EscPosPrinterService } from '@/services/EscPosPrinterService';
 import { toast } from 'sonner';
 
@@ -83,6 +85,69 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [transactionRefInput, setTransactionRefInput] = useState<string>('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
+
+  const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'NEW_ORDER'>('QR_ORDERS');
+  const [menuCategories, setMenuCategories] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CashierCartItem[]>([]);
+  const [isSubmittingNewOrder, setIsSubmittingNewOrder] = useState(false);
+
+  useEffect(() => {
+    if (activeMode === 'NEW_ORDER' && menuCategories.length === 0) {
+      fetch('/api/cashier/menu?tenantId=' + (restaurantId || localStorage.getItem('current_restaurant_id')))
+        .then(res => res.json())
+        .then(data => {
+          if (data.categories) setMenuCategories(data.categories);
+        });
+    }
+  }, [activeMode, restaurantId]);
+
+  const handleAddToCart = (item: any) => {
+    setCartItems(prev => {
+      const existing = prev.find(i => i.menuItemId === item.id);
+      if (existing) {
+        return prev.map(i => i.menuItemId === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { menuItemId: item.id, name: item.name, price: Number(item.price), quantity: 1 }];
+    });
+  };
+
+  const handleUpdateCartQuantity = (id: string, delta: number) => {
+    setCartItems(prev => prev.map(i => i.menuItemId === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
+  };
+
+  const handleSubmitNewOrder = async (method: string, customerName: string, isPaidLater: boolean = false, tableNumber: number = 0) => {
+    setIsSubmittingNewOrder(true);
+    try {
+      const res = await fetch('/api/cashier/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: restaurantId || localStorage.getItem('current_restaurant_id'),
+          items: cartItems,
+          paymentMethod: method,
+          cashierId: currentCashier?.id,
+          cashSessionId: currentSession?.id,
+          customerName,
+          isPaidLater,
+          tableNumber
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Commande enregistrée et encaissée !');
+        setCartItems([]);
+        setActiveMode('QR_ORDERS');
+        fetchActiveSession(restaurantId || localStorage.getItem('current_restaurant_id') || '');
+      } else {
+        toast.error(data.error || 'Erreur lors de la commande');
+      }
+    } catch (e) {
+      toast.error('Erreur réseau');
+    } finally {
+      setIsSubmittingNewOrder(false);
+    }
+  };
+
 
   // Waiter Calls / Bill Requests State
   const [waiterCalls, setWaiterCalls] = useState<any[]>([]);
