@@ -143,6 +143,8 @@ model Tenant {
   subdomain             String             @unique
   email                 String?            @unique
   passwordHash          String?            @map("password_hash")
+  isTwoFactorEnabled    Boolean            @default(false) @map("is_two_factor_enabled")
+  twoFactorSecret       String?            @map("two_factor_secret")
   ownerName             String?            @map("owner_name")
   phone                 String
   address               String?
@@ -498,7 +500,9 @@ model Cashier {
   tenantId  String       @map("tenant_id")
   name      String
   phone     String?
-  pinCode   String       @map("pin_code")
+  pinCode           String       @map("pin_code")
+  failedPinAttempts Int          @default(0) @map("failed_pin_attempts")
+  lockedUntil       DateTime?    @map("locked_until")
   shift     CashierShift @default(MORNING)
   schedule  String?
   isActive  Boolean      @default(true) @map("is_active")
