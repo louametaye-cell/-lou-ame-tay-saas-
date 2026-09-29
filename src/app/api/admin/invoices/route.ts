@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { generateInvoiceHtml, InvoiceData } from '@/lib/invoice-generator';
-import { saasStorage } from '@/lib/saas-storage';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/invoices
-// Récupère ou génère une facture au format HTML / PDF
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -11,8 +10,13 @@ export async function GET(req: Request) {
     if (!tenantId) {
       return NextResponse.json({ error: 'tenantId requis' }, { status: 400 });
     }
-    const tenant = saasStorage.getTenantById(tenantId);
-    const plan = tenant ? saasStorage.getPlanById(tenant.currentPlanId) : null;
+    
+    const tenant = await (prisma as any).tenant.findUnique({
+      where: { id: tenantId },
+      include: { plan: true }
+    });
+
+    const plan = tenant?.plan;
 
     const invoiceData: InvoiceData = {
       invoiceNumber: `FACT-SN-2026-${Math.floor(1000 + Math.random() * 9000)}`,

@@ -16,8 +16,7 @@ export async function POST(
     if (!featureKey) {
       return NextResponse.json({ error: 'featureKey obligatoire' }, { status: 400 });
     }
-
-    const check = canUseFeature(id, featureKey, requestedCount);
+    const check = await canUseFeature(id, featureKey, requestedCount);
 
     if (!check.allowed) {
       return NextResponse.json({

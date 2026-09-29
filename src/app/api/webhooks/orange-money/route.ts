@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { saasStorage } from '@/lib/saas-storage';
-import { PaymentTransaction } from '@/types/saas';
 import { prisma } from '@/lib/prisma';
 
 // POST /api/webhooks/orange-money
@@ -20,13 +18,16 @@ export async function POST(req: Request) {
       subscriber_msisdn,
     } = body;
 
-    // Validation d'authenticité si le secret Orange Money est configuré
-    if (omSecret) {
-      const isHeaderValid = authHeader && (authHeader === omSecret || authHeader === `Bearer ${omSecret}`);
-      const isTokenValid = notif_token && notif_token === omSecret;
-      if (!isHeaderValid && !isTokenValid) {
-        return NextResponse.json({ error: 'Signature ou jeton Orange Money non valide' }, { status: 401 });
-      }
+    // Validation d'authenticité STRICTE
+    if (!omSecret) {
+      console.error('[ORANGE MONEY WEBHOOK] CRITICAL ERROR: ORANGE_MONEY_WEBHOOK_SECRET is missing. Rejecting webhook for security.');
+      return NextResponse.json({ error: 'Webhook secret is not configured in production' }, { status: 500 });
+    }
+
+    const isHeaderValid = authHeader && (authHeader === omSecret || authHeader === `Bearer ${omSecret}`);
+    const isTokenValid = notif_token && notif_token === omSecret;
+    if (!isHeaderValid && !isTokenValid) {
+      return NextResponse.json({ error: 'Signature ou jeton Orange Money non valide' }, { status: 401 });
     }
 
     if (!txnid && !notif_token) {
@@ -35,60 +36,38 @@ export async function POST(req: Request) {
 
     const tenantId = order_id;
     if (!tenantId) {
-      console.warn('⚠️ Webhook Orange Money reçu sans order_id/tenantId valide');
+      console.warn('Webhook Orange Money reçu sans order_id/tenantId valide');
       return NextResponse.json({ error: 'order_id requis' }, { status: 400 });
     }
     const planId = 'plan_nio_far';
 
-    // Enregistrement de la transaction Orange Money
-    const transaction: PaymentTransaction = {
-      id: `om_tx_${txnid || Date.now()}`,
-      tenantId,
-      planId,
-      amount: Number(amount) || 25000,
-      provider: 'ORANGE_MONEY',
-      providerTxId: txnid || `OM_REF_${Date.now()}`,
-      status: status === 'SUCCESS' || status === 'COMPLETED' ? 'SUCCESS' : 'PENDING',
-      webhookVerifiedAt: new Date().toISOString(),
-      periodMonths: 1,
-      paidAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    };
-
-    saasStorage.recordTransaction(transaction);
-
     // Si statut validé -> activation immédiate du pack
-    if (transaction.status === 'SUCCESS') {
-      saasStorage.upgradeTenantPlan(tenantId, planId, 1);
+    if (status === 'SUCCESS' || status === 'COMPLETED') {
+      
+      console.log(`[ORANGE MONEY WEBHOOK] Transaction traitée: om_tx_${txnid} pour ${tenantId}, Montant: ${amount}`);
 
       // Synchronisation en base de données Supabase / PostgreSQL
       try {
         const expirationDate = new Date();
         expirationDate.setMonth(expirationDate.getMonth() + 1);
-        await (prisma as any).tenant.update({
-          where: { id: tenantId },
+        
+        const updated = await (prisma as any).tenant.updateMany({
+          where: { OR: [{ id: tenantId }, { subdomain: tenantId }] },
           data: {
             subscriptionStatus: 'ACTIVE',
             subscriptionExpiresAt: expirationDate,
           },
         });
-      } catch (dbErr) {
-        try {
-          const expirationDate = new Date();
-          expirationDate.setMonth(expirationDate.getMonth() + 1);
-          await (prisma as any).tenant.updateMany({
-            where: { subdomain: tenantId },
-            data: {
-              subscriptionStatus: 'ACTIVE',
-              subscriptionExpiresAt: expirationDate,
-            },
-          });
-        } catch (innerErr) {
-          console.warn('[ORANGE MONEY WEBHOOK] Erreur sync BDD:', innerErr);
-        }
-      }
 
-      console.log(`[ORANGE MONEY WEBHOOK] 💰 Paiement OM validé pour ${tenantId} ! Statut passé à ACTIVE.`);
+        if (updated.count === 0) {
+          console.warn(`[ORANGE MONEY WEBHOOK] Aucun tenant trouvé avec l'ID ou le sous-domaine: ${tenantId}`);
+        } else {
+          console.log(`[ORANGE MONEY WEBHOOK] Paiement OM validé pour ${tenantId} ! Statut passé à ACTIVE.`);
+        }
+      } catch (dbErr) {
+        console.warn('[ORANGE MONEY WEBHOOK] Erreur sync BDD:', dbErr);
+        return NextResponse.json({ error: 'Erreur BDD interne' }, { status: 500 });
+      }
     }
 
     return NextResponse.json({

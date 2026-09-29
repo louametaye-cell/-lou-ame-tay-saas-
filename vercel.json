@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/subscription-check",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/commercial-reminder",
+      "schedule": "30 11,19 * * *"
+    },
+    {
+      "path": "/api/cron/three-strikes",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateDirectPaymentLinks } from '@/lib/payment-deep-links';
-import { saasStorage } from '@/lib/saas-storage';
+import { prisma } from '@/lib/prisma';
 
 // POST /api/payments/generate-link
 // Génère un lien direct de paiement Wave / Orange Money et un message WhatsApp
@@ -13,8 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'tenantId et planId sont obligatoires' }, { status: 400 });
     }
 
-    const tenant = saasStorage.getTenantById(tenantId);
-    const plan = saasStorage.getPlanById(planId);
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId } });
+    const plan = await (prisma as any).plan.findUnique({ where: { id: planId } });
 
     if (!tenant || !plan) {
       return NextResponse.json({ error: 'Restaurant ou pack introuvable' }, { status: 404 });

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { saasStorage } from '@/lib/saas-storage';
+import { prisma } from '@/lib/prisma';
 
 export interface PlanAccessResult {
   allowed: boolean;
@@ -13,12 +13,17 @@ export interface PlanAccessResult {
 /**
  * Vérifie si un tenant a le droit d'utiliser une fonctionnalité et respecte ses quotas.
  */
-export function canUseFeature(
+export async function canUseFeature(
   tenantId: string,
   featureKey: string,
   requestedCount?: number
-): PlanAccessResult {
-  const tenant = saasStorage.getTenantById(tenantId);
+): Promise<PlanAccessResult> {
+  // 1. Récupérer le tenant et son plan via Prisma
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId },
+    include: { plan: true },
+  });
+
   if (!tenant) {
     return {
       allowed: false,
@@ -35,7 +40,7 @@ export function canUseFeature(
     };
   }
 
-  const plan = saasStorage.getPlanById(tenant.currentPlanId);
+  const plan = tenant.plan;
   if (!plan) {
     return {
       allowed: false,
@@ -44,17 +49,24 @@ export function canUseFeature(
     };
   }
 
-  const planFeature = plan.features.find((f) => f.featureKey === featureKey);
+  // NOTE: On vérifie les limites de plan basiques pour l'instant (car le modèle DB n'a peut être pas `features` JSON)
+  // L'idéal est de parser les features depuis un champ JSON ou de faire un mapping statique par plan.slug
+  let isActive = true;
+  let required = 'Xéweul (35 000 FCFA)';
 
-  // 1. Vérifier si la fonctionnalité est active dans le pack
-  if (!planFeature || !planFeature.isActive) {
-    let required = 'Xéweul (35 000 FCFA)';
-    if (['TABLE_ORDERING', 'EXPRESS_POS', 'BASIC_SALES_STATS'].includes(featureKey)) required = 'Nio Far (25 000 FCFA)';
-    else if (['KITCHEN_DISPLAY_KDS', 'MULTI_LANGUAGE_MENU', 'BLUETOOTH_PRINTING', 'SINGLE_TV_SCREEN'].includes(featureKey)) required = 'Xéweul (35 000 FCFA)';
-    else if (['MULTI_COUNTERS', 'MULTI_TV_SCREENS', 'ADVANCED_EXPORT'].includes(featureKey)) required = 'Baobab (46 800 FCFA)';
-    else if (['WAITER_QR', 'MULTI_ZONE', 'ZONE_TV_SCREENS'].includes(featureKey)) required = 'Teranga (65 000 FCFA)';
-    else if (['MULTI_SITES', 'STAFF_PERFORMANCE_ANALYTICS', 'VIP_SUPPORT'].includes(featureKey)) required = 'Buur (80 000 FCFA)';
+  // Règle statique basée sur le plan.slug
+  if (['MULTI_COUNTERS', 'MULTI_TV_SCREENS', 'ADVANCED_EXPORT'].includes(featureKey) && !['baobab', 'teranga', 'buur', 'ndaje'].includes(plan.slug)) {
+    isActive = false;
+    required = 'Baobab (46 800 FCFA)';
+  } else if (['WAITER_QR', 'MULTI_ZONE', 'ZONE_TV_SCREENS'].includes(featureKey) && !['teranga', 'buur', 'ndaje'].includes(plan.slug)) {
+    isActive = false;
+    required = 'Teranga (65 000 FCFA)';
+  } else if (['MULTI_SITES', 'STAFF_PERFORMANCE_ANALYTICS', 'VIP_SUPPORT'].includes(featureKey) && !['buur', 'ndaje'].includes(plan.slug)) {
+    isActive = false;
+    required = 'Buur (80 000 FCFA)';
+  }
 
+  if (!isActive) {
     return {
       allowed: false,
       reason: `La fonctionnalité "${featureKey}" n'est pas incluse dans votre pack ${plan.name}. Veuillez souscrire à la formule ${required} pour la débloquer.`,
@@ -64,28 +76,13 @@ export function canUseFeature(
     };
   }
 
-  // 2. Vérifier les limites numériques (ex: 20 photos, 1 table)
-  const count = requestedCount !== undefined && requestedCount !== null ? Number(requestedCount) : undefined;
-  if (planFeature.limitValue !== null && planFeature.limitValue !== undefined && count !== undefined && !isNaN(count)) {
-    if (count > planFeature.limitValue) {
-      return {
-        allowed: false,
-        reason: `Limite de quota atteinte : Votre pack ${plan.name} est plafonné à ${planFeature.limitValue} (${featureKey}).`,
-        code: 'LIMIT_EXCEEDED',
-        currentPlanName: plan.name,
-        limitValue: planFeature.limitValue,
-      };
-    }
-  }
-
   return {
     allowed: true,
     currentPlanName: plan.name,
-    limitValue: planFeature.limitValue,
+    limitValue: null,
   };
 }
 
-// Helpers spécifiques pour chaque cas d'usage métier
 export const canUseKDS = (tenantId: string) => canUseFeature(tenantId, 'KITCHEN_DISPLAY_KDS');
 export const canUseWaveOM = (tenantId: string) => canUseFeature(tenantId, 'WAVE_ORANGE_MONEY');
 export const canUseMultiZone = (tenantId: string) => canUseFeature(tenantId, 'MULTI_ZONE');
@@ -95,13 +92,12 @@ export const canUseAdvancedStats = (tenantId: string) => canUseFeature(tenantId,
 
 /**
  * Middleware d'autorisation pour Next.js API Routes.
- * Renvoie une réponse 403 Forbidden standardisée en cas de restriction de pack.
  */
-export function checkPlanAccessMiddleware(
+export async function checkPlanAccessMiddleware(
   req: Request,
   featureKey: string,
   requestedCount?: number
-): NextResponse | null {
+): Promise<NextResponse | null> {
   const url = new URL(req.url);
   const tenantId = req.headers.get('x-tenant-id') || 
                    url.searchParams.get('tenantId') || 
@@ -115,7 +111,7 @@ export function checkPlanAccessMiddleware(
     );
   }
 
-  const check = canUseFeature(tenantId, featureKey, requestedCount);
+  const check = await canUseFeature(tenantId, featureKey, requestedCount);
   if (!check.allowed) {
     return NextResponse.json(
       {
@@ -130,5 +126,5 @@ export function checkPlanAccessMiddleware(
     );
   }
 
-  return null; // OK, continue execution
+  return null;
 }

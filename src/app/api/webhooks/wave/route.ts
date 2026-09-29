@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import { saasStorage } from '@/lib/saas-storage';
-import { PaymentTransaction } from '@/types/saas';
 import { prisma } from '@/lib/prisma';
-
 import crypto from 'crypto';
 
 // POST /api/webhooks/wave
@@ -20,20 +17,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'JSON invalide' }, { status: 400 });
     }
 
-    // Validation cryptographique si la clé secrète WAVE_WEBHOOK_SECRET est configurée
-    if (webhookSecret) {
-      if (!signature) {
-        return NextResponse.json({ error: 'Signature Wave manquante' }, { status: 401 });
-      }
-      const expectedHmac = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
-      const sigBuf = Buffer.from(signature);
-      const expBuf = Buffer.from(expectedHmac);
-      const isHmacValid = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
-      const isTokenValid = signature === webhookSecret;
+    // Validation cryptographique STRICTE
+    if (!webhookSecret) {
+      console.error('[WAVE WEBHOOK] CRITICAL ERROR: WAVE_WEBHOOK_SECRET is missing. Rejecting webhook for security.');
+      return NextResponse.json({ error: 'Webhook secret is not configured in production' }, { status: 500 });
+    }
 
-      if (!isHmacValid && !isTokenValid) {
-        return NextResponse.json({ error: 'Signature Wave non valide' }, { status: 401 });
-      }
+    if (!signature) {
+      return NextResponse.json({ error: 'Signature Wave manquante' }, { status: 401 });
+    }
+    const expectedHmac = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedHmac);
+    const isHmacValid = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+    const isTokenValid = signature === webhookSecret;
+
+    if (!isHmacValid && !isTokenValid) {
+      return NextResponse.json({ error: 'Signature Wave non valide' }, { status: 401 });
     }
 
     const {
@@ -51,67 +51,45 @@ export async function POST(req: Request) {
     // Récupération des informations de la transaction
     const tenantId = metadata?.tenant_id || client_reference;
     if (!tenantId) {
-      console.warn('⚠️ Webhook Wave reçu sans tenant_id valide');
+      console.warn('Webhook Wave reçu sans tenant_id valide');
       return NextResponse.json({ error: 'tenant_id requis' }, { status: 400 });
     }
     const planId = metadata?.plan_id || 'plan_nio_far';
     const periodMonths = metadata?.period_months || 1;
 
-    // Enregistrement de la transaction
-    const transaction: PaymentTransaction = {
-      id: `wave_tx_${waveTransactionId || Date.now()}`,
-      tenantId,
-      planId,
-      amount: Number(amount) || 25000,
-      provider: 'WAVE',
-      providerTxId: waveTransactionId || `WAVE_REF_${Date.now()}`,
-      status: 'SUCCESS',
-      webhookVerifiedAt: new Date().toISOString(),
-      periodMonths: Number(periodMonths),
-      paidAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    };
-
-    saasStorage.recordTransaction(transaction);
-
-    // ⚡ Activation instantanée du pack et statut ACTIVE
-    saasStorage.upgradeTenantPlan(tenantId, planId, Number(periodMonths));
+    // TODO: Enregistrer la transaction dans Prisma si une table de transaction existe.
+    // Pour l'instant, logguer simplement l'événement au lieu d'utiliser saasStorage en mémoire.
+    console.log(`[WAVE WEBHOOK] Transaction traitée: wave_tx_${waveTransactionId} pour ${tenantId}, Montant: ${amount}`);
 
     // Synchronisation en base de données Supabase / PostgreSQL
     try {
       const expirationDate = new Date();
       expirationDate.setMonth(expirationDate.getMonth() + Number(periodMonths));
-      await (prisma as any).tenant.update({
-        where: { id: tenantId },
+      
+      const updated = await (prisma as any).tenant.updateMany({
+        where: { OR: [{ id: tenantId }, { subdomain: tenantId }] },
         data: {
           subscriptionStatus: 'ACTIVE',
           subscriptionExpiresAt: expirationDate,
         },
       });
-    } catch (dbErr) {
-      // Si tenant introuvable par ID, essayer par sous-domaine
-      try {
-        const expirationDate = new Date();
-        expirationDate.setMonth(expirationDate.getMonth() + Number(periodMonths));
-        await (prisma as any).tenant.updateMany({
-          where: { subdomain: tenantId },
-          data: {
-            subscriptionStatus: 'ACTIVE',
-            subscriptionExpiresAt: expirationDate,
-          },
-        });
-      } catch (innerErr) {
-        console.warn('[WAVE WEBHOOK] Erreur sync BDD:', innerErr);
-      }
-    }
 
-    console.log(`[WAVE WEBHOOK] 💰 Paiement Wave validé pour ${tenantId} ! Statut passé à ACTIVE.`);
+      if (updated.count === 0) {
+        console.warn(`[WAVE WEBHOOK] Aucun tenant trouvé avec l'ID ou le sous-domaine: ${tenantId}`);
+      } else {
+        console.log(`[WAVE WEBHOOK] Paiement Wave validé pour ${tenantId} ! Statut passé à ACTIVE.`);
+      }
+
+    } catch (dbErr) {
+      console.warn('[WAVE WEBHOOK] Erreur sync BDD:', dbErr);
+      return NextResponse.json({ error: 'Erreur BDD interne' }, { status: 500 });
+    }
 
     return NextResponse.json({
       received: true,
       status: 'PROCESSED',
       tenantId,
-      transactionId: transaction.id,
+      transactionId: waveTransactionId,
     });
   } catch (error) {
     console.error('[WAVE WEBHOOK ERROR]', error);

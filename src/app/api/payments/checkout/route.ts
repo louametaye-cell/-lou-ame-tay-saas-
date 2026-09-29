@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { saasStorage } from '@/lib/saas-storage';
+import { prisma } from '@/lib/prisma';
 import { PaymentTransaction } from '@/types/saas';
 
 // POST /api/payments/checkout
@@ -13,8 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'tenantId, planId et provider sont obligatoires' }, { status: 400 });
     }
 
-    const plan = saasStorage.getPlanById(planId);
-    const tenant = saasStorage.getTenantById(tenantId);
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId } });
+    const plan = await (prisma as any).plan.findUnique({ where: { id: planId } });
 
     if (!plan || !tenant) {
       return NextResponse.json({ error: 'Restaurant ou pack introuvable' }, { status: 404 });
@@ -38,11 +38,18 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    // 1. Enregistrer la transaction
-    saasStorage.recordTransaction(transaction);
-
-    // 2. Activer / Surclasser le pack du restaurant
-    saasStorage.upgradeTenantPlan(tenant.id, plan.id, months);
+    // 2. Activer / Surclasser le pack du restaurant dans Prisma
+    const expirationDate = new Date();
+    expirationDate.setMonth(expirationDate.getMonth() + months);
+    
+    await (prisma as any).tenant.update({
+      where: { id: tenant.id },
+      data: {
+        currentPlanId: plan.id,
+        subscriptionStatus: 'ACTIVE',
+        subscriptionExpiresAt: expirationDate,
+      },
+    });
 
     return NextResponse.json({
       success: true,
