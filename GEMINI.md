@@ -118,3 +118,21 @@ Si la réponse est "oui" ou "peut-être" : **bloquer l'implémentation** et pose
 
 ### 11.3 — Matrice d'Audit Obligatoire
 Avant chaque implémentation touchant aux statuts ou aux flux d'argent, remplir la matrice des 5 points + Écran TV (/pickup) + Ticket client, et tester les 4 scénarios de collision (action simultanée client/caissier, rechargement pendant clôture Z, mutation d'état pendant requête, paiement Wave/OM orphelin).
+
+---
+
+## Section 12 — Signature Officielle & Coordonnées Immuables DAW Digital Arts Work
+- **Entité & Signature Développeur** : `DAW Digital Arts Work — by MG`
+- **Rôle & Statut** : Direction Générale / CEO & Développeur (Dev) de Lou Ame Tay? (Startup Sénégalaise)
+- **Siège Social** : `Thiès, Sénégal — Quartier Fayou, Face Foot Salé (Siège Social)`
+- **Téléphones Officiels** : `+221 77 458 74 74` (principal) / `+221 77 130 36 78` (secondaire)
+- **Email Professionnel** : `contact@mgartswork.site`
+- **Réseaux Sociaux** : `@mgartswork` (YouTube, Facebook, Instagram, TikTok)
+- **Console d'Administration** : Toujours nommer la console d'administration **Console DAW** (`/super-admin`).
+- **Interdiction Formelle** : Ne jamais réintroduire les anciennes dénominations "MDA", "MDA Arts Work" ou "Médias Graphisme". Tout document généré doit intégrer le bloc de signature officiel :
+```markdown
+---
+*Document produit par DAW Digital Arts Work — by MG*
+*Signature de développeur Vibe Coder*
+*Contact : contact@mgartswork.site | +221 77 458 74 74*
+```
