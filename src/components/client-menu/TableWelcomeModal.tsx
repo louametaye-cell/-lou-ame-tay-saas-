@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Users, Sparkles, Clock, HelpCircle, ArrowRight, Utensils } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Sparkles, Clock, HelpCircle, ArrowRight, Utensils, Timer } from 'lucide-react';
 import { formatFCFA } from '@/lib/utils';
 
 interface TableWelcomeModalProps {
@@ -23,9 +23,35 @@ export const TableWelcomeModal: React.FC<TableWelcomeModalProps> = ({
   onJoinMeal,
   onStartNewMeal,
 }) => {
+  const [countdown, setCountdown] = useState<number>(30);
+
+  // Auto-timeout de 30 secondes pour créer automatiquement une session séparée par défaut
+  useEffect(() => {
+    if (!isOpen) {
+      setCountdown(30);
+      return;
+    }
+
+    setCountdown(30);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Si le client ne choisit pas dans les 30s, créer une session séparée par défaut
+          onStartNewMeal();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, onStartNewMeal]);
+
   if (!isOpen) return null;
 
   const formattedTable = tableNumber < 10 ? `0${tableNumber}` : tableNumber;
+  const progressPercent = Math.max(0, Math.min(100, (countdown / 30) * 100));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
@@ -43,6 +69,20 @@ export const TableWelcomeModal: React.FC<TableWelcomeModalProps> = ({
           <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
             {restaurantName}
           </p>
+        </div>
+
+        {/* Décompte visuel de choix automatique (30 secondes) */}
+        <div className="bg-amber-50/90 border-b border-amber-200/80 px-4 py-2.5 flex items-center justify-between gap-2 text-xs text-amber-950 font-bold">
+          <div className="flex items-center gap-2">
+            <Timer className="w-4 h-4 text-amber-600 animate-pulse shrink-0" />
+            <span>Choix automatique dans <strong className="font-mono text-sm text-amber-700">{countdown} sec</strong>...</span>
+          </div>
+          <div className="w-20 sm:w-24 bg-amber-200 h-2 rounded-full overflow-hidden shrink-0">
+            <div 
+              className="bg-amber-600 h-full rounded-full transition-all duration-1000 ease-linear"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
         </div>
 
         {/* Corps d'explication simple et visuel */}
@@ -88,20 +128,23 @@ export const TableWelcomeModal: React.FC<TableWelcomeModalProps> = ({
               <ArrowRight className="w-5 h-5 text-white/80 shrink-0" />
             </button>
 
-            {/* Bouton 2 : Nouveau repas (BLEU) */}
+            {/* Bouton 2 : Nouveau repas (BLEU) - Choix par défaut */}
             <button
               type="button"
               onClick={onStartNewMeal}
-              className="w-full min-h-[56px] py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-between shadow-lg shadow-blue-600/25 transition-all cursor-pointer border border-blue-500"
+              className="w-full min-h-[56px] py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-between shadow-lg shadow-blue-600/25 transition-all cursor-pointer border border-blue-500 relative ring-2 ring-blue-400/40"
             >
               <div className="flex items-center gap-3 text-left">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <Sparkles className="w-5 h-5 text-white stroke-[2.5]" />
                 </div>
                 <div>
-                  <div className="font-black leading-tight">🆕 Je commence un nouveau repas</div>
+                  <div className="font-black leading-tight flex items-center gap-1.5">
+                    <span>🆕 Je commence un nouveau repas</span>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full font-bold">Défaut</span>
+                  </div>
                   <div className="text-[11px] font-normal text-blue-100">
-                    Démarrer une table neuve et vierge
+                    Démarrer une table neuve et séparée
                   </div>
                 </div>
               </div>

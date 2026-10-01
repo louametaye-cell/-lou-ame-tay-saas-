@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { invalidateMenuCache } from '@/lib/cache';
 import { Language } from '@/types';
+import { startTimer, logApiCall, createApiErrorResponse } from '@/lib/logger';
+
 
 // Helper to resolve tenant ID
 async function resolveTenantId(reqTenantInput?: string): Promise<{ id: string; subdomain: string } | null> {
@@ -59,9 +61,12 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, items });
   } catch (error: any) {
-    console.error('Erreur GET menu-items:', error);
-    return NextResponse.json({ error: 'Erreur lors de la récupération des plats' }, { status: 500 });
+    return createApiErrorResponse(error, {
+      method: 'GET',
+      endpoint: '/api/restaurant/menu-items',
+    });
   }
+
 }
 
 // POST /api/restaurant/menu-items
@@ -172,9 +177,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // Invalidate Redis Menu & Display Cache
-    await invalidateMenuCache(tenant.subdomain);
-    await invalidateMenuCache(tenant.id);
+    // Invalidate Redis Menu Cache de manière CIBLÉE par catégorie
+    await invalidateMenuCache(tenant.subdomain, targetCategoryId);
+    await invalidateMenuCache(tenant.id, targetCategoryId);
 
     return NextResponse.json(
       {
@@ -185,10 +190,10 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Erreur POST menu-items:', error);
-    return NextResponse.json(
-      { error: error?.message || 'Erreur lors de la création du plat' },
-      { status: 500 }
-    );
+    return createApiErrorResponse(error, {
+      method: 'POST',
+      endpoint: '/api/restaurant/menu-items',
+    });
   }
 }
+

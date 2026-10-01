@@ -15,7 +15,7 @@ export async function PATCH(
     // 1. Fetch menuItem to find its tenantId and verify existence
     const existingItem = await (prisma as any).menuItem.findUnique({
       where: { id },
-      select: { id: true, tenantId: true },
+      select: { id: true, tenantId: true, categoryId: true },
     });
 
     if (!existingItem) {
@@ -34,10 +34,11 @@ export async function PATCH(
       data: updateData,
     });
 
-    // 3. Invalidate Redis Menu & Display Cache for this specific restaurant
+    // 3. Invalidate Redis Menu Cache de manière CIBLÉE par catégorie
     if (effectiveTenantId) {
-      await invalidateMenuCache(effectiveTenantId);
+      await invalidateMenuCache(effectiveTenantId, existingItem.categoryId);
     }
+
 
     return NextResponse.json({
       success: true,

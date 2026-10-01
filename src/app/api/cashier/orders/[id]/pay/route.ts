@@ -2,14 +2,18 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { PaymentMethod } from '@prisma/client';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { createApiErrorResponse } from '@/lib/logger';
+
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  let orderId: string | undefined;
   try {
     const resolvedParams = await Promise.resolve(params);
-    const orderId = resolvedParams.id;
+    orderId = resolvedParams.id;
+
 
     if (!orderId) {
       return NextResponse.json({ error: 'Identifiant de commande requis' }, { status: 400 });
@@ -157,10 +161,10 @@ export async function POST(
       }
     });
   } catch (error) {
-    console.error('Erreur API Encaissement Caisse:', error);
-    return NextResponse.json(
-      { error: "Erreur lors de l'encaissement de la commande" },
-      { status: 500 }
-    );
+    return createApiErrorResponse(error, {
+      method: 'POST',
+      endpoint: `/api/cashier/orders/${orderId}/pay`,
+    });
   }
 }
+

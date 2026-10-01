@@ -177,7 +177,41 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
             {isExpressOrder ? '⚡ Guichet Caisse' : `👤 ${order.waiter?.name || getAssignedServerForTable(order.tableNumber)}`}
           </span>
         </div>
+
+        {/* 💳 Statut Financier & Paiements Partiels (KDS) */}
+        {(() => {
+          const totalAmount = Number(order.totalAmount ?? order.total ?? 0);
+          const paidAmount = Number(order.paidAmount ?? order.amountReceived ?? (order as any).paid_amount ?? 0);
+          const remainingAmount = Math.max(0, totalAmount - paidAmount);
+          const isPaid = order.paymentStatus === 'PAID';
+          const hasPartialPayment = !isPaid && paidAmount > 0 && remainingAmount > 0;
+
+          if (isPaid) {
+            return (
+              <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[11px] font-black px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+                <span>PAYÉ ✅</span>
+              </span>
+            );
+          }
+
+          if (hasPartialPayment) {
+            return (
+              <span className="bg-yellow-100 text-yellow-950 border border-yellow-400 text-[11px] font-black px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+                <Banknote className="w-3.5 h-3.5 text-yellow-700" />
+                <span>PAIEMENT PARTIEL - Reste {formatFCFA(remainingAmount)}</span>
+              </span>
+            );
+          }
+
+          return (
+            <span className="bg-orange-100 text-orange-950 border border-orange-300 text-[11px] font-black px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+              <Banknote className="w-3.5 h-3.5 text-orange-700" />
+              <span>NON PAYÉ</span>
+            </span>
+          );
+        })()}
       </div>
+
 
       {/* 3. Items List with Quantities in Big Bold (KITCHEN DISHES ONLY) */}
       <div className="p-4 space-y-3 flex-1 overflow-y-auto max-h-[320px] bg-white">

@@ -4,7 +4,7 @@ import { autoTranslateDish } from '@/lib/translation-engine';
 import { Language } from '@/types';
 import { getCachedMenu, setCachedMenu, invalidateMenuCache } from '@/lib/cache';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { startTimer, logPerformance } from '@/lib/logger';
+import { startTimer, logPerformance, logApiCall, createApiErrorResponse } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
 export async function GET(req: Request) {
@@ -94,30 +94,61 @@ export async function GET(req: Request) {
 
     await setCachedMenu(subdomain, lang, responsePayload);
 
+    logApiCall({
+      method: 'GET',
+      endpoint: '/api/menu',
+      tenantId: subdomain,
+      durationMs: timer.elapsedMs(),
+      statusCode: 200,
+    }).catch(() => {});
+
     return NextResponse.json(responsePayload);
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur récupération menu' }, { status: 500 });
+    return createApiErrorResponse(error, {
+      method: 'GET',
+      endpoint: '/api/menu',
+      durationMs: timer.elapsedMs(),
+    });
   }
 }
 
 export async function POST(req: Request) {
+  const timer = startTimer();
   try {
     const body = await req.json();
     const { itemId, isAvailable, translations, restaurantId } = body;
 
     if (!itemId) return NextResponse.json({ error: 'itemId obligatoire' }, { status: 400 });
 
+    let targetCategoryId: string | undefined;
     if (typeof isAvailable === 'boolean') {
-      await (prisma as any).menuItem.update({
+      const updatedItem = await (prisma as any).menuItem.update({
         where: { id: itemId },
-        data: { isAvailable }
+        data: { isAvailable },
+        select: { id: true, categoryId: true, tenantId: true }
       });
+      targetCategoryId = updatedItem?.categoryId;
     }
 
-    if (restaurantId) await invalidateMenuCache(restaurantId);
+    if (restaurantId) {
+      await invalidateMenuCache(restaurantId, targetCategoryId);
+    }
+
+    logApiCall({
+      method: 'POST',
+      endpoint: '/api/menu',
+      tenantId: restaurantId,
+      durationMs: timer.elapsedMs(),
+      statusCode: 200,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, itemId, isAvailable });
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour' }, { status: 500 });
+    return createApiErrorResponse(error, {
+      method: 'POST',
+      endpoint: '/api/menu',
+      durationMs: timer.elapsedMs(),
+    });
   }
 }
+

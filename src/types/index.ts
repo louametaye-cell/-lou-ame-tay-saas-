@@ -320,7 +320,10 @@ export interface OrderType {
   status: OrderStatus;
   total: number;
   totalAmount?: number;
+  paidAmount?: number;
+  amountReceived?: number;
   preparedAt?: string | null;
+
   servedAt?: string | null;
   createdAt: string;
   updatedAt?: string;

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { createApiErrorResponse } from '@/lib/logger';
+
 
 // POST /api/cashier/orders
 // Création d'une commande directe depuis la caisse (déduit le stock de façon atomique)
@@ -93,7 +95,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, order });
   } catch (error: any) {
-    console.error('Erreur API Création Commande Caisse:', error);
-    return NextResponse.json({ error: error.message || 'Erreur interne' }, { status: 500 });
+    return createApiErrorResponse(error, {
+      method: 'POST',
+      endpoint: '/api/cashier/orders',
+    });
   }
 }
+

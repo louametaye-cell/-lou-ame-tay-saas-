@@ -4,11 +4,13 @@ import { prisma } from '@/lib/prisma';
 import { getAssignedServerIdForTable } from '@/lib/server-shift';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/cache';
-import { startTimer, logPerformance } from '@/lib/logger';
+import { startTimer, logPerformance, logApiCall, createApiErrorResponse } from '@/lib/logger';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 export async function GET(req: Request) {
+  const timer = startTimer();
+
   try {
     const { searchParams } = new URL(req.url);
     const rawInput = searchParams.get('tenantId') || searchParams.get('restaurantId') || searchParams.get('subdomain');
@@ -73,15 +75,28 @@ export async function GET(req: Request) {
       orderType: (o.tableNumber === 0 || o.tableNumber === null || !o.tableNumber) ? 'EXPRESS' : 'TABLE',
     }));
 
+    logApiCall({
+      method: 'GET',
+      endpoint: '/api/orders',
+      tenantId: resolvedTenantId,
+      durationMs: timer.elapsedMs(),
+      statusCode: 200,
+    }).catch(() => {});
+
     return NextResponse.json({ orders: mappedOrders, source: 'database' });
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+    return createApiErrorResponse(error, {
+      method: 'GET',
+      endpoint: '/api/orders',
+      durationMs: timer.elapsedMs(),
+    });
   }
+
 }
 
 export async function POST(req: Request) {
   const timer = startTimer();
+  let trackedTenantId: string | null = null;
   try {
     // 1. Rate Limiting Check (25 orders/min per IP to prevent spam attacks)
     const rate = await checkRateLimit(req, 'orders');
@@ -100,6 +115,8 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { tableNumber, orderType, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef, waiterId, zoneId, locationDetail } = body;
+    trackedTenantId = restaurantId || body.tenantId || null;
+
 
     const isExpress = orderType === 'EXPRESS' || Number(tableNumber) === 0;
 
@@ -336,12 +353,23 @@ export async function POST(req: Request) {
       orderType: (newOrder.tableNumber === 0 || !newOrder.tableNumber) ? 'EXPRESS' : 'TABLE',
     };
 
+    logApiCall({
+      method: 'POST',
+      endpoint: '/api/orders',
+      tenantId: validTenantId,
+      durationMs: timer.elapsedMs(),
+      statusCode: 201,
+    }).catch(() => {});
+
     return NextResponse.json({ success: true, order: mappedNewOrder }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating order in API route:', error?.message || error, error?.stack);
-    return NextResponse.json(
-      { error: 'Erreur lors de la création de la commande: ' + (error?.message || 'Erreur serveur') },
-      { status: 500 }
-    );
+    return createApiErrorResponse(error, {
+      method: 'POST',
+      endpoint: '/api/orders',
+      tenantId: trackedTenantId,
+      durationMs: timer.elapsedMs(),
+    });
   }
+
+
 }

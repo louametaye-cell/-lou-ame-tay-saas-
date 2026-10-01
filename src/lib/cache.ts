@@ -27,17 +27,43 @@ export async function setCachedMenu(restaurantId: string, lang = 'FR', menuData:
   }
 }
 
-export async function invalidateMenuCache(restaurantId: string): Promise<void> {
-  const cleanId = restaurantId.toLowerCase();
+export async function invalidateCategoryMenuCache(restaurantId: string, categoryId: string): Promise<void> {
+  const cleanId = restaurantId.toLowerCase().trim();
+  const catKey = `menu:${cleanId}:cat:${categoryId}`;
+  try {
+    await redis.del(catKey);
+    // Supprime également les caches de langue s'ils contiennent cette catégorie
+    const languages = ['FR', 'EN', 'ES', 'IT', 'WO'];
+    const keysToDelete = languages.map((l) => `menu:${cleanId}:${l}`);
+    await redis.del(...keysToDelete);
+    await redis.del(`display:${cleanId}`);
+  } catch (e) {
+    console.error(`[Cache] Erreur invalidation catégorie ${catKey}:`, e);
+  }
+}
+
+export async function invalidateMenuCache(restaurantId: string, categoryId?: string): Promise<void> {
+  if (categoryId) {
+    return invalidateCategoryMenuCache(restaurantId, categoryId);
+  }
+  const cleanId = restaurantId.toLowerCase().trim();
   try {
     // Delete all language variations for this restaurant
     const languages = ['FR', 'EN', 'ES', 'IT', 'WO'];
     const keysToDelete = languages.map((l) => `menu:${cleanId}:${l}`);
     await redis.del(...keysToDelete);
-    // Also delete display cache
+    await redis.del(`menu:${cleanId}:all`);
+    // Delete display cache
     await redis.del(`display:${cleanId}`);
+    if (typeof redis.keys === 'function') {
+      const catKeys = await redis.keys(`menu:${cleanId}:cat:*`);
+      if (catKeys && catKeys.length > 0) {
+        await redis.del(...catKeys);
+      }
+    }
   } catch (e) {}
 }
+
 
 // ---------------- DASHBOARD STATS CACHING ---------------- //
 export async function getCachedDashboardStats<T = any>(restaurantId: string): Promise<T | null> {

@@ -58,12 +58,34 @@ export async function getCachedMenu(tenantId: string): Promise<any> {
 }
 
 /**
+ * Invalide uniquement le cache Redis d'une catégorie ciblée lors d'une mise à jour de plat.
+ */
+export function invalidateCategoryMenuCache(tenantId: string, categoryId: string): void {
+  const catKey = `menu:${tenantId}:cat:${categoryId}`;
+  redisMemoryStore.delete(catKey);
+  // Invalider aussi le cache global
+  redisMemoryStore.delete(`menu:${tenantId}:all`);
+  redisMemoryStore.delete(`menu:tenant:${tenantId}`);
+}
+
+/**
  * Invalide immédiatement le cache Redis d'un restaurant lors d'une mise à jour de plat ou de prix.
  */
-export function invalidateMenuCache(tenantId: string): void {
+export function invalidateMenuCache(tenantId: string, categoryId?: string): void {
+  if (categoryId) {
+    invalidateCategoryMenuCache(tenantId, categoryId);
+    return;
+  }
   const cacheKey = `menu:tenant:${tenantId}`;
   redisMemoryStore.delete(cacheKey);
+  redisMemoryStore.delete(`menu:${tenantId}:all`);
+  for (const k of Array.from(redisMemoryStore.keys())) {
+    if (k.startsWith(`menu:${tenantId}:cat:`)) {
+      redisMemoryStore.delete(k);
+    }
+  }
 }
+
 
 /**
  * Statistiques d'utilisation du cache Redis pour le monitoring.

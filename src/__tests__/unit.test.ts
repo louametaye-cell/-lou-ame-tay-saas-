@@ -37,3 +37,32 @@ describe('Lou Ame Tay ? - Unité & Utilitaires Métier', () => {
     expect(dualPrice.secondary).not.toBeNull();
   });
 });
+
+import { getCategoryCacheKey, getAllMenuCacheKey } from '../lib/redis';
+import { createApiErrorResponse, DEFAULT_USER_ERROR_MESSAGE } from '../lib/logger';
+
+describe('Lou Ame Tay ? - Cache Redis par Catégorie & Logger Structuré', () => {
+  it('getCategoryCacheKey() doit générer une clé ciblée par catégorie menu:[tenantId]:cat:[categoryId]', () => {
+    const key = getCategoryCacheKey('Anima-Pizzeria', 'cat-pizzas-123');
+    expect(key).toBe('menu:anima-pizzeria:cat:cat-pizzas-123');
+  });
+
+  it('getAllMenuCacheKey() doit générer la clé globale menu:[tenantId]:all', () => {
+    const key = getAllMenuCacheKey('Sams-Prestige');
+    expect(key).toBe('menu:sams-prestige:all');
+  });
+
+  it('createApiErrorResponse() doit renvoyer un statut 500 avec le message officiel utilisateur', async () => {
+    const response = createApiErrorResponse(new Error('Database timeout'), {
+      method: 'POST',
+      endpoint: '/api/orders',
+      tenantId: 'anima-pizzeria',
+    });
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe(DEFAULT_USER_ERROR_MESSAGE);
+    expect(body.error).toBe("Une erreur est survenue, l'équipe technique a été notifiée.");
+  });
+});

@@ -21,11 +21,17 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
   const [recentlyCancelledOrders, setRecentlyCancelledOrders] = useState<OrderType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [isWsUnstable, setIsWsUnstable] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
 
   const previousPendingIds = useRef<Set<string>>(new Set());
   const knownActiveOrderIds = useRef<Set<string>>(new Set());
   const isInitialLoad = useRef(true);
+  const missedWsOrdersCount = useRef<number>(0);
+  const isWsTriggeredFetch = useRef<boolean>(false);
+
+  // Intervalle de polling dynamique : 2500ms si connexion instable ou >=3 commandes WS manquées, sinon pollIntervalMs (4000ms par défaut)
+  const effectivePollInterval = (!isConnected || isWsUnstable || missedWsOrdersCount.current >= 3) ? 2500 : pollIntervalMs;
 
   // Fetch orders from API
   const fetchOrders = useCallback(async (silent = false) => {
@@ -43,9 +49,22 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
 
         // Check for new PENDING orders to trigger audio & visual alert
         const currentPending = incomingOrders.filter((o) => o.status === 'PENDING');
-        const hasNewOrder = currentPending.some(
+        const newOrders = currentPending.filter(
           (o) => !previousPendingIds.current.has(o.id)
         );
+        const hasNewOrder = newOrders.length > 0;
+
+        // Détection de commandes WebSocket manquées :
+        // Si de nouvelles commandes apparaissent via le polling régulier sans déclencheur WebSocket direct
+        if (hasNewOrder && !isInitialLoad.current && !isWsTriggeredFetch.current) {
+          missedWsOrdersCount.current += newOrders.length;
+          if (missedWsOrdersCount.current >= 3 && !isWsUnstable) {
+            console.warn(`[KDS] ${missedWsOrdersCount.current} commandes WebSocket manquées. Basculement automatique en mode polling accéléré (2,5s).`);
+            setIsWsUnstable(true);
+          }
+        }
+        // Réinitialiser le drapeau de fetch déclenché par WS
+        isWsTriggeredFetch.current = false;
 
         if (hasNewOrder && !isInitialLoad.current && isAudioEnabled) {
           playKitchenOrderAlert();
@@ -107,7 +126,7 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [restaurantId, isAudioEnabled]);
+  }, [restaurantId, isAudioEnabled, isWsUnstable]);
 
   // Update order status API call
   const updateOrderStatus = useCallback(
@@ -156,10 +175,10 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
         return false;
       }
     },
-    [fetchOrders]
+    [fetchOrders, restaurantId]
   );
 
-  // Supabase Realtime Subscription + Interval Polling Fallback
+  // Supabase Realtime Subscription + Interval Polling Fallback (2,5s si instable, 4s sinon)
   useEffect(() => {
     fetchOrders();
 
@@ -171,6 +190,11 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'Order' },
           (payload: any) => {
+            // Signal WebSocket reçu avec succès : réinitialiser le compteur de manqués
+            missedWsOrdersCount.current = 0;
+            setIsWsUnstable(false);
+            isWsTriggeredFetch.current = true;
+
             if (isAudioEnabled) {
               playKitchenOrderAlert();
             }
@@ -185,20 +209,33 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'Order' },
           () => {
+            missedWsOrdersCount.current = 0;
+            setIsWsUnstable(false);
+            isWsTriggeredFetch.current = true;
             fetchOrders(true);
           }
         )
         .subscribe((status: string) => {
-          setIsConnected(status === 'SUBSCRIBED');
+          const isOk = status === 'SUBSCRIBED';
+          setIsConnected(isOk);
+          if (isOk) {
+            // WebSocket rétabli : repasser en mode WebSocket stable
+            missedWsOrdersCount.current = 0;
+            setIsWsUnstable(false);
+          } else {
+            // Déconnexion ou dégradation : basculer en polling 2,5s
+            setIsWsUnstable(true);
+          }
         });
     } catch (e) {
       console.warn('[useKitchenOrders] Supabase Realtime init error:', e);
+      setIsWsUnstable(true);
     }
 
-    // High-performance background polling fallback
+    // High-performance background polling fallback (2500ms si connexion instable ou >=3 manquants)
     const interval = setInterval(() => {
       fetchOrders(true);
-    }, pollIntervalMs);
+    }, effectivePollInterval);
 
     return () => {
       clearInterval(interval);
@@ -206,7 +243,8 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
         supabase.removeChannel(channel);
       }
     };
-  }, [fetchOrders, isAudioEnabled, pollIntervalMs]);
+  }, [fetchOrders, isAudioEnabled, effectivePollInterval]);
+
 
   return {
     orders,
