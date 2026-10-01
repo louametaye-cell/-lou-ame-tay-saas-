@@ -2,7 +2,7 @@ import React from 'react';
 import { SuperAdminAuthGuard } from '@/components/super-admin/SuperAdminAuthGuard';
 
 export const metadata = {
-  title: 'Super Admin | Lou Ame Tay ? - MDA Arts Work',
+  title: 'Console DAW | Lou Ame Tay ? - DAW Digital Arts Work — by MG',
   description: 'Portail de pilotage centralisé, abonnements et monitoring multi-restaurants.',
 };
 

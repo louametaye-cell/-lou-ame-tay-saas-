@@ -492,7 +492,7 @@ const RESTAURANTS_DATA = [
         catalogPrice: 65000,
         grandfatheredUntil: '2027-09-08T00:00:00.000Z',
         targetPlanSlug: 'teranga',
-        reviewNote: 'Tarif préférentiel garanti 12 mois à 45 000 FCFA au lieu de 65 000 FCFA. Réexamen le 08/09/2027 par la direction MDA Arts Work.',
+        reviewNote: 'Tarif préférentiel garanti 12 mois à 45 000 FCFA au lieu de 65 000 FCFA. Réexamen le 08/09/2027 par la direction DAW Digital Arts Work — by MG.',
       }
     },
     tablesCount: 24,

@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- 🇸🇳 LOU AME TAY ? - SCRIPT SQL DE PURGE & IMPLANTATION DES MENUS RÉELS
--- Éditeur : MG Digital Arts Work / Médias Graphisme Sénégal (+221 77 458 74 74)
+-- Éditeur : DAW Digital Arts Work — by MG (+221 77 458 74 74)
 -- ==============================================================================
 
 BEGIN;

@@ -1,7 +1,7 @@
 # 📓 JOURNAL D'EXÉCUTION EN MODE AUTONOME (V2.2) — LOU AME TAY ? 🇸🇳🍽️
 *Branche de travail : `v2.2-dev`*  
 *Architecture : Next.js 14 App Router, TypeScript, Prisma ORM, Supabase Realtime, Upstash Redis, Tailwind CSS*  
-*Supervision : Agence Digitale MDA Arts Work / Médias Graphisme Sénégal*
+*Supervision : DAW Digital Arts Work — by MG*
 
 ---
 
@@ -129,7 +129,7 @@
   - FAQ métier CHR sénégalais de 10 questions/réponses approfondies.
   - Tutoriels vidéo avec durées et guides opérationnels.
   - Moniteur de diagnostic en direct des infrastructures cloud via `/api/health` (PostgreSQL, Supabase Realtime, Upstash Redis, Vercel).
-  - Bouton WhatsApp pré-rempli avec l'identifiant restaurant pour assistance prioritaire MDA (+221 77 458 74 74).
+  - Bouton WhatsApp pré-rempli avec l'identifiant restaurant pour assistance prioritaire DAW (+221 77 458 74 74).
 - **Tests effectués** : Test de ping API `/api/health` avec calcul de latence en ms et vérification des liens WhatsApp.
 
 ---
@@ -146,7 +146,7 @@
   - `/display` : "Affichage Salle — Lou Ame Tay?" (`src/app/display/[restaurantId]/page.tsx`, `dashboard/display/page.tsx`)
   - `/express` : "Borne Express — Lou Ame Tay?" (`src/app/express/page.tsx`, `r/[subdomain]/express/page.tsx`)
   - `/login` : "Connexion Gérant — Lou Ame Tay?" (`src/app/login/page.tsx`)
-  - `/super-admin` : "Console MDA — Lou Ame Tay?" (`src/app/super-admin/page.tsx`)
+  - `/super-admin` : "Console DAW — Lou Ame Tay?" (`src/app/super-admin/page.tsx`)
   - `/r/[subdomain]` : "[Nom Restaurant] — Menu Digital" (`src/app/r/[subdomain]/page.tsx` via `generateMetadata`)
 - **Description** : Remplacement systématique des titres techniques par des termes métier valorisants.
 
@@ -166,3 +166,8 @@
 - **Compilation TypeScript** : `npx tsc --noEmit` ➡️ **0 erreur** (100% propre).
 - **Vitest Unit Tests** : `npm test` ➡️ **8/8 tests passés** (100% au vert).
 - **Documentation globale** : `CHANGELOG_V2.2.md` généré à la racine.
+
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*

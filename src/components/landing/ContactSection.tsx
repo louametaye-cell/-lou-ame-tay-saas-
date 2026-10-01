@@ -53,7 +53,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
     const text = encodeURIComponent(
       `Bonjour Lou Ame Tay ! Je m'appelle ${formData.fullName || 'Restaurateur'}, gérant de ${formData.restaurantName || 'mon restaurant'} à ${formData.city}. Je souhaite des informations pour la formule ${formData.plan.toUpperCase()}.`
     );
-    window.open(`https://wa.me/221762312003?text=${text}`, '_blank');
+    window.open(`https://wa.me/221774587474?text=${text}`, '_blank');
   };
 
   return (
@@ -72,8 +72,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                 Discutons de votre <span className="text-[#00A86B]">restaurant</span>
               </h2>
               <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
-                Remplissez ce formulaire ou écrivez-nous directement sur WhatsApp. Notre équipe se déplace 
-                gratuitement dans votre établissement à Thiès, Dakar, Mbour et Saly.
+                Remplissez ce formulaire ou écrivez-nous directement sur WhatsApp. Notre équipe DAW Digital Arts Work — by MG se déplace 
+                dans votre établissement à Thiès, Dakar, Mbour et Saly.
               </p>
             </div>
 
@@ -82,7 +82,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
               
               {/* WhatsApp direct card */}
               <a
-                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9monstration%20du%20menu%20digital."
+                href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20je%20souhaite%20une%20d%C3%A9monstration%20du%20menu%20digital."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-4 rounded-xl bg-green-50/70 border border-green-200/80 flex items-center gap-4 hover:bg-green-100/80 transition-colors group"
@@ -95,7 +95,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                     WhatsApp Direct (Réponse en 5 min)
                   </span>
                   <span className="font-heading font-black text-base text-gray-900 group-hover:text-[#00A86B]">
-                    +221 76 231 20 03
+                    +221 77 458 74 74
                   </span>
                 </div>
               </a>
@@ -107,10 +107,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                 </div>
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block">
-                    Téléphone Fixe / Mobile
+                    Téléphone Principal & Secondaire
                   </span>
                   <span className="font-bold text-sm sm:text-base text-gray-900">
-                    +221 77 130 36 78 / +221 77 458 74 74
+                    +221 77 458 74 74 / +221 77 130 36 78
                   </span>
                 </div>
               </div>
@@ -122,10 +122,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                 </div>
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block">
-                    Email Officiel
+                    Email Professionnel
                   </span>
                   <span className="font-bold text-sm sm:text-base text-gray-900">
-                    contact@louametay.com
+                    contact@mgartswork.site
                   </span>
                 </div>
               </div>
@@ -137,10 +137,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
                 </div>
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block">
-                    Bureaux & Agence Digitale
+                    Siège Social — DAW Digital Arts Work — by MG
                   </span>
                   <span className="font-bold text-sm text-gray-900 block">
-                    Thiès (Quartier Dixième) & Dakar (Point E)
+                    Thiès, Sénégal — Quartier Fayou, Face Foot Salé
                   </span>
                   <span className="text-[11px] text-gray-500">Sénégal 🇸🇳</span>
                 </div>

@@ -157,7 +157,7 @@ export default function DisplayMenuPage({
           <div className="pt-2 border-t border-slate-800">
             <p className="text-xs text-slate-500 mb-1">Pour activer cette option :</p>
             <p className="text-xs font-bold text-emerald-400">
-              Médias Graphisme / MG Digital Arts Work : +221 77 458 74 74
+              DAW Digital Arts Work — by MG : +221 77 458 74 74
             </p>
           </div>
         </div>

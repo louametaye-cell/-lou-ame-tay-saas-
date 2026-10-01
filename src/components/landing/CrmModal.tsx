@@ -377,7 +377,7 @@ export const CrmModal: React.FC<CrmModalProps> = ({ isOpen, onClose, initialAgen
 
                 <div className="space-y-4 text-xs text-gray-300">
                   <p className="leading-relaxed">
-                    Bienvenue sur le portail commercial officiel de <strong>Lou Ame Tay ?</strong> (édité par <strong>Médias Graphisme Sénégal</strong>). Chaque agent terrain accède de manière isolée à son portefeuille de restaurants et à ses outils de prospection.
+                    Bienvenue sur le portail commercial officiel de <strong>Lou Ame Tay ?</strong> (édité par <strong>DAW Digital Arts Work — by MG</strong>). Chaque agent terrain accède de manière isolée à son portefeuille de restaurants et à ses outils de prospection.
                   </p>
 
                   <div className="p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-2">
@@ -1312,7 +1312,7 @@ Si vous avez 10 minutes aujourd'hui, je peux passer directement à votre restaur
                         <div className="border-b pb-3">
                           <span className="font-heading font-black text-lg text-[#00A86B] block">LOU AME TAY ?</span>
                           <span className="text-[10px] text-gray-500 uppercase tracking-wider block">
-                            Édité par MÉDIAS GRAPHISME SÉNÉGAL • Liberté 6 Extension VDN, Dakar • Tél : +221 77 458 74 74 / +221 77 130 36 78
+                            Édité par DAW Digital Arts Work — by MG • Thiès, Sénégal — Quartier Fayou, Face Foot Salé • Tél : +221 77 458 74 74 / +221 77 130 36 78
                           </span>
                         </div>
 
@@ -1329,7 +1329,7 @@ Si vous avez 10 minutes aujourd'hui, je peux passer directement à votre restaur
 
                         <div className="pt-2 border-t flex justify-between text-[11px] text-gray-500">
                           <span>Signature Restaurant (« Bon pour Accord »)</span>
-                          <span>Signature Médias Graphisme Sénégal</span>
+                          <span>Signature DAW Digital Arts Work — by MG</span>
                         </div>
                       </div>
 

@@ -101,8 +101,8 @@ export const SALES_PITCH_STEPS: SalesPitchStep[] = [
     title: 'La Prise de Contact & Brise-glace',
     duration: '30 secondes',
     objective: 'Identifier le décideur (Gérant, Propriétaire ou Maître d\'Hôtel) et susciter une curiosité immédiate sans être intrusif.',
-    action: 'Saluer avec le sourire, se présenter au nom de Médias Graphisme Sénégal et demander 2 minutes.',
-    frenchScript: '« Bonjour Monsieur/Madame ! Je suis [Votre Nom], conseiller pour la solution sénégalaise Lou Ame Tay ?, éditée par Médias Graphisme Sénégal. Nous accompagnons les meilleurs restaurants de [Thiès / Dakar / Mbour / Saly] pour moderniser leur accueil client, réduire leurs coûts de menu et augmenter leur chiffre d\'affaires. Avez-vous 2 petites minutes pour découvrir comment vos confrères gagnent jusqu\'à 30 minutes de service par table ? »',
+    action: 'Saluer avec le sourire, se présenter au nom de DAW Digital Arts Work — by MG et demander 2 minutes.',
+    frenchScript: '« Bonjour Monsieur/Madame ! Je suis [Votre Nom], conseiller pour la solution sénégalaise Lou Ame Tay ?, éditée par DAW Digital Arts Work — by MG. Nous accompagnons les meilleurs restaurants de [Thiès / Dakar / Mbour / Saly] pour moderniser leur accueil client, réduire leurs coûts de menu et augmenter leur chiffre d\'affaires. Avez-vous 2 petites minutes pour découvrir comment vos confrères gagnent jusqu\'à 30 minutes de service par table ? »',
     wolofScript: '« Salamalekum Patron ! Man la [Votre Nom], ma ngi ñëw ci turu plateforme Lou Ame Tay ?. Dañuy accompagner restaurants yi pour digitaliser sen carte, ba client bi bu toogé ci table bi, dafay scanne QR code bi rek gis lépp lu ngeen am tay ci ay photo yu rafet ak prix yi. Mën naala wone ci 10 secondes ni mu koy déffé ? »',
     tips: [
       'Toujours demander à parler au propriétaire ou au gérant en salle.',
@@ -193,9 +193,9 @@ export const OBJECTION_HANDLERS: ObjectionHandler[] = [
 
 export const CONTRACT_ORDER_FORM_FIELDS = {
   documentTitle: 'FICHE D\'INSCRIPTION & BON DE COMMANDE « LOU AME TAY ? »',
-  editor: 'MÉDIAS GRAPHISME SÉNÉGAL',
-  headquarters: 'Liberté 6 Extension VDN, Dakar',
-  contactPhones: '+221 77 45 87 47 4 / +221 77 130 36 78',
+  editor: 'DAW Digital Arts Work — by MG',
+  headquarters: 'Thiès, Sénégal — Quartier Fayou, Face Foot Salé (Siège Social)',
+  contactPhones: '+221 77 458 74 74 / +221 77 130 36 78',
   contactEmail: 'contact@mgartswork.site',
   website: 'www.mgartswork.site',
   initialSetupFee: 50000,

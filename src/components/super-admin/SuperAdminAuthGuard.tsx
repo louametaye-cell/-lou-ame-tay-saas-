@@ -211,10 +211,10 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
 
             <div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 drop-shadow-sm">
-                Espace Super Admin
+                Console DAW
               </h1>
               <p className="text-xs text-orange-500 font-bold uppercase tracking-wider mt-1">
-                Lou Ame Tay ? • Agence Digitale MDA
+                Lou Ame Tay ? • DAW Digital Arts Work — by MG
               </p>
             </div>
             <p className="text-[12px] text-slate-600">
@@ -274,7 +274,7 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
                 <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Déverrouiller l&apos;Espace Agence</span>
+                  <span>Déverrouiller la Console DAW</span>
                   <ArrowRight className="w-4 h-4 stroke-[3]" />
                 </>
               )}
@@ -299,7 +299,7 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
       <div className="bg-slate-950 text-slate-300 border-b border-slate-800 px-4 py-1.5 text-xs flex items-center justify-between print:hidden shadow-xs">
         <div className="flex items-center gap-2.5">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-bold text-white tracking-wide">Portail Super Admin • MDA</span>
+          <span className="font-bold text-white tracking-wide">Console DAW • Super Admin</span>
           <span className="text-slate-700">|</span>
           <span className="hidden sm:inline text-[11px] text-slate-400 flex items-center gap-1">
             <Clock className="w-3 h-3 text-orange-400 inline" />

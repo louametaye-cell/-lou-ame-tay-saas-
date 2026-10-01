@@ -71,7 +71,7 @@ export const SalesGuideModal: React.FC<SalesGuideModalProps> = ({ isOpen, onClos
                 </span>
               </div>
               <p className="text-xs text-gray-400 mt-0.5">
-                Éditeur : <strong>MÉDIAS GRAPHISME SÉNÉGAL</strong> • Direction : Mbaye Babacar GUEYE
+                Éditeur : <strong>DAW Digital Arts Work — by MG</strong> • Direction : Mbaye Babacar GUEYE
               </p>
             </div>
           </div>
@@ -644,7 +644,7 @@ export const SalesGuideModal: React.FC<SalesGuideModalProps> = ({ isOpen, onClos
 
                     <div className="border border-gray-300 rounded-xl p-4 h-32 flex flex-col justify-between">
                       <div>
-                        <span className="font-bold block text-xs">Pour Médias Graphisme Sénégal :</span>
+                        <span className="font-bold block text-xs">Pour DAW Digital Arts Work — by MG :</span>
                         <span className="text-[10px] text-gray-500">Nom du Commercial : ________________</span>
                       </div>
                       <span className="text-[10px] text-gray-400 italic">Signature & Date</span>
@@ -663,7 +663,7 @@ export const SalesGuideModal: React.FC<SalesGuideModalProps> = ({ isOpen, onClos
                   </h4>
                 </div>
                 <p className="text-xs text-amber-900">
-                  Pour que le dossier soit mis en production et livré en 48h par l'équipe technique de Médias Graphisme Sénégal :
+                  Pour que le dossier soit mis en production et livré en 48h par l'équipe technique de DAW Digital Arts Work — by MG :
                 </p>
 
                 <div className="space-y-2 text-xs text-gray-800">

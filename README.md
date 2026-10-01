@@ -114,3 +114,20 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 - **🥟 Entrées & Tapas :** Pastels au thon, Nems croustillants, Fataya épicée
 - **🥤 Boissons & Jus Locaux :** Jus de Bissap rouge à la menthe, Jus de Bouye (Pain de singe), Gnamankoudji au gingembre
 - **🍰 Desserts :** Thiakry / Dégué gourmand au yaourt, Salade de fruits de Casamance.
+
+---
+
+## 🏢 Éditeur & Contact Officiel
+- **Éditeur** : DAW Digital Arts Work — by MG
+- **Rôle** : CEO & Développeur (Dev) de Lou Ame Tay?
+- **Société** : Startup Sénégalaise
+- **Siège Social** : Thiès, Sénégal — Quartier Fayou, Face Foot Salé
+- **Téléphone principal** : +221 77 458 74 74
+- **Téléphone secondaire** : +221 77 130 36 78
+- **Email** : contact@mgartswork.site
+- **Réseaux Sociaux** : @mgartswork (YouTube, Facebook, Instagram, TikTok)
+
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*

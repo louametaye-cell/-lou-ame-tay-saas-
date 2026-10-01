@@ -1,7 +1,7 @@
 # 🇸🇳 Lou Ame Tay ? — Fiche Officielle des Logins de Démonstration Commerciale
-**Éditeur** : MG Digital Arts Work / Médias Graphisme Sénégal  
-**Contact Direction & Support** : +221 77 458 74 74 | support@louametay.sn  
-**Mise à jour** : Février 2026
+**Éditeur** : DAW Digital Arts Work — by MG  
+**Contact Direction & Support** : +221 77 458 74 74 / +221 77 130 36 78 | contact@mgartswork.site  
+**Mise à jour** : Octobre 2026
 
 ---
 
@@ -24,8 +24,8 @@
 * **Écran Cuisine KDS en Direct (Bip Sonore)** : [`/kitchen`](http://localhost:3000/kitchen)
 * **Écran TV Digital Signage (3 Modes)** : [`/display/tenant_hotel_lat_dior`](http://localhost:3000/display/tenant_hotel_lat_dior)
 * **Guichet Caisse Express (Mode Bar / 80mm)** : [`/cashier`](http://localhost:3000/cashier)
-* **Portail Super Admin MGD** *(Direction uniquement)* : [`/super-admin`](http://localhost:3000/super-admin)
-  * *Code d'accès Super Admin* : `admin123`
+* **Portail Console DAW** *(Direction uniquement)* : [`/super-admin`](http://localhost:3000/super-admin)
+  * *Code d'accès Console DAW* : `admin123`
 
 ---
 
@@ -60,8 +60,13 @@
 
 ---
 
-## 📞 4. Support Technique & Commercial MGD
+## 📞 4. Support Technique & Commercial DAW
+* **WhatsApp Commercial** : [+221 77 458 74 74](https://wa.me/221774587474) / +221 77 130 36 78
+* **Email Assistance** : contact@mgartswork.site
+* **Siège Social** : Thiès, Sénégal — Quartier Fayou, Face Foot Salé
+* **Réseaux Sociaux** : @mgartswork (YouTube, Facebook, Instagram, TikTok)
 
-* **WhatsApp Commercial** : [+221 77 458 74 74](https://wa.me/221774587474)
-* **Email Assistance** : contact@mg-digital.sn / support@louametay.sn
-* **Lieu** : Thiès & Dakar, Sénégal
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*

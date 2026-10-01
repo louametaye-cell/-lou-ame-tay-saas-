@@ -322,7 +322,7 @@ export default function DigitalCustomerReceipt({
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>Ticket certifié conforme Lou Ame Tay ?</span>
             </div>
-            <div>Dakar, Sénégal • Restauration Connectée</div>
+            <div>Thiès, Sénégal • Restauration Connectée</div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 // ==============================================================================
 // 🇸🇳 LOU AME TAY ? - SCRIPT PRISMA SEED EXHAUSTIF (PILOTES THIÈS & DAKAR)
-// Éditeur : MG Digital Arts Work / Médias Graphisme Sénégal (+221 77 458 74 74)
+// Éditeur : DAW Digital Arts Work — by MG (+221 77 458 74 74)
 // Menus complets avec prix réels certifiés et traductions multilingues
 // ==============================================================================
 
@@ -730,7 +730,7 @@ const RESTAURANTS_DATA = [
 async function main() {
   console.log('🚀 =========================================================');
   console.log('🇸🇳 LOU AME TAY ? - SEEDING DES MENUS RÉELS & COMPTES DÉMO');
-  console.log('🏢 ÉDITEUR : MG DIGITAL ARTS WORK / MÉDIAS GRAPHISME SÉNÉGAL');
+  console.log('🏢 ÉDITEUR : DAW DIGITAL ARTS WORK — BY MG');
   console.log('=========================================================\n');
 
   // 1. Sauvegarde et mise à jour des Plans et Features

@@ -1,6 +1,6 @@
 # 🔐 LOU AME TAY ? — FICHE OFFICIELLE DES ACCÈS & MOTS DE PASSE
 **Plateforme SaaS de Menus Digitaux QR Code & Écrans TV**  
-*Éditée par Médias Graphisme Sénégal / MG Digital Arts Work*  
+*Éditée par DAW Digital Arts Work — by MG*  
 *Support & Direction Technique : +221 77 458 74 74*  
 *Date de mise à jour : Février 2026*
 
@@ -102,7 +102,13 @@ Ces comptes permettent à votre force commerciale de présenter l'application en
 
 ---
 
-## 📞 5. CONTACT SUPPORT MG DIGITAL ARTS WORK
-* **Assistance Technique** : +221 77 458 74 74
-* **Email** : contact@mg-digital.sn / support@louametay.sn
-* **Dakar / Thiès — Sénégal**
+## 📞 5. CONTACT SUPPORT DAW DIGITAL ARTS WORK
+* **Assistance Technique** : +221 77 458 74 74 / +221 77 130 36 78
+* **Email** : contact@mgartswork.site
+* **Siège Social** : Thiès, Sénégal — Quartier Fayou, Face Foot Salé
+* **Réseaux Sociaux** : @mgartswork (YouTube, Facebook, Instagram, TikTok)
+
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*

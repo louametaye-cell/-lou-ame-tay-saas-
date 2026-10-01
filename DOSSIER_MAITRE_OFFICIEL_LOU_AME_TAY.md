@@ -1,7 +1,7 @@
 # 🇸🇳 LE LIVRE BLANC & DOSSIER MAÎTRE OFFICIEL — LOU AME TAY ?
 ### Menu Digital Interactif, KDS Brigade & Terminal Caisse Tactile pour le Secteur CHR au Sénégal
 *Document Officiel • Version V2.2 • Année 2026*  
-*Édité par : Agence MDA Arts Work / Médias Graphisme Sénégal*  
+*Édité par : DAW Digital Arts Work — by MG*  
 *Plateforme de production : [www.louametay.com](https://www.louametay.com)*
 
 ---
@@ -15,7 +15,7 @@
 5. **RAPPORT DES ÉVOLUTIONS (V1.0 ➔ V2.2) & BILAN DES TESTS QUALITÉ (QA)**
 6. **BILAN RSE, IMPACT ÉCOLOGIQUE & RÉDUCTION D'EMPREINTE CARBONE (CO₂)**
 7. **MANUELS D'UTILISATION COMPLETS PAR PROFIL OPÉRATIONNEL**
-   - 7.1. Guide Console MDA (Super-Admin)
+   - 7.1. Guide Console DAW (Super-Admin)
    - 7.2. Guide Espace Gérant (Propriétaire de Restaurant / Hôtel)
    - 7.3. Guide Poste Caisse (Caissier & Clôture Z)
    - 7.4. Guide Brigade Cuisine (Écran Cuisine KDS)
@@ -37,10 +37,11 @@
 - **PWA & CRM Mobile** : `https://louametay.online`
 
 ### 1.2. Créateur & Propriété Intellectuelle
-- **Concepteur & Éditeur** : Agence **MDA Arts Work** / **Médias Graphisme Sénégal**.
-- **Fondateur & Architecte** : Direction Générale Médias Graphisme.
-- **Siège Social** : Dakar, République du Sénégal.
-- **Contact Technique & SAV** : +221 77 458 74 74 / `contact@louametay.com`.
+- **Concepteur & Éditeur** : Agence **DAW Digital Arts Work — by MG**.
+- **Fondateur & Architecte** : Direction Générale DAW Digital Arts Work (MG) — CEO & Développeur.
+- **Siège Social** : Thiès, Sénégal — Quartier Fayou, Face Foot Salé (Siège Social).
+- **Contact Technique & SAV** : +221 77 458 74 74 / +221 77 130 36 78 / `contact@mgartswork.site`.
+- **Réseaux Sociaux Officiels** : @mgartswork (YouTube, Facebook, Instagram, TikTok).
 - **Date de Création Initiale** : 15 Septembre 2026 (Version MVP 1.0).
 - **Date de Déploiement Stable V2.2** : 01 Octobre 2026.
 
@@ -64,7 +65,7 @@ La plateforme s'articule autour de 6 modules interconnectés en temps réel :
 3. **Écran Brigade Cuisine (KDS)** : Affichage instantané Kanban des commandes à préparer. Alertes sonores paramétrables (Carillon, Ding-dong, Alerte rush), calcul du temps écoulé avec alerte visuelle rouge au-delà de 20 minutes, boutons de validation d'étape en un clic.
 4. **Écran Retrait Guichet (/pickup)** : Affichage grand écran pour la salle ou le comptoir de retrait, indiquant les commandes en cours de préparation et les commandes prêtes, avec sonnerie d'appel client.
 5. **Espace Gérant (/dashboard)** : Pilotage complet du restaurant : modification de carte, gestion des stocks, gestion des équipes (serveurs et cuisiniers), statistiques de vente, export comptable et paramètres d'identité.
-6. **Console MDA (Super-Admin)** : Supervision centralisée de tous les restaurants abonnés, activation des formules d'abonnements, gestion des relances WhatsApp J-5, observabilité de l'infrastructure.
+6. **Console DAW (Super-Admin)** : Supervision centralisée de tous les restaurants abonnés, activation des formules d'abonnements, gestion des relances WhatsApp J-5, observabilité de l'infrastructure.
 
 ### 2.2. Spécifications Techniques
 - **Framework Front-End & Back-End** : Next.js 14 avec App Router, React 18, Server Components et Server Actions.
@@ -147,7 +148,7 @@ Le passage d'une commande à l'état `PAID` exige impérativement une action phy
 | **5. Statistiques & Reporting** | `src/app/api/stats/route.ts` | Exclusion systématique des statuts non commerciaux de toutes les fonctions de sommation (`sum`, `aggregate`). |
 
 ### 4.3. Protection des Accès & Cloisonnement des Rôles
-- **Console MDA** (`/super-admin`) : protégée par hachage de mot de passe cryptographique, verrouillage automatique après 15 minutes d'inactivité, et journalisation de session.
+- **Console DAW** (`/super-admin`) : protégée par hachage de mot de passe cryptographique, verrouillage automatique après 15 minutes d'inactivité, et journalisation de session.
 - **Espace Gérant** (`/dashboard`) : authentification sécurisée via JWT en cookie `HttpOnly`, `SameSite=Strict`, résistant aux attaques XSS et CSRF.
 - **Poste Caisse** (`/cashier`) : validation de l'appartenance stricte du caissier à l'établissement. Rejet immédiat si un code PIN d'un restaurant A est saisi sur le poste d'un restaurant B.
 
@@ -216,7 +217,7 @@ Selon la méthodologie ADEME adaptée au secteur tertiaire en Afrique de l'Ouest
 
 # 7. MANUELS D'UTILISATION COMPLETS PAR PROFIL OPÉRATIONNEL
 
-## 7.1. Guide Console MDA (Super-Admin)
+## 7.1. Guide Console DAW (Super-Admin)
 **Accès** : `https://www.louametay.com/super-admin`
 
 1. **Connexion & Sécurité** :
@@ -229,7 +230,7 @@ Selon la méthodologie ADEME adaptée au secteur tertiaire en Afrique de l'Ouest
    - Valider : le compte, la base de données et les URL sont créés en 2 secondes.
 3. **Pilotage des Abonnements & Relances WhatsApp J-5** :
    - Le système affiche automatiquement une bannière d'alerte orange pour les restaurants dont l'échéance arrive dans $\le 5$ jours.
-   - Un clic sur l'icône WhatsApp ouvre un message pré-rempli avec les coordonnées de paiement Wave/Orange Money de l'agence MDA.
+   - Un clic sur l'icône WhatsApp ouvre un message pré-rempli avec les coordonnées de paiement Wave/Orange Money de l'agence DAW Digital Arts Work — by MG.
 
 ---
 
@@ -317,7 +318,7 @@ Selon la méthodologie ADEME adaptée au secteur tertiaire en Afrique de l'Ouest
 
 # 8. GUIDE DU SERVICE APRÈS-VENTE (SAV 24/7) & PROTOCOLE D'ASTREINTE
 
-Pour garantir une continuité d'exploitation sans interruption pour les restaurants abonnés, Médias Graphisme déploie une infrastructure de support à 3 niveaux :
+Pour garantir une continuité d'exploitation sans interruption pour les restaurants abonnés, DAW Digital Arts Work — by MG déploie une infrastructure de support à 3 niveaux :
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -327,7 +328,7 @@ Pour garantir une continuité d'exploitation sans interruption pour les restaura
                                        │ (Si problème non résolu en < 2 min)
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                   NIVEAU 2 : STANDARD WHATSAPP DÉDIÉ MDA                    │
+│                   NIVEAU 2 : STANDARD WHATSAPP DÉDIÉ DAW                    │
 │      Ligne directe : +221 77 458 74 74 • Temps de réponse garanti < 15 min   │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │ (En cas de panne matérielle / réseau)
@@ -377,8 +378,8 @@ La plateforme est conçue selon un principe d'inclusion universelle : **aucune m
 
 ### 10.1. Résumé du Projet (Executive Summary)
 - **Titre du Projet** : Lou Ame Tay ? — La transition digitale et écologique de la gastronomie sénégalaise.
-- **Porteur de Projet** : Agence Médias Graphisme / MDA Arts Work.
-- **Localisation** : Dakar, Thiès, Saly (Sénégal).
+- **Porteur de Projet** : DAW Digital Arts Work — by MG.
+- **Localisation** : Thiès (Siège Social), Dakar, Saly (Sénégal).
 - **Objectif** : Équiper 500 établissements de restauration au Sénégal d'ici fin 2027 en réduisant de 10 tonnes les déchets plastiques et papiers et en augmentant de 25% la productivité moyenne du secteur CHR.
 
 ### 10.2. Proposition de Valeur & Innovation Locale
@@ -389,7 +390,7 @@ La plateforme est conçue selon un principe d'inclusion universelle : **aucune m
 ### 10.3. Indicateurs d'Impact Clés (KPIs RSE)
 - **Environnement** : $\approx 165\text{ kg de }\text{CO}_2$ évités par établissement et par an.
 - **Économie Sociale** : Amélioration des conditions de travail du personnel de cuisine et de salle (réduction du stress acoustique, zéro commande illisible).
-- **Emploi Local** : Formation certifiée de serveurs et caissiers aux outils numériques à Dakar et dans les régions.
+- **Emploi Local** : Formation certifiée de serveurs et caissiers aux outils numériques à Dakar, Thiès et dans les régions.
 
 ---
 
@@ -399,7 +400,7 @@ La plateforme est conçue selon un principe d'inclusion universelle : **aucune m
 
 ### ENTRE LES SOUSSIGNÉS :
 1. **LE CÉDANT** :
-   L'agence **Médias Graphisme / MDA Arts Work**, représentée par son Fondateur et Directeur Général, titulaire exclusif de l'intégralité des droits patrimoniaux, codes sources, marques et actifs immatériels afférents à la solution logicielle « Lou Ame Tay ? ».
+   L'agence **DAW Digital Arts Work — by MG**, représentée par son Fondateur et Directeur Général (MG), titulaire exclusif de l'intégralité des droits patrimoniaux, codes sources, marques et actifs immatériels afférents à la solution logicielle « Lou Ame Tay ? ».
    *Ci-après dénommé « Le Cédant », d'une part,*
 
 ET
@@ -420,7 +421,7 @@ La présente cession comprend de manière indissociable :
    - Module de cache Redis, moteur d'affichage TV Digital Signage, module KDS et terminal de caisse tactile 80mm.
 2. **Les Droits de Propriété Intellectuelle** :
    - Droit de reproduction, de représentation, d'adaptation, de modification, de commercialisation et de distribution sans limitation géographique ni temporelle.
-   - Les marques, logos vectoriels, maquettes graphiques et chartes ergonomiques créées par MDA Arts Work.
+   - Les marques, logos vectoriels, maquettes graphiques et chartes ergonomiques créées par DAW Digital Arts Work — by MG.
 3. **Les Noms de Domaine & Actifs d'Hébergement** :
    - Transfert de la pleine gestion des domaines `louametay.com` et `louametay.online`.
    - Transfert des configurations des comptes Vercel, Supabase, Neon, Upstash Redis et passerelles associées.
@@ -451,12 +452,18 @@ En cas de litige relatif à la validité, l'interprétation ou l'exécution du p
 
 ---
 
-*Fait à Dakar, République du Sénégal, en autant d'exemplaires originaux que de parties.*
+*Fait à Thiès / Dakar, République du Sénégal, en autant d'exemplaires originaux que de parties.*
 
 **Pour le Cédant**  
-*Direction Générale MDA Arts Work / Médias Graphisme Sénégal*  
+*Direction Générale DAW Digital Arts Work (MG) — CEO & Développeur*  
+*Siège : Thiès, Sénégal — Quartier Fayou, Face Foot Salé*  
 *(Signature & Cachet Officiel)*
 
 **Pour le Cessionnaire**  
 *(Nom, Prénom & Qualité)*  
 *(Signature précédée de la mention manuscrite « Bon pour accord et cession »)*
+
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*

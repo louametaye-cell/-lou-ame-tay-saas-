@@ -1,7 +1,7 @@
 # 📋 CHANGELOG V2.2 — LOU AME TAY ? 🇸🇳🍽️
 *Date de déploiement : Octobre 2026*  
 *Architecture : Next.js 14 App Router, Prisma ORM, Redis (Upstash / In-Memory), Supabase Realtime, Tailwind CSS*  
-*Supervision : Agence Digitale MDA Arts Work / Médias Graphisme Sénégal*
+*Supervision : DAW Digital Arts Work — by MG*
 
 ---
 
@@ -102,7 +102,7 @@ Nouvelle interface complète en 7 onglets opérationnels :
 - **FAQ Métier CHR** : 10 questions/réponses exhaustives adaptées aux réalités sénégalaises (réseau 3G/4G, impression thermique 80mm ESC/POS, encaissements Wave/OM, gestion des tables).
 - **Tutoriels Vidéo** : Cartes vidéo pas-à-pas avec durées estimées et thématiques claires.
 - **Moniteur de Santé en Temps Réel** : Diagnostic en direct des services cloud via `/api/health` (Base de données PostgreSQL/Supabase, Realtime WebSocket, Redis Upstash, CDN Vercel) avec temps de latence en ms.
-- **Assistance Express WhatsApp** : Bouton d'ouverture de ticket support direct pré-rempli avec l'identifiant de l'établissement (`tenantId`) vers le standard MDA Arts Work (+221 77 458 74 74).
+- **Assistance Express WhatsApp** : Bouton d'ouverture de ticket support direct pré-rempli avec l'identifiant de l'établissement (`tenantId`) vers le standard DAW (+221 77 458 74 74).
 
 ---
 
@@ -116,7 +116,7 @@ Nouvelle interface complète en 7 onglets opérationnels :
 | `cashier` | **Poste Caisse** | Vocabulaire standard CHR / caisses enregistreuses. |
 | `kitchen` | **Brigade Cuisine** | Terminologie culinaire professionnelle. |
 | `client-menu` | **Menu Client** | Lisible et immédiatement compréhensible. |
-| `super-admin` | **Console MDA** | Affirmation de la marque de l'agence MDA Arts Work. |
+| `super-admin` | **Console DAW** | Affirmation de la marque de l'agence DAW Digital Arts Work — by MG. |
 | `KDS` (dans l'UI) | **Écran Cuisine** | Terme français, accessible à l'ensemble du personnel. |
 | `POS` (dans l'UI) | **Caisse Enregistreuse** | Terminologie commerciale reconnue. |
 | `Tenant` (dans l'UI) | **Établissement** | Moins abstrait et plus représentatif. |
@@ -134,7 +134,7 @@ Nouvelle interface complète en 7 onglets opérationnels :
 | `/display` | `Affichage Salle — Lou Ame Tay?` | `src/app/display/[restaurantId]/page.tsx` & `dashboard/display/page.tsx` |
 | `/express` | `Borne Express — Lou Ame Tay?` | `src/app/express/page.tsx` & `r/[subdomain]/express/page.tsx` |
 | `/login` | `Connexion Gérant — Lou Ame Tay?` | `src/app/login/page.tsx` |
-| `/super-admin` | `Console MDA — Lou Ame Tay?` | `src/app/super-admin/page.tsx` |
+| `/super-admin` | `Console DAW — Lou Ame Tay?` | `src/app/super-admin/page.tsx` |
 | `/r/[subdomain]` | `[Nom Restaurant] — Menu Digital` | `src/app/r/[subdomain]/page.tsx` (`generateMetadata`) |
 
 ### 3. Boutons d'Action & Messages d'Erreur
@@ -159,3 +159,8 @@ Nouvelle interface complète en 7 onglets opérationnels :
 3. **Respect des Règles d'Accessibilité et d'Intégrité Financière** :
    - Code couleur strict respecté (Vert, Orange/Ambre, Rouge, Bleu).
    - Séparation absolue statuts métier / statuts financiers préservée.
+
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*

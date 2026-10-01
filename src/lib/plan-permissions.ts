@@ -1,6 +1,6 @@
 /**
  * 🔒 SYSTÈME DE PERMISSIONS ET VERROUILLAGE PAR PACK (PAYWALL)
- * Lou Ame Tay ? - Plateforme SaaS Médias Graphisme Sénégal
+ * Lou Ame Tay ? - Plateforme SaaS DAW Digital Arts Work — by MG
  * 
  * Source unique de vérité pour l'éligibilité des fonctionnalités selon la formule souscrite.
  */
@@ -419,7 +419,7 @@ export const FEATURES_CATALOG: Record<FeatureKey, FeaturePaywall> = {
     requiredPlan: 'buur',
     requiredPlanName: 'BUUR',
     requiredPlanPrice: '80 000 FCFA / mois',
-    benefit: 'Bénéficiez d\'un conseiller dédié chez Médias Graphisme Sénégal disponible 7j/7.',
+    benefit: 'Bénéficiez d\'un conseiller dédié chez DAW Digital Arts Work — by MG disponible 7j/7.',
     concreteUnlocks: [
       'Ligne WhatsApp directe avec temps de réponse prioritaire (< 15 min)',
       'Interventions techniques d\'urgence sur place à Dakar et Thiès',
@@ -512,7 +512,7 @@ export function buildUpgradeWhatsAppUrl(
   const currentPlanMeta = PLANS_REGISTRY[(currentPlanSlug || 'tambali').toLowerCase().trim() as PlanSlug] || PLANS_REGISTRY['tambali'];
   const targetPlanMeta = PLANS_REGISTRY[targetPlanSlug as PlanSlug] || PLANS_REGISTRY['xeweul'];
 
-  const message = `Bonjour Lou Ame Tay ? / Médias Graphisme Sénégal,
+  const message = `Bonjour Lou Ame Tay ? / DAW Digital Arts Work — by MG,
 
 Je suis le gérant de l'établissement *${restaurantName || 'Mon Restaurant'}*.
 Nous sommes actuellement sous la formule *${currentPlanMeta.name}* (${currentPlanMeta.priceMonthly.toLocaleString('fr-FR')} FCFA/mois).
@@ -521,5 +521,5 @@ Je souhaite faire évoluer notre abonnement vers la formule supérieure *${targe
 
 Merci de nous recontacter pour finaliser l'activation et la configuration.`;
 
-  return `https://wa.me/221762312003?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/221774587474?text=${encodeURIComponent(message)}`;
 }

@@ -1461,7 +1461,7 @@ export default function DashboardSettingsPage() {
                     }}
                     className="min-h-[44px] px-4 bg-slate-900 hover:bg-black text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                   >
-                    <span>Contacter MDA pour résiliation</span>
+                    <span>Contacter DAW pour résiliation</span>
                   </button>
                 </div>
               </div>

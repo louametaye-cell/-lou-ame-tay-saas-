@@ -156,7 +156,7 @@ export const SupportAIAssistant: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                Service Après-Vente (SAV) & Assistance MDA 24/7
+                Service Après-Vente (SAV) & Assistance DAW 24/7
               </h3>
               <span className="bg-indigo-950 text-indigo-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-indigo-500/30">
                 Support Dédié 24/7

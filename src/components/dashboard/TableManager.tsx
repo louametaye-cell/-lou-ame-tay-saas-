@@ -297,7 +297,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
                     Atelier d&apos;Impression Officiel
                   </span>
                   <span className="text-xs text-slate-500 font-bold">
-                    Médias Graphisme / MG Digital Arts Work
+                    DAW Digital Arts Work — by MG
                   </span>
                 </div>
                 <h3 className="text-base font-black text-slate-900">

@@ -1072,7 +1072,7 @@ export default function SuperAdminRestaurantDetailPage() {
                         Contrôle Strictement Réservé Super-Admin
                       </span>
                       <span className="text-xs text-slate-500 font-bold">
-                        Médias Graphisme / MG Digital Arts Work
+                        DAW Digital Arts Work — by MG
                       </span>
                     </div>
                     <h3 className="text-lg font-black text-slate-900">
@@ -1382,7 +1382,7 @@ export default function SuperAdminRestaurantDetailPage() {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-950 px-2.5 py-0.5 rounded-full border border-orange-200">
-                        Administration Centrale • MDA Arts Work
+                        Administration Centrale • DAW Digital Arts Work — by MG
                       </span>
                       <span className="text-xs font-bold text-slate-500 font-mono">
                         ID: {restaurant.id}

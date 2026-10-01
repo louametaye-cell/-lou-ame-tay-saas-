@@ -9,7 +9,7 @@ import { isAuthorizedSuperAdmin } from './admin-auth';
 export function isAuthorizedTenant(req: Request, targetTenantId: string, targetSubdomain?: string): boolean {
   if (!targetTenantId) return false;
 
-  // 1. Le Super-Admin MDA Arts Work est toujours autorisé
+  // 1. Le Super-Admin Console DAW est toujours autorisé
   if (isAuthorizedSuperAdmin(req)) {
     return true;
   }

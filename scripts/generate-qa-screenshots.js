@@ -310,7 +310,7 @@ async function run() {
         <div class="divider"></div>
         <div class="center" style="font-size: 10px; margin-top: 8px;">
           Merci de votre visite chez Anima Pizzeria !<br/>
-          Propulsé par Lou Ame Tay ? - MDA Arts Work
+          Propulsé par Lou Ame Tay ? - DAW Digital Arts Work — by MG
         </div>
       </body>
     </html>

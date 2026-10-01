@@ -1,6 +1,7 @@
 {
   "name": "lou-ame-tay-menu-digital",
   "version": "0.1.0",
+  "author": "DAW Digital Arts Work — by MG",
   "private": true,
   "scripts": {
     "dev": "next dev",

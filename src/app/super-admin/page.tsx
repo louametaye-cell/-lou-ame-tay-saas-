@@ -60,7 +60,7 @@ export default function SuperAdminDashboardPage() {
   const [activeRankingTab, setActiveRankingTab] = useState<'scans' | 'orders' | 'revenue'>('scans');
 
   useEffect(() => {
-    document.title = 'Console MDA — Lou Ame Tay?';
+    document.title = 'Console DAW — Lou Ame Tay?';
   }, []);
 
   // Modals state
@@ -371,7 +371,7 @@ export default function SuperAdminDashboardPage() {
               />
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                  <span>Console MDA — Lou Ame Tay?</span>
+                  <span>Console DAW — Lou Ame Tay?</span>
                   <span className="bg-orange-500/20 text-[#FF6B00] border border-orange-500/30 text-xs font-bold px-2.5 py-0.5 rounded-full">
                     Super Admin 360°
                   </span>
@@ -411,7 +411,7 @@ export default function SuperAdminDashboardPage() {
                 }`}
               >
                 <Headphones className="w-4 h-4 text-[#FF6B00]" />
-                <span>{isSupportOpen ? 'Fermer Support' : 'Support MDA 24/7'}</span>
+                <span>{isSupportOpen ? 'Fermer Support' : 'Support DAW 24/7'}</span>
               </button>
 
               <button

@@ -89,8 +89,8 @@ const FAQ_DATA: FAQItem[] = [
   {
     id: 'faq-10',
     category: 'Support Technique',
-    question: 'Comment contacter l\'assistance technique MDA Arts Work ?',
-    answer: 'Notre équipe support sénégalaise est joignable 7j/7 de 8h à 23h via WhatsApp au +221 77 458 74 74 ou par email à support@louametay.com. Une intervention à distance peut être déployée en moins de 15 minutes.',
+    question: 'Comment contacter l\'assistance technique DAW Digital Arts Work — by MG ?',
+    answer: 'Notre équipe support sénégalaise est joignable 7j/7 de 8h à 23h via WhatsApp au +221 77 458 74 74 ou par email à contact@mgartswork.site. Une intervention à distance peut être déployée en moins de 15 minutes.',
   },
 ];
 
@@ -180,7 +180,7 @@ export default function DashboardHelpPage() {
 
   const openWhatsAppSupport = () => {
     const message = encodeURIComponent(
-      `Bonjour l'équipe support Lou Ame Tay ? (MDA Arts Work),\n` +
+      `Bonjour l'équipe support Lou Ame Tay ? (DAW Digital Arts Work — by MG),\n` +
       `Je sollicite une assistance technique pour mon établissement :\n` +
       `🏢 Restaurant : ${restaurantName}\n` +
       `🆔 Identifiant : ${restaurantId}\n` +
@@ -210,7 +210,7 @@ export default function DashboardHelpPage() {
                 </span>
               </h1>
               <p className="text-xs text-slate-500">
-                Centre d'aide interactif, foire aux questions et assistance technique directe MDA Arts Work.
+                Centre d'aide interactif, foire aux questions et assistance technique directe DAW Digital Arts Work — by MG.
               </p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function DashboardHelpPage() {
               Une question ou un blocage technique ?
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Les ingénieurs MDA Arts Work sont à vos côtés pour le dépannage de vos imprimantes, caisses, écrans TV et réseaux.
+              Les ingénieurs DAW Digital Arts Work — by MG sont à vos côtés pour le dépannage de vos imprimantes, caisses, écrans TV et réseaux.
             </p>
           </div>
 
@@ -319,7 +319,7 @@ export default function DashboardHelpPage() {
                 key={vid.id}
                 className="bg-white border-2 border-slate-200 hover:border-amber-400 rounded-3xl overflow-hidden shadow-xs transition-all group flex flex-col justify-between"
               >
-                <div className="relative h-40 bg-slate-900 overflow-hidden cursor-pointer" onClick={() => toast.info('Vidéo disponible prochainement dans la Console MDA.')}>
+                <div className="relative h-40 bg-slate-900 overflow-hidden cursor-pointer" onClick={() => toast.info('Vidéo disponible prochainement dans la Console DAW.')}>
                   <img src={vid.thumbnail} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-12 h-12 rounded-full bg-white/90 text-slate-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       const exportPayload = {
         meta: {
           exportDate: new Date().toISOString(),
-          platform: 'Lou Ame Tay? - MDA Arts Work',
+          platform: 'Lou Ame Tay? - DAW Digital Arts Work — by MG',
           version: 'V2.2',
         },
         restaurant: {

@@ -1,6 +1,6 @@
 /**
  * SCRIPT D'AUDIT ANTI-RÉGRESSION MULTI-TENANT
- * "Lou Ame Tay ?" - Médias Graphisme Sénégal
+ * "Lou Ame Tay ?" - DAW Digital Arts Work — by MG
  *
  * Ce script vérifie qu'aucun fallback en dur ou fuite de données
  * (tenant_madiba_restau, Chez Fatou, etc.) n'existe dans les composants

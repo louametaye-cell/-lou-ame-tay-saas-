@@ -5,7 +5,10 @@ import { Toaster } from 'sonner';
 export const metadata: Metadata = {
   title: 'Lou Ame Tay ? 🍽️ - Menu Digital & Commande à Table Sénégal',
   description:
-    'Scannez le QR Code de votre table, découvrez le menu du jour "Lou Ame Tay ?" et commandez directement en cuisine sans attendre.',
+    'Scannez le QR Code de votre table, découvrez le menu du jour "Lou Ame Tay ?" et commandez directement en cuisine sans attendre. Conçu par DAW Digital Arts Work — by MG.',
+  authors: [{ name: 'DAW Digital Arts Work — by MG', url: 'https://mgartswork.site' }],
+  creator: 'DAW Digital Arts Work — by MG',
+  publisher: 'DAW Digital Arts Work — by MG',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -14,9 +17,9 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Lou Ame Tay ? 🍽️ - Menu Digital & Commande à Table',
-    description: 'Le menu digital QR code ultra-rapide conçu pour les restaurants du Sénégal.',
+    description: 'Le menu digital QR code ultra-rapide conçu pour les restaurants du Sénégal par DAW Digital Arts Work — by MG.',
     url: 'https://louametay.com',
-    siteName: 'Lou Ame Tay',
+    siteName: 'Lou Ame Tay - DAW Digital Arts Work',
     images: [
       {
         url: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',

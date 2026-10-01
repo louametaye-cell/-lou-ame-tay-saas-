@@ -1,7 +1,7 @@
 # 📊 RAPPORT DE MISSION EN MODE AUTONOME — LOU AME TAY ? V2.2 🇸🇳🍽️
 *Date de remise : 01 Octobre 2026*  
 *Auteur : Ingénieur Senior & Architecte Logiciel (Mode Autonome)*  
-*Destinataire : Propriétaire Unique & Fondateur Lou Ame Tay / Médias Graphisme*  
+*Destinataire : Propriétaire Unique & Fondateur Lou Ame Tay — DAW Digital Arts Work — by MG*  
 *Plateforme de production : www.louametay.com (Vercel, Supabase, Prisma, Upstash)*
 
 ---
@@ -59,7 +59,7 @@
 | `src/app/display/[restaurantId]/page.tsx` & `dashboard/display/page.tsx` | Titre & H1 `"🖥️ Affichage Salle — Lou Ame Tay?"` + correction état `baseUrl`. |
 | `src/app/express/page.tsx` & `r/[subdomain]/express/page.tsx` | Titre & H1 `"Borne Express — Lou Ame Tay?"`. |
 | `src/app/login/page.tsx` | Titre & H1 `"Connexion Gérant — Lou Ame Tay?"`. |
-| `src/app/super-admin/page.tsx` | Titre & H1 `"Console MDA — Lou Ame Tay?"`. |
+| `src/app/super-admin/page.tsx` | Titre & H1 `"Console DAW — Lou Ame Tay?"`. |
 | `src/app/r/[subdomain]/page.tsx` | Titre dynamique `"[Nom Restaurant] — Menu Digital"` via `generateMetadata`. |
 | `src/app/dashboard/cashiers/page.tsx` | Libellé mis à jour : `"Ouvrir le Poste Caisse"`. |
 | `src/app/dashboard/kitchen/page.tsx` | Valeur par défaut mise à jour : `"Écran Cuisine"` et `document.title`. |
@@ -152,3 +152,8 @@ curl -I https://www.louametay.com/api/health
 En cas d'imprévu, la sauvegarde intégrale est prête dans `_BACKUP_SOURCE_LOCAL/` :
 - Hash SHA-256 certifié : `B5AE6FF8CE60A394D7C2F56D95EF62C3CD68766EBE17F4927365363CBA4B41CE`
 - Suivre les instructions dans [`_BACKUP_SOURCE_LOCAL/BACKUP_README.md`](file:///C:/Users/DELL/Desktop/Lou%20ame%20Tay%20menu%20digital%20Mda%20arts%20work/_BACKUP_SOURCE_LOCAL/BACKUP_README.md).
+
+---
+*Document produit par DAW Digital Arts Work — by MG*  
+*Signature de développeur Vibe Coder*  
+*Contact : contact@mgartswork.site | +221 77 458 74 74*
