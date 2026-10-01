@@ -30,6 +30,10 @@ export default function RestaurantLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  React.useEffect(() => {
+    document.title = 'Connexion Gérant — Lou Ame Tay?';
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
@@ -112,7 +116,7 @@ export default function RestaurantLoginPage() {
             />
             <div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                Lou Ame Tay ?
+                Connexion Gérant — Lou Ame Tay?
               </h1>
               <p className="text-orange-400 font-extrabold text-sm sm:text-base tracking-wide mt-1">
                 Scannez • Commandez • Savourez !

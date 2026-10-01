@@ -9,13 +9,14 @@ import { History, LayoutGrid } from 'lucide-react';
 import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 
 export default function DashboardKitchenPage() {
-  const [restaurantName, setRestaurantName] = useState('Écran Cuisine (KDS)');
+  const [restaurantName, setRestaurantName] = useState('Écran Cuisine');
   const [restaurantId, setRestaurantId] = useState<string | undefined>(undefined);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [activeFilter, setActiveFilter] = useState<KitchenFilter>('ALL');
   const [activeTab, setActiveTab] = useState<'LIVE' | 'HISTORY'>('LIVE');
 
   useEffect(() => {
+    document.title = 'Brigade Cuisine — Lou Ame Tay?';
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const queryId = params.get('restaurantId');

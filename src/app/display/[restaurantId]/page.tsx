@@ -42,10 +42,16 @@ export default function DisplayMenuPage({
   const [currentTime, setCurrentTime] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = "Affichage Salle — Lou Ame Tay?";
+    }
+  }, []);
 
   // Clock in Senegal GMT
   useEffect(() => {
     const updateClock = () => {
+
       const now = new Date();
       setCurrentTime(
         now.toLocaleTimeString('fr-FR', {

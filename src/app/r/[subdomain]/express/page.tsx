@@ -12,7 +12,16 @@ interface PageProps {
   };
 }
 
+export async function generateMetadata({ params }: PageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  return {
+    title: "Borne Express — Lou Ame Tay?",
+    description: `Commande express au comptoir pour ${resolvedParams.subdomain}`,
+  };
+}
+
 export default async function ExpressCounterMenuPage({ params }: PageProps) {
+
   const resolvedParams = await Promise.resolve(params);
   let restaurant: any = null;
 

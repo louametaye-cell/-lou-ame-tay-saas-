@@ -98,6 +98,7 @@ export default function DisplaySettingsPage() {
   const [baseUrl, setBaseUrl] = useState('');
 
   useEffect(() => {
+    document.title = 'Affichage Salle — Lou Ame Tay?';
     if (typeof window !== 'undefined') {
       setBaseUrl(window.location.origin);
       const savedResto = localStorage.getItem('current_restaurant_subdomain') || localStorage.getItem('louametay_resto_subdomain') || '';
@@ -177,8 +178,9 @@ export default function DisplaySettingsPage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
             <Tv className="w-8 h-8 text-emerald-600" />
-            <span>🖥️ Écran Menu Public (Affichage TV)</span>
+            <span>🖥️ Affichage Salle — Lou Ame Tay?</span>
           </h1>
+
           <p className="text-sm text-slate-500 mt-1">
             Diffusez votre carte en direct sur Smart TV ou écran vitrine dans votre restaurant.
           </p>

@@ -59,6 +59,10 @@ export default function SuperAdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'TRIAL' | 'EXPIRED'>('ALL');
   const [activeRankingTab, setActiveRankingTab] = useState<'scans' | 'orders' | 'revenue'>('scans');
 
+  useEffect(() => {
+    document.title = 'Console MDA — Lou Ame Tay?';
+  }, []);
+
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<RestaurantType | null>(null);
@@ -367,13 +371,13 @@ export default function SuperAdminDashboardPage() {
               />
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                  <span>Agence Digitale • Lou Ame Tay ?</span>
+                  <span>Console MDA — Lou Ame Tay?</span>
                   <span className="bg-orange-500/20 text-[#FF6B00] border border-orange-500/30 text-xs font-bold px-2.5 py-0.5 rounded-full">
                     Super Admin 360°
                   </span>
                 </h1>
                 <p className="text-xs text-slate-500">
-                  Vue d&apos;ensemble de tous vos restaurants clients & indicateurs en direct
+                  Vue d&apos;ensemble de tous vos établissements clients & indicateurs en direct
                 </p>
               </div>
             </div>

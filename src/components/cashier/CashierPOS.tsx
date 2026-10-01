@@ -784,9 +784,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               <Lock className="w-4 h-4" />
               <span>Formule TÀMBALI (Menu Vitrine)</span>
             </div>
-            <h1 className="text-xl font-black text-white">Espace Caisse POS</h1>
+            <h1 className="text-xl font-black text-white">Poste Caisse</h1>
             <p className="text-xs text-slate-400 leading-relaxed">
-              L'espace Caisse POS n'est pas inclus dans la formule <strong className="text-amber-300">TÀMBALI</strong>.
+              Le Poste Caisse n'est pas inclus dans la formule <strong className="text-amber-300">TÀMBALI</strong>.
               Ce pack est dédié à un menu digital vitrine sans prise de commande numérique (l'établissement opérant avec sa propre caisse physique ou prise de commande orale directe).
             </p>
           </div>
@@ -813,7 +813,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             <img src="/logo.png" alt="Lou Ame Tay ?" className="w-9 h-9 rounded-2xl object-cover border border-amber-500/40" />
             <div>
               <span className="text-base font-black text-white block leading-tight">Lou Ame Tay ?</span>
-              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Terminal Caisse POS</span>
+              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Poste Caisse</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
@@ -989,8 +989,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                 <Receipt className="w-5 h-5" />
               </div>
               <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                Écran Caisse &amp; Comptoir Express
+                Poste Caisse — Lou Ame Tay?
               </h1>
+
 
               {currentSession ? (
                 <span className="text-[11px] font-black text-emerald-900 bg-emerald-100 border border-emerald-300 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">

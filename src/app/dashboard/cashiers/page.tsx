@@ -255,7 +255,7 @@ export default function CashiersManagementPage() {
               className="px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2 shadow-xs transition-all"
             >
               <Store className="w-4 h-4" />
-              <span>Ouvrir l'Écran Caisse POS</span>
+              <span>Ouvrir le Poste Caisse</span>
             </Link>
           </div>
         </div>

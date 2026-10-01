@@ -1,5 +1,11 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { DashboardBackground } from '@/components/DashboardBackground';
+
+export const metadata: Metadata = {
+  title: 'Tableau de Bord — Espace Gérant Lou Ame Tay?',
+  description: 'Tableau de bord de gestion pour restaurateurs Lou Ame Tay ?',
+};
 
 export default function DashboardLayout({
   children,

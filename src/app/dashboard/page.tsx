@@ -186,6 +186,7 @@ export default function OperationalDashboardPage() {
 
   // Initialize restaurant name & date
   useEffect(() => {
+    document.title = 'Tableau de Bord — Espace Gérant Lou Ame Tay?';
     let activeId = '';
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -430,15 +431,19 @@ export default function OperationalDashboardPage() {
               />
             </Link>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                  {restaurantName}
+                  Tableau de Bord — Espace Gérant Lou Ame Tay?
                 </h1>
+                <span className="text-xs text-amber-900 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300">
+                  {restaurantName}
+                </span>
                 <span className="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Caisse Ouverte
                 </span>
               </div>
+
               <p className="text-xs text-slate-500 flex items-center gap-1.5">
                 <span>📅 {currentDateString}</span>
                 <span className="text-slate-300">•</span>
@@ -498,14 +503,32 @@ export default function OperationalDashboardPage() {
               )}
             </div>
 
-            {/* Sécurité & Mot de passe Gérant */}
-            <button
-              onClick={() => setIsChangePasswordOpen(true)}
-              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs cursor-pointer"
-              title="Modifier votre mot de passe de connexion"
+            {/* Paramètres Autonomes */}
+            <Link
+              href="/dashboard/settings"
+              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Configurer les paramètres de l'établissement"
             >
-              <span>🔐 Sécurité & Accès</span>
-            </button>
+              <span>⚙️ Paramètres</span>
+            </Link>
+
+            {/* Équipe & Personnel */}
+            <Link
+              href="/dashboard/team"
+              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Gérer les serveurs et la brigade cuisine"
+            >
+              <span>👥 Équipe</span>
+            </Link>
+
+            {/* Support & Documentation */}
+            <Link
+              href="/dashboard/help"
+              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
+              title="Centre d'aide et assistance technique"
+            >
+              <span>📚 Support</span>
+            </Link>
 
             {/* Studio de Marque Branding */}
             <Link
@@ -522,7 +545,7 @@ export default function OperationalDashboardPage() {
               currentPlanSlug={currentPlanSlug}
               restaurantName={restaurantName}
               href="/dashboard/display"
-              label="🖥️ Écran TV"
+              label="🖥️ Affichage Salle"
               title="Configurer la diffusion sur écran TV / Vidéoprojecteur"
               className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
             />
@@ -533,8 +556,8 @@ export default function OperationalDashboardPage() {
               currentPlanSlug={currentPlanSlug}
               restaurantName={restaurantName}
               href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
-              label="📢 Retrait Guichet"
-              title="Ouvrir l'Écran TV Retrait Commandes (Status Board Fast-Food)"
+              label="📢 Écran Retrait Client"
+              title="Ouvrir l'Écran Retrait Client de votre établissement"
               externalLink
               className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
             />
@@ -545,20 +568,20 @@ export default function OperationalDashboardPage() {
               currentPlanSlug={currentPlanSlug}
               restaurantName={restaurantName}
               href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
-              label="⚡ Caisse Express"
-              title="Ouvrir le Terminal Caisse POS de votre établissement"
+              label="⚡ Poste Caisse"
+              title="Ouvrir le Poste Caisse Enregistreuse de votre établissement"
               externalLink
               className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
             />
 
-            {/* Kitchen KDS Quick View */}
+            {/* Kitchen Brigade Quick View */}
             <LockedHeaderButton
               featureKey="KITCHEN_KDS"
               currentPlanSlug={currentPlanSlug}
               restaurantName={restaurantName}
               href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
-              label="👨‍🍳 Écran Cuisine KDS"
-              title="Ouvrir l'Écran Cuisine KDS de votre établissement"
+              label="👨‍🍳 Brigade Cuisine"
+              title="Ouvrir l'Écran Cuisine de votre établissement"
               externalLink
               className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
             />
@@ -568,10 +591,11 @@ export default function OperationalDashboardPage() {
               href={`/r/${restaurantSubdomain || restaurantId}`}
               target="_blank"
               className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black px-3.5 py-2.5 rounded-2xl transition-all shadow-xs"
-              title="Consulter le menu digital en ligne"
+              title="Consulter le Menu Client en ligne"
             >
               <span>👁️ Voir Menu Client</span>
             </Link>
+
 
             {/* Badge Formule Active */}
             <span className="hidden md:inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 text-xs font-black px-3 py-2 rounded-2xl shadow-2xs">
@@ -1060,8 +1084,8 @@ export default function OperationalDashboardPage() {
               currentPlanSlug={currentPlanSlug}
               restaurantName={restaurantName}
               href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
-              title="Caisse & Comptoir Express"
-              description="Terminal caisse POS tactile et impression 80mm"
+              title="Poste Caisse"
+              description="Caisse Enregistreuse tactile et impression 80mm"
               externalLink
               icon={<Receipt className="w-6 h-6" />}
               iconBgColor="bg-purple-100"
@@ -1094,13 +1118,13 @@ export default function OperationalDashboardPage() {
               iconColor="text-emerald-800"
             />
 
-            {/* 7. Écran Cuisine KDS */}
+            {/* 7. Écran Cuisine */}
             <LockedFeatureCard
               featureKey="KITCHEN_KDS"
               currentPlanSlug={currentPlanSlug}
               restaurantName={restaurantName}
               href="/dashboard/kitchen"
-              title="Écran Cuisine KDS"
+              title="Écran Cuisine"
               description="Commandes en direct et alertes sonores rush"
               icon={<Store className="w-6 h-6" />}
               iconBgColor="bg-orange-100"

@@ -58,6 +58,13 @@ export default function FastFoodPickupBoardPage() {
   const [readyOrders, setReadyOrders] = useState<OrderItem[]>([]);
   const [recentlyServed, setRecentlyServed] = useState<OrderItem[]>([]);
   const [currentTime, setCurrentTime] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = "Écran Retrait Client — Lou Ame Tay?";
+    }
+  }, []);
+
   const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -273,8 +280,13 @@ export default function FastFoodPickupBoardPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">
-                {restaurant?.name || 'Lou Ame Tay ?'}
+                Écran Retrait Client — Lou Ame Tay?
               </h1>
+              {restaurant?.name && (
+                <span className="text-xs text-amber-300 font-bold bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30">
+                  {restaurant.name}
+                </span>
+              )}
               <span className="px-3 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1.5 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 DIRECT GUICHET EN SALLE

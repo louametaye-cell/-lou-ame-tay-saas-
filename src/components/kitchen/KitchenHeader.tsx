@@ -39,7 +39,7 @@ interface KitchenHeaderProps {
 }
 
 export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
-  restaurantName = 'Écran Cuisine (KDS)',
+  restaurantName = 'Écran Cuisine',
   isConnected,
   isAudioEnabled,
   onToggleAudio,
@@ -85,13 +85,14 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
               </div>
               <div>
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
-                  <span>Cuisine KDS</span>
-                  {restaurantName && restaurantName !== 'Écran Cuisine (KDS)' ? (
+                  <span>Brigade Cuisine — Lou Ame Tay?</span>
+                  {restaurantName && restaurantName !== 'Écran Cuisine' ? (
                     <span className="text-xs text-amber-800 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-200">
                       {restaurantName}
                     </span>
                   ) : null}
                 </h1>
+
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />

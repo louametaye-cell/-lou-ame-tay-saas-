@@ -8,8 +8,15 @@ function KitchenPageContent() {
   const searchParams = useSearchParams();
   const restaurantId = searchParams?.get('restaurantId') || undefined;
 
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = "Brigade Cuisine — Lou Ame Tay?";
+    }
+  }, []);
+
   return <KitchenKDSView initialRestaurantId={restaurantId} />;
 }
+
 
 export default function KitchenPage() {
   return (

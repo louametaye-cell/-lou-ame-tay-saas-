@@ -8,8 +8,15 @@ function CashierPageContent() {
   const searchParams = useSearchParams();
   const restaurantId = searchParams?.get('restaurantId') || undefined;
 
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = "Poste Caisse — Lou Ame Tay?";
+    }
+  }, []);
+
   return <CashierPOS initialRestaurantId={restaurantId} />;
 }
+
 
 export default function CashierPage() {
   return (

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { prisma } from '@/lib/prisma';
@@ -11,6 +12,32 @@ interface PageProps {
     subdomain: string;
   };
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  let restaurantName = 'Restaurant';
+  try {
+    const tenant = await (prisma as any).tenant.findFirst({
+      where: {
+        OR: [
+          { subdomain: resolvedParams.subdomain },
+          { id: resolvedParams.subdomain }
+        ]
+      },
+      select: { businessName: true }
+    });
+    if (tenant?.businessName) {
+      restaurantName = tenant.businessName;
+    }
+  } catch (e) {
+    // Fallback silencieux
+  }
+
+  return {
+    title: `${restaurantName} — Menu Digital`,
+    description: `Découvrez le menu digital de ${restaurantName} sur Lou Ame Tay ?`,
+  };
 }
 
 export default async function FriendlySubdomainMenuPage({ params, searchParams }: PageProps) {
