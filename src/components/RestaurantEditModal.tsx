@@ -390,7 +390,15 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsActive(!isActive)}
+                onClick={() => {
+                  const nextActive = !isActive;
+                  setIsActive(nextActive);
+                  if (nextActive && status === 'SUSPENDED') {
+                    setStatus('ACTIVE');
+                  } else if (!nextActive && status === 'ACTIVE') {
+                    setStatus('SUSPENDED');
+                  }
+                }}
                 className={`w-12 h-7 rounded-full p-1 transition-colors ${isActive ? 'bg-[#00A86B]' : 'bg-slate-300'}`}
               >
                 <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${isActive ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -478,7 +486,15 @@ export const RestaurantEditModal: React.FC<RestaurantEditModalProps> = ({
                 <label className="text-xs font-bold text-slate-700 block mb-1">Statut de Règlement</label>
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(e) => {
+                    const newStatus = e.target.value;
+                    setStatus(newStatus);
+                    if (newStatus === 'ACTIVE' || newStatus === 'TRIAL') {
+                      setIsActive(true);
+                    } else if (newStatus === 'SUSPENDED') {
+                      setIsActive(false);
+                    }
+                  }}
                   className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 focus:border-[#FF6B00] outline-none text-xs font-bold shadow-2xs"
                 >
                   <option value="ACTIVE">🟢 ACTIVE (Opérationnel)</option>

@@ -113,12 +113,34 @@ async function handleUpdate(
       subscriptionUpdateData.monthlyFee = Number(body.price);
     }
 
-    if (body.status) {
-      subscriptionUpdateData.subscriptionStatus = body.status;
+    if (body.action === 'toggle-active') {
+      if (body.isActive === true) {
+        subscriptionUpdateData.subscriptionStatus = 'ACTIVE';
+      } else if (body.isActive === false) {
+        subscriptionUpdateData.subscriptionStatus = 'SUSPENDED';
+      }
+    } else {
+      if (body.status) {
+        subscriptionUpdateData.subscriptionStatus = body.status;
+      }
+      if (body.isActive === true && (!body.status || body.status === 'SUSPENDED')) {
+        subscriptionUpdateData.subscriptionStatus = 'ACTIVE';
+      } else if (body.isActive === false && (!body.status || body.status === 'ACTIVE')) {
+        subscriptionUpdateData.subscriptionStatus = 'SUSPENDED';
+      }
     }
 
-    if (body.isActive === false) {
-      subscriptionUpdateData.subscriptionStatus = 'SUSPENDED';
+    if (subscriptionUpdateData.subscriptionStatus === 'ACTIVE') {
+      const currentResto = await (prisma as any).tenant.findUnique({
+        where: { id: resolvedParams.id },
+        select: { subscriptionExpiresAt: true }
+      });
+      const now = new Date();
+      if (!currentResto?.subscriptionExpiresAt || new Date(currentResto.subscriptionExpiresAt) < now) {
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        subscriptionUpdateData.subscriptionExpiresAt = nextMonth;
+      }
     }
 
     let brandingUpdateData: any = {};
@@ -200,6 +222,7 @@ async function handleUpdate(
       logoUrl: updated.logoUrl,
       bannerUrl: updated.bannerUrl,
       branding: updated.branding || {},
+      isActive: updated.subscriptionStatus !== 'CANCELED' && updated.subscriptionStatus !== 'SUSPENDED',
       subscription: {
         id: updated.id,
         plan: updated.plan?.name || 'Inconnu',
