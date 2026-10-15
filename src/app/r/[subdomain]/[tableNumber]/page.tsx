@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
+import { ScreenShield } from '@/components/security/ScreenShield';
 
 // Correspondances d'anciens sous-domaines pour garantir zéro rupture sur les anciens QR codes / favoris
 const LEGACY_SUBDOMAINS: Record<string, string> = {
@@ -127,9 +128,11 @@ export default async function FriendlyTableMenuPage({ params, searchParams }: Pa
   }
 
   return (
-    <ClientMenuView
-      initialRestaurant={restaurant}
-      tableNumber={tableNum}
-    />
+    <ScreenShield userRole="CUSTOMER">
+      <ClientMenuView
+        initialRestaurant={restaurant}
+        tableNumber={tableNum}
+      />
+    </ScreenShield>
   );
 }

@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CashierPOS from '@/components/cashier/CashierPOS';
+import { ScreenShield } from '@/components/security/ScreenShield';
 
 function CashierPageContent() {
   const searchParams = useSearchParams();
@@ -14,7 +15,11 @@ function CashierPageContent() {
     }
   }, []);
 
-  return <CashierPOS initialRestaurantId={restaurantId} />;
+  return (
+    <ScreenShield userRole="CASHIER">
+      <CashierPOS initialRestaurantId={restaurantId} />
+    </ScreenShield>
+  );
 }
 
 

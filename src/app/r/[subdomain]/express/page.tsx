@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ClientMenuView } from '@/components/ClientMenuView';
 import { prisma } from '@/lib/prisma';
 import { RestaurantType } from '@/types';
+import { ScreenShield } from '@/components/security/ScreenShield';
 
 interface PageProps {
   params: Promise<{
@@ -103,10 +104,12 @@ export default async function ExpressCounterMenuPage({ params }: PageProps) {
   }
 
   return (
-    <ClientMenuView
-      initialRestaurant={restaurant}
-      tableNumber={0}
-      isExpress={true}
-    />
+    <ScreenShield userRole="CUSTOMER">
+      <ClientMenuView
+        initialRestaurant={restaurant}
+        tableNumber={0}
+        isExpress={true}
+      />
+    </ScreenShield>
   );
 }

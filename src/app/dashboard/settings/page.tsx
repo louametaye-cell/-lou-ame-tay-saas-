@@ -22,6 +22,7 @@ import {
   Download, 
   Eye, 
   RefreshCw,
+  Package,
   Edit2,
   Phone,
   Mail,
@@ -1017,40 +1018,39 @@ export default function DashboardSettingsPage() {
               </div>
             </div>
 
-            {/* Modal Aperçu QR Code Table */}
+            {/* Modal Information QR Code Sécurisé (RBAC Gérant) */}
             {qrModalTable && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-                <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+                <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-slate-200">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                     <span className="font-black text-slate-900 text-sm">
-                      QR Code — Table {qrModalTable.tableNumber} {qrModalTable.label ? `(${qrModalTable.label})` : ''}
+                      Table {qrModalTable.tableNumber} {qrModalTable.label ? `(${qrModalTable.label})` : ''}
                     </span>
                     <button onClick={() => setQrModalTable(null)} className="text-slate-400 hover:text-slate-700 p-1">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  <div className="p-4 bg-white border border-slate-200 rounded-2xl flex justify-center shadow-xs">
-                    <QRCodeSVG
-                      value={`https://www.louametay.com/r/${restaurantSubdomain || restaurantId}?table=${qrModalTable.tableNumber}`}
-                      size={200}
-                      level="H"
-                      includeMargin
-                    />
+                  <div className="p-6 bg-slate-900 text-white rounded-2xl flex flex-col items-center justify-center gap-3 shadow-inner">
+                    <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">
+                      <ShieldCheck className="w-8 h-8" />
+                    </div>
+                    <span className="font-black text-xs uppercase tracking-wider text-amber-300">
+                      Tirage Physique Certifié DAW
+                    </span>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      L&apos;export vectoriel et l&apos;impression des QR codes sont strictement réservés à l&apos;administration centrale DAW pour garantir l&apos;intégrité et la plastification étanche lavable.
+                    </p>
                   </div>
 
-                  <p className="text-xs text-slate-500 font-medium">
-                    Scannez pour ouvrir le menu digital rattaché directement à cette table.
-                  </p>
-
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => window.print()}
-                      className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md"
+                    <Link
+                      href="/dashboard/qrcodes"
+                      className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md"
                     >
-                      <Printer className="w-4 h-4" />
-                      <span>Imprimer le chevalet</span>
-                    </button>
+                      <Package className="w-4 h-4" />
+                      <span>Commander nos Packs Chevalets</span>
+                    </Link>
                   </div>
                 </div>
               </div>

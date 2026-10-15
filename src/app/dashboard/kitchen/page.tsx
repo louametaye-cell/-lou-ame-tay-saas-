@@ -7,6 +7,7 @@ import { KitchenAlertManager } from '@/components/kitchen/KitchenAlertManager';
 import { KitchenHistory } from '@/components/KitchenHistory';
 import { History, LayoutGrid } from 'lucide-react';
 import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
+import { ScreenShield } from '@/components/security/ScreenShield';
 
 export default function DashboardKitchenPage() {
   const [restaurantName, setRestaurantName] = useState('Écran Cuisine');
@@ -63,88 +64,90 @@ export default function DashboardKitchenPage() {
 
   return (
     <LockedFeatureGuard featureKey="KITCHEN_KDS">
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
-      {/* 1. KDS Fixed Header */}
-      <KitchenHeader
-        restaurantName={restaurantName}
-        isConnected={isConnected}
-        isAudioEnabled={isAudioEnabled}
-        onToggleAudio={() => setIsAudioEnabled((prev) => !prev)}
-        counts={{
-          pending: pendingCount,
-          preparing: preparingCount,
-          ready: readyCount,
-          served: servedCount,
-          urgent: urgentCount,
-        }}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-        onRefresh={refetch}
-        isLoading={isLoading}
-      />
-
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 pt-5 space-y-6">
-        {/* Repeating Alert Banner if pending orders */}
-        <KitchenAlertManager
-          pendingOrders={pendingOrders}
-          onAcknowledgeAll={handleAcknowledgeAll}
+      <ScreenShield userRole="KITCHEN_STAFF">
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
+        {/* 1. KDS Fixed Header */}
+        <KitchenHeader
+          restaurantName={restaurantName}
+          isConnected={isConnected}
+          isAudioEnabled={isAudioEnabled}
+          onToggleAudio={() => setIsAudioEnabled((prev) => !prev)}
+          counts={{
+            pending: pendingCount,
+            preparing: preparingCount,
+            ready: readyCount,
+            served: servedCount,
+            urgent: urgentCount,
+          }}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          onRefresh={refetch}
+          isLoading={isLoading}
         />
 
-        {/* View Tabs Selector */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setActiveTab('LIVE')}
-              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
-                activeTab === 'LIVE'
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span>Tickets en Direct ({pendingCount + preparingCount})</span>
-            </button>
+        {/* Main Container */}
+        <main className="max-w-7xl mx-auto px-4 pt-5 space-y-6">
+          {/* Repeating Alert Banner if pending orders */}
+          <KitchenAlertManager
+            pendingOrders={pendingOrders}
+            onAcknowledgeAll={handleAcknowledgeAll}
+          />
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('HISTORY')}
-              className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
-                activeTab === 'HISTORY'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <History className="w-4 h-4" />
-              <span>Historique ({servedCount})</span>
-            </button>
+          {/* View Tabs Selector */}
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">
+            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setActiveTab('LIVE')}
+                className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                  activeTab === 'LIVE'
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                <span>Tickets en Direct ({pendingCount + preparingCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('HISTORY')}
+                className={`min-h-[40px] px-4 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                  activeTab === 'HISTORY'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <History className="w-4 h-4" />
+                <span>Historique ({servedCount})</span>
+              </button>
+            </div>
+
+            <div className="text-xs text-slate-500 font-mono font-medium">
+              {pendingCount + preparingCount} en cuisine • {servedCount} servie(s)
+            </div>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono font-medium">
-            {pendingCount + preparingCount} en cuisine • {servedCount} servie(s)
-          </div>
-        </div>
+          {/* Tab 1: Live KDS Grid */}
+          {activeTab === 'LIVE' && (
+            <OrderTicketGrid
+              orders={orders}
+              onUpdateStatus={updateOrderStatus}
+              restaurantName={restaurantName}
+              activeFilter={activeFilter}
+            />
+          )}
 
-        {/* Tab 1: Live KDS Grid */}
-        {activeTab === 'LIVE' && (
-          <OrderTicketGrid
-            orders={orders}
-            onUpdateStatus={updateOrderStatus}
-            restaurantName={restaurantName}
-            activeFilter={activeFilter}
-          />
-        )}
-
-        {/* Tab 2: History View */}
-        {activeTab === 'HISTORY' && (
-          <KitchenHistory
-            restaurantId={restaurantId}
-            restaurantName={restaurantName}
-          />
-        )}
-      </main>
-    </div>
+          {/* Tab 2: History View */}
+          {activeTab === 'HISTORY' && (
+            <KitchenHistory
+              restaurantId={restaurantId}
+              restaurantName={restaurantName}
+            />
+          )}
+        </main>
+      </div>
+      </ScreenShield>
     </LockedFeatureGuard>
   );
 }

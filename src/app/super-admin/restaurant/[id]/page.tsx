@@ -367,6 +367,44 @@ export default function SuperAdminRestaurantDetailPage() {
     }
   };
 
+  const [isExportingZip, setIsExportingZip] = useState(false);
+
+  const handleExportQRCodesZip = async () => {
+    try {
+      setIsExportingZip(true);
+      toast.info('Génération du pack vectoriel SVG & ZIP en cours...');
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('lou_ame_tay_superadmin_auth') || '' : '';
+      const res = await fetch(`/api/admin/restaurants/${id}/qr-export`, {
+        headers: {
+          'x-superadmin-token': token,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erreur lors de l\'exportation');
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `qr-lou-ame-tay-${restaurant?.subdomain || id}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+
+      toast.success('Pack QR Codes SVG (ZIP) téléchargé avec succès !');
+    } catch (e: any) {
+      toast.error(e.message || 'Échec du téléchargement du pack QR');
+    } finally {
+      setIsExportingZip(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex items-center justify-center">
@@ -1000,6 +1038,16 @@ export default function SuperAdminRestaurantDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-2.5 flex-wrap">
+                  {/* BOUTON EXPORT QR CODES SVG / ZIP (SUPER-ADMIN EXCLUSIF) */}
+                  <button
+                    onClick={handleExportQRCodesZip}
+                    disabled={isExportingZip}
+                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs sm:text-sm font-black px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{isExportingZip ? 'Génération du ZIP...' : '📦 Exporter Pack QR SVG (ZIP)'}</span>
+                  </button>
+
                   {/* BOUTON EXPORT CSV QR CODES POUR IMPRIMEUR */}
                   <button
                     onClick={handleExportQRCodesCSV}

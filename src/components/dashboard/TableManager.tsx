@@ -14,7 +14,6 @@ import {
   Phone,
   Printer
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { OrderType } from '@/types';
 import { TableServiceLiveStatus } from './TableServiceLiveStatus';
 import { toast } from 'sonner';
@@ -379,15 +378,15 @@ export const TableManager: React.FC<TableManagerProps> = ({
                   </p>
                 </div>
 
-                <div className="p-4 bg-white rounded-3xl shadow-xl border-4 border-purple-400 shrink-0 self-center md:self-auto">
-                  <QRCodeSVG
-                    value={expressUrl}
-                    size={160}
-                    level="H"
-                    marginSize={1}
-                  />
-                  <span className="block text-center text-[10px] font-black text-purple-950 uppercase tracking-wider pt-2">
+                <div className="p-4 bg-slate-900 rounded-3xl shadow-xl border-2 border-purple-500/50 shrink-0 self-center md:self-auto flex flex-col items-center justify-center text-center gap-2 max-w-[180px]">
+                  <div className="p-3 bg-purple-500/20 text-purple-400 rounded-2xl border border-purple-400/30">
+                    <ShieldCheck className="w-8 h-8" />
+                  </div>
+                  <span className="text-[10px] font-black text-purple-300 uppercase tracking-wider">
                     ⚡ COMPTOIR EXPRESS
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    QR vectoriel officiel certifié DAW
                   </span>
                 </div>
               </div>
@@ -542,13 +541,16 @@ export const TableManager: React.FC<TableManagerProps> = ({
               {selectedTable !== null && (
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-5">
-                    <div className="p-3 bg-white rounded-2xl shadow-sm border-2 border-amber-400 shrink-0">
-                      <QRCodeSVG
-                        value={getTableUrl(selectedTable)}
-                        size={120}
-                        level="H"
-                        marginSize={1}
-                      />
+                    <div className="p-4 bg-slate-900 rounded-2xl shadow-sm border-2 border-amber-500/50 shrink-0 flex flex-col items-center justify-center text-center gap-1.5 max-w-[150px]">
+                      <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
+                        <ShieldCheck className="w-6 h-6" />
+                      </div>
+                      <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider">
+                        QR Certifié
+                      </span>
+                      <span className="text-[8px] text-slate-400 font-medium">
+                        Tirage physique DAW
+                      </span>
                     </div>
 
                     <div className="space-y-1 text-left">

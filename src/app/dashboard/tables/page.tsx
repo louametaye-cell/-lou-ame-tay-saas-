@@ -9,6 +9,7 @@ import {
   UtensilsCrossed 
 } from 'lucide-react';
 import { TableManager } from '@/components/dashboard/TableManager';
+import { ScreenShield } from '@/components/security/ScreenShield';
 
 export default function DashboardTablesPage() {
   const [subdomain, setSubdomain] = useState('');
@@ -79,16 +80,18 @@ export default function DashboardTablesPage() {
         </div>
       </header>
 
-      {/* Main Table Manager */}
-      <main className="max-w-7xl mx-auto px-4 pt-6">
-        <TableManager
-          key={subdomain}
-          subdomain={subdomain}
-          restaurantName={restaurantName}
-          initialTableCount={tableCount}
-          restaurantId={restaurantId}
-        />
-      </main>
+      {/* Main Table Manager enveloppé dans ScreenShield RESTAURANT_ADMIN (isQrZone=true) */}
+      <ScreenShield userRole="RESTAURANT_ADMIN" isQrZone={true}>
+        <main className="max-w-7xl mx-auto px-4 pt-6">
+          <TableManager
+            key={subdomain}
+            subdomain={subdomain}
+            restaurantName={restaurantName}
+            initialTableCount={tableCount}
+            restaurantId={restaurantId}
+          />
+        </main>
+      </ScreenShield>
     </div>
   );
 }

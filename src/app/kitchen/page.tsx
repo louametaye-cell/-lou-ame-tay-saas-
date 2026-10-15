@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import KitchenKDSView from '@/components/kitchen/KitchenKDSView';
+import { ScreenShield } from '@/components/security/ScreenShield';
 
 function KitchenPageContent() {
   const searchParams = useSearchParams();
@@ -14,7 +15,11 @@ function KitchenPageContent() {
     }
   }, []);
 
-  return <KitchenKDSView initialRestaurantId={restaurantId} />;
+  return (
+    <ScreenShield userRole="KITCHEN_STAFF">
+      <KitchenKDSView initialRestaurantId={restaurantId} />
+    </ScreenShield>
+  );
 }
 
 
