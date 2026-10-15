@@ -45,7 +45,7 @@ export const TableManager: React.FC<TableManagerProps> = ({
   const [tableCount, setTableCount] = useState(initialTableCount);
   const [selectedTable, setSelectedTable] = useState<number | null>(1);
   const [orders, setOrders] = useState<OrderType[]>([]);
-  const [baseUrl, setBaseUrl] = useState('');
+  const [baseUrl, setBaseUrl] = useState(process.env.NEXT_PUBLIC_APP_URL || 'https://www.louametay.com');
 
   const effectiveRestaurantId = propRestaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
   const effectiveSubdomain = propSubdomain || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_subdomain') : '') || '';
@@ -93,7 +93,8 @@ export const TableManager: React.FC<TableManagerProps> = ({
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setBaseUrl(window.location.origin);
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      setBaseUrl(isLocal ? window.location.origin : 'https://www.louametay.com');
     }
 
     fetchLiveOrders();

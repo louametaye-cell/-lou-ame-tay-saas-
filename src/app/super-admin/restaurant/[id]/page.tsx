@@ -75,7 +75,7 @@ export default function SuperAdminRestaurantDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance' | 'display' | 'configuration'>('overview');
-  const [appUrl, setAppUrl] = useState<string>('http://localhost:3000');
+  const [appUrl, setAppUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_URL || 'https://www.louametay.com');
   
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -118,7 +118,8 @@ export default function SuperAdminRestaurantDetailPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAppUrl(window.location.origin);
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      setAppUrl(isLocal ? window.location.origin : 'https://www.louametay.com');
     }
   }, []);
 

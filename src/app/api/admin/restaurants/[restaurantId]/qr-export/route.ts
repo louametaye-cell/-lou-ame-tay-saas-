@@ -42,7 +42,7 @@ export async function GET(
 
     const zip = new JSZip();
     const folder = zip.folder(`qr-${restaurant.subdomain}`);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://louametay.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.louametay.com';
 
     // Génération des QR Codes SVG vectoriels pour chaque table
     for (const table of restaurant.tables) {

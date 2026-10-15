@@ -286,7 +286,7 @@ export const HowItWorksSection: React.FC = () => {
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block" />
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block" />
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block" />
-                      <span className="ml-2 font-mono text-[11px] text-slate-400">app.louametay.sn/{activeScreenTab}</span>
+                      <span className="ml-2 font-mono text-[11px] text-slate-400">www.louametay.com/{activeScreenTab}</span>
                     </div>
                     <span className="text-[10px] text-emerald-400 font-mono">
                       ● Actif

@@ -34,7 +34,7 @@
 * **Email gérant** : `contact@madibarestaurant.sn`
 * **Code PIN Manager** : `1234`
 * **Mot de passe complet** : `Pass1234!`
-* **Menu Client QR Code** : `https://madiba-restaurant.louametay.sn/1`
+* **Menu Client QR Code** : `https://www.louametay.com/r/madiba-restaurant/table-1`
 
 ---
 
@@ -44,7 +44,7 @@
 * **Email gérant** : `contact@samsprestige.sn`
 * **Code PIN Manager** : `1234`
 * **Mot de passe complet** : `Pass1234!`
-* **Menu Client QR Code** : `https://sams-prestige.louametay.sn/1`
+* **Menu Client QR Code** : `https://www.louametay.com/r/sams-prestige/table-1`
 
 ---
 
@@ -54,7 +54,7 @@
 * **Email gérant** : `contact@animapizzeria.sn`
 * **Code PIN Manager** : `1234`
 * **Mot de passe complet** : `Pass1234!`
-* **Menu Client QR Code** : `https://anima-pizzeria.louametay.sn/1`
+* **Menu Client QR Code** : `https://www.louametay.com/r/anima-pizzeria/table-1`
 
 ---
 
@@ -64,7 +64,7 @@
 * **Email gérant** : `contact@hotellatdior.sn`
 * **Code PIN Manager** : `1234`
 * **Mot de passe complet** : `Pass1234!`
-* **Menu Client QR Code** : `https://hotel-lat-dior.louametay.sn/1`
+* **Menu Client QR Code** : `https://www.louametay.com/r/hotel-lat-dior/table-1`
 
 ---
 

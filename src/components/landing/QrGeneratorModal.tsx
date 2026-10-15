@@ -18,7 +18,8 @@ export const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ isOpen, onCl
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://app.louametay.sn/menu?resto=${encodeURIComponent(restaurantName)}&table=${tableNumber}`);
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.louametay.com';
+    navigator.clipboard.writeText(`${origin}/r/demo/table-${tableNumber}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
