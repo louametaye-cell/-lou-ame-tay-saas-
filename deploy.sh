@@ -38,5 +38,5 @@ sleep 5
 curl -f http://localhost:3000/api/admin/health || echo "⚠️ Attention : Vérification initiale du endpoint de santé."
 
 echo "======================================================================"
-echo "✅ DÉPLOIEMENT TERMINÉ AVEC SUCCÈS SUR HTTPS://LOUAMETAY.SN"
+echo "✅ DÉPLOIEMENT TERMINÉ AVEC SUCCÈS SUR HTTPS://WWW.LOUAMETAY.COM"
 echo "======================================================================"

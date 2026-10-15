@@ -60,7 +60,7 @@ DELETE FROM "tenants";
 ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "branding" JSONB;
 
 -- RESTAURANT 1 : Madiba Restau / MG Café Resto (Thiès) -> Pack Starter / Pro
--- Démo Starter : demo.starter@louametay.sn / Demo123!
+-- Compte Pilote : madiba-restaurant
 INSERT INTO "tenants" ("id", "business_name", "subdomain", "owner_name", "phone", "address", "city", "current_plan_id", "subscription_status", "monthly_fee", "logo_url", "banner_url", "branding", "subscription_expires_at", "created_at", "updated_at")
 VALUES (
   'tenant_madiba_restau',
@@ -75,14 +75,14 @@ VALUES (
   15000.00,
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
   'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
-  '{"primaryColor":"#FF6B00","secondaryColor":"#00A86B","fontTitle":"Poppins","fontBody":"Plus Jakarta Sans","googleReviewUrl":"https://maps.app.goo.gl/mgcaferesto","phone":"+221 77 458 74 74","whatsapp":"+221 77 458 74 74","address":"HLM Route de Mbour, Thiès","website":"https://louametay.sn","instagram":"mgcaferesto"}'::jsonb,
+  '{"primaryColor":"#FF6B00","secondaryColor":"#00A86B","fontTitle":"Poppins","fontBody":"Plus Jakarta Sans","googleReviewUrl":"https://maps.app.goo.gl/mgcaferesto","phone":"+221 77 458 74 74","whatsapp":"+221 77 458 74 74","address":"HLM Route de Mbour, Thiès","website":"https://www.louametay.com","instagram":"mgcaferesto"}'::jsonb,
   NOW() + INTERVAL '1 year',
   NOW(),
   NOW()
 );
 
 -- RESTAURANT 2 : Sam's Restaurant / Chez Collé (Thiès) -> Pack Pro
--- Démo Pro : demo.pro@louametay.sn / Demo123!
+-- Compte Pilote : sams-prestige
 INSERT INTO "tenants" ("id", "business_name", "subdomain", "owner_name", "phone", "address", "city", "current_plan_id", "subscription_status", "monthly_fee", "logo_url", "banner_url", "branding", "subscription_expires_at", "created_at", "updated_at")
 VALUES (
   'tenant_sams_restaurant',
@@ -125,7 +125,7 @@ VALUES (
 );
 
 -- RESTAURANT 4 : Hôtel Résidence Lat-Dior / Hôtel Cayor (Thiès) -> Pack Premium (5 Langues)
--- Démo Premium : demo.premium@louametay.sn / Demo123!
+-- Compte Pilote : hotel-lat-dior
 INSERT INTO "tenants" ("id", "business_name", "subdomain", "owner_name", "phone", "address", "city", "current_plan_id", "subscription_status", "monthly_fee", "logo_url", "banner_url", "branding", "subscription_expires_at", "created_at", "updated_at")
 VALUES (
   'tenant_hotel_lat_dior',

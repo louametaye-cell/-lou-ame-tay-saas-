@@ -64,7 +64,7 @@ export default function RestaurantLoginPage() {
         localStorage.setItem('current_restaurant_subdomain', data.restaurant.subdomain);
         localStorage.setItem('current_restaurant_name', data.restaurant.name);
         toast.success(data.message || 'Connexion réussie !');
-        router.push(`/dashboard?restaurantId=${data.restaurant.id}`);
+        window.location.href = `/dashboard?restaurantId=${data.restaurant.id}`;
       } else {
         toast.error(data.error || 'Identifiants invalides');
       }
@@ -252,7 +252,7 @@ export default function RestaurantLoginPage() {
             {/* Support Contact */}
             <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 relative z-10">
               <a
-                href="https://wa.me/221762312003?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
+                href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
@@ -261,7 +261,7 @@ export default function RestaurantLoginPage() {
                 <span>Assistance WhatsApp 24/7</span>
               </a>
 
-              <span className="text-slate-400 text-[11px]">Sénégal 🇸🇳 2026</span>
+              <span className="text-slate-400 text-[11px] font-medium">Sénégal • 2026</span>
             </div>
           </div>
         </div>

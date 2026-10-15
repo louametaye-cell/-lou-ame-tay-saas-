@@ -58,7 +58,7 @@ DELETE FROM "tenants";
 -- ------------------------------------------------------------------------------
 
 -- RESTAURANT 1 : MG Café Resto (Dakar) -> Pack STARTER
--- Login Commercial : demo.starter@louametay.sn / Demo123!
+-- Compte Pilote : madiba-restaurant
 INSERT INTO "tenants" ("id", "business_name", "subdomain", "owner_name", "phone", "address", "city", "current_plan_id", "subscription_status", "monthly_fee", "logo_url", "banner_url", "subscription_expires_at", "created_at", "updated_at")
 VALUES (
   'tenant_mg_cafe_resto',
@@ -79,7 +79,7 @@ VALUES (
 );
 
 -- RESTAURANT 2 : Chez Collé Restaurant (Thiès) -> Pack PRO
--- Login Commercial : demo.pro@louametay.sn / Demo123!
+-- Compte Pilote : sams-prestige
 INSERT INTO "tenants" ("id", "business_name", "subdomain", "owner_name", "phone", "address", "city", "current_plan_id", "subscription_status", "monthly_fee", "logo_url", "banner_url", "subscription_expires_at", "created_at", "updated_at")
 VALUES (
   'tenant_chez_colle',
@@ -100,7 +100,7 @@ VALUES (
 );
 
 -- RESTAURANT 3 : Hôtel Restaurant Cayor (Saly / Mbour) -> Pack PREMIUM (Multi-Zones & 5 Langues)
--- Login Commercial : demo.premium@louametay.sn / Demo123!
+-- Compte Pilote : hotel-lat-dior
 INSERT INTO "tenants" ("id", "business_name", "subdomain", "owner_name", "phone", "address", "city", "current_plan_id", "subscription_status", "monthly_fee", "logo_url", "banner_url", "subscription_expires_at", "created_at", "updated_at")
 VALUES (
   'tenant_hotel_cayor',

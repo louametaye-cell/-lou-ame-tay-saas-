@@ -136,8 +136,8 @@ const DEFAULT_FEATURES = [
 // ------------------------------------------------------------------------------
 const RESTAURANTS_DATA = [
   // ============================================================================
-  // RESTAURANT 1 : Madiba Restau (Thiès) -> Pack STARTER (ou Pro) / Démo Starter
-  // Compte Démo : demo.starter@louametay.sn / Demo123!
+  // RESTAURANT 1 : Madiba Restau (Thiès) -> Pack STARTER (ou Pro)
+  // Compte Pilote : madiba-restaurant
   // ============================================================================
   {
     id: 'tenant_madiba_restau',
@@ -161,7 +161,7 @@ const RESTAURANTS_DATA = [
       phone: '+221 77 458 74 74',
       whatsapp: '+221 77 458 74 74',
       address: 'HLM Route de Mbour, Thiès',
-      website: 'https://louametay.sn',
+      website: 'https://www.louametay.com',
       instagram: 'mgcaferesto'
     },
     tablesCount: 12,
@@ -245,8 +245,8 @@ const RESTAURANTS_DATA = [
   },
 
   // ============================================================================
-  // RESTAURANT 2 : Sam's Restaurant (Thiès) -> Pack PRO / Démo Pro
-  // Compte Démo : demo.pro@louametay.sn / Demo123!
+  // RESTAURANT 2 : Sam's Restaurant (Thiès) -> Pack PRO
+  // Compte Pilote : sams-prestige
   // ============================================================================
   {
     id: 'tenant_sams_restaurant',
@@ -461,7 +461,7 @@ const RESTAURANTS_DATA = [
 
   // ============================================================================
   // RESTAURANT 4 : Hôtel Résidence Lat-Dior (Thiès) -> Pack PREMIUM (5 Langues)
-  // Compte Démo : demo.premium@louametay.sn / Demo123!
+  // Compte Pilote : hotel-lat-dior
   // ============================================================================
   {
     id: 'tenant_hotel_lat_dior',

@@ -66,7 +66,7 @@ const DEFAULT_FEATURES = [
 const RESTAURANTS_DATA = [
   // ============================================================================
   // RESTAURANT 1 : Madiba Restau / MG Café Resto (Thiès / Dakar) -> Pack STARTER / PRO
-  // Compte Démo Commercial : demo.starter@louametay.sn / Demo123!
+  // Compte Pilote Production : madiba-restaurant
   // ============================================================================
   {
     id: 'tenant_madiba_restau',
@@ -163,7 +163,7 @@ const RESTAURANTS_DATA = [
 
   // ============================================================================
   // RESTAURANT 2 : Sam's Restaurant / Chez Collé (Thiès) -> Pack PRO
-  // Compte Démo Commercial : demo.pro@louametay.sn / Demo123!
+  // Compte Pilote Production : sams-prestige
   // ============================================================================
   {
     id: 'tenant_sams_restaurant',
@@ -354,7 +354,7 @@ const RESTAURANTS_DATA = [
 
   // ============================================================================
   // RESTAURANT 4 : Hôtel Résidence Lat-Dior / Hôtel Cayor -> Pack PREMIUM (5 Langues)
-  // Compte Démo Commercial : demo.premium@louametay.sn / Demo123!
+  // Compte Pilote Production : hotel-lat-dior
   // ============================================================================
   {
     id: 'tenant_hotel_lat_dior',
@@ -876,17 +876,14 @@ async function main() {
 
   console.log('\n🎉 =========================================================');
   console.log('✅ SEEDING TERMINÉ AVEC SUCCÈS !');
-  console.log('3 Comptes Démo Commerciaux Configurés :');
-  console.log('  1. Démo Starter : demo.starter@louametay.sn / Demo123!');
-  console.log('     -> Restaurant : MG Café Resto (Madiba) | Pack Starter (15k)');
+  console.log('3 Comptes Pilotes Production Configurés :');
+  console.log('  1. Madiba Restau : madiba-restaurant | Pack Starter');
   console.log('     -> URL Client : /r/mg-cafe-resto/table-1');
   console.log('');
-  console.log('  2. Démo Pro     : demo.pro@louametay.sn / Demo123!');
-  console.log('     -> Restaurant : Chez Collé (Sam\'s) | Pack Pro (25k)');
+  console.log('  2. Sam\'s Prestige : sams-prestige | Pack Pro');
   console.log('     -> URL Client : /r/chez-colle/table-1');
   console.log('');
-  console.log('  3. Démo Premium : demo.premium@louametay.sn / Demo123!');
-  console.log('     -> Restaurant : Hôtel Restaurant Cayor (Lat-Dior) | Pack Premium (45k)');
+  console.log('  3. Hôtel Lat-Dior : hotel-lat-dior | Pack Premium');
   console.log('     -> URL Client : /r/hotel-cayor/table-1 (Multi-Zones & 5 Langues)');
   console.log('=========================================================\n');
 }
