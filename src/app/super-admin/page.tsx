@@ -125,7 +125,13 @@ export default function SuperAdminDashboardPage() {
   const fetchRestaurants = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/super-admin/restaurants');
+      const savedToken = typeof window !== 'undefined' ? localStorage.getItem('lou_ame_tay_superadmin_auth') : null;
+      const headers: Record<string, string> = {};
+      if (savedToken) {
+        headers['Authorization'] = `Bearer ${savedToken}`;
+        headers['x-superadmin-token'] = savedToken;
+      }
+      const res = await fetch('/api/super-admin/restaurants', { headers });
       if (res.ok) {
         const data = await res.json();
         setRestaurants(data.restaurants || []);

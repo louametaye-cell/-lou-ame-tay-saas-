@@ -1,22 +1,10 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import Link from 'next/link';
 import { 
   MapPin, 
-  Layers, 
-  ExternalLink, 
-  Store, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  Navigation, 
   Maximize2, 
-  RotateCcw,
-  Sparkles,
-  QrCode,
-  ShieldCheck,
-  Building2,
+  Store,
   ChevronRight
 } from 'lucide-react';
 import { RestaurantType } from '@/types';
@@ -37,11 +25,11 @@ export function SenegalRestaurantsMap({
   const mapInstanceRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
   const tileLayerRef = useRef<any>(null);
+  const LRef = useRef<any>(null);
 
-  const [isLeafletReady, setIsLeafletReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string>('ALL');
   const [tileStyle, setTileStyle] = useState<MapTileStyle>('light');
-  const [activeRestaurant, setActiveRestaurant] = useState<RestaurantType | null>(null);
 
   // Statistiques rapides
   const stats = useMemo(() => {
@@ -59,85 +47,65 @@ export function SenegalRestaurantsMap({
     return { total: restaurants.length, active, trial, suspended };
   }, [restaurants]);
 
-  // Chargement asynchrone de Leaflet via CDN pour éviter tout conflit SSR Next.js
+  // Chargement asynchrone dynamique de Leaflet côté client
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    let isMounted = true;
 
-    // Vérifier si Leaflet est déjà injecté
-    if ((window as any).L) {
-      setIsLeafletReady(true);
-      return;
-    }
+    async function loadLeaflet() {
+      if (typeof window === 'undefined') return;
 
-    // Injecter CSS Leaflet
-    const existingLink = document.getElementById('leaflet-css');
-    if (!existingLink) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-css';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      link.crossOrigin = '';
-      document.head.appendChild(link);
-    }
+      try {
+        const L = await import('leaflet');
+        if (!isMounted) return;
 
-    // Injecter JS Leaflet
-    const existingScript = document.getElementById('leaflet-js');
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.id = 'leaflet-js';
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.crossOrigin = '';
-      script.async = true;
-      script.onload = () => {
-        setIsLeafletReady(true);
-      };
-      document.body.appendChild(script);
-    } else {
-      existingScript.addEventListener('load', () => setIsLeafletReady(true));
-    }
-  }, []);
+        LRef.current = L.default || L;
 
-  // Initialisation de la carte une fois Leaflet prêt
-  useEffect(() => {
-    if (!isLeafletReady || !mapContainerRef.current) return;
-    const L = (window as any).L;
-    if (!L) return;
+        if (mapContainerRef.current && !mapInstanceRef.current) {
+          const map = LRef.current.map(mapContainerRef.current, {
+            center: [14.7167, -16.0],
+            zoom: 7,
+            zoomControl: false,
+            attributionControl: false,
+          });
 
-    // Si une instance existe déjà, ne pas la recréer
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [14.7167, -16.0],
-        zoom: 7,
-        zoomControl: false,
-        attributionControl: false,
-      });
+          LRef.current.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Contrôle de zoom personnalisé en haut à droite
-      L.control.zoom({ position: 'topright' }).addTo(map);
+          const tileLayer = LRef.current.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            {
+              maxZoom: 19,
+              subdomains: 'abcd',
+            }
+          ).addTo(map);
 
-      // Couche de tuiles initiale (CartoDB Positron)
-      const tileLayer = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        {
-          maxZoom: 19,
-          subdomains: 'abcd',
+          const markersLayer = LRef.current.featureGroup().addTo(map);
+
+          mapInstanceRef.current = map;
+          tileLayerRef.current = tileLayer;
+          markersLayerRef.current = markersLayer;
+
+          setIsReady(true);
         }
-      ).addTo(map);
-
-      // Groupe de markers
-      const markersLayer = L.featureGroup().addTo(map);
-
-      mapInstanceRef.current = map;
-      tileLayerRef.current = tileLayer;
-      markersLayerRef.current = markersLayer;
+      } catch (err) {
+        console.error('Erreur chargement Leaflet:', err);
+      }
     }
-  }, [isLeafletReady]);
+
+    loadLeaflet();
+
+    return () => {
+      isMounted = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   // Changement de style de carte (Light, Dark, Satellite)
   useEffect(() => {
-    if (!mapInstanceRef.current || !isLeafletReady) return;
-    const L = (window as any).L;
-    if (!L) return;
+    if (!mapInstanceRef.current || !LRef.current) return;
+    const L = LRef.current;
 
     if (tileLayerRef.current) {
       mapInstanceRef.current.removeLayer(tileLayerRef.current);
@@ -155,18 +123,15 @@ export function SenegalRestaurantsMap({
       subdomains: tileStyle === 'satellite' ? [] : 'abcd',
     }).addTo(mapInstanceRef.current);
 
-    // Mettre la couche de tuiles en arrière-plan
     newLayer.bringToBack();
     tileLayerRef.current = newLayer;
-  }, [tileStyle, isLeafletReady]);
+  }, [tileStyle]);
 
-  // Rendu des markers de restaurants
+  // Mise à jour des markers dès que Leaflet ou restaurants changent
   useEffect(() => {
-    if (!mapInstanceRef.current || !markersLayerRef.current || !isLeafletReady) return;
-    const L = (window as any).L;
-    if (!L) return;
+    if (!mapInstanceRef.current || !markersLayerRef.current || !LRef.current) return;
+    const L = LRef.current;
 
-    // Vider les anciens markers
     markersLayerRef.current.clearLayers();
 
     restaurants.forEach((restaurant) => {
@@ -187,7 +152,7 @@ export function SenegalRestaurantsMap({
         statusLabel = 'Période d\'essai';
       }
 
-      // Icône HTML personnalisée avec halo pulsant
+      // Pin SVG stylisé avec halo pulsant
       const customIcon = L.divIcon({
         className: 'custom-daw-map-marker',
         html: `
@@ -212,7 +177,6 @@ export function SenegalRestaurantsMap({
 
       const marker = L.marker([coords.lat, coords.lng], { icon: customIcon });
 
-      // Contenu du Popup interactif stylisé DAW
       const logoHtml = restaurant.logoUrl 
         ? `<img src="${restaurant.logoUrl}" alt="${restaurant.name}" style="width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" />`
         : `<div style="width: 44px; height: 44px; border-radius: 12px; background: #0f172a; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px;">${restaurant.name.charAt(0)}</div>`;
@@ -254,7 +218,7 @@ export function SenegalRestaurantsMap({
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
             <a 
               href="/super-admin/restaurant/${restaurant.id}" 
-              style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 10px; border-radius: 8px; background: #0f172a; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; text-align: center; transition: background 0.2s;"
+              style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 10px; border-radius: 8px; background: #0f172a; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; text-align: center;"
             >
               Fiche Admin
             </a>
@@ -285,13 +249,20 @@ export function SenegalRestaurantsMap({
       });
 
       marker.on('click', () => {
-        setActiveRestaurant(restaurant);
         if (onSelectRestaurant) onSelectRestaurant(restaurant);
       });
 
       markersLayerRef.current.addLayer(marker);
     });
-  }, [restaurants, isLeafletReady, onSelectRestaurant]);
+
+    // Si on a des restaurants, ajuster la vue
+    if (restaurants.length > 0) {
+      const bounds = markersLayerRef.current.getBounds();
+      if (bounds.isValid()) {
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+      }
+    }
+  }, [restaurants, isReady, onSelectRestaurant]);
 
   // Centrage par région
   const handleSelectRegion = (region: RegionPreset) => {
@@ -439,7 +410,7 @@ export function SenegalRestaurantsMap({
 
       {/* Conteneur Cartographique */}
       <div className="relative w-full h-[480px] sm:h-[560px] bg-slate-100">
-        {!isLeafletReady && (
+        {!isReady && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/90 text-white backdrop-blur-xs">
             <div className="w-10 h-10 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mb-3"></div>
             <p className="text-sm font-bold tracking-tight">Initialisation de la carte satellite Sénégal...</p>
