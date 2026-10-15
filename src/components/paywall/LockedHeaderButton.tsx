@@ -12,6 +12,7 @@ interface LockedHeaderButtonProps {
   restaurantName?: string;
   href: string;
   label: string;
+  icon?: React.ReactNode;
   title?: string;
   className?: string;
   externalLink?: boolean;
@@ -23,6 +24,7 @@ export const LockedHeaderButton: React.FC<LockedHeaderButtonProps> = ({
   restaurantName = 'Mon Restaurant',
   href,
   label,
+  icon,
   title,
   className = '',
   externalLink = false,
@@ -41,13 +43,15 @@ export const LockedHeaderButton: React.FC<LockedHeaderButtonProps> = ({
           className={className}
           title={title}
         >
-          {label}
+          {icon}
+          <span>{label}</span>
         </a>
       );
     }
     return (
       <Link href={href} className={className} title={title}>
-        {label}
+        {icon}
+        <span>{label}</span>
       </Link>
     );
   }
@@ -58,7 +62,7 @@ export const LockedHeaderButton: React.FC<LockedHeaderButtonProps> = ({
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className={`flex items-center gap-1.5 bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-900 border border-dashed border-amber-300 text-xs font-bold px-3 py-2.5 rounded-2xl transition-all shadow-2xs cursor-pointer group`}
+        className={`flex items-center gap-1.5 bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-900 border border-dashed border-amber-300 text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-2xs cursor-pointer group`}
         title={`Fonctionnalité ${paywall.name} disponible avec le pack ${paywall.requiredPlanName} — Cliquez pour en savoir plus`}
       >
         <Lock className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />

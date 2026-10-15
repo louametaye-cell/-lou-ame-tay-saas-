@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Users, Sparkles, Clock, HelpCircle, ArrowRight, Utensils, Timer } from 'lucide-react';
+import { Users, Clock, HelpCircle, ArrowRight, Utensils, Timer } from 'lucide-react';
 import { formatFCFA } from '@/lib/utils';
 
 interface TableWelcomeModalProps {
@@ -63,7 +63,6 @@ export const TableWelcomeModal: React.FC<TableWelcomeModalProps> = ({
             <Utensils className="w-8 h-8 stroke-[2.5]" />
           </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
-            <span>👋</span>
             <span>Vous êtes à la Table {formattedTable}</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
@@ -119,7 +118,7 @@ export const TableWelcomeModal: React.FC<TableWelcomeModalProps> = ({
                   <Users className="w-5 h-5 text-white stroke-[2.5]" />
                 </div>
                 <div>
-                  <div className="font-black leading-tight">👥 Je rejoins le repas en cours</div>
+                  <div className="font-black leading-tight">Je rejoins le repas en cours</div>
                   <div className="text-[11px] font-normal text-emerald-100">
                     Ajouter mes plats sur la note de la table
                   </div>
@@ -136,11 +135,11 @@ export const TableWelcomeModal: React.FC<TableWelcomeModalProps> = ({
             >
               <div className="flex items-center gap-3 text-left">
                 <div className="p-2 bg-white/20 rounded-xl">
-                  <Sparkles className="w-5 h-5 text-white stroke-[2.5]" />
+                  <Utensils className="w-5 h-5 text-white stroke-[2.5]" />
                 </div>
                 <div>
                   <div className="font-black leading-tight flex items-center gap-1.5">
-                    <span>🆕 Je commence un nouveau repas</span>
+                    <span>Je commence un nouveau repas</span>
                     <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full font-bold">Défaut</span>
                   </div>
                   <div className="text-[11px] font-normal text-blue-100">

@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from 'next';
+import { Montserrat } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-montserrat',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Lou Ame Tay ? 🍽️ - Menu Digital & Commande à Table Sénégal',
@@ -48,7 +56,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="light scroll-smooth">
-      <body className="antialiased selection:bg-amber-500 selection:text-white min-h-screen bg-[#F8FAFC] text-slate-900">
+      <body className={`${montserrat.variable} font-sans antialiased selection:bg-amber-500 selection:text-white min-h-screen bg-[#F8FAFC] text-slate-900`}>
         {children}
         <Toaster position="top-center" richColors closeButton />
       </body>

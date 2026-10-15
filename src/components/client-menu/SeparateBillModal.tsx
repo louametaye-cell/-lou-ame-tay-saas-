@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, User, Check, X, ArrowRight, Sparkles } from 'lucide-react';
+import { Users, User, Check, X, ArrowRight } from 'lucide-react';
 
 interface SeparateBillModalProps {
   isOpen: boolean;

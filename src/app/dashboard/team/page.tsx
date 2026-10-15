@@ -15,7 +15,6 @@ import {
   X, 
   CheckCircle2, 
   Clock, 
-  Sparkles,
   HelpCircle
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';

@@ -250,8 +250,8 @@ export default function DisplaySettingsPage() {
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-amber-50 text-amber-600 text-2xl border border-amber-200">
-                    {activeModeInfo.emoji}
+                  <div className="p-3 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center">
+                    <activeModeInfo.icon className="w-7 h-7 text-amber-600" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -260,7 +260,7 @@ export default function DisplaySettingsPage() {
                         <span>Style Certifié par Super-Admin</span>
                       </span>
                       <span className="text-xs text-slate-500 font-bold">
-                        MG Digital Arts Work
+                        DAW Digital Arts Work — by MG
                       </span>
                     </div>
                     <h3 className="text-lg font-black text-slate-900 mt-0.5">
@@ -389,7 +389,7 @@ export default function DisplaySettingsPage() {
                             title="Lancer le mode Plein Écran Immersif (Showcase 100% Écran avec QR Code)"
                           >
                             <Maximize2 className="w-3.5 h-3.5" />
-                            <span>Plein Écran ✨</span>
+                            <span>Plein Écran</span>
                           </button>
                         </div>
                       </div>
@@ -425,12 +425,12 @@ export default function DisplaySettingsPage() {
                     <span>Besoin d&apos;écrans supplémentaires (Terrasse, Vitrine, Salle VIP) ?</span>
                   </span>
                   <p className="text-slate-500 text-[11px]">
-                    Commandez des licences d&apos;écrans additionnelles auprès de MG Digital Arts Work.
+                    Commandez des licences d&apos;écrans additionnelles auprès de DAW Digital Arts Work.
                   </p>
                 </div>
 
                 <a
-                  href="https://wa.me/221774587474?text=Bonjour%20MG%20Digital%20Arts%20Work%20je%20souhaite%20ajouter%20un%20ecran%20TV%20supplementaire%20a%20mon%20restaurant"
+                  href="https://wa.me/221774587474?text=Bonjour%20DAW%20Digital%20Arts%20Work%20je%20souhaite%20ajouter%20un%20ecran%20TV%20supplementaire%20a%20mon%20restaurant"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0"

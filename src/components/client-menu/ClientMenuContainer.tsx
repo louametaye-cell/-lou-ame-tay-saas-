@@ -301,7 +301,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
           const total = mapped.reduce((s, o) => s + (o.totalAmount || o.total || 0), 0);
           const count = mapped.reduce((s, o) => s + (o.items?.length || 1), 0);
           setJoinedSessionBanner({ isJoined: true, count, total });
-          toast.success(`👥 Vous avez rejoint la Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber} !`);
+          toast.success(`Vous avez rejoint la Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber} !`);
         }
       }
     } catch (e) {}
@@ -342,7 +342,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         localStorage.setItem(separateTimeKey, Date.now().toString());
       }
     }
-    toast.success(`👤 Addition Séparée activée pour ${name} ! Vos commandes seront sur votre note personnelle.`);
+    toast.success(`Addition séparée activée pour ${name}. Vos commandes seront sur votre note personnelle.`);
   };
 
   const handleSelectCommonBill = () => {
@@ -362,7 +362,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         } catch (e) {}
       }
     }
-    toast.info(`👥 Vous avez rejoint la note commune de la Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber}.`);
+    toast.info(`Vous avez rejoint la note commune de la Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber}.`);
   };
 
   const isReleasingTableRef = useRef<boolean>(false);
@@ -388,7 +388,7 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
       setActiveOrder(null);
       setJoinedSessionBanner(null);
       setIsOrderSuccessOpen(false);
-      toast.success(`✨ Bienvenue ! Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber} prête pour votre nouveau repas.`);
+      toast.success(`Bienvenue ! Table ${tableNumber < 10 ? '0' + tableNumber : tableNumber} prête pour votre nouveau repas.`);
     } catch (e) {
       toast.error('Erreur lors de la préparation de la table');
     } finally {

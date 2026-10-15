@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, CheckCircle2, ArrowRight, Smartphone, ChefHat, Sparkles } from 'lucide-react';
+import { Play, CheckCircle2, ArrowRight, Smartphone, ChefHat } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface DemoVideoSectionProps {

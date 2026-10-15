@@ -8,7 +8,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash('Pass1234!', 10);
   
   for (const t of tenants) {
-    const defaultEmail = `contact@${t.subdomain}.sn`;
+    const defaultEmail = `contact@${t.subdomain}.com`;
     await prisma.tenant.update({
       where: { id: t.id },
       data: {

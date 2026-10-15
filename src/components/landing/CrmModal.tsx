@@ -1403,7 +1403,7 @@ Si vous avez 10 minutes aujourd'hui, je peux passer directement à votre restaur
                         <input
                           type="email"
                           required
-                          placeholder="modou.fall@louametay.sn"
+                          placeholder="modou.fall@louametay.com"
                           value={newCommEmail}
                           onChange={(e) => setNewCommEmail(e.target.value)}
                           className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs"

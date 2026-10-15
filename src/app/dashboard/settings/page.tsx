@@ -630,7 +630,7 @@ export default function DashboardSettingsPage() {
                     value={identity.email}
                     onChange={(e) => setIdentity({ ...identity, email: e.target.value })}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:border-emerald-500 outline-hidden transition-all"
-                    placeholder="contact@restaurant.sn"
+                    placeholder="contact@restaurant.com"
                   />
                 </div>
               </div>

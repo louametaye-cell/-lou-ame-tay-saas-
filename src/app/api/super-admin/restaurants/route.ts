@@ -91,10 +91,10 @@ export async function POST(req: Request) {
     }
 
     // Résolution automatique de l'unicité de l'email
-    let uniqueEmail = `contact@${uniqueSubdomain}.sn`;
+    let uniqueEmail = `contact@${uniqueSubdomain}.com`;
     let emailCounter = 1;
     while (await (prisma as any).tenant.findFirst({ where: { email: uniqueEmail } })) {
-      uniqueEmail = `contact-${emailCounter}@${uniqueSubdomain}.sn`;
+      uniqueEmail = `contact-${emailCounter}@${uniqueSubdomain}.com`;
       emailCounter++;
     }
 

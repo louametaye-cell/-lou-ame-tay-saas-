@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Maximize2, Minimize2, ChefHat, Sparkles, QrCode, ArrowLeft, ArrowRight, Layers } from 'lucide-react';
+import { Clock, Maximize2, Minimize2, ChefHat, Utensils, QrCode, ArrowLeft, ArrowRight, Layers } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatFCFA } from '@/lib/utils';
 import { SlideItem, getAllergenEmoji } from './SlideshowDisplay';
@@ -140,19 +140,19 @@ export const FullscreenDisplay: React.FC<FullscreenDisplayProps> = ({
               <Image src={restaurantLogo} alt={restaurantName} fill className="object-cover" />
             </div>
           ) : (
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xl border border-emerald-500/30">
-              🍽️
+            <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+              <Utensils className="w-5 h-5 text-emerald-400" />
             </div>
           )}
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 fill-emerald-400" />
+              <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Plein Écran TV</span>
               </span>
               {isPaused && (
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
-                  ⏸ Pause
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
+                  Pause
                 </span>
               )}
             </div>
@@ -177,7 +177,7 @@ export const FullscreenDisplay: React.FC<FullscreenDisplayProps> = ({
                   : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span>🍽️</span>
+              <Utensils className="w-4 h-4" />
               <span>Tous les plats ({slides.length})</span>
             </button>
 
@@ -275,7 +275,7 @@ export const FullscreenDisplay: React.FC<FullscreenDisplayProps> = ({
             )}
             {slide?.category && (
               <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-slate-950 font-black text-xs sm:text-sm px-4 py-1.5 rounded-2xl shadow-lg border border-emerald-300/40">
-                <Sparkles className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+                <Layers className="w-3.5 h-3.5 text-slate-950" />
                 <span className="uppercase tracking-wider">{slide.category}</span>
               </div>
             )}

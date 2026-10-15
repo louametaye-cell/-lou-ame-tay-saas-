@@ -20,7 +20,7 @@ async function run() {
       data: {
         businessName: 'Test Name',
         subdomain: 'testsub',
-        email: 'test@testsub.sn',
+        email: 'test@testsub.com',
         passwordHash: await bcrypt.hash('Pass1234!', 10),
         ownerName: '',
         phone: '',

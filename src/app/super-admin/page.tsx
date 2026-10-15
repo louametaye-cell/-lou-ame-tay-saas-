@@ -34,6 +34,7 @@ import {
   Trash2,
   Upload,
   Key,
+  User,
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -479,10 +480,10 @@ export default function SuperAdminDashboardPage() {
 
                         <button
                           onClick={() => setWhatsAppReminderRestaurant(r)}
-                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all shrink-0"
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs active:scale-95 transition-all shrink-0"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>💬 WhatsApp</span>
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Relance WhatsApp</span>
                         </button>
                       </div>
                     );
@@ -728,7 +729,9 @@ export default function SuperAdminDashboardPage() {
 
             {filteredRestaurants.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 max-w-md mx-auto shadow-xs">
-                <div className="text-4xl mb-3">🏢</div>
+                <div className="p-3 bg-slate-100 rounded-2xl w-14 h-14 mx-auto flex items-center justify-center text-slate-400 mb-3">
+                  <Building2 className="w-7 h-7 text-slate-500" />
+                </div>
                 <h3 className="text-base font-bold text-slate-800">Aucun restaurant trouvé</h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Modifiez votre recherche ou ajoutez un nouveau restaurant client.
@@ -826,18 +829,21 @@ export default function SuperAdminDashboardPage() {
                         {/* Owner & Location Info */}
                         <div className="space-y-1.5 text-xs text-slate-600 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
                           {resto.ownerName && (
-                            <p className="font-medium text-slate-700">
-                              👤 Gérant : <span className="font-bold text-slate-900">{resto.ownerName}</span>
+                            <p className="font-medium text-slate-700 flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>Gérant : <span className="font-bold text-slate-900">{resto.ownerName}</span></span>
                             </p>
                           )}
                           {resto.phone && (
-                            <p className="font-medium text-slate-700 font-mono">
-                              📞 WhatsApp : <span className="font-bold text-slate-900">{resto.phone}</span>
+                            <p className="font-medium text-slate-700 font-mono flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>WhatsApp : <span className="font-bold text-slate-900">{resto.phone}</span></span>
                             </p>
                           )}
                           {resto.address && (
-                            <p className="font-medium text-slate-700">
-                              📍 Adresse : <span className="font-bold text-slate-900">{resto.address}</span>
+                            <p className="font-medium text-slate-700 flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>Adresse : <span className="font-bold text-slate-900">{resto.address}</span></span>
                             </p>
                           )}
                         </div>

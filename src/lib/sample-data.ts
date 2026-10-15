@@ -3,7 +3,7 @@ import { RestaurantType } from '@/types';
 export const SAMPLE_RESTAURANTS: RestaurantType[] = [
   // ----------------------------------------------------------------------------
   // 1. MG CAFÉ RESTO (Dakar) -> Pack STARTER
-  // Login Commercial : demo.starter@louametay.sn / Demo123!
+  // Login Commercial : demo.starter@louametay.com / Demo123!
   // ----------------------------------------------------------------------------
   {
     id: 'tenant_mg_cafe_resto',
@@ -168,7 +168,7 @@ export const SAMPLE_RESTAURANTS: RestaurantType[] = [
 
   // ----------------------------------------------------------------------------
   // 2. CHEZ COLLÉ RESTAURANT (Thiès) -> Pack PRO
-  // Login Commercial : demo.pro@louametay.sn / Demo123!
+  // Login Commercial : demo.pro@louametay.com / Demo123!
   // ----------------------------------------------------------------------------
   {
     id: 'tenant_chez_colle',
@@ -348,7 +348,7 @@ export const SAMPLE_RESTAURANTS: RestaurantType[] = [
 
   // ----------------------------------------------------------------------------
   // 3. HÔTEL RESTAURANT CAYOR (Saly / Mbour) -> Pack PREMIUM (Multi-Zones & 5 Langues)
-  // Login Commercial : demo.premium@louametay.sn / Demo123!
+  // Login Commercial : demo.premium@louametay.com / Demo123!
   // ----------------------------------------------------------------------------
   {
     id: 'tenant_hotel_cayor',

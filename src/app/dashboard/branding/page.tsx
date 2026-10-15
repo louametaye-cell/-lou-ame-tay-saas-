@@ -737,7 +737,7 @@ export default function BrandStudioPage() {
                   type="text"
                   value={branding.website || ''}
                   onChange={(e) => setBranding({ ...branding, website: e.target.value })}
-                  placeholder="https://monresto.sn"
+                  placeholder="https://monresto.com"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none"
                 />
               </div>

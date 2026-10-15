@@ -29,7 +29,7 @@ export const SupportAIAssistant: React.FC = () => {
     {
       id: 'welcome',
       sender: 'assistant',
-      content: '👋 Bonjour ! Je suis votre Assistant IA Support 24/7 dédié à Lou Ame Tay. Je peux vous aider à renouveler un abonnement, générer vos QR codes, configurer vos plats ou résoudre un problème technique en cuisine.',
+      content: 'Bonjour ! Bienvenue au Support Technique DAW. Je suis à votre service pour vous accompagner dans la configuration de votre menu, le renouvellement de votre abonnement, la génération de vos QR codes ou la résolution de vos flux de caisse et cuisine.',
       timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -93,7 +93,7 @@ export const SupportAIAssistant: React.FC = () => {
         setMessages((prev) => [...prev, aiMsg]);
       }
     } catch (e) {
-      toast.error('Erreur de réponse de l\'assistant IA');
+      toast.error('Erreur de réponse du service support');
     } finally {
       setIsAiTyping(false);
     }
@@ -117,7 +117,7 @@ export const SupportAIAssistant: React.FC = () => {
       });
 
       if (res.ok) {
-        toast.success('Ticket SAV enregistré ! L\'IA et un technicien sont mobilisés.');
+        toast.success('Ticket SAV enregistré ! Notre équipe technique prend en charge votre demande.');
         setNewSubject('');
         setNewMessage('');
         setIsCreatingTicket(false);

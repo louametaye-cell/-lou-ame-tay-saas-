@@ -9,6 +9,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-montserrat)', 'Montserrat', 'system-ui', 'sans-serif'],
+        montserrat: ['var(--font-montserrat)', 'Montserrat', 'system-ui', 'sans-serif'],
+      },
       colors: {
         brand: {
           50: '#fff7ed',

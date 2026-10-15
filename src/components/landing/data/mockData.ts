@@ -4,7 +4,7 @@ export const COMMERCIAL_AGENTS: CommercialAgent[] = [
   {
     id: 'comm-1',
     name: 'Moussa Diop',
-    email: 'moussa.diop@louametay.sn',
+    email: 'moussa.diop@louametay.com',
     phone: '+221 76 231 20 03',
     zone: 'Thiès & Environs (Centre, Dixième, Randoulène)',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
@@ -18,7 +18,7 @@ export const COMMERCIAL_AGENTS: CommercialAgent[] = [
   {
     id: 'comm-2',
     name: 'Awa Ndiaye',
-    email: 'awa.ndiaye@louametay.sn',
+    email: 'awa.ndiaye@louametay.com',
     phone: '+221 78 876 54 32',
     zone: 'Dakar (Almadies, Plateau, Point E, Ngor)',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
@@ -32,7 +32,7 @@ export const COMMERCIAL_AGENTS: CommercialAgent[] = [
   {
     id: 'comm-3',
     name: 'Cheikh Fall',
-    email: 'cheikh.fall@louametay.sn',
+    email: 'cheikh.fall@louametay.com',
     phone: '+221 76 543 21 09',
     zone: 'Petite Côte (Saly, Mbour, Somone, Ngaparou)',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
@@ -46,7 +46,7 @@ export const COMMERCIAL_AGENTS: CommercialAgent[] = [
   {
     id: 'admin-1',
     name: 'Super Administrateur',
-    email: 'direction@louametay.sn',
+    email: 'direction@louametay.com',
     phone: '+221 76 231 20 03',
     zone: 'National (Sénégal)',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
