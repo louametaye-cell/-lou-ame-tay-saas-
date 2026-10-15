@@ -1,0 +1,14 @@
+.next
+_BACKUP_SOURCE_LOCAL
+capture
+capture des teste
+capture teste MG
+captures_qa
+image plats et food
+playwright-report
+test-results
+scratch
+backups
+.agents
+*.zip
+*.tar.gz
