@@ -12,3 +12,9 @@ backups
 .agents
 *.zip
 *.tar.gz
+*.psd
+*.ai
+*.mp4
+public/print/
+public/logo reseau social/
+public/bahnier reseaux social/
