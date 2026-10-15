@@ -51,6 +51,7 @@ import { RestaurantEditModal } from '@/components/RestaurantEditModal';
 import { WhatsAppReminderModal } from '@/components/WhatsAppReminderModal';
 import { SupportAIAssistant } from '@/components/SupportAIAssistant';
 import { SAVManagementPanel } from '@/components/super-admin/SAVManagementPanel';
+import { SenegalRestaurantsMap } from '@/components/super-admin/SenegalRestaurantsMap';
 import { toast } from 'sonner';
 
 export default function SuperAdminDashboardPage() {
@@ -402,6 +403,15 @@ export default function SuperAdminDashboardPage() {
                 <span>Restaurants & QA</span>
               </Link>
 
+              {/* Button Carte Sénégal */}
+              <a
+                href="#carte-senegal"
+                className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all shadow-xs"
+              >
+                <MapPin className="w-4 h-4 text-emerald-600" />
+                <span>Carte Sénégal</span>
+              </a>
+
               {/* Button SAV 24/7 */}
               <button
                 onClick={() => setIsSupportOpen(!isSupportOpen)}
@@ -684,6 +694,14 @@ export default function SuperAdminDashboardPage() {
               <span className="text-[11px] text-slate-500 mt-1 block">MRR Abonnements : {formatFCFA(totalMRR)}</span>
             </div>
           </div>
+
+          {/* SECTION : CARTOGRAPHIE INTERACTIVE DU RÉSEAU SÉNÉGAL */}
+          <section id="carte-senegal" className="scroll-mt-24">
+            <SenegalRestaurantsMap
+              restaurants={restaurants}
+              onSelectRestaurant={(r) => setEditingRestaurant(r)}
+            />
+          </section>
 
           {/* Search & Filter Bar */}
           <div className="flex items-center justify-between gap-4 flex-wrap bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
+import { resolveRestaurantCoordinates } from '@/lib/senegal-geo';
 
 export async function GET(req: Request) {
   try {
@@ -18,29 +19,43 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    const formatted = tenants.map((t: any) => ({
-      id: t.id,
-      name: t.businessName,
-      subdomain: t.subdomain,
-      ownerName: t.ownerName,
-      phone: t.phone,
-      address: t.address,
-      logoUrl: t.logoUrl,
-      bannerUrl: t.bannerUrl,
-      currency: t.currency,
-      establishmentType: (t.branding as any)?.establishmentType || 'Restaurant',
-      branding: t.branding || {},
-      isActive: t.subscriptionStatus !== 'CANCELED' && t.subscriptionStatus !== 'SUSPENDED',
-      tablesCount: t.tables?.length || 0,
-      ordersCount: t.orders?.length || 0,
-      createdAt: t.createdAt.toISOString(),
-      subscription: {
-        plan: t.plan?.name || 'Inconnu',
-        status: t.subscriptionStatus,
-        price: Number(t.monthlyFee || t.plan?.price || 25000),
-        endDate: t.subscriptionExpiresAt ? t.subscriptionExpiresAt.toISOString() : undefined,
-      }
-    }));
+    const formatted = tenants.map((t: any) => {
+      const coords = resolveRestaurantCoordinates({
+        subdomain: t.subdomain,
+        city: t.city,
+        address: t.address,
+        latitude: (t.branding as any)?.latitude,
+        longitude: (t.branding as any)?.longitude,
+        branding: t.branding
+      });
+
+      return {
+        id: t.id,
+        name: t.businessName,
+        subdomain: t.subdomain,
+        ownerName: t.ownerName,
+        phone: t.phone,
+        address: t.address,
+        city: t.city || 'Thiès',
+        latitude: coords.lat,
+        longitude: coords.lng,
+        logoUrl: t.logoUrl,
+        bannerUrl: t.bannerUrl,
+        currency: t.currency,
+        establishmentType: (t.branding as any)?.establishmentType || 'Restaurant',
+        branding: t.branding || {},
+        isActive: t.subscriptionStatus !== 'CANCELED' && t.subscriptionStatus !== 'SUSPENDED',
+        tablesCount: t.tables?.length || 0,
+        ordersCount: t.orders?.length || 0,
+        createdAt: t.createdAt.toISOString(),
+        subscription: {
+          plan: t.plan?.name || 'Inconnu',
+          status: t.subscriptionStatus,
+          price: Number(t.monthlyFee || t.plan?.price || 25000),
+          endDate: t.subscriptionExpiresAt ? t.subscriptionExpiresAt.toISOString() : undefined,
+        }
+      };
+    });
 
     return NextResponse.json({ restaurants: formatted, source: 'database' });
   } catch (error) {

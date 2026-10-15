@@ -195,6 +195,8 @@ export interface RestaurantType {
   peakHours?: Record<string, number> | null;
 
   city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   waveMerchantId?: string | null;
   omMerchantNumber?: string | null;
   subscriptionId?: string | null;
@@ -222,6 +224,8 @@ export interface RestaurantBranding {
   phone?: string | null;       // Téléphone direct
   whatsapp?: string | null;    // Numéro WhatsApp pour commande/contact
   address?: string | null;     // Adresse physique
+  latitude?: number | null;    // Coordonnées GPS latitude
+  longitude?: number | null;   // Coordonnées GPS longitude
   googleMapsUrl?: string | null; // Lien d'itinéraire Google Maps
   website?: string | null;     // Site web officiel
   instagram?: string | null;   // Lien profil Instagram

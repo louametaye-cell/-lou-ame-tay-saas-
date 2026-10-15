@@ -4,6 +4,7 @@ import { redis } from '@/lib/redis';
 import bcrypt from 'bcryptjs';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { resolveRestaurantCoordinates } from '@/lib/senegal-geo';
 
 // GET /api/super-admin/restaurants/[id]
 export async function GET(
@@ -27,6 +28,15 @@ export async function GET(
       return NextResponse.json({ error: 'Restaurant non trouvé' }, { status: 404 });
     }
 
+    const coords = resolveRestaurantCoordinates({
+      subdomain: restaurant.subdomain,
+      city: restaurant.city,
+      address: restaurant.address,
+      latitude: (restaurant.branding as any)?.latitude,
+      longitude: (restaurant.branding as any)?.longitude,
+      branding: restaurant.branding
+    });
+
     const formatted = {
       ...restaurant,
       id: restaurant.id,
@@ -36,7 +46,9 @@ export async function GET(
       ownerName: restaurant.ownerName || 'Gérant',
       phone: restaurant.phone,
       address: restaurant.address || 'Sénégal',
-      city: restaurant.city || 'Dakar',
+      city: restaurant.city || 'Thiès',
+      latitude: coords.lat,
+      longitude: coords.lng,
       logoUrl: restaurant.logoUrl,
       bannerUrl: restaurant.bannerUrl,
       currency: restaurant.currency || 'FCFA',
