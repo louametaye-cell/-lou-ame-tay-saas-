@@ -54,8 +54,17 @@ export async function GET() {
 
     return NextResponse.json({ plans: formatted });
   } catch (error) {
-    console.error('Erreur GET admin plans:', error);
-    return NextResponse.json({ error: 'Erreur lors de la récupération des packs' }, { status: 500 });
+    console.error('Erreur GET admin plans (activation fallback résilient) :', error);
+    const fallbackPlans = [
+      { id: 'p_tambali', name: 'TÀMBALI', slug: 'tambali', price: 15000, currency: 'FCFA', description: 'Menu digital vitrine, gestion des stocks et personnalisation de marque.', colorTheme: '#64748b', isRecommended: false, isActive: true, features: [] },
+      { id: 'p_niofar', name: 'NIO FAR', slug: 'nio-far', price: 25000, currency: 'FCFA', description: 'Commande QR à table, caisse comptoir express et gestion des commandes.', colorTheme: '#0284c7', isRecommended: false, isActive: true, features: [] },
+      { id: 'p_xeweul', name: 'XÉWEUL', slug: 'xeweul', price: 35000, currency: 'FCFA', description: 'Écran cuisine KDS, retrait guichet TV, impression 80mm et multilingue.', colorTheme: '#FF6B00', isRecommended: true, isActive: true, features: [] },
+      { id: 'p_baobab', name: 'BAOBAB', slug: 'baobab', price: 46800, currency: 'FCFA', description: 'Multi-guichets caisse, affichage multi-écrans TV et exports comptables.', colorTheme: '#059669', isRecommended: false, isActive: true, features: [] },
+      { id: 'p_teranga', name: 'TERANGA', slug: 'teranga', price: 65000, currency: 'FCFA', description: 'Gestion multi-zones, badges QR serveurs avec traçabilité et TV par zone.', colorTheme: '#7c3aed', isRecommended: false, isActive: true, features: [] },
+      { id: 'p_buur', name: 'BUUR', slug: 'buur', price: 80000, currency: 'FCFA', description: 'Supervision multi-sites, reporting staff avancé et support VIP 24/7.', colorTheme: '#dc2626', isRecommended: false, isActive: true, features: [] },
+      { id: 'p_ndaje', name: 'NDAJÉ', slug: 'ndaje', price: 120000, currency: 'FCFA', description: 'Formule sur mesure, multi-établissements illimité et intégration ERP complète.', colorTheme: '#0f172a', isRecommended: false, isActive: true, features: [] },
+    ];
+    return NextResponse.json({ plans: fallbackPlans, source: 'resilient_fallback' });
   }
 }
 

@@ -145,6 +145,15 @@ export default function SuperAdminDashboardPage() {
 
   useEffect(() => {
     fetchRestaurants();
+
+    const handleUnlocked = () => {
+      fetchRestaurants();
+    };
+
+    window.addEventListener('superadmin-unlocked', handleUnlocked);
+    return () => {
+      window.removeEventListener('superadmin-unlocked', handleUnlocked);
+    };
   }, []);
 
   const handleToggleActive = async (resto: RestaurantType) => {
@@ -705,7 +714,6 @@ export default function SuperAdminDashboardPage() {
           <section id="carte-senegal" className="scroll-mt-24">
             <SenegalRestaurantsMap
               restaurants={restaurants}
-              onSelectRestaurant={(r) => setEditingRestaurant(r)}
             />
           </section>
 

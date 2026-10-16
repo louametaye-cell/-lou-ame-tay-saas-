@@ -165,6 +165,9 @@ export const SuperAdminAuthGuard: React.FC<SuperAdminAuthGuardProps> = ({ childr
         setPassword('');
         setLockReason(null);
         setIsAuthenticated(true);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('superadmin-unlocked'));
+        }
         toast.success("Bienvenue dans l'espace Super Admin Agence !");
       } else {
         toast.error(data.error || 'Mot de passe administrateur incorrect');

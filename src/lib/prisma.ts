@@ -60,7 +60,7 @@ prisma.$on('error', (e: { message: string; timestamp: Date }) => {
   }
 });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+globalForPrisma.prisma = prisma;
 
 export interface PoolMetrics {
   status: 'HEALTHY' | 'WARNING' | 'SATURATED';

@@ -71,10 +71,11 @@ export function SenegalRestaurantsMap({
           LRef.current.control.zoom({ position: 'topright' }).addTo(map);
 
           const tileLayer = LRef.current.tileLayer(
-            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             {
               maxZoom: 19,
-              subdomains: 'abcd',
+              subdomains: ['a', 'b', 'c'],
+              attribution: '© OpenStreetMap contributors',
             }
           ).addTo(map);
 
@@ -111,16 +112,22 @@ export function SenegalRestaurantsMap({
       mapInstanceRef.current.removeLayer(tileLayerRef.current);
     }
 
-    let url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    let url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let subdomains: any = ['a', 'b', 'c'];
+    let attribution = '© OpenStreetMap contributors';
+
     if (tileStyle === 'dark') {
-      url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     } else if (tileStyle === 'satellite') {
       url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      subdomains = [];
+      attribution = '© Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
     }
 
     const newLayer = L.tileLayer(url, {
       maxZoom: 19,
-      subdomains: tileStyle === 'satellite' ? [] : 'abcd',
+      subdomains,
+      attribution,
     }).addTo(mapInstanceRef.current);
 
     newLayer.bringToBack();
