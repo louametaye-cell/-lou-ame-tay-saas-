@@ -168,6 +168,8 @@ export interface RestaurantStatsType {
     tableNumber: number;
     scans: number;
   }[];
+  totalViews?: number;
+  starDish?: { name: string; salesCount: number; price: number } | null;
 }
 
 export interface RestaurantType {
@@ -188,11 +190,15 @@ export interface RestaurantType {
   tablesCount?: number;
 
   totalScans?: number;
+  totalViews?: number;
   totalOrders?: number;
   totalRevenue?: number;
   lastScanAt?: string | null;
   lastOrderAt?: string | null;
   peakHours?: Record<string, number> | null;
+  topDishes?: { id: string; name: string; salesCount: number; price: number }[];
+  starDish?: { name: string; salesCount: number; price: number } | null;
+  satisfactionRating?: number;
 
   city?: string | null;
   latitude?: number | null;
