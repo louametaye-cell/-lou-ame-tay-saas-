@@ -136,3 +136,25 @@ Avant chaque implémentation touchant aux statuts ou aux flux d'argent, remplir 
 *Signature de développeur Vibe Coder*
 *Contact : contact@mgartswork.site | +221 77 458 74 74*
 ```
+
+---
+
+## Section 13 — Console DAW, Architecture Analytique Réseau & UX Senior B2B
+Cette section consacre les règles de design et de télémétrie de la console de supervision Super-Admin (`/super-admin`) :
+
+### 13.1 — Design System "Executive Clean & Quiet Luxury"
+- **Zéro bruit visuel** : Bannir les bordures multicolores fluorescentes, les gradients criards et les pictogrammes gadgets (`Sparkles`, `Flame`, `Trophy`).
+- **Icônes universelles sobres** : `Award` (Plat star), `TrendingUp` (Conversion), `Activity` / `BarChart3` (Métriques), `Clock` (Heures de rush), `Eye` (Consultations plats), `Star` (Avis et e-réputation).
+- **Header unifié à 2 niveaux** :
+  1. Bandeau supérieur : Statut réactif vert pulsé (`X / Y actifs`), synchro dynamique, support DAW 24/7, bouton rafraîchir et un seul bouton primaire CTA sombre contrasté (`+ Nouveau Restaurant Client`).
+  2. Barre d'onglets de navigation intégrée : Vue d'ensemble, Classement & Plats Stars, Carte Réseau Sénégal, Gestion des Formules, Diagnostic QA.
+
+### 13.2 — Télémétrie Consolidée Temps Réel & Entonnoir Universel
+- **4 Paliers de Conversion** :
+  1. Trafic en salle (Scans QR réels).
+  2. Découverte menu (Somme des consultations `viewsCount` des `menuItems`).
+  3. Prise de commande (Commandes totales non-annulées).
+  4. Encaissement caisse (Chiffre d'affaires réel encaissé `PAID` / `SUCCESS`).
+- **Matrice des Plats Stars** : Calcul automatique pour chaque établissement du plat le plus commandé avec volume de ventes (`salesCount`) et tarif unitaire FCFA.
+- **Heatmap 24h & Heures de Rush** : Distribution horaire de 00h à 23h mettant en lumière les 4 pics réels du marché sénégalais (13h déjeuner, 15h plage/détente, 19h dîner, 22h-23h soirée lounge).
+- **Module E-Réputation** : Suivi de la note de satisfaction certifiée Lou Ame Tay (4.8/5 ⭐) et lien direct sortant vers les fiches Google Maps des restaurants partenaires.
