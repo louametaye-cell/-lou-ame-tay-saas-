@@ -2,11 +2,31 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import bcrypt from 'bcryptjs';
+
+function extractTenantFromCookie(req: Request): string | null {
+  try {
+    const cookieHeader = req.headers.get('cookie') || '';
+    const cookiesList = cookieHeader.split(';').map((c) => c.trim());
+    for (const c of cookiesList) {
+      if (c.startsWith('saas_token=')) {
+        const val = decodeURIComponent(c.replace('saas_token=', ''));
+        if (val.startsWith('resto_session_')) return val.replace('resto_session_', '');
+        return val;
+      }
+    }
+  } catch {}
+  return null;
+}
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId') || searchParams.get('restaurantId');
+    const tenantId =
+      searchParams.get('tenantId') ||
+      searchParams.get('restaurantId') ||
+      extractTenantFromCookie(req);
+
     if (!tenantId) {
       return NextResponse.json({ error: 'tenantId ou restaurantId est requis' }, { status: 400 });
     }
@@ -18,6 +38,7 @@ export async function GET(req: Request) {
       },
       select: { 
         id: true,
+        subdomain: true,
         businessName: true,
         plan: { select: { slug: true, name: true } }
       }
@@ -28,7 +49,7 @@ export async function GET(req: Request) {
     }
 
     // 🔒 CONTRÔLE D'ACCÈS STRICT : Seul le gérant authentifié ou Super-Admin peut voir l'équipe
-    if (!isAuthorizedTenant(req, tenant.id)) {
+    if (!isAuthorizedTenant(req, tenant.id, tenant.subdomain)) {
       return NextResponse.json(
         { error: 'Accès non autorisé : Session gérant requise pour consulter les caissiers' },
         { status: 401 }
@@ -51,7 +72,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // Récupération des caissiers avec code PIN pour le gérant authentifié
+    // Récupération des caissiers pour le gérant authentifié
     const cashiers = await prisma.cashier.findMany({
       where: { tenantId: tenant.id },
       orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
@@ -86,6 +107,7 @@ export async function GET(req: Request) {
 
     const safeCashiers = cashiers.map((c) => ({
       ...c,
+      pinCode: c.pinCode?.startsWith('$2') ? '••••' : c.pinCode,
       hasPin: Boolean(c.pinCode),
     }));
 
@@ -101,7 +123,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { tenantId, restaurantId, name, phone, pinCode, shift, schedule } = body;
 
-    const rawTenantId = tenantId || restaurantId;
+    const rawTenantId = tenantId || restaurantId || extractTenantFromCookie(req);
     if (!rawTenantId) {
       return NextResponse.json({ error: 'Identifiant du restaurant requis' }, { status: 400 });
     }
@@ -110,18 +132,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Le nom du caissier est requis' }, { status: 400 });
     }
 
-    const cleanPin = pinCode.trim();
-    if (!pinCode || !/^\d{4}$/.test(cleanPin)) {
+    const cleanPin = String(pinCode || '').trim();
+    if (!cleanPin || !/^\d{4}$/.test(cleanPin)) {
       return NextResponse.json({ error: 'Le code PIN doit comporter exactement 4 chiffres' }, { status: 400 });
     }
 
-    const TRIVIAL_PINS = ['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234', '4321', '0123'];
-    if (TRIVIAL_PINS.includes(cleanPin)) {
-      return NextResponse.json(
-        { error: 'Code PIN trop faible ou trivial (ex: 0000, 1234). Veuillez choisir un code sécurisé à 4 chiffres non consécutifs.' },
-        { status: 400 }
-      );
-    }
+    const cleanPhone = phone && typeof phone === 'string' && phone.trim() ? phone.trim() : null;
 
     // Resolve tenant with plan
     const tenant = await prisma.tenant.findFirst({
@@ -130,6 +146,7 @@ export async function POST(req: Request) {
       },
       select: { 
         id: true,
+        subdomain: true,
         businessName: true,
         plan: { select: { slug: true, name: true } }
       }
@@ -140,7 +157,7 @@ export async function POST(req: Request) {
     }
 
     // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant ou Super-Admin peut créer un caissier
-    if (!isAuthorizedTenant(req, tenant.id)) {
+    if (!isAuthorizedTenant(req, tenant.id, tenant.subdomain)) {
       return NextResponse.json(
         { error: 'Accès non autorisé : Session gérant requise pour créer un caissier' },
         { status: 401 }
@@ -163,39 +180,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔒 Contrôle Paywall Multi-Guichets : Sous NIO FAR ou XÉWEUL, 1 seul caissier actif est autorisé
-    if (!hasAccessToFeature(currentPlan, 'MULTI_CASHIERS')) {
-      const activeCount = await prisma.cashier.count({
-        where: { tenantId: tenant.id, isActive: true }
-      });
-      if (activeCount >= 1) {
-        const paywall = getFeaturePaywallInfo('MULTI_CASHIERS');
+    // Vérification de l'unicité [tenantId, pinCode] (compatible PIN en clair et PIN hashé bcrypt)
+    const existingCashiers = await prisma.cashier.findMany({
+      where: { tenantId: tenant.id },
+      select: { id: true, name: true, pinCode: true }
+    });
+
+    for (const c of existingCashiers) {
+      const stored = (c.pinCode || '').trim();
+      const isDuplicate = stored.startsWith('$2')
+        ? await bcrypt.compare(cleanPin, stored)
+        : stored === cleanPin;
+
+      if (isDuplicate) {
         return NextResponse.json(
-          {
-            error: `Votre formule actuelle (${tenant.plan?.name || 'Standard'}) est limitée à 1 seul guichet de caisse actif. Pour gérer plusieurs caissiers et postes d'encaissement simultanés, passez à la formule BAOBAB.`,
-            paywall,
-            requiredPlan: paywall.requiredPlanName,
-            currentPlan: tenant.plan?.name || 'Standard',
-            isMultiCashierQuotaReached: true
-          },
-          { status: 403 }
+          { error: `Le code PIN ${cleanPin} est déjà attribué à ${c.name}` },
+          { status: 409 }
         );
       }
     }
 
-    // Check PIN uniqueness for this tenant
-    const existing = await prisma.cashier.findUnique({
-      where: {
-        uq_tenant_cashier_pin: {
-          tenantId: tenant.id,
-          pinCode: pinCode.trim()
-        }
-      }
-    });
-
-    if (existing) {
-      return NextResponse.json({ error: `Le code PIN ${pinCode.trim()} est déjà attribué à ${existing.name}` }, { status: 409 });
-    }
+    // Hachage sécurisé du code PIN avec bcrypt avant insertion
+    const hashedPin = await bcrypt.hash(cleanPin, 10);
 
     // Shift validation
     const validShift = Object.values(CashierShift).includes(shift) ? shift : CashierShift.MORNING;
@@ -204,15 +210,25 @@ export async function POST(req: Request) {
       data: {
         tenantId: tenant.id,
         name: name.trim(),
-        phone: phone?.trim() || null,
-        pinCode: pinCode.trim(),
+        phone: cleanPhone,
+        pinCode: hashedPin,
         shift: validShift,
         schedule: schedule?.trim() || null,
         isActive: true
       }
     });
 
-    return NextResponse.json({ success: true, cashier }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        cashier: {
+          ...cashier,
+          pinCode: cleanPin,
+          hasPin: true
+        }
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Erreur création caissier:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la création du caissier' }, { status: 500 });

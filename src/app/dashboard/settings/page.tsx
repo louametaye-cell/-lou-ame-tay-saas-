@@ -126,17 +126,33 @@ export default function DashboardSettingsPage() {
   const fetchSettings = async () => {
     try {
       setIsLoading(true);
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const urlRestoId = urlParams?.get('restaurantId') || '';
       const storedId = localStorage.getItem('current_restaurant_id') || '';
       const storedSub = localStorage.getItem('current_restaurant_subdomain') || '';
-      const effectiveId = storedId || storedSub || 'anima-pizzeria';
-      setRestaurantId(effectiveId);
-      setRestaurantSubdomain(storedSub);
+      let effectiveId = urlRestoId || storedId || storedSub || '';
+      if (effectiveId) {
+        setRestaurantId(effectiveId);
+      }
+      if (storedSub) {
+        setRestaurantSubdomain(storedSub);
+      }
 
-      const res = await fetch(`/api/tenant/settings?restaurantId=${effectiveId}`);
+      const settingsUrl = effectiveId ? `/api/tenant/settings?restaurantId=${encodeURIComponent(effectiveId)}` : '/api/tenant/settings';
+      const res = await fetch(settingsUrl);
       if (res.ok) {
         const data = await res.json();
         if (data.settings) {
           setIdentity(data.settings.identity);
+          if (data.settings.identity?.id) {
+            effectiveId = data.settings.identity.id;
+            setRestaurantId(data.settings.identity.id);
+            localStorage.setItem('current_restaurant_id', data.settings.identity.id);
+          }
+          if (data.settings.identity?.subdomain) {
+            setRestaurantSubdomain(data.settings.identity.subdomain);
+            localStorage.setItem('current_restaurant_subdomain', data.settings.identity.subdomain);
+          }
           if (data.settings.openingHours) setOpeningHours(data.settings.openingHours);
           if (data.settings.exceptionalClosure) setExceptionalClosure(data.settings.exceptionalClosure);
           if (data.settings.payment) setPayment(data.settings.payment);
@@ -144,21 +160,24 @@ export default function DashboardSettingsPage() {
         }
       }
 
+      if (!effectiveId) effectiveId = 'sams-prestige';
+      const authHeaders: Record<string, string> = { 'x-tenant-token': effectiveId };
+
       // Charger les zones & tables
-      const zonesRes = await fetch(`/api/tenant/zones?restaurantId=${effectiveId}`);
+      const zonesRes = await fetch(`/api/tenant/zones?restaurantId=${encodeURIComponent(effectiveId)}`, { headers: authHeaders });
       if (zonesRes.ok) {
         const zData = await zonesRes.json();
         setZones(zData.zones || []);
       }
 
-      const tablesRes = await fetch(`/api/tenant/tables?restaurantId=${effectiveId}`);
+      const tablesRes = await fetch(`/api/tenant/tables?restaurantId=${encodeURIComponent(effectiveId)}`, { headers: authHeaders });
       if (tablesRes.ok) {
         const tData = await tablesRes.json();
         setTables(tData.tables || []);
       }
 
       // Charger les caissiers
-      const cashiersRes = await fetch(`/api/tenant/cashiers?restaurantId=${effectiveId}`);
+      const cashiersRes = await fetch(`/api/tenant/cashiers?restaurantId=${encodeURIComponent(effectiveId)}`, { headers: authHeaders });
       if (cashiersRes.ok) {
         const cData = await cashiersRes.json();
         setCashiers(cData.cashiers || []);
@@ -359,11 +378,15 @@ export default function DashboardSettingsPage() {
     }
 
     try {
+      const effectiveRestoId = restaurantId || identity.id || restaurantSubdomain || localStorage.getItem('current_restaurant_id') || '';
       const res = await fetch('/api/tenant/cashiers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(effectiveRestoId ? { 'x-tenant-token': effectiveRestoId } : {}),
+        },
         body: JSON.stringify({
-          restaurantId,
+          restaurantId: effectiveRestoId,
           name: newCashierName.trim(),
           phone: newCashierPhone.trim(),
           shift: newCashierShift,

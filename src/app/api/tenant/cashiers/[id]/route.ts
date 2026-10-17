@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import bcrypt from 'bcryptjs';
 
 export async function PATCH(
   req: Request,
@@ -14,7 +15,8 @@ export async function PATCH(
     const { name, phone, pinCode, shift, schedule, isActive } = body;
 
     const current = await prisma.cashier.findUnique({
-      where: { id }
+      where: { id },
+      include: { tenant: { select: { subdomain: true } } }
     });
 
     if (!current) {
@@ -22,7 +24,7 @@ export async function PATCH(
     }
 
     // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut modifier un caissier
-    if (!isAuthorizedTenant(req, current.tenantId)) {
+    if (!isAuthorizedTenant(req, current.tenantId, current.tenant?.subdomain)) {
       return NextResponse.json(
         { error: 'Accès non autorisé : Session gérant requise pour modifier ce caissier' },
         { status: 401 }
@@ -40,23 +42,33 @@ export async function PATCH(
     }
 
     if (pinCode !== undefined) {
-      const cleanPin = pinCode.trim();
+      const cleanPin = String(pinCode).trim();
       if (!/^\d{4}$/.test(cleanPin)) {
         return NextResponse.json({ error: 'Le code PIN doit comporter 4 chiffres' }, { status: 400 });
       }
 
-      // Check PIN conflict
-      const conflict = await prisma.cashier.findFirst({
+      // Check PIN conflict across other cashiers of this tenant
+      const otherCashiers = await prisma.cashier.findMany({
         where: {
           tenantId: current.tenantId,
-          pinCode: cleanPin,
           NOT: { id: current.id }
-        }
+        },
+        select: { id: true, name: true, pinCode: true }
       });
-      if (conflict) {
-        return NextResponse.json({ error: `Le code PIN ${cleanPin} est déjà utilisé par ${conflict.name}` }, { status: 409 });
+
+      for (const c of otherCashiers) {
+        const stored = (c.pinCode || '').trim();
+        const isConflict = stored.startsWith('$2')
+          ? await bcrypt.compare(cleanPin, stored)
+          : stored === cleanPin;
+        if (isConflict) {
+          return NextResponse.json({ error: `Le code PIN ${cleanPin} est déjà utilisé par ${c.name}` }, { status: 409 });
+        }
       }
-      dataToUpdate.pinCode = cleanPin;
+
+      dataToUpdate.pinCode = await bcrypt.hash(cleanPin, 10);
+      dataToUpdate.failedPinAttempts = 0;
+      dataToUpdate.lockedUntil = null;
     }
 
     const updated = await prisma.cashier.update({
@@ -82,7 +94,7 @@ export async function DELETE(
 
     const current = await prisma.cashier.findUnique({
       where: { id },
-      select: { id: true, tenantId: true }
+      select: { id: true, tenantId: true, tenant: { select: { subdomain: true } } }
     });
 
     if (!current) {
@@ -90,7 +102,7 @@ export async function DELETE(
     }
 
     // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut supprimer un caissier
-    if (!isAuthorizedTenant(req, current.tenantId)) {
+    if (!isAuthorizedTenant(req, current.tenantId, current.tenant?.subdomain)) {
       return NextResponse.json(
         { error: 'Accès non autorisé : Session gérant requise pour supprimer ce caissier' },
         { status: 401 }

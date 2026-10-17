@@ -55,15 +55,15 @@ export async function GET(
       );
     }
 
-    // Start of current day (Senegal / GMT)
+    // Fenêtre temporelle glissante de 24 heures (évite la coupure à minuit pendant le service du soir)
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const windowStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // Fetch active and recently served orders
+    // Fetch active and recently served orders for this tenantId
     const orders = await prisma.order.findMany({
       where: {
         tenantId: tenant.id,
-        createdAt: { gte: startOfDay },
+        createdAt: { gte: windowStart },
         status: { in: ['PENDING', 'PREPARING', 'READY', 'SERVED'] }
       },
       orderBy: { createdAt: 'asc' },

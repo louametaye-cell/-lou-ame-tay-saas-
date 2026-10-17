@@ -60,7 +60,9 @@ export default function CashiersManagementPage() {
   const fetchCashiers = async (tId: string) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/tenant/cashiers?restaurantId=${encodeURIComponent(tId)}`);
+      const res = await fetch(`/api/tenant/cashiers?restaurantId=${encodeURIComponent(tId)}`, {
+        headers: tId ? { 'x-tenant-token': tId } : {}
+      });
       const data = await res.json();
       if (data.success) {
         setCashiers(data.cashiers || []);
@@ -89,7 +91,10 @@ export default function CashiersManagementPage() {
       setIsSubmitting(true);
       const res = await fetch('/api/tenant/cashiers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(restaurantId ? { 'x-tenant-token': restaurantId } : {})
+        },
         body: JSON.stringify({
           restaurantId,
           name: name.trim(),
@@ -123,7 +128,10 @@ export default function CashiersManagementPage() {
     try {
       const res = await fetch(`/api/tenant/cashiers/${cashier.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(restaurantId ? { 'x-tenant-token': restaurantId } : {})
+        },
         body: JSON.stringify({ isActive: !cashier.isActive })
       });
       const data = await res.json();
@@ -154,7 +162,10 @@ export default function CashiersManagementPage() {
         ? `/api/tenant/cashiers/${cashier.id}` 
         : `/api/tenant/cashiers/${cashier.id}?hard=true`;
 
-      const res = await fetch(url, { method: 'DELETE' });
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: restaurantId ? { 'x-tenant-token': restaurantId } : {}
+      });
       const data = await res.json();
 
       if (res.ok && data.success) {

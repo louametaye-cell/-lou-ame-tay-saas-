@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { 
   Clock, 
   ChefHat, 
@@ -150,11 +151,13 @@ export default function FastFoodPickupBoardPage() {
     }
   };
 
-  // Fetch Pickup Board Data
-  const fetchData = async () => {
+  // Fetch Pickup Board Data (no-store pour éviter tout cache obsolète)
+  const fetchData = useCallback(async () => {
     try {
       if (!restaurantId) return;
-      const res = await fetch(`/api/pickup/${encodeURIComponent(restaurantId)}`);
+      const res = await fetch(`/api/pickup/${encodeURIComponent(restaurantId)}?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (res.status === 403) {
         setIsTambaliPlan(true);
         return;
@@ -194,13 +197,44 @@ export default function FastFoodPickupBoardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [restaurantId, isSoundEnabled]);
 
+  // 1. Abonnement Supabase Realtime (filtre tenantId & détection immédiate status = 'READY') + Polling de secours 3s
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 3500);
-    return () => clearInterval(interval);
-  }, [restaurantId, isSoundEnabled]);
+
+    let channel: any = null;
+    const targetTenantId = restaurant?.id;
+
+    try {
+      const filterConfig = targetTenantId
+        ? { event: '*', schema: 'public', table: 'orders', filter: `tenant_id=eq.${targetTenantId}` }
+        : { event: '*', schema: 'public', table: 'orders' };
+
+      channel = supabase
+        .channel(`pickup-realtime-${targetTenantId || restaurantId}`)
+        .on('postgres_changes', filterConfig as any, (payload: any) => {
+          const newRow = payload?.new;
+          if (!newRow || !targetTenantId || newRow.tenant_id === targetTenantId || newRow.tenantId === targetTenantId) {
+            if (newRow?.status === 'READY' || newRow?.status === 'PREPARING' || newRow?.status === 'PENDING' || newRow?.status === 'SERVED') {
+              fetchData();
+            }
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('[PickupBoard] Supabase Realtime fallback to polling:', err);
+    }
+
+    // Polling de secours toutes les 3 secondes
+    const interval = setInterval(fetchData, 3000);
+    return () => {
+      clearInterval(interval);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [fetchData, restaurant?.id, restaurantId]);
 
   // Fullscreen Toggle
   const toggleFullscreen = () => {

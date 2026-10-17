@@ -163,6 +163,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     return 0;
   };
 
+  const [availableRestaurants, setAvailableRestaurants] = useState<any[]>([]);
+
   // Initial Load
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -187,6 +189,25 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       // 🔒 Pour la sécurité du terminal caisse, chaque ouverture de page requiert la saisie du code PIN
       setCurrentCashier(null);
 
+      // Charger la liste des établissements pour permettre la sélection sur /cashier
+      fetch('/api/cashier/auth')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.restaurants && Array.isArray(d.restaurants)) {
+            setAvailableRestaurants(d.restaurants);
+            if (!effectiveId && d.restaurants.length > 0) {
+              const sams = d.restaurants.find((r: any) => r.subdomain === 'sams-prestige') || d.restaurants[0];
+              setRestaurantId(sams.subdomain);
+              setRestaurantName(sams.businessName);
+              localStorage.setItem('current_restaurant_id', sams.subdomain);
+              localStorage.setItem('current_restaurant_name', sams.businessName);
+              fetchRestaurantDetails(sams.subdomain);
+              fetchActiveSession(sams.subdomain);
+            }
+          }
+        })
+        .catch(() => {});
+
       if (effectiveId) {
         fetchRestaurantDetails(effectiveId);
         fetchCashiersList(effectiveId);
@@ -196,6 +217,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   }, [initialRestaurantId]);
 
   const fetchRestaurantDetails = (id: string) => {
+    setIsTambaliPlan(false);
     fetch(`/api/tenant/branding?restaurantId=${encodeURIComponent(id)}`)
       .then((r) => r.json())
       .then((d) => {
@@ -852,23 +874,51 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         <main className="max-w-md mx-auto w-full my-auto py-6">
           <div className="bg-slate-950/90 backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
             
-            {/* Établissement actif - Verrouillé hermétiquement */}
+            {/* Établissement actif - Verrouillé hermétiquement ou sélecteur /cashier */}
             {restaurantId ? (
-              <div className="flex items-center justify-between bg-white/5 border border-emerald-500/20 p-3 rounded-2xl text-left">
-                <div className="flex items-center gap-2.5 truncate">
-                  <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-400/30">
-                    <Store className="w-5 h-5" />
-                  </div>
-                  <div className="truncate">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Établissement Dédié</span>
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">
-                        <Lock className="w-2.5 h-2.5" /> Sécurisé
-                      </span>
+              <div className="flex flex-col gap-2 bg-white/5 border border-emerald-500/20 p-3 rounded-2xl text-left">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-400/30">
+                      <Store className="w-5 h-5" />
                     </div>
-                    <span className="font-black text-sm text-amber-200 truncate block">{restaurantName || restaurantId}</span>
+                    <div className="truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Établissement Dédié</span>
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">
+                          <Lock className="w-2.5 h-2.5" /> Sécurisé
+                        </span>
+                      </div>
+                      <span className="font-black text-sm text-amber-200 truncate block">{restaurantName || restaurantId}</span>
+                    </div>
                   </div>
                 </div>
+                {!initialRestaurantId && availableRestaurants.length > 1 && (
+                  <select
+                    value={restaurantId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const found = availableRestaurants.find((r: any) => r.subdomain === val || r.id === val);
+                      setRestaurantId(val);
+                      localStorage.setItem('current_restaurant_id', val);
+                      if (found?.businessName) {
+                        setRestaurantName(found.businessName);
+                        localStorage.setItem('current_restaurant_name', found.businessName);
+                      }
+                      setAuthError('');
+                      setPinInput('');
+                      fetchRestaurantDetails(val);
+                      fetchActiveSession(val);
+                    }}
+                    className="w-full mt-1 px-3 py-2 bg-slate-900 border border-white/15 rounded-xl text-xs font-bold text-white focus:border-amber-400 outline-none cursor-pointer"
+                  >
+                    {availableRestaurants.map((r: any) => (
+                      <option key={r.id} value={r.subdomain}>
+                        🏪 {r.businessName} ({r.subdomain})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             ) : (
               /* Aucun établissement spécifié dans l'URL */

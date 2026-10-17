@@ -34,8 +34,10 @@ export function middleware(request: NextRequest) {
   if (isProtectedTenantApi) {
     const tenantToken =
       request.cookies.get('saas_token')?.value ||
+      request.cookies.get('token')?.value ||
       request.cookies.get('superadmin_token')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '') ||
+      request.headers.get('x-tenant-token');
 
     if (!tenantToken) {
       return NextResponse.json(

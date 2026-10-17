@@ -1,6 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit } from '@/lib/rate-limit';
+import bcrypt from 'bcryptjs';
+
+export async function GET() {
+  try {
+    const tenants = await prisma.tenant.findMany({
+      orderBy: { businessName: 'asc' },
+      select: {
+        id: true,
+        businessName: true,
+        subdomain: true,
+        logoUrl: true,
+        city: true,
+      },
+    });
+    return NextResponse.json({ success: true, restaurants: tenants });
+  } catch (error) {
+    console.error('Erreur liste restaurants caisse:', error);
+    return NextResponse.json({ restaurants: [] }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +40,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Restaurant non spécifié' }, { status: 400 });
     }
 
-    if (!pinCode || !/^\d{4}$/.test(String(pinCode).trim())) {
+    const cleanPin = String(pinCode || '').trim();
+    if (!cleanPin || !/^\d{4}$/.test(cleanPin)) {
       return NextResponse.json({ error: 'Code PIN à 4 chiffres requis' }, { status: 400 });
     }
 
@@ -41,24 +62,72 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    // Find cashier
-    const cashier = await prisma.cashier.findFirst({
+    // Récupérer tous les caissiers actifs de cet établissement
+    const activeCashiers = await prisma.cashier.findMany({
       where: {
         tenantId: tenant.id,
-        pinCode: String(pinCode).trim(),
         isActive: true
       }
     });
 
-    if (!cashier) {
+    if (activeCashiers.length === 0) {
+      return NextResponse.json({ error: 'Aucun caissier actif configuré pour cet établissement' }, { status: 401 });
+    }
+
+    const now = new Date();
+    let matchedCashier: (typeof activeCashiers)[0] | null = null;
+
+    for (const c of activeCashiers) {
+      const storedPin = (c.pinCode || '').trim();
+      let isMatch = false;
+
+      if (storedPin.startsWith('$2a$') || storedPin.startsWith('$2b$') || storedPin.startsWith('$2y$')) {
+        isMatch = await bcrypt.compare(cleanPin, storedPin);
+      } else {
+        isMatch = storedPin === cleanPin;
+      }
+
+      if (isMatch) {
+        matchedCashier = c;
+        break;
+      }
+    }
+
+    // Si aucun caissier ne correspond au PIN saisi
+    if (!matchedCashier) {
       return NextResponse.json({ error: 'Code PIN incorrect ou caissier inactif' }, { status: 401 });
+    }
+
+    // 🔒 VÉRIFICATION DU VERROUILLAGE TEMPORAIRE (lockedUntil)
+    if (matchedCashier.lockedUntil && new Date(matchedCashier.lockedUntil) > now) {
+      const remainingMinutes = Math.max(
+        1,
+        Math.ceil((new Date(matchedCashier.lockedUntil).getTime() - now.getTime()) / 60000)
+      );
+      return NextResponse.json(
+        {
+          error: `Ce profil caissier est temporairement verrouillé suite à plusieurs tentatives échouées. Réessayez dans ${remainingMinutes} min.`
+        },
+        { status: 423 }
+      );
+    }
+
+    // Réinitialiser le compteur d'échecs et lockedUntil après connexion valide
+    if (matchedCashier.failedPinAttempts > 0 || matchedCashier.lockedUntil) {
+      await prisma.cashier.update({
+        where: { id: matchedCashier.id },
+        data: {
+          failedPinAttempts: 0,
+          lockedUntil: null
+        }
+      });
     }
 
     // Check for open session for this cashier or tenant
     const activeSession = await prisma.cashSession.findFirst({
       where: {
         tenantId: tenant.id,
-        cashierId: cashier.id,
+        cashierId: matchedCashier.id,
         status: 'OPEN'
       },
       orderBy: { openedAt: 'desc' },
@@ -77,11 +146,11 @@ export async function POST(req: Request) {
       success: true,
       restaurant: tenant,
       cashier: {
-        id: cashier.id,
-        name: cashier.name,
-        phone: cashier.phone,
-        shift: cashier.shift,
-        schedule: cashier.schedule
+        id: matchedCashier.id,
+        name: matchedCashier.name,
+        phone: matchedCashier.phone,
+        shift: matchedCashier.shift,
+        schedule: matchedCashier.schedule
       },
       token: `cashier_session_${tenant.id}`,
       activeSession
