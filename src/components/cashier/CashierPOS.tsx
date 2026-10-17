@@ -106,7 +106,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [bluetoothDeviceName, setBluetoothDeviceName] = useState<string>('');
   const [isConnectingBt, setIsConnectingBt] = useState(false);
 
-  const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'NEW_ORDER'>('QR_ORDERS');
+  const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'NEW_ORDER' | 'TAKEAWAY_ORDERS'>('QR_ORDERS');
   const [menuCategories, setMenuCategories] = useState<any[]>([]);
   const [cartItems, setCartItems] = useState<CashierCartItem[]>([]);
   const [isSubmittingNewOrder, setIsSubmittingNewOrder] = useState(false);
@@ -303,7 +303,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       const offlineOrder: OrderType = {
         id: offlineId,
         restaurantId: effectiveRestoId,
-        orderType: tableNumber === 0 ? 'EXPRESS' : 'TABLE',
+        orderType: tableNumber === 0 ? 'TAKEAWAY' : 'TABLE',
         tableNumber: tableNumber,
         customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
         status: isPaidLater ? 'PENDING' : 'SERVED',
@@ -365,7 +365,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           printOrderReceipt(data.order);
         }
         setCartItems([]);
-        setActiveMode('QR_ORDERS');
+        setActiveMode(tableNumber === 0 ? 'TAKEAWAY_ORDERS' : 'QR_ORDERS');
         fetchActiveSession(effectiveRestoId);
         fetchOrders();
       } else {
@@ -377,7 +377,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       const offlineOrder: OrderType = {
         id: offlineId,
         restaurantId: effectiveRestoId,
-        orderType: tableNumber === 0 ? 'EXPRESS' : 'TABLE',
+        orderType: tableNumber === 0 ? 'TAKEAWAY' : 'TABLE',
         tableNumber: tableNumber,
         customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
         status: isPaidLater ? 'PENDING' : 'SERVED',
@@ -1133,22 +1133,34 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     setIsPinModalOpen(true);
   };
 
-  // Filter Orders : Une commande reste active en caisse tant qu'elle n'est pas payée et clôturée (SERVED + PAID) et NON annulée
+  // 🪑 VUE STRICTE DES VENTES SUR TABLE : Seules les commandes sur table en salle (orderType === 'TABLE' ou tableNumber > 0)
+  // Les commandes au comptoir (TAKEAWAY) sont strictement exclues de cette vue opérationnelle
   const activeOrders = useMemo(() => {
     return orders.filter((order) => {
       // 🔒 SÉCURITÉ FINANCIÈRE : Les commandes annulées ne figurent jamais dans la file d'encaissement
       if (order.status === 'CANCELLED') return false;
 
-      const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0;
+      // 🚫 EXCLUSION COMPTOIR : Les ventes directes au comptoir ne doivent JAMAIS apparaître ici
+      const isTakeaway = order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || Number(order.tableNumber) === 0;
+      if (isTakeaway) return false;
+
       const isPaidAndClosed = order.status === 'SERVED' && order.paymentStatus === 'PAID';
 
       if (activeFilter === 'ALL') return !isPaidAndClosed;
-      if (activeFilter === 'EXPRESS') return isExpress && !isPaidAndClosed;
-      if (activeFilter === 'TABLE') return !isExpress && order.tableNumber > 0 && !isPaidAndClosed;
+      if (activeFilter === 'TABLE') return !isPaidAndClosed;
       if (activeFilter === 'SERVED') return isPaidAndClosed;
       return true;
     });
   }, [orders, activeFilter]);
+
+  // 🧾 VENTES COMPTOIR DU JOUR : Liste dédiée des ventes directes / takeaway encaissées
+  const takeawayOrders = useMemo(() => {
+    return orders.filter((order) => {
+      if (order.status === 'CANCELLED') return false;
+      const isTakeaway = order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || Number(order.tableNumber) === 0;
+      return isTakeaway;
+    });
+  }, [orders]);
 
   const readyOrders = useMemo(() => {
     return orders.filter((o) => o.status === 'READY');
@@ -1157,13 +1169,13 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   // Caisse du Jour & Ventes Express : UNIQUEMENT les commandes effectivement ENCAISSÉES (PAID) et NON annulées
   const totalRevenue = useMemo(() => {
     return orders
-      .filter((o) => o.paymentStatus === 'PAID' && o.status !== 'CANCELLED')
+      .filter((o) => (o.paymentStatus === 'PAID' || o.paymentStatus === 'STAFF_NP') && o.status !== 'CANCELLED')
       .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
   const expressRevenue = useMemo(() => {
     return orders
-      .filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && o.paymentStatus === 'PAID' && o.status !== 'CANCELLED')
+      .filter((o) => (o.orderType === 'TAKEAWAY' || o.orderType === 'EXPRESS' || o.tableNumber === 0) && (o.paymentStatus === 'PAID' || o.paymentStatus === 'STAFF_NP') && o.status !== 'CANCELLED')
       .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
@@ -1629,12 +1641,12 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </div>
       </header>
 
-        {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Vente Directe / Comptoir */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">
+        {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Vente Directe vs Ventes Comptoir */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setActiveMode('QR_ORDERS')}
-            className={`py-3.5 px-5 min-h-[50px] rounded-2xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer touch-manipulation border ${
+            className={`py-3.5 px-4 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
               activeMode === 'QR_ORDERS'
                 ? 'bg-slate-900 text-white border-slate-950 shadow-md ring-2 ring-slate-900/10'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -1642,10 +1654,10 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           >
             <span className="text-xl">🪑</span>
             <span>Ventes sur Table (QR)</span>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
               activeMode === 'QR_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
             }`}>
-              {orders.filter((o) => !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+              {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
             </span>
           </button>
 
@@ -1659,19 +1671,37 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               }
               setActiveMode('NEW_ORDER');
             }}
-            className={`py-3.5 px-5 min-h-[50px] rounded-2xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer touch-manipulation border ${
+            className={`py-3.5 px-4 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
               activeMode === 'NEW_ORDER'
                 ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-400/30'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
             <span className="text-xl">🛍️</span>
-            <span>Vente Directe / Comptoir</span>
+            <span>+ Vente Directe / Comptoir</span>
             {cartItems.length > 0 && (
-              <span className="bg-slate-950 text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-mono font-black">
+              <span className="bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full text-xs font-mono font-black">
                 {cartItems.reduce((s, i) => s + i.quantity, 0)} plat(s)
               </span>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMode('TAKEAWAY_ORDERS')}
+            className={`py-3.5 px-4 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
+              activeMode === 'TAKEAWAY_ORDERS'
+                ? 'bg-emerald-700 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <span className="text-xl">🧾</span>
+            <span>Ventes Comptoir du Jour</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
+              activeMode === 'TAKEAWAY_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
+            }`}>
+              {takeawayOrders.length}
+            </span>
           </button>
         </div>
 
@@ -1696,6 +1726,123 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             />
           </div>
         </div>
+      ) : activeMode === 'TAKEAWAY_ORDERS' ? (
+        /* VUE 3 : HISTORIQUE DES VENTES COMPTOIR DU JOUR */
+        <section className="space-y-4">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-xs">
+                🧾
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-emerald-950">Ventes Directes &amp; Comptoir (Takeaway)</h2>
+                <p className="text-xs text-emerald-700">
+                  Historique certifié des ventes directes déjà encaissées. Les tickets sont réglés et justifiés dans votre rapport Z.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-emerald-900 bg-white border border-emerald-300 px-4 py-2 rounded-2xl shadow-xs">
+                Total Ventes Comptoir : <strong className="font-mono text-emerald-950 text-sm sm:text-base font-black">{formatFCFA(expressRevenue)}</strong>
+              </span>
+            </div>
+          </div>
+
+          {takeawayOrders.length === 0 ? (
+            <div className="py-16 text-center text-slate-500 space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-3xl">
+                🛍️
+              </div>
+              <h3 className="text-base font-bold text-slate-800">Aucune vente comptoir pour le moment</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Les commandes enregistrées en mode "Vente Directe / Comptoir" apparaîtront automatiquement ici dès leur encaissement.
+              </p>
+              <button
+                type="button"
+                onClick={() => setActiveMode('NEW_ORDER')}
+                className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 rounded-2xl text-xs font-black shadow-xs transition-all cursor-pointer"
+              >
+                <span>+ Nouvelle Vente Directe</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+              {takeawayOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="bg-white rounded-3xl border-2 border-emerald-300 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between transition-all"
+                >
+                  {/* Card Header */}
+                  <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-base sm:text-lg font-black tracking-tight text-amber-400">
+                        ⚡ COMPTOIR
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white/15 text-white">
+                        #{order.id.slice(-5).toUpperCase()}
+                      </span>
+                      {renderPaymentBadge(order.paymentMethod)}
+                    </div>
+                    <span className="text-[11px] font-bold opacity-90 font-mono">
+                      {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'En direct'}
+                    </span>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="p-4 space-y-3 flex-1">
+                    {order.customerName && (
+                      <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Client : <strong>{order.customerName}</strong></span>
+                      </div>
+                    )}
+
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className="text-xs flex items-start justify-between gap-2 border-b border-slate-50 pb-1">
+                          <div className="min-w-0">
+                            <span className="font-black text-slate-900">{item.quantity}x</span>{' '}
+                            <span className="font-bold text-slate-800">{item.name}</span>
+                          </div>
+                          <span className="font-mono font-bold text-slate-700 shrink-0">
+                            {formatFCFA(Number(item.price) * Number(item.quantity))}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="p-4 bg-slate-50 border-t border-slate-100 space-y-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-600 font-bold uppercase">Total Encaissé :</span>
+                      <span className="text-lg font-black text-emerald-950 font-mono">{formatFCFA(getOrderTotal(order))}</span>
+                    </div>
+
+                    <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Encaissée &amp; Validée</span>
+                      </span>
+                      <span className="font-mono text-[11px] text-emerald-700">
+                        {order.servedAt ? new Date(order.servedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Payé'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => printOrderReceipt(order)}
+                      className="w-full py-2.5 px-3 min-h-[44px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                    >
+                      <Printer className="w-4 h-4 text-amber-400" />
+                      <span>Réimprimer le Ticket</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       ) : (
         <>
       {/* 1.5. BANDEAU DES DEMANDES D'ADDITION ET APPELS DE SALLE */}
@@ -1741,7 +1888,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </section>
       )}
 
-      {/* 2. FILTER TABS */}
+      {/* 2. FILTER TABS (VENTES SUR TABLE EXCLUSIVEMENT) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <button
           type="button"
@@ -1752,27 +1899,11 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
           }`}
         >
-          <span>Toutes les Commandes</span>
+          <span>Toutes les Tables Ouvertes</span>
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
             activeFilter === 'ALL' ? 'bg-white/20 text-white font-black' : 'bg-slate-100 text-slate-700 font-bold'
           }`}>
-            {orders.filter((o) => !(o.status === 'SERVED' && o.paymentStatus === 'PAID')).length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveFilter('EXPRESS')}
-          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
-            activeFilter === 'EXPRESS'
-              ? 'bg-amber-400 text-slate-950 border-amber-500/40 shadow-xs'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
-          }`}
-        >
-          <Zap className="w-4 h-4 text-slate-950 fill-slate-950 shrink-0" />
-          <span>Comptoir / Express</span>
-          <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono">
-            {orders.filter((o) => (o.orderType === 'EXPRESS' || o.tableNumber === 0) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID')).length}
+            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
           </span>
         </button>
 
@@ -1786,9 +1917,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           }`}
         >
           <UtensilsCrossed className="w-4 h-4 text-slate-950 shrink-0" />
-          <span>Tables (Salle)</span>
-          <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono">
-            {orders.filter((o) => o.orderType !== 'EXPRESS' && o.tableNumber > 0 && !(o.status === 'SERVED' && o.paymentStatus === 'PAID')).length}
+          <span>Tables à Encaisser</span>
+          <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono font-black">
+            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length}
           </span>
         </button>
 
@@ -1802,11 +1933,11 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           }`}
         >
           <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
-          <span>Servies &amp; Encaissées</span>
+          <span>Tables Clôturées du Jour</span>
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
             activeFilter === 'SERVED' ? 'bg-white/20 text-white font-black' : 'bg-emerald-100 text-emerald-800 font-bold'
           }`}>
-            {orders.filter((o) => o.status === 'SERVED' && o.paymentStatus === 'PAID').length}
+            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.status === 'SERVED' && o.paymentStatus === 'PAID').length}
           </span>
         </button>
       </div>

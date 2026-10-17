@@ -112,9 +112,11 @@ export async function POST(req: Request) {
       }
 
       // 2. Création de la commande directe comptoir
+      const isTakeaway = !isPaidLater && (!tableNumber || Number(tableNumber) === 0);
       const newOrder = await tx.order.create({
         data: {
           tenantId: resolvedTenantId,
+          orderType: isTakeaway ? 'TAKEAWAY' : 'TABLE',
           tableNumber: isPaidLater ? (tableNumber || 0) : 0,
           spaceType: isPaidLater ? 'TABLE' : 'COUNTER',
           destinationService: 'KITCHEN',
@@ -128,7 +130,7 @@ export async function POST(req: Request) {
             : (customerName || (isPaidLater ? `Table ${tableNumber || 0}` : 'Client Comptoir')),
           employeeId: isStaffMeal ? (employeeId || undefined) : undefined,
           employeeName: isStaffMeal ? employeeName.trim() : undefined,
-          status: 'PENDING',
+          status: (isTakeaway && !isPaidLater && !isStaffMeal) ? 'SERVED' : 'PENDING',
           paymentStatus: isStaffMeal ? 'STAFF_NP' : (isPaidLater ? 'UNPAID' : 'PAID'),
           paymentMethod: paymentMethod || 'CASH',
           totalAmount,

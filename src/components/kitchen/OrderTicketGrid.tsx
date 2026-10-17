@@ -34,7 +34,7 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
           : true;
         if (!hasKitchenDishes) return false;
 
-        if (activeFilter === 'PENDING') return order.status === 'PENDING';
+        if (activeFilter === 'PENDING') return order.status === 'PENDING' || ((order.orderType === 'TAKEAWAY' || order.tableNumber === 0) && !order.preparedAt);
         if (activeFilter === 'PREPARING') return order.status === 'PREPARING';
         if (activeFilter === 'READY') return order.status === 'READY';
 
@@ -44,8 +44,15 @@ export const OrderTicketGrid: React.FC<OrderTicketGridProps> = ({
           return minutes >= 15 && order.status !== 'SERVED';
         }
 
-        // 'ALL' filter: show pending, preparing and ready orders
-        return order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
+        // 'ALL' filter: show pending, preparing and ready orders + takeaway orders récentes du service
+        if (order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY') {
+          return true;
+        }
+        if (order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || order.tableNumber === 0) {
+          const diffMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
+          return diffMinutes < 90;
+        }
+        return false;
       });
 
     // Si une commande était affichée et vient d'être annulée, on l'affiche avec son badge rouge d'alerte

@@ -329,7 +329,7 @@ export interface RestaurantTableType {
   } | null;
 }
 
-export type OrderServiceType = 'TABLE' | 'EXPRESS';
+export type OrderServiceType = 'TABLE' | 'TAKEAWAY' | 'EXPRESS';
 export type QRCodeType = 'TABLE' | 'EXPRESS';
 
 export interface OrderType {

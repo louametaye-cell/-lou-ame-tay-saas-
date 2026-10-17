@@ -95,7 +95,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
     }
   };
 
-  const isExpressOrder = order.orderType === 'EXPRESS' || order.tableNumber === 0;
+  const isExpressOrder = order.orderType === 'EXPRESS' || order.orderType === 'TAKEAWAY' || order.tableNumber === 0;
 
   // 🚨 RÈGLE TERRAIN SÉNÉGAL (Alerte Visuelle KDS) : si commande > 15 min en cuisine, clignotement rouge vigoureux
   const orderAgeMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
@@ -195,6 +195,19 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           </div>
           <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs">
             BON NP
+          </span>
+        </div>
+      )}
+
+      {/* 🥡 BADGE KDS TRÈS VISIBLE : COMMANDE À EMPORTER / COMPTOIR */}
+      {(order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || order.tableNumber === 0) && (
+        <div className="bg-amber-400 text-slate-950 px-3.5 py-2 text-xs font-black uppercase tracking-wider flex items-center justify-between shadow-inner border-y-2 border-amber-500">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🥡</span>
+            <span className="font-black text-xs sm:text-sm tracking-tight">À EMPORTER / COMPTOIR</span>
+          </div>
+          <span className="bg-slate-950 text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-400/40">
+            NE PAS SERVIR EN SALLE
           </span>
         </div>
       )}

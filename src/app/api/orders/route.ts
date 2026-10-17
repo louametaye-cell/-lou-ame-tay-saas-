@@ -76,7 +76,7 @@ export async function GET(req: Request) {
       ...o,
       total: Number(o.totalAmount ?? o.total ?? 0),
       totalAmount: Number(o.totalAmount ?? o.total ?? 0),
-      orderType: (o.tableNumber === 0 || o.tableNumber === null || !o.tableNumber) ? 'EXPRESS' : 'TABLE',
+      orderType: o.orderType || ((o.tableNumber === 0 || o.tableNumber === null || !o.tableNumber) ? 'TAKEAWAY' : 'TABLE'),
     }));
 
     logApiCall({
@@ -328,6 +328,7 @@ export async function POST(req: Request) {
         tenantId: validTenantId,
         tableId: matchedTableId || undefined,
         tableNumber: cleanTableNum,
+        orderType: (isExpress || cleanTableNum === 0) ? 'TAKEAWAY' : 'TABLE',
         spaceType: effectiveSpaceType || undefined,
         destinationService: effectiveDestination || undefined,
         customerName: customerName ? String(customerName).trim() : null,

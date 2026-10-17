@@ -103,6 +103,11 @@ enum DestinationService {
   RECEPTION
 }
 
+enum OrderType {
+  TABLE
+  TAKEAWAY
+}
+
 model Plan {
   id            String   @id @default(cuid())
   name          String
@@ -384,6 +389,7 @@ model Order {
   cashSessionId  String?       @map("cash_session_id")
   locationDetail     String?             @map("location_detail")
   spaceType          SpaceType?          @default(TABLE) @map("space_type")
+  orderType          OrderType?          @default(TABLE) @map("order_type")
   destinationService DestinationService? @default(KITCHEN) @map("destination_service")
   employeeId         String?             @map("employee_id")
   employeeName       String?             @map("employee_name")
@@ -410,6 +416,7 @@ model Order {
 
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
+  @@index([tenantId, orderType])
   @@index([tableNumber])
   @@index([cashierId])
   @@index([cashSessionId])
