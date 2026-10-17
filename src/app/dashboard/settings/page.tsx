@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
+import { CashierManagementCard } from '@/components/dashboard/CashierManagementCard';
 
 type TabKey = 'identity' | 'hours' | 'zones' | 'cashiers' | 'payment' | 'notifications' | 'danger';
 
@@ -1186,44 +1187,18 @@ export default function DashboardSettingsPage() {
                 </div>
               )}
 
-              {/* Liste des caissiers */}
-              <div className="space-y-3">
+              {/* Liste des caissiers via le composant global multi-tenant */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cashiers.map((c) => (
-                  <div
+                  <CashierManagementCard
                     key={c.id}
-                    className="p-4 bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl flex items-center justify-between gap-4 flex-wrap shadow-2xs"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-emerald-50 text-emerald-700 rounded-2xl">
-                        <KeyRound className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-black text-slate-900">{c.name}</h4>
-                          <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
-                            Shift : {c.shift}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                          <span>📞 {c.phone || 'Pas de numéro'}</span>
-                          <span>•</span>
-                          <span>Code PIN : <strong className="font-mono text-emerald-700">{c.pinCode || '••••'}</strong></span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSendPinWhatsApp(c)}
-                        className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border border-emerald-200 cursor-pointer"
-                        title="Renvoyer le code PIN par WhatsApp"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Renvoyer PIN (WhatsApp)</span>
-                      </button>
-                    </div>
-                  </div>
+                    cashier={c}
+                    restaurantId={restaurantId || identity.id || restaurantSubdomain}
+                    restaurantSubdomain={restaurantSubdomain || identity.subdomain}
+                    restaurantName={identity.name}
+                    onRefresh={fetchSettings}
+                    compact
+                  />
                 ))}
               </div>
             </div>

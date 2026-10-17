@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { CashierType, CashierShift } from '@/types';
 import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
+import { CashierManagementCard } from '@/components/dashboard/CashierManagementCard';
 
 export default function CashiersManagementPage() {
   const [cashiers, setCashiers] = useState<CashierType[]>([]);
@@ -456,104 +457,13 @@ export default function CashiersManagementPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {cashiers.map((c: any) => (
-                <div
+                <CashierManagementCard
                   key={c.id}
-                  className={`bg-white rounded-3xl border p-6 shadow-xs flex flex-col justify-between transition-all ${
-                    c.isActive ? 'border-slate-200' : 'border-slate-200 opacity-60 bg-slate-50'
-                  }`}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
-                          {c.name}
-                          {!c.isActive && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-600 rounded-full">
-                              Inactif
-                            </span>
-                          )}
-                        </h3>
-                        {c.phone && (
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <Phone className="w-3 h-3 text-slate-400" />
-                            {c.phone}
-                          </p>
-                        )}
-                      </div>
-                      <div>{getShiftBadge(c.shift)}</div>
-                    </div>
-
-                    {/* Planning */}
-                    {c.schedule && (
-                      <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs text-slate-600 flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                        <span>{c.schedule}</span>
-                      </div>
-                    )}
-
-                    {/* PIN Code Box */}
-                    <div className="p-3 bg-orange-50/60 border border-orange-200/60 rounded-2xl flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <KeyRound className="w-4 h-4 text-orange-600" />
-                        <span className="text-xs font-bold text-slate-700">Code PIN de connexion :</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm tracking-widest text-slate-900">
-                          {showPins[c.id] ? c.pinCode : '••••'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => togglePinVisibility(c.id)}
-                          className="p-1 text-slate-400 hover:text-slate-700"
-                          title="Afficher/Masquer le PIN"
-                        >
-                          {showPins[c.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Sessions count info */}
-                    <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                      <span>Sessions clôturées : <strong>{c._count?.sessions || 0}</strong></span>
-                      <span>Commandes : <strong>{c._count?.orders || 0}</strong></span>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleActive(c)}
-                        className={`text-xs font-bold px-2.5 py-1.5 rounded-xl border transition-colors ${
-                          c.isActive
-                            ? 'border-amber-200 text-amber-800 hover:bg-amber-50'
-                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                        }`}
-                        title={c.isActive ? 'Suspendre ce compte temporairement' : 'Réactiver ce compte'}
-                      >
-                        {c.isActive ? 'Désactiver' : 'Réactiver'}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleArchiveOrDeleteCashier(c)}
-                        className="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 flex items-center gap-1 transition-colors"
-                        title="Archiver ou supprimer ce profil caissier"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Archiver</span>
-                      </button>
-                    </div>
-
-                    <Link
-                      href={`/cashier${restaurantId ? `?restaurantId=${restaurantId}` : ''}`}
-                      className="text-xs font-bold text-slate-700 hover:text-orange-600 flex items-center gap-1 ml-auto"
-                    >
-                      <span>Tester Caisse</span>
-                      <span>→</span>
-                    </Link>
-                  </div>
-                </div>
+                  cashier={c}
+                  restaurantId={restaurantId}
+                  restaurantName={restaurantName}
+                  onRefresh={() => fetchCashiers(restaurantId)}
+                />
               ))}
             </div>
           )}

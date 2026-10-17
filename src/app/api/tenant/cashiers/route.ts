@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
-import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { isAuthorizedTenantAdmin } from '@/lib/tenant-auth';
 import bcrypt from 'bcryptjs';
 
 function extractTenantFromCookie(req: Request): string | null {
@@ -22,10 +22,8 @@ function extractTenantFromCookie(req: Request): string | null {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId =
-      searchParams.get('tenantId') ||
-      searchParams.get('restaurantId') ||
-      extractTenantFromCookie(req);
+    const explicitTenant = searchParams.get('tenantId') || searchParams.get('restaurantId') || null;
+    const tenantId = explicitTenant || extractTenantFromCookie(req);
 
     if (!tenantId) {
       return NextResponse.json({ error: 'tenantId ou restaurantId est requis' }, { status: 400 });
@@ -48,11 +46,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    // 🔒 CONTRÔLE D'ACCÈS STRICT : Seul le gérant authentifié ou Super-Admin peut voir l'équipe
-    if (!isAuthorizedTenant(req, tenant.id, tenant.subdomain)) {
+    // 🔒 RÈGLE D'OR MULTI-TENANT : Seul le gérant authentifié de cet établissement ou Super-Admin peut voir l'équipe
+    if (!isAuthorizedTenantAdmin(req, tenant.id, tenant.subdomain, explicitTenant)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé : Session gérant requise pour consulter les caissiers' },
-        { status: 401 }
+        { error: 'Accès non autorisé : Isolation multi-tenant stricte (Session gérant requise)' },
+        { status: 403 }
       );
     }
 
@@ -72,7 +70,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // Récupération des caissiers pour le gérant authentifié
+    // Récupération des caissiers strictement filtrés par tenantId
     const cashiers = await prisma.cashier.findMany({
       where: { tenantId: tenant.id },
       orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
@@ -91,6 +89,7 @@ export async function GET(req: Request) {
           select: { sessions: true, orders: true }
         },
         sessions: {
+          where: { status: 'OPEN' },
           take: 1,
           orderBy: { openedAt: 'desc' },
           select: {
@@ -105,10 +104,12 @@ export async function GET(req: Request) {
       }
     });
 
+    // Jamais d'exposition du hash bcrypt côté client : toujours '••••'
     const safeCashiers = cashiers.map((c) => ({
       ...c,
-      pinCode: c.pinCode?.startsWith('$2') ? '••••' : c.pinCode,
+      pinCode: '••••',
       hasPin: Boolean(c.pinCode),
+      hasOpenSession: c.sessions.some((s) => s.status === 'OPEN'),
     }));
 
     return NextResponse.json({ success: true, cashiers: safeCashiers });
@@ -156,11 +157,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant ou Super-Admin peut créer un caissier
-    if (!isAuthorizedTenant(req, tenant.id, tenant.subdomain)) {
+    // 🔒 RÈGLE D'OR MULTI-TENANT : Seul le gérant de cet établissement ou Super-Admin peut créer un caissier
+    const explicitTenant = tenantId || restaurantId || null;
+    if (!isAuthorizedTenantAdmin(req, tenant.id, tenant.subdomain, explicitTenant)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé : Session gérant requise pour créer un caissier' },
-        { status: 401 }
+        { error: 'Accès non autorisé : Isolation multi-tenant stricte (Session gérant requise)' },
+        { status: 403 }
       );
     }
 
@@ -223,8 +225,9 @@ export async function POST(req: Request) {
         success: true,
         cashier: {
           ...cashier,
-          pinCode: cleanPin,
-          hasPin: true
+          pinCode: '••••',
+          hasPin: true,
+          hasOpenSession: false
         }
       },
       { status: 201 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
-import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { isAuthorizedTenantAdmin } from '@/lib/tenant-auth';
 import bcrypt from 'bcryptjs';
 
 export async function PATCH(
@@ -12,7 +12,7 @@ export async function PATCH(
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id;
     const body = await req.json();
-    const { name, phone, pinCode, shift, schedule, isActive } = body;
+    const { name, phone, pinCode, shift, schedule, isActive, tenantId, restaurantId } = body;
 
     const current = await prisma.cashier.findUnique({
       where: { id },
@@ -23,11 +23,35 @@ export async function PATCH(
       return NextResponse.json({ error: 'Caissier introuvable' }, { status: 404 });
     }
 
-    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut modifier un caissier
-    if (!isAuthorizedTenant(req, current.tenantId, current.tenant?.subdomain)) {
+    // 🔒 RÈGLE D'OR MULTI-TENANT : Seul le gérant de cet établissement peut modifier ce caissier
+    const explicitTenant = tenantId || restaurantId || null;
+    if (!isAuthorizedTenantAdmin(req, current.tenantId, current.tenant?.subdomain, explicitTenant)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé : Session gérant requise pour modifier ce caissier' },
-        { status: 401 }
+        { error: 'Accès non autorisé : Isolation multi-tenant stricte' },
+        { status: 403 }
+      );
+    }
+
+    // Vérifier si le caissier a une session ouverte (status: 'OPEN')
+    const openSession = await prisma.cashSession.findFirst({
+      where: {
+        cashierId: current.id,
+        tenantId: current.tenantId,
+        status: 'OPEN'
+      }
+    });
+
+    if (pinCode !== undefined && openSession) {
+      return NextResponse.json(
+        { error: 'Impossible de modifier le PIN : session de caisse en cours. Effectuez d\'abord la clôture Z.' },
+        { status: 400 }
+      );
+    }
+
+    if (isActive === false && openSession) {
+      return NextResponse.json(
+        { error: 'Impossible de désactiver ce compte : session de caisse en cours. Effectuez d\'abord la clôture Z.' },
+        { status: 400 }
       );
     }
 
@@ -62,7 +86,7 @@ export async function PATCH(
           ? await bcrypt.compare(cleanPin, stored)
           : stored === cleanPin;
         if (isConflict) {
-          return NextResponse.json({ error: `Le code PIN ${cleanPin} est déjà utilisé par ${c.name}` }, { status: 409 });
+          return NextResponse.json({ error: `Le code PIN est déjà utilisé par ${c.name}` }, { status: 409 });
         }
       }
 
@@ -72,12 +96,15 @@ export async function PATCH(
     }
 
     const updated = await prisma.cashier.update({
-      where: { id },
+      where: { id: current.id },
       data: dataToUpdate
     });
 
     const { pinCode: _, ...safeUpdated } = updated as any;
-    return NextResponse.json({ success: true, cashier: { ...safeUpdated, hasPin: true } });
+    return NextResponse.json({
+      success: true,
+      cashier: { ...safeUpdated, pinCode: '••••', hasPin: true }
+    });
   } catch (error) {
     console.error('Erreur mise à jour caissier:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la mise à jour' }, { status: 500 });
@@ -91,6 +118,8 @@ export async function DELETE(
   try {
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id;
+    const { searchParams } = new URL(req.url);
+    const explicitTenant = searchParams.get('restaurantId') || searchParams.get('tenantId') || null;
 
     const current = await prisma.cashier.findUnique({
       where: { id },
@@ -101,65 +130,42 @@ export async function DELETE(
       return NextResponse.json({ error: 'Caissier introuvable' }, { status: 404 });
     }
 
-    // 🔒 CONTRÔLE D'ACCÈS : Seul le gérant de cet établissement ou Super-Admin peut supprimer un caissier
-    if (!isAuthorizedTenant(req, current.tenantId, current.tenant?.subdomain)) {
+    // 🔒 RÈGLE D'OR MULTI-TENANT : Seul le gérant de cet établissement peut désactiver/supprimer ce caissier
+    if (!isAuthorizedTenantAdmin(req, current.tenantId, current.tenant?.subdomain, explicitTenant)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé : Session gérant requise pour supprimer ce caissier' },
-        { status: 401 }
+        { error: 'Accès non autorisé : Isolation multi-tenant stricte' },
+        { status: 403 }
       );
     }
 
     // Check if cashier has open session
     const openSession = await prisma.cashSession.findFirst({
-      where: { cashierId: id, status: 'OPEN' }
+      where: { cashierId: id, tenantId: current.tenantId, status: 'OPEN' }
     });
 
     if (openSession) {
-      return NextResponse.json({ error: 'Impossible d\'archiver ou supprimer un caissier ayant une session de caisse en cours d\'activité' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Impossible de désactiver ce compte : session de caisse en cours. Effectuez d\'abord la clôture Z.' },
+        { status: 400 }
+      );
     }
 
-    // Check sessions and orders count
-    const cashierWithCounts = await prisma.cashier.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { sessions: true, orders: true }
-        }
-      }
-    });
-
-    const hasHistory = (cashierWithCounts?._count?.sessions || 0) > 0 || (cashierWithCounts?._count?.orders || 0) > 0;
-    const { searchParams } = new URL(req.url);
-    const hardDelete = searchParams.get('hard') === 'true';
-
-    if (hardDelete && !hasHistory) {
-      // 0 session et 0 commande : suppression définitive sécurisée autorisée
-      await prisma.cashier.delete({
-        where: { id }
-      });
-      return NextResponse.json({ 
-        success: true, 
-        action: 'DELETED', 
-        message: 'Profil caissier supprimé définitivement (aucune donnée historique liée).' 
-      });
-    }
-
-    // Si le caissier a des sessions historiques ou si archivage demandé : SOFT ARCHIVE Garanti
+    // Soft delete systématique (Désactiver le compte) pour préserver l'intégrité comptable
     const updated = await prisma.cashier.update({
       where: { id },
       data: { isActive: false }
     });
 
+    const { pinCode: _, ...safeUpdated } = updated as any;
+
     return NextResponse.json({ 
       success: true, 
       action: 'ARCHIVED',
-      message: hasHistory 
-        ? 'Caissier archivé avec succès (historique comptable et rapports Z intégralement conservés).' 
-        : 'Caissier désactivé avec succès.', 
-      cashier: updated 
+      message: 'Compte caissier désactivé avec succès.', 
+      cashier: { ...safeUpdated, pinCode: '••••', hasPin: true } 
     });
   } catch (error) {
-    console.error('Erreur archivage/suppression caissier:', error);
+    console.error('Erreur désactivation caissier:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de l\'opération' }, { status: 500 });
   }
 }
