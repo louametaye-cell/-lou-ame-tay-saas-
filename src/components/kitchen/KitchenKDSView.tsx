@@ -82,18 +82,41 @@ export default function KitchenKDSView({
     }
   }, [initialRestaurantId, initialPlanSlug, initialRestaurantName]);
 
+  const [selectedService, setSelectedService] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('service')?.toUpperCase() || 'ALL';
+    }
+    return 'ALL';
+  });
+
+  const [isSimulatingOffline, setIsSimulatingOffline] = useState(false);
+
   const {
     orders,
     recentlyCancelledOrders,
     isLoading,
     isConnected,
+    isOffline,
+    pendingSyncCount,
     updateOrderStatus,
+    triggerManualSync,
     refetch,
   } = useKitchenOrders({
     restaurantId,
+    service: selectedService,
     isAudioEnabled,
     pollIntervalMs: 3500,
   });
+
+  const handleToggleSimulateOffline = () => {
+    const next = !isSimulatingOffline;
+    setIsSimulatingOffline(next);
+    import('@/lib/terrain-resilience').then((m) => {
+      m.setSimulatedNetworkOutage(next);
+      refetch(true);
+    });
+  };
 
   // Calculate live counts
   const pendingOrders = orders.filter((o) => o.status === 'PENDING');
@@ -240,6 +263,11 @@ export default function KitchenKDSView({
         onFilterChange={setActiveFilter}
         onRefresh={refetch}
         isLoading={isLoading}
+        isOffline={isOffline}
+        pendingSyncCount={pendingSyncCount}
+        onManualSync={triggerManualSync}
+        onToggleSimulateOffline={handleToggleSimulateOffline}
+        isSimulatingOffline={isSimulatingOffline}
       />
 
       {/* Main Container */}
@@ -249,6 +277,40 @@ export default function KitchenKDSView({
           pendingOrders={pendingOrders}
           onAcknowledgeAll={handleAcknowledgeAll}
         />
+
+        {/* Multi-Service Destination Selector Bar (v2.3 Hôtellerie & Restauration) */}
+        <div className="bg-white rounded-3xl border border-slate-200 p-2.5 shadow-xs flex items-center justify-between gap-3 overflow-x-auto">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1">
+              <span>Poste KDS :</span>
+            </span>
+            {[
+              { id: 'ALL', label: '🌐 Tous les Services', color: 'bg-slate-900 text-white' },
+              { id: 'KITCHEN', label: '🍳 Cuisine', color: 'bg-amber-500 text-slate-950' },
+              { id: 'BAR', label: '🍹 Bar', color: 'bg-blue-600 text-white' },
+              { id: 'ROOM_SERVICE', label: '🛎️ Room Service', color: 'bg-purple-600 text-white' },
+              { id: 'RECEPTION', label: '🏨 Réception', color: 'bg-emerald-600 text-white' },
+            ].map((srv) => (
+              <button
+                key={srv.id}
+                type="button"
+                onClick={() => setSelectedService(srv.id)}
+                className={`min-h-[42px] px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer touch-manipulation flex items-center gap-1.5 ${
+                  selectedService === srv.id
+                    ? `${srv.color} shadow-sm ring-2 ring-slate-900/10`
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'
+                }`}
+              >
+                <span>{srv.label}</span>
+              </button>
+            ))}
+          </div>
+          {selectedService !== 'ALL' && (
+            <span className="text-[11px] font-black px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
+              Filtre actif : {selectedService}
+            </span>
+          )}
+        </div>
 
         {/* View Tabs Selector */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">

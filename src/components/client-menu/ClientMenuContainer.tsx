@@ -30,7 +30,9 @@ import {
   OrderType, 
   Language, 
   CurrencyCode, 
-  ExchangeRates 
+  ExchangeRates,
+  SpaceType,
+  DestinationService
 } from '@/types';
 import { DEFAULT_EXCHANGE_RATES, formatFCFA } from '@/lib/utils';
 import { useCartStore } from '@/store/useCartStore';
@@ -52,6 +54,8 @@ interface ClientMenuContainerProps {
     waiterName?: string;
     zoneId?: string;
     locationDetail?: string;
+    spaceType?: SpaceType;
+    destinationService?: DestinationService;
   };
 }
 
@@ -688,6 +692,8 @@ export const ClientMenuContainer: React.FC<ClientMenuContainerProps> = ({
         waiterId: orderContext?.waiterId,
         zoneId: orderContext?.zoneId,
         locationDetail: finalLocationDetail,
+        spaceType: orderContext?.spaceType,
+        destinationService: orderContext?.destinationService,
         items: items.map((i) => ({
           menuItemId: i.menuItem.id,
           name: i.menuItem.name,

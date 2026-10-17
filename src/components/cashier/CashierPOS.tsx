@@ -32,13 +32,25 @@ import {
   UtensilsCrossed,
   X,
   MessageCircle,
-  Loader2
+  Loader2,
+  Wifi,
+  WifiOff,
+  Bluetooth,
+  UserCheck
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
 import { TactileGrid } from './TactileGrid';
 import { CashierCart, CashierCartItem } from './CashierCart';
 import { EscPosPrinterService } from '@/services/EscPosPrinterService';
+import { 
+  resilientFetch, 
+  enqueueOfflineAction, 
+  flushOfflineQueue, 
+  getOfflineQueue, 
+  isNetworkOnline, 
+  setSimulatedNetworkOutage 
+} from '@/lib/terrain-resilience';
 import { toast } from 'sonner';
 
 interface CashierPOSProps {
@@ -80,16 +92,159 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   // Payment Modal States
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [orderToPay, setOrderToPay] = useState<OrderType | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'WAVE' | 'ORANGE_MONEY' | 'YAS_MONEY' | 'CARD'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'WAVE' | 'ORANGE_MONEY' | 'YAS_MONEY' | 'CARD' | 'STAFF_MEAL'>('CASH');
+  const [staffEmployeeName, setStaffEmployeeName] = useState<string>('');
   const [amountReceivedInput, setAmountReceivedInput] = useState<string>('');
   const [transactionRefInput, setTransactionRefInput] = useState<string>('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
+  // 🖨️ États Gestion Imprimante (Bluetooth & Système / PDF)
+  const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
+  const [printerType, setPrinterType] = useState<'native' | 'bluetooth'>('native');
+  const [isBluetoothConnected, setIsBluetoothConnected] = useState(false);
+  const [bluetoothDeviceName, setBluetoothDeviceName] = useState<string>('');
+  const [isConnectingBt, setIsConnectingBt] = useState(false);
+
   const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'NEW_ORDER'>('QR_ORDERS');
   const [menuCategories, setMenuCategories] = useState<any[]>([]);
   const [cartItems, setCartItems] = useState<CashierCartItem[]>([]);
   const [isSubmittingNewOrder, setIsSubmittingNewOrder] = useState(false);
+
+  // 📡 États de Résilience Réseau & Hors-Ligne (Terrain Sénégal)
+  const [isOffline, setIsOffline] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    const updateNetStatus = () => {
+      const offline = !isNetworkOnline();
+      setIsOffline(offline);
+      const queue = getOfflineQueue('CASHIER');
+      setPendingSyncCount(queue.length);
+    };
+
+    updateNetStatus();
+
+    const handleOnline = async () => {
+      updateNetStatus();
+      toast.success('🌐 Connexion rétablie ! Synchronisation des commandes en cours...');
+      setIsSyncing(true);
+      await flushOfflineQueue('CASHIER');
+      setIsSyncing(false);
+      updateNetStatus();
+      fetchOrders();
+      const currentResto = restaurantId || localStorage.getItem('current_restaurant_id');
+      if (currentResto) fetchActiveSession(currentResto);
+    };
+
+    const handleOffline = () => {
+      updateNetStatus();
+      toast.warning('📡 Réseau indisponible. Bascule automatique en Mode Hors-Ligne Caisse.');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Sync périodique toutes les 15s si des actions sont en attente et que le réseau est disponible
+    const syncInterval = setInterval(() => {
+      updateNetStatus();
+      if (isNetworkOnline()) {
+        const queue = getOfflineQueue('CASHIER');
+        if (queue.length > 0) {
+          flushOfflineQueue('CASHIER').then(() => {
+            updateNetStatus();
+            fetchOrders();
+          });
+        }
+      }
+    }, 15000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(syncInterval);
+    };
+  }, [restaurantId]);
+
+  const handleManualSync = async () => {
+    if (!isNetworkOnline()) {
+      toast.error('Impossible de synchroniser : appareil hors ligne.');
+      return;
+    }
+    setIsSyncing(true);
+    toast.info('Synchronisation de la file d\'attente caisse...');
+    const success = await flushOfflineQueue('CASHIER');
+    setIsSyncing(false);
+    const queue = getOfflineQueue('CASHIER');
+    setPendingSyncCount(queue.length);
+    if (success) {
+      toast.success('File d\'attente caisse synchronisée avec succès !');
+      fetchOrders();
+      const currentResto = restaurantId || localStorage.getItem('current_restaurant_id');
+      if (currentResto) fetchActiveSession(currentResto);
+    } else {
+      toast.warning('Certaines actions n\'ont pas pu être synchronisées.');
+    }
+  };
+
+  const handleToggleNetworkOutage = () => {
+    const willBeOffline = isNetworkOnline();
+    setSimulatedNetworkOutage(willBeOffline);
+    setIsOffline(willBeOffline);
+    if (willBeOffline) {
+      toast.error('Simulation : Coupure réseau activée (Mode Sénégal Hors-Ligne)');
+    } else {
+      toast.success('Simulation : Connexion réseau rétablie !');
+    }
+  };
+
+  // 🖨️ Synchronisation configuration Imprimante & Web Bluetooth
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedType = localStorage.getItem('louametay_printer_type') as 'native' | 'bluetooth' | null;
+      if (savedType) setPrinterType(savedType);
+    }
+  }, []);
+
+  const handleConnectBluetooth = async () => {
+    setIsConnectingBt(true);
+    try {
+      const res = await EscPosPrinterService.connectBluetooth();
+      if (res.success) {
+        setIsBluetoothConnected(true);
+        setBluetoothDeviceName(res.deviceName || 'Imprimante BT 80mm');
+        setPrinterType('bluetooth');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('louametay_printer_type', 'bluetooth');
+        }
+        toast.success(`Imprimante connectée : ${res.deviceName || 'Bluetooth 80mm'}`);
+      } else {
+        toast.error(res.error || 'Échec d\'appairage Bluetooth');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur Bluetooth');
+    } finally {
+      setIsConnectingBt(false);
+    }
+  };
+
+  const printOrderReceipt = async (orderData: any) => {
+    try {
+      if (printerType === 'bluetooth') {
+        const success = await EscPosPrinterService.printViaBluetooth(orderData, restaurantName);
+        if (success) {
+          toast.success('Ticket imprimé via Bluetooth ESC/POS 80mm');
+          return;
+        }
+        toast.warning('Bluetooth non accessible. Bascule sur l\'impression PDF/Système...');
+      }
+      EscPosPrinterService.printViaNative(orderData, restaurantName);
+    } catch (err) {
+      console.error("Erreur d'impression ticket:", err);
+      EscPosPrinterService.printViaNative(orderData, restaurantName);
+    }
+  };
 
   useEffect(() => {
     if (activeMode === 'NEW_ORDER' && menuCategories.length === 0) {
@@ -117,32 +272,132 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
   const handleSubmitNewOrder = async (method: string, customerName: string, isPaidLater: boolean = false, tableNumber: number = 0) => {
     setIsSubmittingNewOrder(true);
+    const effectiveRestoId = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+    const totalOrderAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    const orderPayload = {
+      tenantId: effectiveRestoId,
+      items: cartItems,
+      paymentMethod: method,
+      cashierId: currentCashier?.id,
+      cashSessionId: currentSession?.id,
+      customerName,
+      isPaidLater,
+      tableNumber
+    };
+
+    // 📡 RÉALITÉ DU TERRAIN SÉNÉGAL : Si coupure réseau, ne jamais bloquer la caisse
+    if (!isNetworkOnline()) {
+      const offlineId = 'offline_' + Date.now();
+      const offlineOrder: OrderType = {
+        id: offlineId,
+        restaurantId: effectiveRestoId,
+        orderType: tableNumber === 0 ? 'EXPRESS' : 'TABLE',
+        tableNumber: tableNumber,
+        customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
+        status: isPaidLater ? 'PENDING' : 'SERVED',
+        paymentStatus: isPaidLater ? 'PENDING' : 'PAID',
+        paymentMethod: method as any,
+        items: cartItems.map((item, idx) => ({
+          id: `item_${idx}_${Date.now()}`,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        total: totalOrderAmount,
+        createdAt: new Date().toISOString()
+      };
+
+      enqueueOfflineAction({
+        scope: 'CASHIER',
+        url: '/api/cashier/orders',
+        method: 'POST',
+        body: {
+          ...orderPayload,
+          offlineClientId: offlineId
+        },
+        label: `Commande caisse ${customerName || 'Comptoir'}`
+      });
+      setPendingSyncCount(getOfflineQueue('CASHIER').length);
+      setOrders(prev => [offlineOrder, ...prev]);
+
+      // Impression immédiate du ticket thermique avec fallback automatique PDF
+      try {
+        EscPosPrinterService.printViaWindowFallback(offlineOrder, restaurantName);
+      } catch (printErr) {
+        console.error("Erreur d'impression:", printErr);
+      }
+
+      toast.warning(`📡 Mode Hors-Ligne : Commande enregistrée localement (${formatFCFA(totalOrderAmount)}). Ticket imprimé ! En attente de synchro.`);
+      setCartItems([]);
+      setActiveMode('QR_ORDERS');
+      setIsSubmittingNewOrder(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/cashier/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenantId: restaurantId || localStorage.getItem('current_restaurant_id'),
-          items: cartItems,
-          paymentMethod: method,
-          cashierId: currentCashier?.id,
-          cashSessionId: currentSession?.id,
-          customerName,
-          isPaidLater,
-          tableNumber
-        })
+        body: JSON.stringify(orderPayload)
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Commande enregistrée et encaissée !');
+        if (data.order) {
+          try {
+            EscPosPrinterService.printViaWindowFallback(data.order, restaurantName);
+          } catch (e) {}
+        }
         setCartItems([]);
         setActiveMode('QR_ORDERS');
-        fetchActiveSession(restaurantId || localStorage.getItem('current_restaurant_id') || '');
+        fetchActiveSession(effectiveRestoId);
+        fetchOrders();
       } else {
         toast.error(data.error || 'Erreur lors de la commande');
       }
     } catch (e) {
-      toast.error('Erreur réseau');
+      // Si la connexion se coupe subitement pendant la requête : bascule hors-ligne fluide
+      const offlineId = 'offline_' + Date.now();
+      const offlineOrder: OrderType = {
+        id: offlineId,
+        restaurantId: effectiveRestoId,
+        orderType: tableNumber === 0 ? 'EXPRESS' : 'TABLE',
+        tableNumber: tableNumber,
+        customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
+        status: isPaidLater ? 'PENDING' : 'SERVED',
+        paymentStatus: isPaidLater ? 'PENDING' : 'PAID',
+        paymentMethod: method as any,
+        items: cartItems.map((item, idx) => ({
+          id: `item_${idx}_${Date.now()}`,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        total: totalOrderAmount,
+        createdAt: new Date().toISOString()
+      };
+
+      enqueueOfflineAction({
+        scope: 'CASHIER',
+        url: '/api/cashier/orders',
+        method: 'POST',
+        body: {
+          ...orderPayload,
+          offlineClientId: offlineId
+        },
+        label: `Commande caisse ${customerName || 'Comptoir'}`
+      });
+      setPendingSyncCount(getOfflineQueue('CASHIER').length);
+      setOrders(prev => [offlineOrder, ...prev]);
+
+      try {
+        EscPosPrinterService.printViaWindowFallback(offlineOrder, restaurantName);
+      } catch (printErr) {}
+
+      toast.warning(`📡 Coupure réseau détectée : Commande enregistrée localement. Ticket imprimé ! En attente de synchro.`);
+      setCartItems([]);
+      setActiveMode('QR_ORDERS');
     } finally {
       setIsSubmittingNewOrder(false);
     }
@@ -253,13 +508,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
   };
 
-  const fetchActiveSession = async (id: string) => {
+  const fetchActiveSession = async (id: string, targetCashierId?: string) => {
     try {
-      const res = await fetch(`/api/cashier/session?restaurantId=${encodeURIComponent(id)}`);
+      const cId = targetCashierId || currentCashier?.id;
+      const url = `/api/cashier/session?restaurantId=${encodeURIComponent(id)}${cId ? `&cashierId=${encodeURIComponent(cId)}` : ''}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success && data.session && data.session.status === 'OPEN') {
         setCurrentSession(data.session);
-        // 🔒 Sécurité : Ne jamais auto-connecter le profil sans validation préalable du code PIN
       } else {
         setCurrentSession(null);
       }
@@ -268,22 +524,47 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
   };
 
-  // Fetch current live orders for active restaurant
+  // Fetch current live orders for active restaurant (avec cache résilient hors-ligne)
   const fetchOrders = async () => {
+    const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
+    const cacheKey = `lou_ame_tay_cached_cashier_orders_${storedId || 'default'}`;
+
+    // Si nous sommes hors-ligne, servir immédiatement le cache local
+    if (!isNetworkOnline()) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          setOrders(JSON.parse(cached));
+        }
+      } catch (e) {}
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
       const url = storedId ? `/api/orders?restaurantId=${encodeURIComponent(storedId)}` : '/api/orders';
       const headers: Record<string, string> = {};
       if (storedId) headers['x-cashier-token'] = `cashier_session_${storedId}`;
       const res = await fetch(url, { headers });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data.orders || []);
+        const freshOrders = data.orders || [];
+        setOrders(freshOrders);
         setLastRefreshed(new Date());
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(freshOrders));
+        } catch (e) {}
+      } else {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) setOrders(JSON.parse(cached));
       }
     } catch (e) {
-      console.error(e);
+      console.error('Erreur fetchOrders (bascule cache local):', e);
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) setOrders(JSON.parse(cached));
+      } catch (cacheErr) {}
     } finally {
       setIsLoading(false);
     }
@@ -383,15 +664,21 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     const total = getOrderTotal(order);
     setOrderToPay(order);
     setPaymentMethod((defaultMethod as any) || 'CASH');
+    setStaffEmployeeName(order.employeeName || '');
     setAmountReceivedInput(String(total));
     setTransactionRefInput('');
     setIsPaymentModalOpen(true);
   };
 
-  // Submit Payment to API /api/cashier/orders/[id]/pay
+  // Submit Payment to API /api/cashier/orders/[id]/pay (Mode Résilient Sénégal)
   const handleConfirmPayment = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!orderToPay) return;
+
+    if (paymentMethod === 'STAFF_MEAL' && !staffEmployeeName.trim()) {
+      toast.error('Veuillez obligatoirement renseigner le nom de l\'employé pour ce bon repas NP.');
+      return;
+    }
 
     const total = getOrderTotal(orderToPay);
     const amountReceived = paymentMethod === 'CASH' ? Number(amountReceivedInput) : total;
@@ -402,21 +689,69 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
 
     const changeGiven = paymentMethod === 'CASH' ? Math.max(0, amountReceived - total) : 0;
+    const effectiveRestoId = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+    const paymentPayload = {
+      restaurantId: effectiveRestoId,
+      paymentMethod,
+      cashierId: currentCashier?.id,
+      cashSessionId: currentSession?.id,
+      amountReceived: paymentMethod === 'STAFF_MEAL' ? total : amountReceived,
+      changeGiven,
+      transactionRef: transactionRefInput.trim() || undefined,
+      employeeName: paymentMethod === 'STAFF_MEAL' ? staffEmployeeName.trim() : undefined,
+    };
+
+    // 📡 RÉALITÉ DU TERRAIN SÉNÉGAL : Si la connexion est coupée, encaissement local immédiat + impression ticket
+    if (!isNetworkOnline()) {
+      enqueueOfflineAction({
+        scope: 'CASHIER',
+        url: `/api/cashier/orders/${orderToPay.id}/pay`,
+        method: 'POST',
+        body: paymentPayload,
+        label: `Encaissement #${orderToPay.id.slice(-5)}`
+      });
+      setPendingSyncCount(getOfflineQueue('CASHIER').length);
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderToPay.id
+            ? {
+                ...o,
+                status: 'SERVED',
+                paymentStatus: (paymentMethod === 'STAFF_MEAL' ? 'STAFF_NP' : 'PAID') as any,
+                paymentMethod: paymentMethod as any,
+                employeeName: paymentMethod === 'STAFF_MEAL' ? staffEmployeeName.trim() : undefined,
+                servedAt: new Date().toISOString(),
+              }
+            : o
+        )
+      );
+
+      printOrderReceipt({
+        ...orderToPay,
+        status: 'SERVED',
+        paymentStatus: paymentMethod === 'STAFF_MEAL' ? 'STAFF_NP' : 'PAID',
+        paymentMethod: paymentMethod as any,
+        employeeName: paymentMethod === 'STAFF_MEAL' ? staffEmployeeName.trim() : undefined,
+      });
+
+      setIsPaymentSuccess(true);
+      toast.warning(`📡 Mode Hors-Ligne : Encaissement enregistré (${formatFCFA(total)} - ${paymentMethod}). Ticket imprimé ! En attente de synchro.`);
+
+      setTimeout(() => {
+        setIsPaymentModalOpen(false);
+        setOrderToPay(null);
+        setIsPaymentSuccess(false);
+      }, 1200);
+      return;
+    }
 
     try {
       setIsProcessingPayment(true);
       const res = await fetch(`/api/cashier/orders/${orderToPay.id}/pay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurantId: restaurantId || localStorage.getItem('current_restaurant_id'),
-          paymentMethod,
-          cashierId: currentCashier?.id,
-          cashSessionId: currentSession?.id,
-          amountReceived,
-          changeGiven,
-          transactionRef: transactionRefInput.trim() || undefined,
-        }),
+        body: JSON.stringify(paymentPayload),
       });
 
       const data = await res.json();
@@ -427,32 +762,37 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               ? {
                   ...o,
                   status: 'SERVED',
-                  paymentStatus: 'PAID',
+                  paymentStatus: (paymentMethod === 'STAFF_MEAL' ? 'STAFF_NP' : 'PAID') as any,
                   paymentMethod: paymentMethod as any,
+                  employeeName: paymentMethod === 'STAFF_MEAL' ? staffEmployeeName.trim() : undefined,
                   servedAt: new Date().toISOString(),
                 }
               : o
           )
         );
 
-        try {
-          EscPosPrinterService.printViaWindowFallback(
-            { ...orderToPay, status: 'SERVED', paymentStatus: 'PAID', paymentMethod: paymentMethod as any },
-            restaurantName
-          );
-        } catch (printErr) {
-          console.error("Erreur d'impression ticket:", printErr);
-        }
+        printOrderReceipt({
+          ...orderToPay,
+          status: 'SERVED',
+          paymentStatus: paymentMethod === 'STAFF_MEAL' ? 'STAFF_NP' : 'PAID',
+          paymentMethod: paymentMethod as any,
+          employeeName: paymentMethod === 'STAFF_MEAL' ? staffEmployeeName.trim() : undefined,
+        });
 
         setIsPaymentSuccess(true);
 
-        toast.success(`Encaissement validé : ${formatFCFA(total)} (${paymentMethod})`, {
-          description: changeGiven > 0 ? `Monnaie rendue au client : ${formatFCFA(changeGiven)}` : 'Règlement exact perçu',
-        });
+        if (paymentMethod === 'STAFF_MEAL') {
+          toast.success(`Bon repas NP enregistré : ${formatFCFA(total)} (Employé : ${staffEmployeeName.trim()})`, {
+            description: 'Montant imputé sur salaire, exclu de la caisse espèces.',
+          });
+        } else {
+          toast.success(`Encaissement validé : ${formatFCFA(total)} (${paymentMethod})`, {
+            description: changeGiven > 0 ? `Monnaie rendue au client : ${formatFCFA(changeGiven)}` : 'Règlement exact perçu',
+          });
+        }
 
-        const activeRestoId = restaurantId || localStorage.getItem('current_restaurant_id');
-        if (activeRestoId) {
-          fetchActiveSession(activeRestoId);
+        if (effectiveRestoId) {
+          fetchActiveSession(effectiveRestoId);
           fetchWaiterCalls();
         }
 
@@ -466,7 +806,45 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         toast.error(data.error || "Erreur lors de l'encaissement de la commande");
       }
     } catch (err) {
-      toast.error('Erreur réseau lors de la communication caisse');
+      // Coupure réseau subite pendant l'encaissement : bascule hors-ligne fluide
+      enqueueOfflineAction({
+        scope: 'CASHIER',
+        url: `/api/cashier/orders/${orderToPay.id}/pay`,
+        method: 'POST',
+        body: paymentPayload,
+        label: `Encaissement #${orderToPay.id.slice(-5)}`
+      });
+      setPendingSyncCount(getOfflineQueue('CASHIER').length);
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderToPay.id
+            ? {
+                ...o,
+                status: 'SERVED',
+                paymentStatus: 'PAID',
+                paymentMethod: paymentMethod as any,
+                servedAt: new Date().toISOString(),
+              }
+            : o
+        )
+      );
+
+      try {
+        EscPosPrinterService.printViaWindowFallback(
+          { ...orderToPay, status: 'SERVED', paymentStatus: 'PAID', paymentMethod: paymentMethod as any },
+          restaurantName
+        );
+      } catch (printErr) {}
+
+      setIsPaymentSuccess(true);
+      toast.warning(`📡 Coupure réseau détectée : Encaissement sauvegardé en local (${formatFCFA(total)}). Ticket imprimé ! En attente de synchro.`);
+
+      setTimeout(() => {
+        setIsPaymentModalOpen(false);
+        setOrderToPay(null);
+        setIsPaymentSuccess(false);
+      }, 1200);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -474,29 +852,37 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
   // Update order status and attach cashier session (sans jamais modifier le statut de paiement)
   const handleUpdateStatus = async (orderId: string, status: OrderStatus, customPaymentMethod?: string) => {
-    try {
-      const payload: any = { status };
-      if (currentCashier) payload.cashierId = currentCashier.id;
-      if (currentSession) payload.cashSessionId = currentSession.id;
-      if (customPaymentMethod) payload.paymentMethod = customPaymentMethod;
+    const payload: any = { status };
+    if (currentCashier) payload.cashierId = currentCashier.id;
+    if (currentSession) payload.cashSessionId = currentSession.id;
+    if (customPaymentMethod) payload.paymentMethod = customPaymentMethod;
 
-      const res = await fetch(`/api/kitchen/orders/${orderId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    // Mise à jour optimiste immédiate dans l'UI
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status, ...(customPaymentMethod ? { paymentMethod: customPaymentMethod } : {}) } : o))
+    );
+
+    try {
+      const res = await resilientFetch(
+        `/api/kitchen/orders/${orderId}/status`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+        'CASHIER',
+        `Mise à jour statut #${orderId.slice(-5)} vers ${status}`
+      );
 
       if (res.ok) {
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status, ...(customPaymentMethod ? { paymentMethod: customPaymentMethod } : {}) } : o))
-        );
         toast.success(`Commande mise à jour : ${status}`);
         if (restaurantId) fetchActiveSession(restaurantId);
       } else {
         toast.error('Erreur lors de la mise à jour du statut en base');
       }
     } catch (e) {
-      toast.error('Erreur réseau lors de la mise à jour');
+      setPendingSyncCount(getOfflineQueue('CASHIER').length);
+      toast.warning(`📡 Mode Hors-Ligne : Statut "${status}" enregistré en local. Synchronisation automatique au retour réseau.`);
     }
   };
 
@@ -505,7 +891,13 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       EscPosPrinterService.printViaWindowFallback(order, restaurantName);
       toast.success(`Impression envoyée pour la commande #${order.id.slice(-4).toUpperCase()}`);
     } catch (e) {
-      toast.error("Erreur lors de l'impression");
+      // Fallback PDF direct
+      try {
+        EscPosPrinterService.printAsPdf(order, restaurantName);
+        toast.info("Impression lancée via le mode PDF de secours.");
+      } catch (pdfErr) {
+        toast.error("Erreur lors de l'impression");
+      }
     }
   };
 
@@ -1109,14 +1501,70 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           </div>
         </div>
 
-        {/* Quick Actions & KPIs */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Quick Actions, Network Status & KPIs */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Badge État Réseau Sénégal */}
+          {isOffline ? (
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 border border-rose-300 text-rose-800 rounded-2xl text-xs font-black animate-pulse shadow-2xs">
+              <WifiOff className="w-4 h-4 text-rose-600" />
+              <span>Mode Hors-Ligne</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl text-xs font-black shadow-2xs">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Réseau En Ligne</span>
+            </div>
+          )}
+
+          {/* Bouton de Synchronisation de la File d'Attente Locale */}
+          {pendingSyncCount > 0 && (
+            <button
+              type="button"
+              onClick={handleManualSync}
+              disabled={isSyncing || isOffline}
+              className="px-3.5 py-2 min-h-[44px] bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer touch-manipulation border border-amber-500/30"
+              title="Synchroniser les commandes enregistrées hors-ligne"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>En attente de synchro ({pendingSyncCount})</span>
+            </button>
+          )}
+
+          {/* Bouton Simulation Coupure Réseau (QA Terrain Sénégal) */}
+          <button
+            type="button"
+            onClick={handleToggleNetworkOutage}
+            className={`px-3 py-2 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 border active:scale-95 cursor-pointer touch-manipulation ${
+              isOffline
+                ? 'bg-rose-600 text-white border-rose-700 shadow-md animate-pulse'
+                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+            }`}
+            title="Simuler une coupure réseau Orange/Free"
+          >
+            {isOffline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4 text-slate-500" />}
+            <span>{isOffline ? 'Rétablir Réseau' : '🧪 Tester Coupure Réseau'}</span>
+          </button>
+
+          {/* 🖨️ Bouton Paramètres Imprimante Thermique */}
+          <button
+            type="button"
+            onClick={() => setIsPrinterModalOpen(true)}
+            className="px-3.5 py-2 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-2xl border border-slate-300 transition-all flex items-center gap-2 active:scale-95 cursor-pointer touch-manipulation shadow-2xs"
+            title="Configurer l'imprimante thermique (Bluetooth / Système)"
+          >
+            <Printer className="w-4 h-4 text-slate-700" />
+            <span className="hidden sm:inline">Imprimante :</span>
+            <span className={printerType === 'bluetooth' ? 'text-indigo-600 font-black' : 'text-slate-600 font-bold'}>
+              {printerType === 'bluetooth' ? 'BT 80mm' : 'Système/PDF'}
+            </span>
+          </button>
+
           {/* Bouton Rouge Clôture de Caisse */}
           {currentSession && (
             <button
               type="button"
               onClick={handleOpenCloseSessionModal}
-              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+              className="px-4 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer touch-manipulation"
               title="Clôturer la caisse et imprimer le rapport Z 80mm"
             >
               <Lock className="w-4 h-4" />
@@ -1128,7 +1576,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           <button
             type="button"
             onClick={handleLogoutCashier}
-            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            className="px-4 py-2.5 min-h-[44px] bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer touch-manipulation"
             title="Déconnecter le caissier et verrouiller la caisse"
           >
             <LogOut className="w-4 h-4" />
@@ -1154,7 +1602,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           <button
             type="button"
             onClick={fetchOrders}
-            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all border border-slate-200 active:scale-[0.97]"
+            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all border border-slate-200 active:scale-[0.97] touch-manipulation"
             title="Actualiser"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -1162,32 +1610,75 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </div>
       </header>
 
-        {currentSession && (
-          <div className="flex bg-white rounded-2xl shadow-sm border border-slate-200 p-1 gap-1 shrink-0">
-            <button
-              onClick={() => setActiveMode('QR_ORDERS')}
-              className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all ${
-                activeMode === 'QR_ORDERS'
-                  ? 'bg-slate-900 text-white shadow-md'
-                  : 'bg-transparent text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              Commandes (QR / Table)
-            </button>
-            <button
-              onClick={() => setActiveMode('NEW_ORDER')}
-              className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
-                activeMode === 'NEW_ORDER'
-                  ? 'bg-amber-400 text-slate-900 shadow-md'
-                  : 'bg-transparent text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              Nouveau Ticket (Comptoir / Sur Place)
-            </button>
+        {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Vente Directe / Comptoir */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveMode('QR_ORDERS')}
+            className={`py-3.5 px-5 min-h-[50px] rounded-2xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer touch-manipulation border ${
+              activeMode === 'QR_ORDERS'
+                ? 'bg-slate-900 text-white border-slate-950 shadow-md ring-2 ring-slate-900/10'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <span className="text-xl">🪑</span>
+            <span>Ventes sur Table (QR)</span>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+              activeMode === 'QR_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
+            }`}>
+              {orders.filter((o) => !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!currentSession) {
+                toast.error("Veuillez d'abord ouvrir une session de caisse pour saisir une vente directe.");
+                setIsOpenSessionModalOpen(true);
+                return;
+              }
+              setActiveMode('NEW_ORDER');
+            }}
+            className={`py-3.5 px-5 min-h-[50px] rounded-2xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer touch-manipulation border ${
+              activeMode === 'NEW_ORDER'
+                ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-400/30'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <span className="text-xl">🛍️</span>
+            <span>Vente Directe / Comptoir</span>
+            {cartItems.length > 0 && (
+              <span className="bg-slate-950 text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-mono font-black">
+                {cartItems.reduce((s, i) => s + i.quantity, 0)} plat(s)
+              </span>
+            )}
+          </button>
+        </div>
+
+      {activeMode === 'NEW_ORDER' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Grille Tactile des Produits (7/12 colonnes) */}
+          <div className="lg:col-span-7 xl:col-span-8 h-[calc(100vh-270px)] min-h-[560px]">
+            <TactileGrid
+              categories={menuCategories}
+              onAddItem={handleAddToCart}
+            />
           </div>
-        )}
 
-
+          {/* Ticket de Caisse & Encaissement Direct (5/12 colonnes) */}
+          <div className="lg:col-span-5 xl:col-span-4 h-[calc(100vh-270px)] min-h-[560px]">
+            <CashierCart
+              items={cartItems}
+              onUpdateQuantity={handleUpdateCartQuantity}
+              onClear={() => setCartItems([])}
+              onSubmit={handleSubmitNewOrder}
+              isSubmitting={isSubmittingNewOrder}
+            />
+          </div>
+        </div>
+      ) : (
+        <>
       {/* 1.5. BANDEAU DES DEMANDES D'ADDITION ET APPELS DE SALLE */}
       {waiterCalls.length > 0 && (
         <section className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-purple-400/80 space-y-3 animate-in fade-in">
@@ -1623,6 +2114,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           })
         )}
       </main>
+      </>
+      )}
 
       {/* MODAL 1 : IDENTIFICATION CAISSIER PAR CODE PIN */}
       {isPinModalOpen && (
@@ -2040,14 +2533,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                 <label className="block text-xs font-bold text-slate-700 uppercase">
                   Moyen de paiement :
                 </label>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-6 gap-1.5">
                   <button
                     type="button"
                     onClick={() => {
                       setPaymentMethod('CASH');
                       setAmountReceivedInput(String(getOrderTotal(orderToPay)));
                     }}
-                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                    className={`p-2 min-h-[48px] rounded-xl text-center text-xs font-bold border transition-all cursor-pointer touch-manipulation flex flex-col items-center justify-center ${
                       paymentMethod === 'CASH'
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-950 font-black shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -2060,7 +2553,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('WAVE')}
-                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                    className={`p-2 min-h-[48px] rounded-xl text-center text-xs font-bold border transition-all cursor-pointer touch-manipulation flex flex-col items-center justify-center ${
                       paymentMethod === 'WAVE'
                         ? 'border-cyan-500 bg-cyan-50 text-cyan-950 font-black shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -2073,7 +2566,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('ORANGE_MONEY')}
-                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                    className={`p-2 min-h-[48px] rounded-xl text-center text-xs font-bold border transition-all cursor-pointer touch-manipulation flex flex-col items-center justify-center ${
                       paymentMethod === 'ORANGE_MONEY'
                         ? 'border-orange-500 bg-orange-50 text-orange-950 font-black shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -2086,7 +2579,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('YAS_MONEY')}
-                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                    className={`p-2 min-h-[48px] rounded-xl text-center text-xs font-bold border transition-all cursor-pointer touch-manipulation flex flex-col items-center justify-center ${
                       paymentMethod === 'YAS_MONEY'
                         ? 'border-purple-500 bg-purple-50 text-purple-950 font-black shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -2099,7 +2592,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('CARD')}
-                    className={`p-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                    className={`p-2 min-h-[48px] rounded-xl text-center text-xs font-bold border transition-all cursor-pointer touch-manipulation flex flex-col items-center justify-center ${
                       paymentMethod === 'CARD'
                         ? 'border-blue-500 bg-blue-50 text-blue-950 font-black shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -2108,10 +2601,26 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     <div className="text-base">💳</div>
                     <div className="text-[10px]">Carte/TPE</div>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('STAFF_MEAL');
+                      setAmountReceivedInput('0');
+                    }}
+                    className={`p-2 min-h-[48px] rounded-xl text-center text-xs font-bold border transition-all cursor-pointer touch-manipulation flex flex-col items-center justify-center ${
+                      paymentMethod === 'STAFF_MEAL'
+                        ? 'border-purple-600 bg-purple-100 text-purple-950 font-black shadow-2xs ring-2 ring-purple-400'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-base">👤</div>
+                    <div className="text-[10px]">Repas NP</div>
+                  </button>
                 </div>
               </div>
 
-              {/* Section Spécifique Espèces : Saisie Montant Reçu & Calcul Monnaie */}
+              {/* Section Spécifique selon le mode de règlement */}
               {paymentMethod === 'CASH' ? (
                 <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                   <div>
@@ -2136,7 +2645,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     <button
                       type="button"
                       onClick={() => setAmountReceivedInput(String(getOrderTotal(orderToPay)))}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-300 transition-colors"
+                      className="px-3 py-2 min-h-[44px] bg-white hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 transition-colors touch-manipulation"
                     >
                       Montant exact ({formatFCFA(getOrderTotal(orderToPay))})
                     </button>
@@ -2147,7 +2656,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                           key={bill}
                           type="button"
                           onClick={() => setAmountReceivedInput(String(bill))}
-                          className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-300 transition-colors"
+                          className="px-3 py-2 min-h-[44px] bg-white hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 transition-colors touch-manipulation"
                         >
                           {formatFCFA(bill)}
                         </button>
@@ -2193,6 +2702,34 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     }
                   })()}
                 </div>
+              ) : paymentMethod === 'STAFF_MEAL' ? (
+                <div className="space-y-3 bg-purple-50 p-4 rounded-2xl border-2 border-purple-300 text-purple-950">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-purple-600 text-white rounded-xl">
+                      <UserCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-xs uppercase tracking-wide">Repas Personnel (Bon NP)</h4>
+                      <p className="text-[11px] text-purple-800">
+                        Ce montant ({formatFCFA(getOrderTotal(orderToPay))}) sera consigné pour déduction sur salaire et exclu de la caisse espèces.
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-purple-950 mb-1">
+                      Nom complet de l'employé bénéficiaire * :
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={staffEmployeeName}
+                      onChange={(e) => setStaffEmployeeName(e.target.value)}
+                      placeholder="Ex: Babacar Ndiaye (Cuisinier), Awa (Serveuse)..."
+                      className="w-full text-sm font-bold p-3 rounded-xl border border-purple-300 bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none text-slate-900"
+                      autoFocus
+                    />
+                  </div>
+                </div>
               ) : (
                 /* Section Mobile Money & Carte */
                 <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -2230,7 +2767,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     setIsPaymentModalOpen(false);
                     setOrderToPay(null);
                   }}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition-all cursor-pointer"
+                  className="flex-1 py-3 min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition-all cursor-pointer touch-manipulation"
                 >
                   Annuler
                 </button>
@@ -2240,15 +2777,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     isProcessingPayment ||
                     isPaymentSuccess ||
                     (paymentMethod === 'CASH' &&
-                      Number(amountReceivedInput) < getOrderTotal(orderToPay))
+                      Number(amountReceivedInput) < getOrderTotal(orderToPay)) ||
+                    (paymentMethod === 'STAFF_MEAL' && !staffEmployeeName.trim())
                   }
-                  className={`flex-1 py-3 ${
+                  className={`flex-1 py-3 min-h-[48px] ${
                     isPaymentSuccess
                       ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 shadow-lg scale-[1.02]'
                       : isProcessingPayment
                       ? 'bg-amber-500 text-white'
                       : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  } disabled:bg-slate-300 disabled:cursor-not-allowed font-black text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95`}
+                  } disabled:bg-slate-300 disabled:cursor-not-allowed font-black text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 touch-manipulation`}
                 >
                   {isPaymentSuccess ? (
                     <>
@@ -2271,6 +2809,174 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 🖨️ Modale Paramètres Imprimante Thermique */}
+      {isPrinterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200">
+            {/* Header Modale */}
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-500/20 text-indigo-400 rounded-2xl border border-indigo-400/30">
+                  <Printer className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black tracking-wide">Paramètres Imprimante 80mm</h3>
+                  <p className="text-xs text-slate-400">Tickets de caisse & Reçus clients</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPrinterModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenu */}
+            <div className="p-6 space-y-5">
+              <div className="space-y-3">
+                <label className="block text-xs font-black uppercase text-slate-700 tracking-wider">
+                  Mode d'impression par défaut :
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrinterType('native');
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('louametay_printer_type', 'native');
+                      }
+                      toast.info('Mode d\'impression configuré sur : Système / PDF');
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                      printerType === 'native'
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-950 shadow-xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-xl mb-1">🖨️</div>
+                    <div className="text-sm font-black">Système / PDF</div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Impression universelle via la boîte de dialogue système / PDF.
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrinterType('bluetooth');
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('louametay_printer_type', 'bluetooth');
+                      }
+                      toast.info('Mode d\'impression configuré sur : Bluetooth ESC/POS');
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                      printerType === 'bluetooth'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-950 shadow-xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-xl mb-1">📶</div>
+                    <div className="text-sm font-black">Bluetooth ESC/POS</div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Envoi direct sans popup vers l'imprimante thermique portable 80mm.
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Section Appairage Bluetooth si mode BT sélectionné */}
+              {printerType === 'bluetooth' && (
+                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Bluetooth className={`w-5 h-5 ${isBluetoothConnected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                      <div>
+                        <div className="text-xs font-black text-indigo-950">Statut Bluetooth</div>
+                        <div className="text-[11px] text-indigo-800">
+                          {isBluetoothConnected
+                            ? `Connecté à : ${bluetoothDeviceName || 'Imprimante ESC/POS'}`
+                            : 'Aucune imprimante connectée pour le moment'}
+                        </div>
+                      </div>
+                    </div>
+                    {isBluetoothConnected ? (
+                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-lg">
+                        Actif
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg">
+                        Non appairé
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isConnectingBt}
+                    onClick={handleConnectBluetooth}
+                    className="w-full py-3 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-black text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-400 touch-manipulation"
+                  >
+                    {isConnectingBt ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Recherche de l'imprimante...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bluetooth className="w-4 h-4" />
+                        <span>
+                          {isBluetoothConnected ? 'Reconnecter une autre imprimante' : 'Appairer l\'imprimante Bluetooth'}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[10px] text-indigo-700">
+                    💡 Allumez votre imprimante Bluetooth 80mm et activez le Bluetooth de votre appareil.
+                  </p>
+                </div>
+              )}
+
+              {/* Actions Footer */}
+              <div className="pt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sampleOrder: any = {
+                      id: 'TEST-' + Math.floor(1000 + Math.random() * 9000),
+                      tableNumber: 0,
+                      isTakeaway: true,
+                      paymentMethod: 'CASH',
+                      paymentStatus: 'PAID',
+                      createdAt: new Date().toISOString(),
+                      items: [
+                        { name: 'Thieboudienne Penda Mbaye (Test)', quantity: 1, unitPrice: 2500, totalPrice: 2500 },
+                        { name: 'Jus de Bissap Maison (Test)', quantity: 1, unitPrice: 1000, totalPrice: 1000 },
+                      ],
+                    };
+                    printOrderReceipt(sampleOrder);
+                    toast.success('Ticket test envoyé à l\'imprimante !');
+                  }}
+                  className="flex-1 py-3 min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-all cursor-pointer touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <Receipt className="w-4 h-4 text-slate-600" />
+                  <span>Ticket Test</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPrinterModalOpen(false)}
+                  className="flex-1 py-3 min-h-[48px] bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-2xl transition-all cursor-pointer touch-manipulation"
+                >
+                  Terminer
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

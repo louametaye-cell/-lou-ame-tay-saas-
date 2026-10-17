@@ -184,19 +184,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Caissier introuvable ou inactif' }, { status: 404 });
     }
 
-    // Check if an OPEN session already exists for this restaurant
-    const alreadyOpen = await prisma.cashSession.findFirst({
+    // Check if an OPEN session already exists for this specific cashier
+    const alreadyOpenForCashier = await prisma.cashSession.findFirst({
       where: {
         tenantId: tenant.id,
+        cashierId: cashier.id,
         status: 'OPEN'
       },
       include: { cashier: true }
     });
 
-    if (alreadyOpen) {
+    if (alreadyOpenForCashier) {
       return NextResponse.json({
-        error: `Une session de caisse est déjà ouverte par ${alreadyOpen.cashier.name}. Veuillez d'abord la clôturer.`,
-        openSession: alreadyOpen
+        error: `Une session de caisse est déjà ouverte pour ${cashier.name}. Vous pouvez continuer à l'utiliser ou la clôturer.`,
+        session: alreadyOpenForCashier
       }, { status: 409 });
     }
 

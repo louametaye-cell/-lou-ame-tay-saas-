@@ -58,7 +58,7 @@ export function TactileGrid({ categories, onAddItem }: TactileGridProps) {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
           <button
             onClick={() => setActiveCategory('ALL')}
-            className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-black transition-all ${
+            className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-black transition-all min-h-[44px] touch-manipulation ${
               activeCategory === 'ALL' ? 'bg-amber-400 text-slate-900 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -68,7 +68,7 @@ export function TactileGrid({ categories, onAddItem }: TactileGridProps) {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-black transition-all ${
+              className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-black transition-all min-h-[44px] touch-manipulation ${
                 activeCategory === cat.id ? 'bg-amber-400 text-slate-900 shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -90,7 +90,7 @@ export function TactileGrid({ categories, onAddItem }: TactileGridProps) {
                 key={item.id}
                 disabled={isOutOfStock}
                 onClick={() => onAddItem(item)}
-                className={`relative aspect-square rounded-2xl flex flex-col overflow-hidden transition-all text-left shadow-xs border-2 group ${
+                className={`relative aspect-square rounded-2xl flex flex-col overflow-hidden transition-all text-left shadow-xs border-2 group touch-manipulation ${
                   isOutOfStock ? 'opacity-40 grayscale border-slate-200 cursor-not-allowed bg-slate-100' : 'bg-white border-transparent hover:border-amber-400 hover:shadow-md hover:-translate-y-1 active:scale-95'
                 }`}
               >

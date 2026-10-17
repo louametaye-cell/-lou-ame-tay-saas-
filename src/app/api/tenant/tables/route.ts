@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 
 function extractTenantId(req: Request, explicitId?: string | null): string | null {
   if (explicitId && explicitId.trim()) return explicitId.trim();
@@ -42,7 +43,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    if (!isAuthorizedTenant(req, tenant.id)) {
+    const isSuperAdmin = isAuthorizedSuperAdmin(req);
+    const isTenant = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
+
+    if (!isSuperAdmin && !isTenant) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
 
@@ -80,7 +84,16 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { restaurantId, tenantId, tableNumber, label, zoneId } = body;
+    const { 
+      restaurantId, 
+      tenantId, 
+      tableNumber, 
+      label, 
+      zoneId, 
+      spaceType = 'TABLE', 
+      destinationService = 'KITCHEN',
+      identifier 
+    } = body;
 
     const rawTenantId = extractTenantId(req, tenantId || restaurantId);
     if (!rawTenantId) {
@@ -91,14 +104,17 @@ export async function POST(req: Request) {
       where: {
         OR: [{ id: rawTenantId }, { subdomain: rawTenantId }]
       },
-      select: { id: true }
+      select: { id: true, subdomain: true }
     });
 
     if (!tenant) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    if (!isAuthorizedTenant(req, tenant.id)) {
+    const isSuperAdmin = isAuthorizedSuperAdmin(req);
+    const isTenant = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
+
+    if (!isSuperAdmin && !isTenant) {
       return NextResponse.json({ error: 'Accès non autorisé pour ce restaurant' }, { status: 401 });
     }
 
@@ -121,7 +137,13 @@ export async function POST(req: Request) {
         // Réactiver
         const updated = await prisma.table.update({
           where: { id: existing.id },
-          data: { isActive: true, label: label || existing.label }
+          data: { 
+            isActive: true, 
+            label: label || existing.label,
+            spaceType: spaceType || existing.spaceType,
+            destinationService: destinationService || existing.destinationService,
+            identifier: identifier || existing.identifier
+          }
         });
         return NextResponse.json({ success: true, table: updated, message: 'Table réactivée' });
       }
@@ -133,6 +155,9 @@ export async function POST(req: Request) {
         tenantId: tenant.id,
         tableNumber: num,
         label: label?.trim() || `Table ${num}`,
+        spaceType,
+        destinationService,
+        identifier: identifier?.trim() || `${num}`,
         zoneId: zoneId || undefined,
         isActive: true,
       },

@@ -38,10 +38,13 @@ export async function GET() {
       isRecommended: p.isRecommended,
       isActive: p.isActive,
       features: p.planFeatures ? p.planFeatures.map((pf: any) => ({
-        id: pf.feature?.id || pf.id,
+        id: pf.id,
+        planId: pf.planId,
+        featureId: pf.featureId || pf.feature?.id,
+        featureKey: pf.feature?.keyName || '',
         keyName: pf.feature?.keyName || '',
         label: pf.feature?.label || '',
-        isActive: pf.isActive,
+        isActive: Boolean(pf.isActive),
         limitValue: pf.limitValue,
       })) : [],
     }));

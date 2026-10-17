@@ -52,6 +52,7 @@ enum PaymentMethod {
   YAS_MONEY
   CARD
   CASH_TPE
+  STAFF_MEAL
 }
 
 enum CashierShift {
@@ -85,6 +86,21 @@ enum PaymentStatus {
 enum ZoneType {
   TABLES
   FREE_ZONE
+}
+
+enum SpaceType {
+  TABLE
+  ROOM
+  POOL
+  VIP_AREA
+  COUNTER
+}
+
+enum DestinationService {
+  KITCHEN
+  BAR
+  ROOM_SERVICE
+  RECEPTION
 }
 
 model Plan {
@@ -233,16 +249,19 @@ model Waiter {
 }
 
 model Table {
-  id          String    @id @default(cuid())
-  tenantId    String    @map("tenant_id")
-  zoneId      String?   @map("zone_id")
-  tableNumber Int       @map("table_number")
-  label       String?
-  status      String    @default("FREE")
-  clearedAt   DateTime? @map("cleared_at")
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id                 String              @id @default(cuid())
+  tenantId           String              @map("tenant_id")
+  zoneId             String?             @map("zone_id")
+  tableNumber        Int                 @map("table_number")
+  spaceType          SpaceType           @default(TABLE) @map("space_type")
+  destinationService DestinationService @default(KITCHEN) @map("destination_service")
+  identifier         String?             // ex: "101", "5", "Transat-1"
+  label              String?
+  status             String              @default("FREE")
+  clearedAt          DateTime?           @map("cleared_at")
+  isActive           Boolean             @default(true) @map("is_active")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
 
   tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   zone     Zone?          @relation(fields: [zoneId], references: [id], onDelete: SetNull)
@@ -251,6 +270,7 @@ model Table {
 
   @@unique([tenantId, zoneId, tableNumber], name: "uq_tenant_zone_table")
   @@index([tenantId, isActive])
+  @@index([tenantId, spaceType])
   @@map("tables")
 }
 
@@ -362,8 +382,12 @@ model Order {
   waiterId       String?       @map("waiter_id")
   cashierId      String?       @map("cashier_id")
   cashSessionId  String?       @map("cash_session_id")
-  locationDetail String?       @map("location_detail")
-  status         OrderStatus   @default(PENDING)
+  locationDetail     String?             @map("location_detail")
+  spaceType          SpaceType?          @default(TABLE) @map("space_type")
+  destinationService DestinationService? @default(KITCHEN) @map("destination_service")
+  employeeId         String?             @map("employee_id")
+  employeeName       String?             @map("employee_name")
+  status             OrderStatus         @default(PENDING)
   paymentMethod  PaymentMethod @default(CASH) @map("payment_method")
   paymentStatus  String        @default("UNPAID") @map("payment_status")
   transactionRef String?       @map("transaction_ref")
@@ -389,6 +413,7 @@ model Order {
   @@index([tableNumber])
   @@index([cashierId])
   @@index([cashSessionId])
+  @@index([tenantId, paymentMethod])
   @@map("orders")
 }
 

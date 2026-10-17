@@ -55,7 +55,11 @@ export async function GET(req: Request) {
       );
     }
 
-    const whereClause = resolvedTenantId ? { tenantId: resolvedTenantId } : {};
+    const serviceFilter = searchParams.get('service') || searchParams.get('destinationService');
+    const whereClause: any = resolvedTenantId ? { tenantId: resolvedTenantId } : {};
+    if (serviceFilter && serviceFilter.toUpperCase() !== 'ALL') {
+      whereClause.destinationService = serviceFilter.toUpperCase();
+    }
 
     const dbOrders = await (prisma as any).order.findMany({
       where: whereClause,
@@ -114,7 +118,22 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { tableNumber, orderType, customerName, customerNote, restaurantId, items, paymentMethod, transactionRef, waiterId, zoneId, locationDetail } = body;
+    const { 
+      tableNumber, 
+      orderType, 
+      customerName, 
+      customerNote, 
+      restaurantId, 
+      items, 
+      paymentMethod, 
+      transactionRef, 
+      waiterId, 
+      zoneId, 
+      locationDetail: initialLocationDetail,
+      spaceType,
+      destinationService 
+    } = body;
+    let locationDetail = initialLocationDetail;
     trackedTenantId = restaurantId || body.tenantId || null;
 
 
@@ -265,10 +284,52 @@ export async function POST(req: Request) {
       console.warn('Erreur vérification anti-doublon:', e);
     }
 
+    // Résolution intelligente du type d'espace et du service destinataire
+    let effectiveSpaceType = spaceType || null;
+    let effectiveDestination = destinationService || null;
+    let matchedTableId: string | null = null;
+
+    if (validTenantId && cleanTableNum > 0) {
+      try {
+        const dbTable = await (prisma as any).table.findFirst({
+          where: {
+            tenantId: validTenantId,
+            tableNumber: cleanTableNum,
+            isActive: true,
+          },
+        });
+        if (dbTable) {
+          matchedTableId = dbTable.id;
+          if (!effectiveSpaceType) effectiveSpaceType = dbTable.spaceType;
+          if (!effectiveDestination) effectiveDestination = dbTable.destinationService;
+          if (!locationDetail && dbTable.label) {
+            locationDetail = dbTable.label;
+          }
+        }
+      } catch (err) {}
+    }
+
+    if (!effectiveDestination) {
+      if (effectiveSpaceType === 'POOL') effectiveDestination = 'BAR';
+      else if (effectiveSpaceType === 'ROOM') effectiveDestination = 'ROOM_SERVICE';
+      else if (effectiveSpaceType === 'COUNTER') effectiveDestination = 'RECEPTION';
+      else effectiveDestination = 'KITCHEN';
+    }
+
+    if (!locationDetail && effectiveSpaceType && effectiveSpaceType !== 'TABLE') {
+      if (effectiveSpaceType === 'ROOM') locationDetail = `CHAMBRE ${cleanTableNum}`;
+      else if (effectiveSpaceType === 'POOL') locationDetail = `PISCINE ${cleanTableNum}`;
+      else if (effectiveSpaceType === 'VIP_AREA') locationDetail = `SALON VIP ${cleanTableNum}`;
+      else if (effectiveSpaceType === 'COUNTER') locationDetail = `COMPTOIR ${cleanTableNum}`;
+    }
+
     const newOrder = await (prisma as any).order.create({
       data: {
         tenantId: validTenantId,
+        tableId: matchedTableId || undefined,
         tableNumber: cleanTableNum,
+        spaceType: effectiveSpaceType || undefined,
+        destinationService: effectiveDestination || undefined,
         customerName: customerName ? String(customerName).trim() : null,
         customerNote: customerNote ? String(customerNote).trim() : '',
         paymentMethod: cleanPaymentMethod,

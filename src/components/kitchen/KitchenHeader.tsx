@@ -36,6 +36,11 @@ interface KitchenHeaderProps {
   onFilterChange: (filter: KitchenFilter) => void;
   onRefresh: () => void;
   isLoading: boolean;
+  isOffline?: boolean;
+  pendingSyncCount?: number;
+  onManualSync?: () => void;
+  onToggleSimulateOffline?: () => void;
+  isSimulatingOffline?: boolean;
 }
 
 export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
@@ -48,6 +53,11 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
   onFilterChange,
   onRefresh,
   isLoading,
+  isOffline = false,
+  pendingSyncCount = 0,
+  onManualSync,
+  onToggleSimulateOffline,
+  isSimulatingOffline = false,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -93,11 +103,23 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
                   ) : null}
                 </h1>
 
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        isOffline
+                          ? 'bg-rose-500'
+                          : isConnected
+                          ? 'bg-emerald-500 animate-pulse'
+                          : 'bg-amber-500'
+                      }`}
+                    />
                     <span className="font-mono text-[11px] font-bold text-slate-700">
-                      {isConnected ? 'Realtime Connecté' : 'Mode Synchro (3s)'}
+                      {isOffline
+                        ? 'Mode Hors-Ligne (Données locales)'
+                        : isConnected
+                        ? 'Realtime Connecté'
+                        : 'Mode Synchro (3s)'}
                     </span>
                   </div>
                   <span>•</span>
@@ -107,13 +129,42 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
             </div>
           </div>
 
-          {/* Right: Audio Toggle & Refresh Button */}
-          <div className="flex items-center gap-2 ml-auto">
+          {/* Right: Audio Toggle, Offline Queue & Refresh Button */}
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            {/* Bouton de simulation de coupure réseau pour tests QA */}
+            {onToggleSimulateOffline && (
+              <button
+                type="button"
+                onClick={onToggleSimulateOffline}
+                className={`min-h-[44px] px-3 py-1.5 rounded-2xl text-[11px] font-black border transition-all touch-manipulation cursor-pointer ${
+                  isSimulatingOffline
+                    ? 'bg-rose-600 text-white border-rose-700 animate-pulse shadow-md'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                }`}
+                title="Simuler une coupure de réseau Orange/Free"
+              >
+                {isSimulatingOffline ? '⚡ Coupure Réseau Active' : '🧪 Tester Coupure Réseau'}
+              </button>
+            )}
+
+            {/* Badge et bouton En attente de synchronisation */}
+            {pendingSyncCount > 0 && (
+              <button
+                type="button"
+                onClick={onManualSync}
+                className="min-h-[44px] px-3.5 py-2 rounded-2xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-slate-950 border-2 border-amber-600 flex items-center gap-2 animate-pulse shadow-md transition-all touch-manipulation cursor-pointer"
+                title="Cliquer pour forcer l'envoi des actions en attente"
+              >
+                <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                <span>En attente de synchronisation ({pendingSyncCount})</span>
+              </button>
+            )}
+
             {/* Audio Toggle Button */}
             <button
               type="button"
               onClick={handleAudioButtonClick}
-              className={`min-h-[44px] px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-2 transition-all active:scale-95 border ${
+              className={`min-h-[44px] px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-2 transition-all active:scale-95 border touch-manipulation ${
                 isAudioEnabled
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-xs'
                   : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 animate-pulse'
@@ -136,7 +187,7 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
             <button
               type="button"
               onClick={onRefresh}
-              className="min-h-[44px] min-w-[44px] bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 rounded-2xl flex items-center justify-center transition-all border border-slate-200 shadow-xs"
+              className="min-h-[44px] min-w-[44px] bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 rounded-2xl flex items-center justify-center transition-all border border-slate-200 shadow-xs touch-manipulation"
               title="Rafraîchir les commandes"
               aria-label="Rafraîchir"
             >

@@ -306,6 +306,29 @@ export interface OrderItemType {
   options?: CartItemOption;
 }
 
+export type SpaceType = 'TABLE' | 'ROOM' | 'POOL' | 'VIP_AREA' | 'COUNTER';
+export type DestinationService = 'KITCHEN' | 'BAR' | 'ROOM_SERVICE' | 'RECEPTION';
+
+export interface RestaurantTableType {
+  id: string;
+  tenantId: string;
+  zoneId?: string | null;
+  tableNumber: number;
+  spaceType: SpaceType;
+  destinationService: DestinationService;
+  identifier?: string | null;
+  label?: string | null;
+  status: string;
+  clearedAt?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  zone?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 export type OrderServiceType = 'TABLE' | 'EXPRESS';
 export type QRCodeType = 'TABLE' | 'EXPRESS';
 
@@ -313,8 +336,12 @@ export interface OrderType {
   id: string;
   tableNumber: number;
   orderType?: OrderServiceType;
+  spaceType?: SpaceType | null;
+  destinationService?: DestinationService | null;
   customerName?: string | null;
   customerNote?: string | null;
+  employeeId?: string | null;
+  employeeName?: string | null;
   paymentMethod?: string | null;
   paymentStatus?: string | null;
   cashierId?: string | null;

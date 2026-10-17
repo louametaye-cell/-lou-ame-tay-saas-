@@ -1,6 +1,6 @@
 // ==============================================================================
-// SERVICE D'IMPRESSION THERMIQUE 80MM ESC/POS (BLUETOOTH & IP DIRECT)
-// Lou Ame Tay ? - Ticket Cuisine & Facturation
+// SERVICE D'IMPRESSION THERMIQUE 80MM ESC/POS (BLUETOOTH & NATIF BROWSER)
+// Lou Ame Tay ? - Ticket Cuisine, Caisse & Repas Personnel (NP)
 // ==============================================================================
 
 import { OrderType } from '@/types';
@@ -27,12 +27,163 @@ export class EscPosPrinterService {
   private static readonly NORMAL_SIZE = `${EscPosPrinterService.GS}!\x00`;
   private static readonly FULL_CUT = `${EscPosPrinterService.GS}V\x00`;
 
+  // État de connexion Bluetooth persistant en session
+  private static connectedDevice: any = null;
+  private static connectedCharacteristic: any = null;
+
+  /**
+   * Vérifie si un appareil Bluetooth est actuellement connecté
+   */
+  public static isBluetoothConnected(): boolean {
+    return Boolean(this.connectedDevice && this.connectedDevice.gatt?.connected && this.connectedCharacteristic);
+  }
+
+  /**
+   * Retourne le nom de l'appareil Bluetooth connecté
+   */
+  public static getConnectedDeviceName(): string | null {
+    if (this.isBluetoothConnected()) {
+      return this.connectedDevice.name || 'Imprimante Bluetooth ESC/POS';
+    }
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('louametay_bluetooth_device_name');
+    }
+    return null;
+  }
+
+  /**
+   * Connexion explicite à l'imprimante Bluetooth via Web Bluetooth API
+   */
+  public static async connectBluetooth(): Promise<{ success: boolean; deviceName?: string; name?: string; id?: string; connected?: boolean; error?: string }> {
+    if (typeof navigator === 'undefined' || !(navigator as any).bluetooth) {
+      return {
+        success: false,
+        error: 'Web Bluetooth non supporté sur ce navigateur ou cet appareil.'
+      };
+    }
+
+    try {
+      // Filtres standards pour imprimantes thermiques 80mm ESC/POS
+      const device = await (navigator as any).bluetooth.requestDevice({
+        filters: [
+          { services: ['000018f0-0000-1000-8000-00805f9b34fb'] },
+          { services: ['0000ff00-0000-1000-8000-00805f9b34fb'] },
+          { namePrefix: 'POS' },
+          { namePrefix: 'RP' },
+          { namePrefix: 'MTP' },
+          { namePrefix: 'Printer' },
+          { namePrefix: 'Bluetooth' },
+        ],
+        optionalServices: [
+          '000018f0-0000-1000-8000-00805f9b34fb',
+          '0000ff00-0000-1000-8000-00805f9b34fb',
+          'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+          '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+        ],
+      });
+
+      const server = await device.gatt?.connect();
+      if (!server) {
+        throw new Error('Impossible de se connecter au serveur GATT de l\'imprimante.');
+      }
+
+      // Recherche du service primaire compatible
+      let service: any = null;
+      const candidateServices = [
+        '000018f0-0000-1000-8000-00805f9b34fb',
+        '0000ff00-0000-1000-8000-00805f9b34fb',
+        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+        '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+      ];
+
+      for (const serviceUuid of candidateServices) {
+        try {
+          service = await server.getPrimaryService(serviceUuid);
+          if (service) break;
+        } catch {
+          // Continuer la boucle
+        }
+      }
+
+      if (!service) {
+        // Tenter d'obtenir tous les services
+        const services = await server.getPrimaryServices();
+        if (services.length > 0) {
+          service = services[0];
+        }
+      }
+
+      if (!service) {
+        throw new Error('Aucun service d\'écriture ESC/POS trouvé sur cet appareil.');
+      }
+
+      // Recherche de la caractéristique d'écriture
+      const characteristics = await service.getCharacteristics();
+      const writeChar = characteristics.find(
+        (c: any) => c.properties.write || c.properties.writeWithoutResponse
+      );
+
+      if (!writeChar) {
+        throw new Error('Aucune caractéristique d\'écriture disponible sur cette imprimante.');
+      }
+
+      this.connectedDevice = device;
+      this.connectedCharacteristic = writeChar;
+
+      const deviceName = device.name || 'Imprimante ESC/POS';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('louametay_bluetooth_device_name', deviceName);
+        localStorage.setItem('louametay_printer_type', 'bluetooth');
+      }
+
+      // Écouter la déconnexion inopinée
+      device.addEventListener('gattserverdisconnected', () => {
+        console.warn('[EscPosPrinter] Imprimante Bluetooth déconnectée.');
+        this.connectedDevice = null;
+        this.connectedCharacteristic = null;
+      });
+
+      return {
+        success: true,
+        deviceName,
+        name: deviceName,
+        id: device.id,
+        connected: true,
+      };
+    } catch (err: any) {
+      this.connectedDevice = null;
+      this.connectedCharacteristic = null;
+      return {
+        success: false,
+        error: err.message || 'Impossible de se connecter à l\'imprimante Bluetooth.',
+      };
+    }
+  }
+
+  /**
+   * Déconnexion manuelle de l'imprimante Bluetooth
+   */
+  public static async disconnectBluetooth(): Promise<void> {
+    if (this.connectedDevice && this.connectedDevice.gatt?.connected) {
+      await this.connectedDevice.gatt.disconnect();
+    }
+    this.connectedDevice = null;
+    this.connectedCharacteristic = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('louametay_bluetooth_device_name');
+    }
+  }
+
   /**
    * Génère le flux d'octets brut ESC/POS pour une imprimante 80mm
    */
   public static generateTicketBytes(order: OrderType, restaurantName = 'LOU AME TAY ?'): Uint8Array {
     const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0 || !order.tableNumber;
-    const tableHeader = isExpress ? 'COMPTOIR EXPRESS' : `TABLE ${order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`}`;
+    const tableHeader = order.locationDetail
+      ? order.locationDetail.toUpperCase()
+      : isExpress
+      ? 'COMPTOIR EXPRESS'
+      : `TABLE ${order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`}`;
     const effectiveTotal = (order as any).totalAmount ?? order.total ?? order.items?.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0) ?? 0;
     const orderDate = new Date(order.createdAt).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
@@ -48,13 +199,27 @@ export class EscPosPrinterService {
     raw += this.BOLD_OFF;
     raw += '==========================================\n';
 
-    // Giant Table Header
-    raw += this.DOUBLE_SIZE;
-    raw += this.BOLD_ON;
-    raw += `${tableHeader}\n`;
-    raw += this.NORMAL_SIZE;
-    raw += this.BOLD_OFF;
+    // Badge spécial Repas Personnel (NP)
+    if (order.paymentMethod === 'STAFF_MEAL' || (order as any).employeeName) {
+      raw += this.DOUBLE_SIZE;
+      raw += this.BOLD_ON;
+      raw += 'BON REPAS PERSONNEL (NP)\n';
+      raw += this.NORMAL_SIZE;
+      raw += `EMPLOYE : ${((order as any).employeeName || 'Non renseigne').toUpperCase()}\n`;
+      raw += this.BOLD_OFF;
+      raw += '------------------------------------------\n';
+    } else {
+      // Giant Table Header standard
+      raw += this.DOUBLE_SIZE;
+      raw += this.BOLD_ON;
+      raw += `${tableHeader}\n`;
+      raw += this.NORMAL_SIZE;
+      raw += this.BOLD_OFF;
+    }
 
+    if (order.destinationService) {
+      raw += `Service : ${order.destinationService}\n`;
+    }
     raw += `Heure : ${orderDate}  |  N° #${order.id.slice(-4).toUpperCase()}\n`;
     if (order.customerName) {
       raw += `Client : ${order.customerName}\n`;
@@ -89,66 +254,107 @@ export class EscPosPrinterService {
     raw += '==========================================\n';
     raw += this.ALIGN_RIGHT;
     raw += `TOTAL : ${formatFCFA(effectiveTotal)}\n`;
-    raw += `Mode de règlement : ${order.paymentMethod || 'Espèces / TPE'}\n`;
+    if (order.paymentMethod === 'STAFF_MEAL') {
+      raw += 'Reglement : REPAS DU PERSONNEL (NP)\n';
+    } else {
+      raw += `Mode de règlement : ${order.paymentMethod || 'Espèces / TPE'}\n`;
+    }
     raw += '\n\n\n';
     raw += this.FULL_CUT;
 
-    // Convert string to ASCII byte array
+    // Convert string to byte array
     const encoder = new TextEncoder();
     return encoder.encode(raw);
   }
 
   /**
    * Impression directe via Web Bluetooth API (sur tablettes et smartphones)
+   * Si échec ou Bluetooth non connecté, lance une exception pour que le caissier puisse basculer.
    */
   public static async printViaBluetooth(order: OrderType, restaurantName?: string): Promise<boolean> {
     try {
-      if (typeof navigator === 'undefined' || !(navigator as any).bluetooth) {
-        throw new Error('Web Bluetooth non supporté sur ce navigateur.');
+      if (!this.isBluetoothConnected()) {
+        // Tenter une connexion rapide
+        await this.connectBluetooth();
       }
 
-      const device = await (navigator as any).bluetooth.requestDevice({
-        filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
-        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'],
-      });
-
-      const server = await device.gatt?.connect();
-      const service = await server?.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-      const characteristic = await service?.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+      if (!this.connectedCharacteristic) {
+        throw new Error('Imprimante Bluetooth non connectée.');
+      }
 
       const data = this.generateTicketBytes(order, restaurantName);
-      await characteristic?.writeValue(data);
+
+      // Envoi par paquets de 512 octets max (respect des MTU Bluetooth)
+      const CHUNK_SIZE = 512;
+      for (let offset = 0; offset < data.length; offset += CHUNK_SIZE) {
+        const chunk = data.slice(offset, offset + CHUNK_SIZE);
+        if (this.connectedCharacteristic.writeValueWithResponse) {
+          await this.connectedCharacteristic.writeValueWithResponse(chunk);
+        } else {
+          await this.connectedCharacteristic.writeValue(chunk);
+        }
+      }
+
       return true;
     } catch (err: any) {
-      console.warn('[EscPosPrinter] Impression Bluetooth fallback fenêtre web:', err);
-      this.printViaWindowFallback(order, restaurantName);
-      return false;
+      console.warn('[EscPosPrinter] Échec Bluetooth :', err);
+      throw err;
     }
   }
 
   /**
-   * Fenêtre d'impression standard 80mm
+   * Impression native du navigateur (Wi-Fi / Système par défaut / Fallback PDF 80mm)
+   */
+  public static printViaNative(order: OrderType, restaurantName = 'LOU AME TAY ?') {
+    this.printAsPdf(order, restaurantName);
+  }
+
+  /**
+   * Alias de compatibilité pour les composants historiques
    */
   public static printViaWindowFallback(order: OrderType, restaurantName = 'LOU AME TAY ?') {
+    this.printAsPdf(order, restaurantName);
+  }
+
+  /**
+   * Impression en PDF / Ticket 80mm via window.print() avec CSS dédié @media print
+   */
+  public static printAsPdf(order: OrderType, restaurantName = 'LOU AME TAY ?') {
     const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0 || !order.tableNumber;
-    const tableHeader = isExpress ? 'COMPTOIR EXPRESS' : `TABLE ${order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`}`;
+    const tableHeader = order.locationDetail
+      ? order.locationDetail.toUpperCase()
+      : isExpress
+      ? 'COMPTOIR EXPRESS'
+      : `TABLE ${order.tableNumber < 10 ? `0${order.tableNumber}` : `${order.tableNumber}`}`;
     const effectiveTotal = (order as any).totalAmount ?? order.total ?? order.items?.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0) ?? 0;
     const orderDate = new Date(order.createdAt).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
     });
+    const orderFullDate = new Date(order.createdAt).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
 
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    const isStaffMeal = order.paymentMethod === 'STAFF_MEAL' || Boolean((order as any).employeeName);
+    const employeeName = (order as any).employeeName;
+
+    const printWindow = window.open('', '_blank', 'width=460,height=700');
     if (!printWindow) return;
 
     const itemsHtml = order.items
       .map(
         (i) => `
-        <div style="margin-bottom: 6px;">
-          <div style="font-weight: 900; font-size: 15px;">${i.quantity}x ${i.name}</div>
-          ${i.options?.side ? `<div style="font-size: 12px; color: #444;">&gt; Accompagnement: ${i.options.side}</div>` : ''}
-          ${i.options?.spiceLevel ? `<div style="font-size: 12px; color: #444;">&gt; Piment: ${i.options.spiceLevel}</div>` : ''}
-          ${i.notes ? `<div style="font-size: 12px; font-style: italic; background: #eee; padding: 2px 4px; border-radius: 4px; margin-top: 2px;">* NOTE: ${i.notes}</div>` : ''}
+        <div class="ticket-item">
+          <div class="ticket-item-row">
+            <span class="ticket-qty">${i.quantity}x</span>
+            <span class="ticket-name">${i.name}</span>
+            <span class="ticket-price">${formatFCFA((Number(i.price) || 0) * (Number(i.quantity) || 1))}</span>
+          </div>
+          ${i.options?.side ? `<div class="ticket-option">&gt; Accompagnement : ${i.options.side}</div>` : ''}
+          ${i.options?.spiceLevel ? `<div class="ticket-option">&gt; Piment : ${i.options.spiceLevel}</div>` : ''}
+          ${i.notes ? `<div class="ticket-note">* NOTE : ${i.notes}</div>` : ''}
         </div>
       `
       )
@@ -156,52 +362,142 @@ export class EscPosPrinterService {
 
     const htmlContent = `
       <!DOCTYPE html>
-      <html>
+      <html lang="fr">
         <head>
-          <title>Ticket ${tableHeader} - ${restaurantName}</title>
+          <meta charset="utf-8" />
+          <title>Ticket - ${isStaffMeal ? `NP ${employeeName}` : tableHeader} - ${restaurantName}</title>
           <style>
-            @page { size: 80mm auto; margin: 0; }
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+            @media print {
+              html, body {
+                width: 76mm !important;
+                margin: 0 auto !important;
+                padding: 4mm 2mm !important;
+                background: #fff !important;
+                color: #000 !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .no-print {
+                display: none !important;
+              }
+            }
             body {
               font-family: 'Courier New', Courier, monospace;
               width: 76mm;
               margin: 0 auto;
-              padding: 6mm 2mm;
+              padding: 6mm 3mm;
               color: #000;
               background: #fff;
               font-size: 13px;
-              line-height: 1.2;
+              line-height: 1.25;
             }
             .center { text-align: center; }
             .right { text-align: right; }
-            .bold { font-weight: bold; }
+            .bold { font-weight: 900; }
+            .header-title { font-size: 17px; font-weight: 900; letter-spacing: 0.5px; }
+            .header-sub { font-size: 11px; margin-top: 2px; }
             .giant-table {
-              font-size: 22px;
+              font-size: 20px;
               font-weight: 900;
               border-top: 2px dashed #000;
               border-bottom: 2px dashed #000;
-              padding: 6px 0;
+              padding: 5px 0;
               margin: 8px 0;
               text-align: center;
+              letter-spacing: 1px;
+            }
+            .staff-badge {
+              border: 2px solid #000;
+              padding: 6px;
+              margin: 8px 0;
+              text-align: center;
+              background: #f1f5f9;
             }
             .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
+            .double-divider { border-bottom: 2px solid #000; margin: 6px 0; }
+            .ticket-item { margin-bottom: 6px; }
+            .ticket-item-row { display: flex; justify-content: space-between; align-items: baseline; }
+            .ticket-qty { font-weight: 900; font-size: 14px; width: 28px; }
+            .ticket-name { font-weight: 900; font-size: 14px; flex: 1; }
+            .ticket-price { font-weight: 700; font-size: 13px; }
+            .ticket-option { font-size: 11px; color: #333; margin-left: 28px; }
+            .ticket-note { font-size: 11px; font-style: italic; background: #eee; padding: 2px 4px; border-radius: 3px; margin: 2px 0 0 28px; }
+            .total-box {
+              font-size: 16px;
+              font-weight: 900;
+              margin-top: 4px;
+            }
+            .footer-info {
+              font-size: 10px;
+              margin-top: 10px;
+              color: #444;
+            }
           </style>
         </head>
         <body>
-          <div class="center bold" style="font-size: 16px;">${restaurantName}</div>
-          <div class="center bold">BON DE COMMANDE CUISINE & CAISSE</div>
-          <div class="giant-table">${tableHeader}</div>
-          <div>Heure: ${orderDate} | #${order.id.slice(-4).toUpperCase()}</div>
-          ${order.customerName ? `<div>Client: ${order.customerName}</div>` : ''}
+          <div class="center bold header-title">${restaurantName}</div>
+          <div class="center header-sub">Lou Ame Tay ? - Plateforme Restaurant</div>
+          
+          ${isStaffMeal ? `
+            <div class="staff-badge">
+              <div class="bold" style="font-size: 15px;">BON REPAS PERSONNEL (NP)</div>
+              <div class="bold" style="font-size: 17px; margin-top: 2px;">EMPLOYÉ : ${(employeeName || 'Non renseigné').toUpperCase()}</div>
+              <div style="font-size: 10px; margin-top: 2px;">À déduire ou facturer fin de mois</div>
+            </div>
+          ` : `
+            <div class="giant-table">${tableHeader}</div>
+          `}
+
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span>${orderFullDate} ${orderDate}</span>
+            <span class="bold">#${order.id.slice(-6).toUpperCase()}</span>
+          </div>
+
+          ${order.destinationService ? `
+            <div style="font-size: 11px; font-weight: bold; margin-top: 2px;">
+              Service : ${order.destinationService}
+            </div>
+          ` : ''}
+
+          ${order.customerName && !isStaffMeal ? `
+            <div style="font-size: 11px; font-weight: bold; margin-top: 2px;">
+              Client : ${order.customerName}
+            </div>
+          ` : ''}
+
           <div class="divider"></div>
-          <div>${itemsHtml}</div>
+
+          ${itemsHtml}
+
           ${order.customerNote || order.note ? `
             <div class="divider"></div>
-            <div class="bold">REMARQUE CUISINE:</div>
-            <div>${order.customerNote || order.note}</div>
+            <div style="font-size: 11px;">
+              <span class="bold">NOTE CUISINE :</span> ${order.customerNote || order.note}
+            </div>
           ` : ''}
+
+          <div class="double-divider"></div>
+
+          <div class="ticket-item-row total-box">
+            <span>TOTAL :</span>
+            <span>${formatFCFA(effectiveTotal)}</span>
+          </div>
+
+          <div style="font-size: 11px; margin-top: 4px; text-align: right;">
+            ${isStaffMeal ? 'Paiement : BONS REPAS DU PERSONNEL (NP)' : `Paiement : ${order.paymentMethod || 'Espèces'}`}
+          </div>
+
           <div class="divider"></div>
-          <div class="right bold" style="font-size: 14px;">TOTAL: ${formatFCFA(effectiveTotal)}</div>
-          <div class="right" style="font-size: 11px;">Règlement: ${order.paymentMethod || 'Espèces / TPE'}</div>
+          <div class="center footer-info">
+            🇸🇳 Jërejëf ! Merci pour votre confiance !<br/>
+            Plateforme Lou Ame Tay ? DAW Digital Arts Work
+          </div>
+
           <script>
             window.onload = function() {
               window.print();
@@ -217,67 +513,87 @@ export class EscPosPrinterService {
   }
 
   /**
-   * Impression du Rapport Z de Clôture de Caisse (80mm Thermique)
+   * Alias de compatibilité pour l'impression du rapport Z
    */
   public static printZReport(session: any, restaurantName = 'LOU AME TAY ?') {
-    const printWindow = window.open('', '_blank', 'width=420,height=750');
-    if (!printWindow) return;
+    return this.printCashSessionZReport(session, restaurantName);
+  }
 
-    const openingDate = session.openedAt
-      ? new Date(session.openedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
-      : '-';
+  /**
+   * Imprime le Ticket Rapport Z de clôture de caisse
+   */
+  public static printCashSessionZReport(session: any, restaurantName = 'LOU AME TAY ?') {
+    const openingDate = new Date(session.openedAt).toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
     const closingDate = session.closedAt
-      ? new Date(session.closedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
-      : new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+      ? new Date(session.closedAt).toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : 'En cours';
 
-    const cashierName = session.cashier?.name || 'Caissier';
-    const cashierShift = session.cashier?.shift || 'STANDARD';
+    const cashierName = session.cashier?.name || 'Caissier(e)';
+    const cashierShift = session.cashier?.shift || 'JOURNEE';
 
     const openingFloat = Number(session.openingFloat) || 0;
+    const countedCash = Number(session.countedCash) || 0;
+    const expectedCash = Number(session.expectedCash) || 0;
+    const discrepancy = Number(session.cashDiscrepancy) || 0;
     const totalCash = Number(session.totalCash) || 0;
     const totalWave = Number(session.totalWave) || 0;
     const totalOM = Number(session.totalOM) || 0;
     const totalYas = Number(session.totalYas) || 0;
     const totalCard = Number(session.totalCard) || 0;
     const totalRevenue = Number(session.totalRevenue) || 0;
-    const expectedCash = Number(session.expectedCash) || (openingFloat + totalCash);
-    const countedCash = Number(session.countedCash) || 0;
-    const discrepancy = Number(session.cashDiscrepancy) || (countedCash - expectedCash);
 
-    let discrepancyLabel = 'ÉQUILIBRÉ (0 FCFA)';
-    let discrepancyColor = '#16a34a';
-    if (discrepancy > 0) {
-      discrepancyLabel = `+${formatFCFA(discrepancy)} (EXCÉDENT)`;
-      discrepancyColor = '#16a34a';
-    } else if (discrepancy < 0) {
-      discrepancyLabel = `${formatFCFA(discrepancy)} (MANQUANT / DEFICIT)`;
-      discrepancyColor = '#dc2626';
+    let discrepancyLabel = '0 FCFA (Caisse Parfaite)';
+    let discrepancyColor = '#059669'; // Vert
+    if (discrepancy < 0) {
+      discrepancyLabel = `-${formatFCFA(Math.abs(discrepancy))} (Déficit de caisse)`;
+      discrepancyColor = '#dc2626'; // Rouge
+    } else if (discrepancy > 0) {
+      discrepancyLabel = `+${formatFCFA(discrepancy)} (Excédent de caisse)`;
+      discrepancyColor = '#2563eb'; // Bleu
     }
+
+    const printWindow = window.open('', '_blank', 'width=460,height=750');
+    if (!printWindow) return;
 
     const htmlContent = `
       <!DOCTYPE html>
-      <html>
+      <html lang="fr">
         <head>
-          <title>Rapport Z Clôture de Caisse - ${restaurantName}</title>
+          <meta charset="utf-8" />
+          <title>Rapport Z Caisse - ${cashierName} - ${restaurantName}</title>
           <style>
-            @page { size: 80mm auto; margin: 0; }
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
             body {
               font-family: 'Courier New', Courier, monospace;
               width: 76mm;
               margin: 0 auto;
-              padding: 6mm 2mm;
+              padding: 6mm 3mm;
               color: #000;
               background: #fff;
               font-size: 12px;
-              line-height: 1.25;
+              line-height: 1.3;
             }
             .center { text-align: center; }
             .right { text-align: right; }
-            .left { text-align: left; }
-            .bold { font-weight: bold; }
+            .bold { font-weight: 900; }
             .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
             .double-divider { border-bottom: 2px solid #000; margin: 6px 0; }
-            .row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
             .badge-title {
               font-size: 15px;
               font-weight: 900;

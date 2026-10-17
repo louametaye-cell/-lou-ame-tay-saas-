@@ -74,9 +74,24 @@ export default function SuperAdminRestaurantDetailPage() {
   const [restaurant, setRestaurant] = useState<RestaurantType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance' | 'display' | 'configuration'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tables' | 'stats' | 'performance' | 'display' | 'configuration' | 'sessions'>('overview');
   const [appUrl, setAppUrl] = useState<string>(process.env.NEXT_PUBLIC_APP_URL || 'https://www.louametay.com');
   
+  // Multi-Espaces et Sessions Caisse (v2.3)
+  const [spaces, setSpaces] = useState<any[]>([]);
+  const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
+  const [cashSessions, setCashSessions] = useState<any[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isForceClosing, setIsForceClosing] = useState<string | null>(null);
+
+  // Formulaire d'ajout en masse d'espaces (Hôtellerie / Multi-Zones)
+  const [bulkSpaceType, setBulkSpaceType] = useState<string>('ROOM');
+  const [bulkDestination, setBulkDestination] = useState<string>('ROOM_SERVICE');
+  const [bulkStartNum, setBulkStartNum] = useState<number>(101);
+  const [bulkEndNum, setBulkEndNum] = useState<number>(120);
+  const [bulkPrefix, setBulkPrefix] = useState<string>('');
+  const [isCreatingBulk, setIsCreatingBulk] = useState(false);
+
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
@@ -155,12 +170,100 @@ export default function SuperAdminRestaurantDetailPage() {
     }
   }, [id]);
 
+  const fetchSpaces = useCallback(async () => {
+    try {
+      setIsLoadingSpaces(true);
+      const res = await fetch(`/api/tenant/tables?restaurantId=${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSpaces(data.tables || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingSpaces(false);
+    }
+  }, [id]);
+
+  const fetchCashSessions = useCallback(async () => {
+    try {
+      setIsLoadingSessions(true);
+      const res = await fetch(`/api/super-admin/restaurants/${id}/cash-sessions`);
+      if (res.ok) {
+        const data = await res.json();
+        setCashSessions(data.sessions || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, [id]);
+
+  const handleForceCloseSession = async (sessionId: string, cashierName: string) => {
+    const confirm = window.confirm(
+      `Confirmer la clôture forcée de la session de caisse de ${cashierName} ?\nLes montants perçus seront consolidés et la caisse sera libérée pour d'autres caissiers.`
+    );
+    if (!confirm) return;
+
+    try {
+      setIsForceClosing(sessionId);
+      const res = await fetch(`/api/super-admin/cash-sessions/${sessionId}/force-close`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`Session de ${cashierName} clôturée avec succès !`);
+        fetchCashSessions();
+      } else {
+        toast.error(data.error || 'Erreur lors de la clôture forcée');
+      }
+    } catch (e) {
+      toast.error('Erreur réseau');
+    } finally {
+      setIsForceClosing(null);
+    }
+  };
+
+  const handleCreateBulkSpaces = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsCreatingBulk(true);
+      const res = await fetch('/api/tenant/tables/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: id,
+          spaceType: bulkSpaceType,
+          destinationService: bulkDestination,
+          startNumber: bulkStartNum,
+          endNumber: bulkEndNum,
+          prefix: bulkPrefix,
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Espaces créés avec succès !');
+        fetchSpaces();
+        fetchRestaurant();
+      } else {
+        toast.error(data.error || 'Erreur lors de la création');
+      }
+    } catch (err) {
+      toast.error('Erreur réseau');
+    } finally {
+      setIsCreatingBulk(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       fetchRestaurant();
       fetchOrders();
+      fetchSpaces();
+      fetchCashSessions();
     }
-  }, [id, fetchRestaurant, fetchOrders]);
+  }, [id, fetchRestaurant, fetchOrders, fetchSpaces, fetchCashSessions]);
 
   useEffect(() => {
     if (restaurant) {
@@ -662,7 +765,22 @@ export default function SuperAdminRestaurantDetailPage() {
               }`}
             >
               <QrCode className="w-4 h-4" />
-              <span>Tables & QR Codes ({totalTables})</span>
+              <span>🏨 Espaces & QR Codes ({spaces.length > 0 ? spaces.length : totalTables})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('sessions')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === 'sessions'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              <CreditCard className="w-4 h-4 text-emerald-500" />
+              <span>💵 Sessions de Caisse</span>
+              {cashSessions.some((s) => s.status === 'OPEN') && (
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              )}
             </button>
 
             <button
@@ -1024,14 +1142,128 @@ export default function SuperAdminRestaurantDetailPage() {
             </div>
           )}
 
-          {/* TAB 3: TABLES & QR CODES (AVEC EXPORT CSV IMPRIMEUR & PLANCHES A5) */}
+          {/* TAB 3: ESPACES DE SERVICE & QR CODES (HÔTELLERIE & MULTI-ZONES) */}
           {activeTab === 'tables' && (
             <div className="space-y-6">
+              {/* Formulaire d'ajout d'espaces en masse (Chambres, Transats, etc.) */}
+              <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 border-2 border-amber-300 rounded-3xl p-6 shadow-sm space-y-4 print:hidden">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center font-black text-xl shadow-xs shrink-0">
+                    🏨
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                      <span>Ajouter des Espaces de Service en Masse (Hôtellerie / Multi-Zones)</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 px-2.5 py-0.5 rounded-full">
+                        v2.3
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-600">
+                      Générez instantanément des chambres d&apos;hôtel (ex: de la 101 à 120), des transats piscine ou des salons VIP avec QR codes uniques et routage automatique vers le bon service.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleCreateBulkSpaces} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Type d&apos;Espace
+                    </label>
+                    <select
+                      value={bulkSpaceType}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setBulkSpaceType(val);
+                        if (val === 'ROOM') {
+                          setBulkDestination('ROOM_SERVICE');
+                          setBulkPrefix('Chambre ');
+                        } else if (val === 'POOL') {
+                          setBulkDestination('BAR');
+                          setBulkPrefix('Transat ');
+                        } else if (val === 'VIP_AREA') {
+                          setBulkDestination('KITCHEN');
+                          setBulkPrefix('Salon VIP ');
+                        } else if (val === 'COUNTER') {
+                          setBulkDestination('RECEPTION');
+                          setBulkPrefix('Comptoir ');
+                        } else {
+                          setBulkDestination('KITCHEN');
+                          setBulkPrefix('');
+                        }
+                      }}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                    >
+                      <option value="ROOM">🏨 Chambre d&apos;Hôtel (ROOM)</option>
+                      <option value="POOL">🏖️ Transat Piscine (POOL)</option>
+                      <option value="TABLE">🍽️ Table Restaurant (TABLE)</option>
+                      <option value="VIP_AREA">👑 Salon VIP (VIP_AREA)</option>
+                      <option value="COUNTER">🛎️ Comptoir / Bar (COUNTER)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Service de Destination (KDS)
+                    </label>
+                    <select
+                      value={bulkDestination}
+                      onChange={(e) => setBulkDestination(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                    >
+                      <option value="ROOM_SERVICE">🛎️ Room Service</option>
+                      <option value="BAR">🍹 Bar / Boissons</option>
+                      <option value="KITCHEN">🍳 Cuisine Centrale</option>
+                      <option value="RECEPTION">🏨 Réception</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Numéro de Début
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={bulkStartNum}
+                      onChange={(e) => setBulkStartNum(parseInt(e.target.value, 10) || 1)}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      placeholder="101"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Numéro de Fin
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={bulkEndNum}
+                      onChange={(e) => setBulkEndNum(parseInt(e.target.value, 10) || 1)}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                      placeholder="120"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <button
+                      type="submit"
+                      disabled={isCreatingBulk}
+                      className="w-full py-2.5 px-4 bg-[#FF6B00] hover:bg-orange-600 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer touch-manipulation min-h-[42px]"
+                    >
+                      <Zap className="w-4 h-4" />
+                      <span>{isCreatingBulk ? 'Génération...' : `Générer ${Math.max(0, bulkEndNum - bulkStartNum + 1)} Espaces`}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Barre d'outils Export & Impression */}
               <div className="bg-slate-50 p-5 sm:p-6 rounded-3xl border border-slate-200 flex items-center justify-between flex-wrap gap-4 print:hidden">
                 <div>
                   <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                     <QrCode className="w-5 h-5 text-[#FF6B00]" />
-                    <span>Planches de QR Codes des Tables (1 à {totalTables})</span>
+                    <span>Planches de QR Codes ({spaces.length > 0 ? spaces.length : totalTables} espaces actifs)</span>
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Téléchargez le fichier CSV pour publipostage imprimeur ou imprimez les planches A5.
@@ -1039,69 +1271,223 @@ export default function SuperAdminRestaurantDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  {/* BOUTON EXPORT QR CODES SVG / ZIP (SUPER-ADMIN EXCLUSIF) */}
                   <button
                     onClick={handleExportQRCodesZip}
                     disabled={isExportingZip}
-                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs sm:text-sm font-black px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs sm:text-sm font-black px-4 py-2.5 rounded-2xl shadow-md transition-all active:scale-95 disabled:opacity-50"
                   >
                     <Download className="w-4 h-4" />
                     <span>{isExportingZip ? 'Génération du ZIP...' : '📦 Exporter Pack QR SVG (ZIP)'}</span>
                   </button>
 
-                  {/* BOUTON EXPORT CSV QR CODES POUR IMPRIMEUR */}
                   <button
                     onClick={handleExportQRCodesCSV}
-                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-2xl shadow-md transition-all active:scale-95"
                   >
                     <Download className="w-4 h-4" />
-                    <span>📥 Exporter la liste CSV des QR Codes (Imprimeur)</span>
+                    <span>📥 Exporter Liste CSV</span>
                   </button>
 
                   <button
                     onClick={handlePrintAllQRs}
-                    className="flex items-center gap-2 bg-[#FF6B00] hover:bg-orange-600 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-2xl shadow-md transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-[#FF6B00] hover:bg-orange-600 text-white text-xs sm:text-sm font-extrabold px-4 py-2.5 rounded-2xl shadow-md transition-all active:scale-95"
                   >
                     <Printer className="w-4 h-4" />
-                    <span>Imprimer les planches A5</span>
+                    <span>Imprimer Planches A5</span>
                   </button>
                 </div>
               </div>
 
-              {/* Grid of all table QR cards */}
+              {/* Grille des Cartes QR Codes pour chaque espace */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: totalTables }, (_, i) => i + 1).map((tableNum) => (
-                  <div
-                    key={tableNum}
-                    className="bg-white text-gray-900 rounded-3xl p-6 border-2 border-orange-200 shadow-xl text-center flex flex-col items-center justify-between page-break-inside-avoid"
-                  >
-                    <div className="w-full bg-[#FF6B00] text-white py-2.5 px-3 rounded-2xl mb-4">
-                      <h4 className="font-black text-base">{restaurant.name}</h4>
-                      <p className="text-xs text-orange-100 font-medium">Menu Digital • Lou Ame Tay ?</p>
-                    </div>
+                {(spaces.length > 0 ? spaces : Array.from({ length: totalTables }, (_, i) => ({ tableNumber: i + 1, spaceType: 'TABLE', destinationService: 'KITCHEN', identifier: `${i + 1}`, label: `Table ${i + 1}` }))).map((spc: any, idx: number) => {
+                  const spcType = (spc.spaceType || 'TABLE').toLowerCase();
+                  const typeRoute = spcType === 'room' ? 'room' : spcType === 'pool' ? 'pool' : spcType === 'vip_area' ? 'vip' : spcType === 'counter' ? 'counter' : 'table';
+                  const spcNum = spc.identifier || spc.tableNumber || idx + 1;
+                  const qrUrl = `${appUrl}/r/${restaurant.subdomain}/${typeRoute}/${spcNum}`;
 
-                    <div className="bg-orange-50 border border-orange-200 px-4 py-1 rounded-full text-xs font-black text-orange-950 mb-3">
-                      🎯 TABLE {tableNum < 10 ? `0${tableNum}` : tableNum}
-                    </div>
+                  return (
+                    <div
+                      key={spc.id || idx}
+                      className="bg-white text-gray-900 rounded-3xl p-6 border-2 border-orange-200 shadow-xl text-center flex flex-col items-center justify-between page-break-inside-avoid relative"
+                    >
+                      <div className="w-full bg-[#FF6B00] text-white py-2.5 px-3 rounded-2xl mb-3">
+                        <h4 className="font-black text-base truncate">{restaurant.name}</h4>
+                        <p className="text-xs text-orange-100 font-medium">Menu Digital • Lou Ame Tay ?</p>
+                      </div>
 
-                    {/* QR Code */}
-                    <div className="p-3.5 bg-white border border-gray-200 rounded-2xl shadow-inner my-1">
-                      <QRCodeSVG
-                        value={`${appUrl}/r/${restaurant.subdomain}/table-${tableNum}`}
-                        size={170}
-                        level="H"
-                        includeMargin={true}
-                      />
-                    </div>
+                      <div className="flex items-center gap-1.5 flex-wrap justify-center mb-3">
+                        <span className="bg-orange-50 border border-orange-200 px-3 py-1 rounded-full text-xs font-black text-orange-950">
+                          {spc.label || (spcType === 'room' ? `CHAMBRE ${spcNum}` : spcType === 'pool' ? `PISCINE ${spcNum}` : `TABLE ${spcNum}`)}
+                        </span>
 
-                    <p className="text-xs font-bold text-gray-800 mt-3">
-                      Scannez avec votre smartphone
-                    </p>
-                    <span className="text-[10px] text-gray-500 font-mono mt-1">
-                      louametay.com/r/{restaurant.subdomain}/table-{tableNum}
-                    </span>
+                        <span className="bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                          {spc.destinationService === 'BAR' ? '🍹 Bar' : spc.destinationService === 'ROOM_SERVICE' ? '🛎️ Room Service' : spc.destinationService === 'RECEPTION' ? '🏨 Réception' : '🍳 Cuisine'}
+                        </span>
+                      </div>
+
+                      {/* QR Code SVG */}
+                      <div className="p-3.5 bg-white border border-gray-200 rounded-2xl shadow-inner my-1">
+                        <QRCodeSVG
+                          value={qrUrl}
+                          size={170}
+                          level="H"
+                          includeMargin={true}
+                        />
+                      </div>
+
+                      <p className="text-xs font-bold text-gray-800 mt-3">
+                        Scannez avec votre smartphone
+                      </p>
+
+                      <div className="mt-2 flex items-center justify-center gap-2">
+                        <span className="text-[10px] text-gray-500 font-mono truncate max-w-[200px]">
+                          /r/{restaurant.subdomain}/{typeRoute}/{spcNum}
+                        </span>
+                        <a
+                          href={qrUrl}
+                          target="_blank"
+                          className="p-1 bg-slate-100 hover:bg-slate-200 rounded-md text-slate-700 transition-colors"
+                          title="Tester le lien"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: SESSIONS DE CAISSE & CLÔTURE D'URGENCE (SUPER-ADMIN EXCLUSIF) */}
+          {activeTab === 'sessions' && (
+            <div className="space-y-6">
+              <div className="bg-slate-50 p-5 sm:p-6 rounded-3xl border border-slate-200 flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center font-black shadow-xs">
+                    <CreditCard className="w-6 h-6" />
                   </div>
-                ))}
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <span>Sessions de Caisse &amp; Clôtures d&apos;Urgence</span>
+                      <span className="text-xs bg-emerald-100 text-emerald-900 font-bold px-2.5 py-0.5 rounded-full">
+                        {cashSessions.filter((s) => s.status === 'OPEN').length} active(s)
+                      </span>
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Visualisez l&apos;état des caisses et forcez la clôture d&apos;une session orpheline ou bloquée pour libérer un caissier.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={fetchCashSessions}
+                  className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingSessions ? 'animate-spin' : ''}`} />
+                  <span>Actualiser les sessions</span>
+                </button>
+              </div>
+
+              {/* Liste des sessions */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
+                {cashSessions.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 space-y-2">
+                    <p className="font-bold text-sm">Aucune session de caisse enregistrée pour cet établissement.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-400 font-black uppercase tracking-wider text-[10px]">
+                          <th className="pb-3">Caissier</th>
+                          <th className="pb-3">Statut</th>
+                          <th className="pb-3">Ouverte le</th>
+                          <th className="pb-3">Fond Initial</th>
+                          <th className="pb-3">Recette Espèces</th>
+                          <th className="pb-3">Recette Wave/OM</th>
+                          <th className="pb-3">Total CA</th>
+                          <th className="pb-3 text-right">Action Super-Admin</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {cashSessions.map((session) => {
+                          const isOpen = session.status === 'OPEN';
+                          const cashierName = session.cashier?.name || 'Caissier';
+
+                          return (
+                            <tr key={session.id} className={isOpen ? 'bg-amber-50/40' : ''}>
+                              <td className="py-4">
+                                <div className="font-black text-slate-900">{cashierName}</div>
+                                {session.cashier?.phone && (
+                                  <div className="text-[11px] text-slate-500 font-mono">{session.cashier.phone}</div>
+                                )}
+                              </td>
+
+                              <td className="py-4">
+                                {isOpen ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    Ouverte
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">
+                                    Clôturée
+                                  </span>
+                                )}
+                              </td>
+
+                              <td className="py-4 text-slate-600 font-mono text-[11px]">
+                                {new Date(session.openedAt).toLocaleDateString('fr-FR', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </td>
+
+                              <td className="py-4 font-mono font-bold text-slate-800">
+                                {formatFCFA(Number(session.openingFloat) || 0)}
+                              </td>
+
+                              <td className="py-4 font-mono font-bold text-slate-800">
+                                {formatFCFA(Number(session.totalCash) || 0)}
+                              </td>
+
+                              <td className="py-4 font-mono font-bold text-blue-600">
+                                {formatFCFA((Number(session.totalWave) || 0) + (Number(session.totalOM) || 0))}
+                              </td>
+
+                              <td className="py-4 font-mono font-black text-emerald-600">
+                                {formatFCFA(Number(session.totalRevenue) || 0)}
+                              </td>
+
+                              <td className="py-4 text-right">
+                                {isOpen ? (
+                                  <button
+                                    type="button"
+                                    disabled={isForceClosing === session.id}
+                                    onClick={() => handleForceCloseSession(session.id, cashierName)}
+                                    className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl text-xs font-black shadow-xs transition-all active:scale-95 inline-flex items-center gap-1.5 cursor-pointer touch-manipulation"
+                                  >
+                                    <Power className="w-3.5 h-3.5" />
+                                    <span>{isForceClosing === session.id ? 'Clôture...' : 'Forcer la clôture'}</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-400 text-[11px] italic">
+                                    {session.notes?.includes('[FORCÉ PAR SUPER-ADMIN]') ? 'Forcée par Admin' : 'Clôturée normalement'}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}

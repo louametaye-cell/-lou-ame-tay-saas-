@@ -97,22 +97,28 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
 
   const isExpressOrder = order.orderType === 'EXPRESS' || order.tableNumber === 0;
 
+  // 🚨 RÈGLE TERRAIN SÉNÉGAL (Alerte Visuelle KDS) : si commande > 15 min en cuisine, clignotement rouge vigoureux
+  const orderAgeMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
+  const isDelayed = order.status !== 'SERVED' && order.status !== 'CANCELLED' && orderAgeMinutes >= 15;
+
   return (
     <article
-      className={`bg-white rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-md ${
+      className={`rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-md ${
         order.status === 'CANCELLED'
           ? 'border-rose-600 bg-rose-50/30 ring-4 ring-rose-500/30'
+          : isDelayed
+          ? 'animate-pulse bg-red-100 border-red-500 ring-4 ring-red-500/50 shadow-red-500/20'
           : isExpressOrder
-          ? 'border-purple-400 bg-purple-50/10'
+          ? 'bg-white border-purple-400'
           : is100PercentBar
-          ? 'border-blue-300 bg-blue-50/20'
+          ? 'bg-white border-blue-300'
           : order.status === 'PENDING'
-          ? 'border-amber-400 shadow-amber-500/10'
+          ? 'bg-white border-amber-400 shadow-amber-500/10'
           : order.status === 'PREPARING'
-          ? 'border-blue-500 shadow-blue-500/10'
+          ? 'bg-white border-blue-500 shadow-blue-500/10'
           : order.status === 'READY'
-          ? 'border-purple-500 shadow-purple-500/20'
-          : 'border-slate-200 opacity-85'
+          ? 'bg-white border-purple-500 shadow-purple-500/20'
+          : 'bg-white border-slate-200 opacity-85'
       }`}
     >
       {/* ⚠️ Bannière clignotante rouge si commande annulée par le client */}
@@ -123,11 +129,22 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
         </div>
       )}
 
+      {/* 🚨 Bannière d'alerte visuelle retard cuisine > 15 min (Terrain Sénégal) */}
+      {isDelayed && order.status !== 'CANCELLED' && (
+        <div className="bg-red-600 text-white px-3 py-2 text-center text-xs font-black uppercase tracking-wider animate-pulse flex items-center justify-center gap-2 shadow-md">
+          <span>🚨</span>
+          <span>RETARD CUISINE (&gt; 15 MIN) — ACTION URGENTE</span>
+          <span>🚨</span>
+        </div>
+      )}
+
       {/* 1. Header Box with Table Number, Chrono & Payment */}
       <div
         className={`p-4 flex items-center justify-between gap-2 ${
           order.status === 'CANCELLED'
             ? 'bg-rose-950 text-white'
+            : isDelayed
+            ? 'bg-red-600 text-white'
             : isExpressOrder
             ? 'bg-slate-900 text-amber-400'
             : is100PercentBar
@@ -143,7 +160,21 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
       >
         <div className="flex items-center gap-2">
           <span className="text-xl sm:text-2xl font-black tracking-tight flex flex-col leading-tight">
-            <span>{isExpressOrder ? '⚡ EXPRESS' : (order.locationDetail ? order.locationDetail : `TABLE ${formattedTable}`)}</span>
+            <span className="font-black uppercase tracking-wide">
+              {order.locationDetail 
+                ? order.locationDetail.toUpperCase() 
+                : isExpressOrder 
+                ? '⚡ COMPTOIR EXPRESS' 
+                : `TABLE ${formattedTable}`}
+            </span>
+            {order.destinationService && (
+              <span className="text-[11px] font-black uppercase tracking-wider bg-black/25 text-white px-2 py-0.5 rounded-md mt-1 self-start inline-flex items-center gap-1 shadow-2xs">
+                {order.destinationService === 'BAR' && '🍹 Service Bar'}
+                {order.destinationService === 'ROOM_SERVICE' && '🛎️ Room Service'}
+                {order.destinationService === 'RECEPTION' && '🏨 Réception'}
+                {order.destinationService === 'KITCHEN' && '🍳 Cuisine'}
+              </span>
+            )}
             {order.zoneId && <span className="text-[10px] text-white/80 font-normal mt-0.5">ZONE ID: {order.zoneId}</span>}
           </span>
           <span className="text-xs font-mono font-bold bg-black/15 px-2 py-0.5 rounded-md">
@@ -154,6 +185,19 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
         {/* Live Dynamic Chrono Badge */}
         <OrderTimerBadge createdAt={order.createdAt} />
       </div>
+
+      {/* 👤 BADGE REPAS DU PERSONNEL (NP) */}
+      {(order.paymentMethod === 'STAFF_MEAL' || (order as any).employeeName) && (
+        <div className="bg-gradient-to-r from-purple-800 to-indigo-900 text-white px-3 py-2 text-xs font-black uppercase tracking-wider flex items-center justify-between shadow-inner border-y border-purple-400/50">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👤</span>
+            <span>REPAS EMPLOYÉ : {((order as any).employeeName || order.customerName || 'Staff').toUpperCase()}</span>
+          </div>
+          <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs">
+            BON NP
+          </span>
+        </div>
+      )}
 
       {/* 2. Customer details & Assigned Waiter & Payment Badge */}
       <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs text-slate-600 flex-wrap">
@@ -185,6 +229,14 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           const remainingAmount = Math.max(0, totalAmount - paidAmount);
           const isPaid = order.paymentStatus === 'PAID';
           const hasPartialPayment = !isPaid && paidAmount > 0 && remainingAmount > 0;
+
+          if (order.paymentMethod === 'STAFF_MEAL' || order.paymentStatus === 'STAFF_NP') {
+            return (
+              <span className="bg-purple-100 text-purple-950 border border-purple-400 text-[11px] font-black px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+                <span>👤 BON NP</span>
+              </span>
+            );
+          }
 
           if (isPaid) {
             return (
@@ -324,16 +376,29 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Print 80mm ESC/POS Button */}
           <button
             type="button"
             onClick={handlePrintThermal}
-            className="min-h-[46px] px-3.5 bg-white hover:bg-slate-100 active:scale-95 text-slate-700 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200 shadow-2xs"
+            className="min-h-[48px] px-3 bg-white hover:bg-slate-100 active:scale-95 text-slate-700 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200 shadow-2xs touch-manipulation"
             title="Imprimer ticket 80mm"
           >
             <Printer className="w-4 h-4 text-orange-600" />
-            <span className="hidden sm:inline">Ticket 80mm</span>
+            <span className="hidden sm:inline">80mm</span>
+          </button>
+
+          {/* Fallback Impression PDF */}
+          <button
+            type="button"
+            onClick={() => {
+              EscPosPrinterService.printAsPdf(order, restaurantName);
+              toast.success(`📄 Ticket PDF généré pour la Table ${formattedTable}`);
+            }}
+            className="min-h-[48px] px-3 bg-white hover:bg-emerald-50 text-emerald-800 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-emerald-200 shadow-2xs touch-manipulation cursor-pointer"
+            title="Imprimer en PDF (Fallback)"
+          >
+            <span>PDF</span>
           </button>
 
           {/* Quick Release Table Action for Tables */}
@@ -342,7 +407,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
               type="button"
               onClick={handleReleaseTable}
               disabled={isReleasingTable}
-              className="min-h-[46px] px-3 bg-white hover:bg-rose-50 hover:text-rose-700 active:scale-95 text-slate-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200 shadow-2xs cursor-pointer"
+              className="min-h-[48px] px-3 bg-white hover:bg-rose-50 hover:text-rose-700 active:scale-95 text-slate-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200 shadow-2xs cursor-pointer touch-manipulation"
               title={`Libérer la Table ${formattedTable} (remise en service immédiate)`}
             >
               <RotateCcw className="w-4 h-4 text-slate-500" />
@@ -352,7 +417,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
 
           {/* Status Progression Button */}
           {order.status === 'CANCELLED' && (
-            <div className="flex-1 min-h-[46px] bg-rose-100 border-2 border-rose-400 text-rose-950 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2">
+            <div className="flex-1 min-h-[48px] bg-rose-100 border-2 border-rose-400 text-rose-950 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2">
               <span>🛑 Annulée dans les délais</span>
             </div>
           )}
@@ -362,7 +427,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
               type="button"
               disabled={isUpdating}
               onClick={() => handleStatusChange('PREPARING')}
-              className="flex-1 min-h-[46px] bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition-all"
+              className="flex-1 min-h-[48px] bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition-all touch-manipulation"
             >
               <ChefHat className="w-4 h-4" />
               <span>👨‍🍳 {is100PercentBar ? 'Préparer au Bar' : 'Lancer Préparation'}</span>
@@ -374,7 +439,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
               type="button"
               disabled={isUpdating}
               onClick={() => handleStatusChange('READY')}
-              className="flex-1 min-h-[46px] bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-purple-600/20 transition-all cursor-pointer"
+              className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-purple-600/20 transition-all cursor-pointer touch-manipulation"
             >
               <CheckCircle2 className="w-4 h-4 stroke-[3]" />
               <span>📦 Commande Prête</span>
@@ -386,7 +451,7 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
               type="button"
               disabled={isUpdating}
               onClick={() => handleStatusChange('SERVED')}
-              className="flex-1 min-h-[46px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              className="flex-1 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer touch-manipulation"
             >
               <CheckCircle2 className="w-4 h-4 stroke-[3]" />
               <span>🍽️ {isExpressOrder ? 'Remise au Client' : 'Servie à Table'}</span>

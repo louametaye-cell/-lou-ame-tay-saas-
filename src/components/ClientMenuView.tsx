@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ClientMenuContainer } from '@/components/client-menu';
-import { RestaurantType } from '@/types';
+import { RestaurantType, SpaceType, DestinationService } from '@/types';
 
 interface ClientMenuViewProps {
   initialRestaurant: RestaurantType;
@@ -13,6 +13,8 @@ interface ClientMenuViewProps {
     waiterName?: string;
     zoneId?: string;
     locationDetail?: string;
+    spaceType?: SpaceType;
+    destinationService?: DestinationService;
   };
 }
 

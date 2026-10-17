@@ -28,6 +28,8 @@ export async function POST(
       changeGiven,
       transactionRef,
       restaurantId,
+      employeeId,
+      employeeName,
     } = body;
 
     // 1. Récupérer la commande
@@ -49,6 +51,15 @@ export async function POST(
     if (order.status === 'CANCELLED') {
       return NextResponse.json(
         { error: 'Cette commande a été annulée par le client et ne peut plus être encaissée.' },
+        { status: 400 }
+      );
+    }
+
+    // 👤 SÉCURITÉ REPAS DU PERSONNEL (NP) : Nom de l'employé obligatoire
+    const isStaffMeal = paymentMethod === 'STAFF_MEAL';
+    if (isStaffMeal && (!employeeName || !String(employeeName).trim())) {
+      return NextResponse.json(
+        { error: 'Le nom de l\'employé est obligatoire pour enregistrer un repas du personnel (bon NP).' },
         { status: 400 }
       );
     }
@@ -106,12 +117,14 @@ export async function POST(
       where: { id: orderId },
       data: {
         status: 'SERVED',
-        paymentStatus: 'PAID',
+        paymentStatus: isStaffMeal ? 'STAFF_NP' : 'PAID',
         paymentMethod: resolvedMethod,
+        employeeId: employeeId || undefined,
+        employeeName: employeeName ? String(employeeName).trim() : undefined,
         cashierId: cashierId || undefined,
         cashSessionId: cashSessionId || undefined,
         servedAt: new Date(),
-        transactionRef: transactionRef ? String(transactionRef).trim() : undefined,
+        transactionRef: transactionRef ? String(transactionRef).trim() : (isStaffMeal ? `NP-${Date.now()}` : undefined),
       },
       include: {
         items: true,

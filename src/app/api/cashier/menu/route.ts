@@ -7,23 +7,35 @@ import { isAuthorizedTenant } from '@/lib/tenant-auth';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenantId');
+    const rawId = searchParams.get('tenantId') || searchParams.get('restaurantId');
 
-    if (!tenantId) {
-      return NextResponse.json({ error: 'tenantId requis' }, { status: 400 });
+    if (!rawId) {
+      return NextResponse.json({ error: 'tenantId ou restaurantId requis' }, { status: 400 });
     }
 
-    const isAuth = isAuthorizedTenant(req, tenantId);
+    const tenant = await prisma.tenant.findFirst({
+      where: {
+        OR: [{ id: rawId }, { subdomain: rawId }]
+      },
+      select: { id: true, subdomain: true }
+    });
+
+    if (!tenant) {
+      return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+
+    const isAuth = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
     if (!isAuth) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
     const categories = await (prisma as any).category.findMany({
-      where: { tenantId },
+      where: { tenantId: tenant.id },
       orderBy: { displayOrder: 'asc' },
       include: {
         items: {
           where: { isAvailable: true },
+          orderBy: { name: 'asc' }
         }
       }
     });
