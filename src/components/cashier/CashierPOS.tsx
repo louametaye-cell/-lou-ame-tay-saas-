@@ -36,7 +36,11 @@ import {
   Wifi,
   WifiOff,
   Bluetooth,
-  UserCheck
+  UserCheck,
+  DoorOpen,
+  Sparkles,
+  MapPin,
+  Layers
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
@@ -106,7 +110,12 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [bluetoothDeviceName, setBluetoothDeviceName] = useState<string>('');
   const [isConnectingBt, setIsConnectingBt] = useState(false);
 
-  const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'NEW_ORDER' | 'TAKEAWAY_ORDERS'>('QR_ORDERS');
+  const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'TABLE_PLAN' | 'NEW_ORDER' | 'TAKEAWAY_ORDERS'>('QR_ORDERS');
+  const [dbTables, setDbTables] = useState<any[]>([]);
+  const [zones, setZones] = useState<any[]>([]);
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('ALL');
+  const [tableStatusFilter, setTableStatusFilter] = useState<'ALL' | 'FREE' | 'OCCUPIED' | 'BILL_REQUESTED'>('ALL');
+  const [releasingTableNum, setReleasingTableNum] = useState<number | null>(null);
   const [menuCategories, setMenuCategories] = useState<any[]>([]);
   const [cartItems, setCartItems] = useState<CashierCartItem[]>([]);
   const [isSubmittingNewOrder, setIsSubmittingNewOrder] = useState(false);
@@ -618,6 +627,70 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
   };
 
+  const fetchDbTables = async () => {
+    try {
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
+      if (!storedId) return;
+      const res = await fetch(`/api/cashier/tables?restaurantId=${encodeURIComponent(storedId)}&cashierId=${encodeURIComponent(currentCashier?.id || '')}`, {
+        headers: {
+          'x-cashier-token': currentCashier ? `${currentCashier.id}:${storedId}` : '',
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.tables)) {
+          setDbTables(data.tables);
+          if (Array.isArray(data.zones)) {
+            setZones(data.zones);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Erreur fetchDbTables caisse:', e);
+    }
+  };
+
+  const handleReleaseTable = async (tableNum: number, tableId?: string) => {
+    const storedId = typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') || restaurantId : restaurantId;
+    if (!storedId) return;
+
+    try {
+      setReleasingTableNum(tableNum);
+      const res = await fetch('/api/cashier/tables', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-cashier-token': currentCashier ? `${currentCashier.id}:${storedId}` : '',
+        },
+        body: JSON.stringify({
+          restaurantId: storedId,
+          tenantId: storedId,
+          tableNumber: tableNum,
+          tableId: tableId,
+          cashierId: currentCashier?.id,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`Table ${tableNum < 10 ? '0' + tableNum : tableNum} libérée avec succès !`, {
+          description: 'La table est propre et prête pour accueillir les prochains clients.',
+        });
+        await Promise.all([fetchDbTables(), fetchOrders(), fetchWaiterCalls()]);
+      } else {
+        toast.error(data.error || 'Impossible de libérer la table.', {
+          description: data.unpaidOrdersCount
+            ? `${data.unpaidOrdersCount} commande(s) non encaissée(s) restante(s).`
+            : undefined,
+        });
+      }
+    } catch (err) {
+      toast.error('Erreur réseau lors de la libération de la table');
+    } finally {
+      setReleasingTableNum(null);
+    }
+  };
+
   useEffect(() => {
     if (!currentCashier) {
       // Saisie directe du PIN au clavier sur la page de connexion
@@ -640,10 +713,12 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
     fetchOrders();
     fetchWaiterCalls();
+    fetchDbTables();
     const interval = setInterval(() => {
       fetchOrders();
       fetchWaiterCalls();
-    }, 7000);
+      fetchDbTables();
+    }, 6000);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
@@ -652,7 +727,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         e.preventDefault();
         fetchOrders();
         fetchWaiterCalls();
-        toast.info('🔄 Liste des commandes et appels actualisée (Touche R)');
+        fetchDbTables();
+        toast.info('🔄 Liste des commandes, tables et appels actualisée (Touche R)');
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         setActiveFilter((prev) => (prev === 'ALL' ? 'EXPRESS' : prev === 'EXPRESS' ? 'TABLE' : 'ALL'));
@@ -1179,6 +1255,95 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       .reduce((sum, o) => sum + getOrderTotal(o), 0);
   }, [orders]);
 
+  // 🗺️ Calcul dynamique du statut de chaque table pour le Plan de Salle Caisse
+  const tableCardsData = useMemo(() => {
+    const baseTables = dbTables.length > 0 
+      ? dbTables 
+      : Array.from({ length: 12 }, (_, i) => ({
+          id: `virtual-table-${i + 1}`,
+          tableNumber: i + 1,
+          identifier: `${i + 1}`,
+          status: 'FREE',
+          clearedAt: null,
+          zone: null,
+        }));
+
+    return baseTables.map((t: any) => {
+      const tableNum = Number(t.tableNumber);
+      const clearedAtTime = t.clearedAt ? new Date(t.clearedAt).getTime() : null;
+
+      // Commandes pour cette table (exclut TAKEAWAY et annulées, et antérieures à clearedAt)
+      const tableOrders = orders.filter((o) => {
+        if (o.orderType === 'TAKEAWAY' || o.orderType === 'EXPRESS' || Number(o.tableNumber) !== tableNum || o.status === 'CANCELLED') return false;
+        if (!clearedAtTime) return true;
+        return new Date(o.createdAt).getTime() > clearedAtTime;
+      });
+
+      // Appel serveur / Demande d'addition
+      const hasBillCall = waiterCalls.some((c) => Number(c.tableNumber) === tableNum);
+
+      // Commandes non payées
+      const unpaidOrders = tableOrders.filter((o) => o.paymentStatus !== 'PAID' && o.paymentStatus !== 'STAFF_NP');
+      const latestUnpaidOrder = unpaidOrders.length > 0 ? unpaidOrders[unpaidOrders.length - 1] : undefined;
+
+      // Commandes payées
+      const paidOrders = tableOrders.filter((o) => o.paymentStatus === 'PAID' || o.paymentStatus === 'STAFF_NP');
+      const latestPaidOrder = paidOrders.length > 0 ? paidOrders[paidOrders.length - 1] : undefined;
+
+      // Détermination du code couleur strict :
+      // 🟢 FREE : Table libre (aucune commande active)
+      // 🔴 OCCUPIED : Table occupée (commandes en cours non payées)
+      // 🟡 BILL_REQUESTED : Table en attente d'addition ou déjà encaissée en attente de libération
+      let visualStatus: 'FREE' | 'OCCUPIED' | 'BILL_REQUESTED' = 'FREE';
+      let activeOrder: OrderType | undefined = undefined;
+
+      if (hasBillCall) {
+        visualStatus = 'BILL_REQUESTED';
+        activeOrder = latestUnpaidOrder || latestPaidOrder;
+      } else if (unpaidOrders.length > 0) {
+        visualStatus = 'OCCUPIED';
+        activeOrder = latestUnpaidOrder;
+      } else if (tableOrders.length > 0 && paidOrders.length === tableOrders.length) {
+        visualStatus = 'BILL_REQUESTED'; // Encaissée, attente départ / libération
+        activeOrder = latestPaidOrder;
+      }
+
+      const totalTableAmount = tableOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+      const unpaidAmount = unpaidOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+
+      return {
+        table: t,
+        tableNum,
+        identifier: t.identifier || String(tableNum),
+        zoneName: t.zone?.name || 'Salle Principale',
+        visualStatus,
+        tableOrders,
+        unpaidOrders,
+        paidOrders,
+        activeOrder,
+        totalTableAmount,
+        unpaidAmount,
+        hasBillCall,
+      };
+    });
+  }, [dbTables, orders, waiterCalls]);
+
+  const filteredTableCards = useMemo(() => {
+    return tableCardsData.filter((card) => {
+      if (selectedZoneFilter !== 'ALL' && card.zoneName !== selectedZoneFilter) {
+        return false;
+      }
+      if (tableStatusFilter === 'FREE' && card.visualStatus !== 'FREE') return false;
+      if (tableStatusFilter === 'OCCUPIED' && card.visualStatus !== 'OCCUPIED') return false;
+      if (tableStatusFilter === 'BILL_REQUESTED' && card.visualStatus !== 'BILL_REQUESTED') return false;
+      return true;
+    });
+  }, [tableCardsData, selectedZoneFilter, tableStatusFilter]);
+
+  const freeTablesCount = useMemo(() => tableCardsData.filter((c) => c.visualStatus === 'FREE').length, [tableCardsData]);
+  const occupiedTablesCount = useMemo(() => tableCardsData.filter((c) => c.visualStatus === 'OCCUPIED').length, [tableCardsData]);
+  const billRequestedTablesCount = useMemo(() => tableCardsData.filter((c) => c.visualStatus === 'BILL_REQUESTED').length, [tableCardsData]);
+
   const renderPaymentBadge = (method?: string | null) => {
     switch (method) {
       case 'WAVE':
@@ -1641,23 +1806,48 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </div>
       </header>
 
-        {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Vente Directe vs Ventes Comptoir */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">
+        {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Plan de Salle vs Vente Directe vs Ventes Comptoir */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setActiveMode('QR_ORDERS')}
-            className={`py-3.5 px-4 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
+            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
               activeMode === 'QR_ORDERS'
                 ? 'bg-slate-900 text-white border-slate-950 shadow-md ring-2 ring-slate-900/10'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
             <span className="text-xl">🪑</span>
-            <span>Ventes sur Table (QR)</span>
+            <span>Ventes sur Table</span>
             <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
               activeMode === 'QR_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
             }`}>
               {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('TABLE_PLAN');
+              fetchDbTables();
+            }}
+            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
+              activeMode === 'TABLE_PLAN'
+                ? 'bg-indigo-900 text-white border-indigo-950 shadow-md ring-2 ring-indigo-900/10'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <span className="text-xl">🗺️</span>
+            <span>Plan de Salle</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
+              activeMode === 'TABLE_PLAN'
+                ? 'bg-white/20 text-white'
+                : occupiedTablesCount > 0
+                ? 'bg-rose-100 text-rose-800'
+                : 'bg-emerald-100 text-emerald-800'
+            }`}>
+              {occupiedTablesCount > 0 ? `${occupiedTablesCount} occupée(s)` : 'Libres'}
             </span>
           </button>
 
@@ -1671,17 +1861,17 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               }
               setActiveMode('NEW_ORDER');
             }}
-            className={`py-3.5 px-4 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
+            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
               activeMode === 'NEW_ORDER'
                 ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-400/30'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
             <span className="text-xl">🛍️</span>
-            <span>+ Vente Directe / Comptoir</span>
+            <span>+ Vente Directe</span>
             {cartItems.length > 0 && (
               <span className="bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full text-xs font-mono font-black">
-                {cartItems.reduce((s, i) => s + i.quantity, 0)} plat(s)
+                {cartItems.reduce((s, i) => s + i.quantity, 0)}
               </span>
             )}
           </button>
@@ -1689,14 +1879,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           <button
             type="button"
             onClick={() => setActiveMode('TAKEAWAY_ORDERS')}
-            className={`py-3.5 px-4 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
+            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
               activeMode === 'TAKEAWAY_ORDERS'
                 ? 'bg-emerald-700 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
             <span className="text-xl">🧾</span>
-            <span>Ventes Comptoir du Jour</span>
+            <span>Ventes Comptoir</span>
             <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
               activeMode === 'TAKEAWAY_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
             }`}>
@@ -1842,6 +2032,290 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               ))}
             </div>
           )}
+        </section>
+      ) : activeMode === 'TABLE_PLAN' ? (
+        /* VUE 4 : PLAN DE SALLE & GESTION DES TABLES */
+        <section className="space-y-5 animate-in fade-in">
+          {/* Header & Statistiques Visuelles Plan de Salle */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-900 text-amber-400 flex items-center justify-center text-2xl shadow-xs">
+                🗺️
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                  <span>Plan de Salle &amp; Statut des Tables</span>
+                  <span className="text-xs font-mono font-bold bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded-full">
+                    {tableCardsData.length} tables
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Code couleur temps réel : 🟢 Libre • 🔴 Occupée • 🟡 Addition demandée / À libérer
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => fetchDbTables()}
+                className="px-3.5 py-2.5 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-2xl flex items-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs touch-manipulation"
+                title="Actualiser le plan de salle"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Actualiser les tables</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filtres d'état et de zone */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Filtres par état (Vert, Rouge, Jaune) */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => setTableStatusFilter('ALL')}
+                className={`px-3.5 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 border cursor-pointer touch-manipulation ${
+                  tableStatusFilter === 'ALL'
+                    ? 'bg-slate-900 text-white border-slate-950 shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+                }`}
+              >
+                <span>Toutes</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-white/20">
+                  {tableCardsData.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTableStatusFilter('FREE')}
+                className={`px-3.5 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 border cursor-pointer touch-manipulation ${
+                  tableStatusFilter === 'FREE'
+                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                    : 'bg-white text-emerald-800 hover:bg-emerald-50 border-emerald-200'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span>🟢 Libres</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-900 font-black">
+                  {freeTablesCount}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTableStatusFilter('OCCUPIED')}
+                className={`px-3.5 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 border cursor-pointer touch-manipulation ${
+                  tableStatusFilter === 'OCCUPIED'
+                    ? 'bg-rose-600 text-white border-rose-700 shadow-xs'
+                    : 'bg-white text-rose-800 hover:bg-rose-50 border-rose-200'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                <span>🔴 Occupées</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-100 text-rose-900 font-black">
+                  {occupiedTablesCount}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTableStatusFilter('BILL_REQUESTED')}
+                className={`px-3.5 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 border cursor-pointer touch-manipulation ${
+                  tableStatusFilter === 'BILL_REQUESTED'
+                    ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xs'
+                    : 'bg-white text-amber-900 hover:bg-amber-50 border-amber-300'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span>🟡 Addition / À Libérer</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-100 text-amber-950 font-black">
+                  {billRequestedTablesCount}
+                </span>
+              </button>
+            </div>
+
+            {/* Sélecteur de zone (si zones multiples) */}
+            {zones.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">Zone :</span>
+                <select
+                  value={selectedZoneFilter}
+                  onChange={(e) => setSelectedZoneFilter(e.target.value)}
+                  className="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-xl px-3 py-2 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="ALL">Toutes les zones ({zones.length})</option>
+                  {zones.map((z) => (
+                    <option key={z.id} value={z.name}>{z.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Grille Tactile des Tables */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredTableCards.map((card) => {
+              const isFree = card.visualStatus === 'FREE';
+              const isOccupied = card.visualStatus === 'OCCUPIED';
+              const isBill = card.visualStatus === 'BILL_REQUESTED';
+
+              return (
+                <div
+                  key={card.table.id || card.tableNum}
+                  className={`rounded-3xl border-2 p-4 flex flex-col justify-between transition-all shadow-xs hover:shadow-md ${
+                    isFree
+                      ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+                      : isOccupied
+                      ? 'bg-rose-50/80 border-rose-400 text-rose-950'
+                      : 'bg-amber-50 border-amber-400 text-amber-950 ring-2 ring-amber-400/30'
+                  }`}
+                >
+                  {/* Top Bar : Numéro & Zone */}
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-mono font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
+                            Table {card.identifier}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-600 block">
+                          📍 {card.zoneName}
+                        </span>
+                      </div>
+
+                      {/* Statut Badge */}
+                      <div>
+                        {isFree ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>LIBRE</span>
+                          </span>
+                        ) : isOccupied ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600 text-white shadow-xs animate-pulse">
+                            <UtensilsCrossed className="w-3.5 h-3.5" />
+                            <span>OCCUPÉE</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-amber-400 text-slate-950 shadow-xs animate-bounce">
+                            <Receipt className="w-3.5 h-3.5" />
+                            <span>{card.hasBillCall ? 'ADDITION !' : 'À LIBÉRER'}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contenu Carte */}
+                    <div className="mt-3.5 pt-3 border-t border-slate-200/80 space-y-2">
+                      {isFree ? (
+                        <div className="py-4 text-center space-y-1">
+                          <span className="text-3xl block">🍽️</span>
+                          <p className="text-xs font-bold text-emerald-800">
+                            Table propre et disponible
+                          </p>
+                          <p className="text-[11px] text-emerald-700/80">
+                            Prête pour de nouveaux clients
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Client Info */}
+                          {card.activeOrder?.customerName && (
+                            <div className="text-xs font-bold bg-white/80 px-2.5 py-1.5 rounded-xl text-slate-800 flex items-center gap-1.5 shadow-2xs">
+                              <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                              <span className="truncate">Client : <strong>{card.activeOrder.customerName}</strong></span>
+                            </div>
+                          )}
+
+                          {/* Montant & Plats */}
+                          <div className="bg-white/90 p-2.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-2xs">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-600 font-bold">
+                                {card.unpaidOrders.length > 0 ? 'À régler :' : 'Total réglé :'}
+                              </span>
+                              <span className="font-mono font-black text-base sm:text-lg text-slate-950">
+                                {formatFCFA(card.unpaidOrders.length > 0 ? card.unpaidAmount : card.totalTableAmount)}
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-bold text-slate-500 flex items-center justify-between">
+                              <span>{card.tableOrders.length} commande(s)</span>
+                              <span>
+                                {card.unpaidOrders.length === 0 ? '✅ Tout payé' : `⚠️ ${card.unpaidOrders.length} impayée(s)`}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Rapides Carte Table */}
+                  <div className="mt-4 pt-3 border-t border-slate-200/80 space-y-2">
+                    {/* Si la table est occupée avec commande non encaissée : Bouton Encaisser */}
+                    {isOccupied && card.activeOrder && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPaymentModal(card.activeOrder!)}
+                        className="w-full min-h-[46px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation active:scale-[0.98]"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Encaisser {formatFCFA(card.unpaidAmount)}</span>
+                      </button>
+                    )}
+
+                    {/* Si addition demandée et commande non encore encaissée */}
+                    {isBill && card.unpaidOrders.length > 0 && card.activeOrder && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPaymentModal(card.activeOrder!)}
+                        className="w-full min-h-[46px] px-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation active:scale-[0.98]"
+                      >
+                        <Receipt className="w-4 h-4" />
+                        <span>Encaisser l&apos;Addition</span>
+                      </button>
+                    )}
+
+                    {/* Bouton ACTION MAÎTRESSE : Libérer la table */}
+                    {!isFree && (
+                      <button
+                        type="button"
+                        onClick={() => handleReleaseTable(card.tableNum, card.table.id)}
+                        disabled={releasingTableNum === card.tableNum}
+                        className={`w-full min-h-[48px] px-3 font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${
+                          card.unpaidOrders.length === 0
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                            : 'bg-white hover:bg-rose-100 text-rose-800 border-2 border-rose-300'
+                        }`}
+                        title={
+                          card.unpaidOrders.length === 0
+                            ? 'Libérer la table (Remettre en service)'
+                            : 'Impossible de libérer : commandes non encaissées'
+                        }
+                      >
+                        <DoorOpen className="w-4 h-4 shrink-0" />
+                        <span>
+                          {releasingTableNum === card.tableNum
+                            ? 'Libération en cours...'
+                            : card.unpaidOrders.length === 0
+                            ? '🧹 Libérer la Table (Remettre Libre)'
+                            : '🧹 Libérer la Table'}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Pour les tables libres : indicateur visuel passif */}
+                    {isFree && (
+                      <div className="w-full py-2.5 text-center text-[11px] font-bold text-emerald-700 bg-emerald-100/60 rounded-xl">
+                        ✓ Prête pour service
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
       ) : (
         <>
@@ -2150,6 +2624,19 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                           <span>Reçu WhatsApp</span>
                         </button>
                       </div>
+
+                      {order.tableNumber > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleReleaseTable(order.tableNumber)}
+                          disabled={releasingTableNum === order.tableNumber}
+                          className="w-full min-h-[46px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer touch-manipulation"
+                          title="Libérer la table et la remettre en service"
+                        >
+                          <DoorOpen className="w-4 h-4 shrink-0" />
+                          <span>{releasingTableNum === order.tableNumber ? 'Libération...' : '🧹 Libérer la Table (Remettre Libre)'}</span>
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -2250,11 +2737,24 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                         <button
                           type="button"
                           onClick={() => handleOpenPaymentModal(order, 'CASH')}
-                          className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                          className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer touch-manipulation"
                         >
                           <CheckCircle2 className="w-4 h-4" />
                           <span>Encaisser &amp; Clôturer</span>
                         </button>
+
+                        {order.tableNumber > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleReleaseTable(order.tableNumber)}
+                            disabled={releasingTableNum === order.tableNumber}
+                            className="w-full min-h-[38px] px-3 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-700 border border-slate-200 hover:border-rose-300 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation"
+                            title="Tenter de libérer la table"
+                          >
+                            <DoorOpen className="w-3.5 h-3.5" />
+                            <span>Libérer la Table {order.tableNumber}</span>
+                          </button>
+                        )}
                       </div>
                     </>
                   )}

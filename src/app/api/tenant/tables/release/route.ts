@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { isAuthorizedTenant } from '@/lib/tenant-auth';
-import { invalidateLiveOrdersCache } from '@/lib/cache';
+import { executeReleaseTable } from '@/lib/table-release';
 
 function extractTenantId(req: Request, explicitId?: string | null): string | null {
   if (explicitId && explicitId.trim()) return explicitId.trim();
@@ -33,7 +31,7 @@ function extractTenantId(req: Request, explicitId?: string | null): string | nul
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { restaurantId, tenantId, tableNumber, tableId } = body;
+    const { restaurantId, tenantId, tableNumber, tableId, cashierId } = body;
 
     const rawTenantId = extractTenantId(req, tenantId || restaurantId);
     if (!rawTenantId) {
@@ -43,104 +41,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const tenant = await prisma.tenant.findFirst({
-      where: {
-        OR: [{ id: rawTenantId }, { subdomain: rawTenantId }],
-      },
-      select: { id: true, businessName: true, subdomain: true },
-    });
-
-    if (!tenant) {
-      return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
-    }
-
-    const num = parseInt(String(tableNumber), 10);
-    if (isNaN(num) && !tableId) {
-      return NextResponse.json({ error: 'tableNumber ou tableId valide est requis' }, { status: 400 });
-    }
-
-    const isStaff = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
-
-    // 🔒 SMART CONTEXTUAL RELEASE & INTÉGRITÉ FINANCIÈRE :
-    // Si l'appel ne provient pas du staff (ex: client sur smartphone choisissant "Nouveau repas"),
-    // vérifier impérativement qu'aucune commande active ou impayée n'est en cours sur cette table.
-    if (!isStaff) {
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-      const activeUnpaidOrders = await prisma.order.findMany({
-        where: {
-          tenantId: tenant.id,
-          tableNumber: num,
-          status: { not: 'CANCELLED' },
-          createdAt: { gte: fourHoursAgo },
-          OR: [
-            { status: { in: ['PENDING', 'PREPARING', 'READY'] } },
-            { paymentStatus: { not: 'PAID' } },
-          ],
-        },
-        select: { id: true },
-      });
-
-      if (activeUnpaidOrders.length > 0) {
-        return NextResponse.json(
-          { error: 'Une commande est active ou impayée sur cette table. Seul le personnel peut la libérer.' },
-          { status: 403 }
-        );
-      }
-    }
-
-    const now = new Date();
-
-    // Trouver ou créer la table pour garantir la persistance
-    let table = null;
-    if (tableId) {
-      table = await prisma.table.findUnique({ where: { id: tableId } });
-    }
-    if (!table && !isNaN(num)) {
-      table = await prisma.table.findFirst({
-        where: { tenantId: tenant.id, tableNumber: num },
-      });
-      if (!table) {
-        table = await prisma.table.create({
-          data: {
-            tenantId: tenant.id,
-            tableNumber: num,
-            status: 'FREE',
-            clearedAt: now,
-          },
-        });
-      }
-    }
-
-    if (!table) {
-      return NextResponse.json({ error: 'Table introuvable' }, { status: 404 });
-    }
-
-    // Mise à jour de la table vers le statut FREE avec clearedAt = now
-    const updatedTable = await prisma.table.update({
-      where: { id: table.id },
-      data: {
-        status: 'FREE',
-        clearedAt: now,
-      },
-    });
-
-    // Invalider le cache des commandes live
-    try {
-      await invalidateLiveOrdersCache(tenant.id);
-    } catch (e) {}
-
-    return NextResponse.json({
-      success: true,
-      message: `Table ${updatedTable.tableNumber} remise en service avec succès`,
-      table: {
-        id: updatedTable.id,
-        tableNumber: updatedTable.tableNumber,
-        status: 'FREE',
-        clearedAt: updatedTable.clearedAt,
-      },
+    return await executeReleaseTable({
+      req,
+      tenantIdOrSubdomain: rawTenantId,
+      tableId,
+      tableNumber,
+      cashierId,
     });
   } catch (error) {
-    console.error('Erreur lors de la remise en service de la table:', error);
+    console.error('Erreur lors de la remise en service de la table (/api/tenant/tables/release):', error);
     return NextResponse.json(
       { error: 'Erreur serveur lors de la libération de la table' },
       { status: 500 }
