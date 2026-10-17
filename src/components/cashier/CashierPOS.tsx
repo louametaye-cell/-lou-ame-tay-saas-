@@ -1660,23 +1660,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               <span className="text-slate-300">•</span>
               
               {currentCashier ? (
-                <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-0.5 rounded-lg text-slate-800 font-bold">
+                <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl text-slate-800 font-bold">
                   <User className="w-3.5 h-3.5 text-slate-600" />
                   <span>En poste : <strong>{currentCashier.name}</strong> ({currentCashier.shift})</span>
                   {currentSession && (
-                    <span className="text-slate-400 text-[10px]">
+                    <span className="text-slate-500 text-[11px] font-mono">
                       • Fond : {formatFCFA(Number(currentSession.openingFloat))}
                     </span>
                   )}
-                  <button
-                    type="button"
-                    onClick={handleLogoutCashier}
-                    className="ml-2 px-2.5 py-1 bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-700 border border-slate-200 hover:border-rose-300 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
-                    title="Déconnecter le caissier"
-                  >
-                    <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Déconnexion</span>
-                  </button>
                 </div>
               ) : (
                 <button
@@ -1768,14 +1759,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             </button>
           )}
 
-          {/* Bouton Déconnexion Caissier TRÈS VISIBLE */}
+          {/* Bouton Déconnexion Caissier UNIQUE & ALIGNÉ À DROITE */}
           <button
             type="button"
             onClick={handleLogoutCashier}
-            className="px-4 py-2.5 min-h-[44px] bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer touch-manipulation"
-            title="Déconnecter le caissier et verrouiller la caisse"
+            className="px-4 py-2.5 min-h-[48px] bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-sm hover:shadow-md flex items-center gap-2 transition-all cursor-pointer touch-manipulation"
+            title="Déconnexion"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span>Déconnexion</span>
           </button>
 
