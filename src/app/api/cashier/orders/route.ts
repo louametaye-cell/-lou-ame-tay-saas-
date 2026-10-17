@@ -26,6 +26,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
     }
 
+    // 1. Résoudre le restaurant par ID ou sous-domaine
+    const tenant = await prisma.tenant.findFirst({
+      where: {
+        OR: [{ id: tenantId }, { subdomain: tenantId }]
+      },
+      select: { id: true, subdomain: true, businessName: true }
+    });
+
+    if (!tenant) {
+      return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+    const resolvedTenantId = tenant.id;
+
     const isStaffMeal = paymentMethod === 'STAFF_MEAL';
     if (isStaffMeal && (!employeeName || !String(employeeName).trim())) {
       return NextResponse.json(
@@ -34,7 +47,35 @@ export async function POST(req: Request) {
       );
     }
 
-    const isAuth = isAuthorizedTenant(req, tenantId);
+    // 2. Contrôle de sécurité et d'isolation multi-tenant stricte :
+    // Autoriser soit le gérant (saas_token), soit le caissier actif rattaché à CE restaurant
+    let isAuth = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
+
+    if (!isAuth && cashierId) {
+      const dbCashier = await prisma.cashier.findFirst({
+        where: { id: cashierId, tenantId: resolvedTenantId, isActive: true }
+      });
+      if (dbCashier) {
+        isAuth = true;
+      }
+    }
+
+    if (!isAuth && cashSessionId) {
+      const dbSession = await prisma.cashSession.findFirst({
+        where: { id: cashSessionId, tenantId: resolvedTenantId, status: 'OPEN' }
+      });
+      if (dbSession) {
+        isAuth = true;
+      }
+    }
+
+    const cashierHeader = req.headers.get('x-cashier-token');
+    if (!isAuth && cashierHeader) {
+      if (cashierHeader.includes(tenant.id) || cashierHeader.includes(tenant.subdomain)) {
+        isAuth = true;
+      }
+    }
+
     if (!isAuth) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
@@ -59,7 +100,7 @@ export async function POST(req: Request) {
           // Enregistrer le mouvement
           await tx.stockMovement.create({
             data: {
-              tenantId,
+              tenantId: resolvedTenantId,
               menuItemId: dbItem.id,
               quantity: -item.quantity,
               type: 'SALE',
@@ -73,8 +114,7 @@ export async function POST(req: Request) {
       // 2. Création de la commande directe comptoir
       const newOrder = await tx.order.create({
         data: {
-          tenantId,
-          orderType: isPaidLater ? 'TABLE' : 'EXPRESS',
+          tenantId: resolvedTenantId,
           tableNumber: isPaidLater ? (tableNumber || 0) : 0,
           spaceType: isPaidLater ? 'TABLE' : 'COUNTER',
           destinationService: 'KITCHEN',
@@ -117,8 +157,8 @@ export async function POST(req: Request) {
     try {
       const { invalidateLiveOrdersCache, invalidateDashboardStatsCache } = await import('@/lib/cache');
       await Promise.all([
-        invalidateLiveOrdersCache(tenantId),
-        invalidateDashboardStatsCache(tenantId),
+        invalidateLiveOrdersCache(resolvedTenantId),
+        invalidateDashboardStatsCache(resolvedTenantId),
       ]);
     } catch (e) {}
 

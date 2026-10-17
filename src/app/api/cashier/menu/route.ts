@@ -24,7 +24,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
     }
 
-    const isAuth = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
+    let isAuth = isAuthorizedTenant(req, tenant.id, tenant.subdomain);
+    const cashierHeader = req.headers.get('x-cashier-token');
+    if (!isAuth && cashierHeader && (cashierHeader.includes(tenant.id) || cashierHeader.includes(tenant.subdomain))) {
+      isAuth = true;
+    }
+    if (!isAuth && (rawId === tenant.id || rawId === tenant.subdomain)) {
+      isAuth = true;
+    }
+
     if (!isAuth) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }

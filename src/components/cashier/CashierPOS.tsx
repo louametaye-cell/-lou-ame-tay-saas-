@@ -248,13 +248,17 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
   useEffect(() => {
     if (activeMode === 'NEW_ORDER' && menuCategories.length === 0) {
-      fetch('/api/cashier/menu?tenantId=' + (restaurantId || localStorage.getItem('current_restaurant_id')))
+      const targetResto = currentCashier?.tenantId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+      const headers: Record<string, string> = {};
+      if (targetResto) headers['x-cashier-token'] = `cashier_session_${targetResto}`;
+      fetch('/api/cashier/menu?tenantId=' + encodeURIComponent(targetResto), { headers })
         .then(res => res.json())
         .then(data => {
           if (data.categories) setMenuCategories(data.categories);
-        });
+        })
+        .catch(() => {});
     }
-  }, [activeMode, restaurantId]);
+  }, [activeMode, restaurantId, currentCashier]);
 
   const handleAddToCart = (item: any) => {
     setCartItems(prev => {
@@ -270,9 +274,15 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     setCartItems(prev => prev.map(i => i.menuItemId === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
   };
 
-  const handleSubmitNewOrder = async (method: string, customerName: string, isPaidLater: boolean = false, tableNumber: number = 0) => {
+  const handleSubmitNewOrder = async (
+    method: string, 
+    customerName: string, 
+    isPaidLater: boolean = false, 
+    tableNumber: number = 0,
+    employeeNameParam?: string
+  ) => {
     setIsSubmittingNewOrder(true);
-    const effectiveRestoId = restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+    const effectiveRestoId = currentCashier?.tenantId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
     const totalOrderAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     const orderPayload = {
@@ -283,7 +293,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       cashSessionId: currentSession?.id,
       customerName,
       isPaidLater,
-      tableNumber
+      tableNumber,
+      employeeName: employeeNameParam
     };
 
     // 📡 RÉALITÉ DU TERRAIN SÉNÉGAL : Si coupure réseau, ne jamais bloquer la caisse
@@ -296,8 +307,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         tableNumber: tableNumber,
         customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
         status: isPaidLater ? 'PENDING' : 'SERVED',
-        paymentStatus: isPaidLater ? 'PENDING' : 'PAID',
+        paymentStatus: isPaidLater ? 'PENDING' : (method === 'STAFF_MEAL' ? 'STAFF_NP' : 'PAID') as any,
         paymentMethod: method as any,
+        employeeName: employeeNameParam,
         items: cartItems.map((item, idx) => ({
           id: `item_${idx}_${Date.now()}`,
           name: item.name,
@@ -322,11 +334,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       setOrders(prev => [offlineOrder, ...prev]);
 
       // Impression immédiate du ticket thermique avec fallback automatique PDF
-      try {
-        EscPosPrinterService.printViaWindowFallback(offlineOrder, restaurantName);
-      } catch (printErr) {
-        console.error("Erreur d'impression:", printErr);
-      }
+      printOrderReceipt(offlineOrder);
 
       toast.warning(`📡 Mode Hors-Ligne : Commande enregistrée localement (${formatFCFA(totalOrderAmount)}). Ticket imprimé ! En attente de synchro.`);
       setCartItems([]);
@@ -336,18 +344,25 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (effectiveRestoId) {
+        headers['x-cashier-token'] = `cashier_session_${effectiveRestoId}`;
+        headers['x-tenant-token'] = effectiveRestoId;
+      }
+      if (currentCashier?.tenantId) {
+        headers['x-cashier-token'] = `cashier_session_${currentCashier.tenantId}`;
+      }
+
       const res = await fetch('/api/cashier/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(orderPayload)
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Commande enregistrée et encaissée !');
+        toast.success(method === 'STAFF_MEAL' ? 'Bon repas personnel (NP) consigné !' : 'Commande enregistrée et encaissée !');
         if (data.order) {
-          try {
-            EscPosPrinterService.printViaWindowFallback(data.order, restaurantName);
-          } catch (e) {}
+          printOrderReceipt(data.order);
         }
         setCartItems([]);
         setActiveMode('QR_ORDERS');
@@ -750,7 +765,11 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       setIsProcessingPayment(true);
       const res = await fetch(`/api/cashier/orders/${orderToPay.id}/pay`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-cashier-token': currentCashier ? `${currentCashier.id}:${effectiveRestoId}` : '',
+          'x-tenant-token': effectiveRestoId,
+        },
         body: JSON.stringify(paymentPayload),
       });
 

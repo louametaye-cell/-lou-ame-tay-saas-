@@ -38,7 +38,7 @@ export async function POST(
       include: {
         items: true,
         tenant: {
-          select: { id: true, businessName: true }
+          select: { id: true, businessName: true, subdomain: true }
         }
       }
     });
@@ -66,7 +66,7 @@ export async function POST(
 
     // 2. Vérification des autorisations :
     // Soit gérant/super-admin authentifié, soit caissier rattaché à ce tenantId
-    let isAuthorized = isAuthorizedTenant(req, order.tenantId);
+    let isAuthorized = isAuthorizedTenant(req, order.tenantId, order.tenant?.subdomain);
 
     if (!isAuthorized && cashierId) {
       const dbCashier = await prisma.cashier.findFirst({
@@ -95,6 +95,13 @@ export async function POST(
         select: { id: true }
       });
       if (match && match.id === order.tenantId) {
+        isAuthorized = true;
+      }
+    }
+
+    const cashierHeader = req.headers.get('x-cashier-token');
+    if (!isAuthorized && cashierHeader) {
+      if (cashierHeader.includes(order.tenantId) || (order.tenant?.subdomain && cashierHeader.includes(order.tenant.subdomain))) {
         isAuthorized = true;
       }
     }

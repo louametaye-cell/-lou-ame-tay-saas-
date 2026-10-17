@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 // Supabase Transaction Pooler (port 6543) avec PgBouncer en mode Transaction :
 // Permet de supporter des dizaines de connexions concurrentes simultanées sans saturer le pool session (EMAXCONNSESSION).
 const defaultDbUrl =
-  'postgresql://postgres.ghkxrrmxvhwoyodygohc:Digitalartswork%40mg2023@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=10&pool_timeout=20';
+  'postgresql://postgres.ghkxrrmxvhwoyodygohc:Digitalartswork%40mg2023@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&connection_limit=10&pool_timeout=20';
 
 const envUrl = process.env.DATABASE_URL?.trim();
 
@@ -16,6 +16,11 @@ let connectionUrl =
   envUrl && envUrl.startsWith('postgres') && !envUrl.includes('db.ghkxrrmxvhwoyodygohc.supabase.co')
     ? envUrl
     : defaultDbUrl;
+
+// S'assurer que sslmode=require est présent
+if (!connectionUrl.includes('sslmode=')) {
+  connectionUrl += connectionUrl.includes('?') ? '&sslmode=require' : '?sslmode=require';
+}
 
 // Si l'URL utilise le pooler (6543 ou 5432), s'assurer que pgbouncer et connection_limit sont présents
 if (connectionUrl.includes('6543') && !connectionUrl.includes('pgbouncer=true')) {
