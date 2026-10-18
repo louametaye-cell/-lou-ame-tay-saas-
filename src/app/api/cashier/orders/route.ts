@@ -235,24 +235,24 @@ export async function POST(req: Request) {
 
       // 3. Création de la commande directe comptoir
       // IMPORTANT : status TOUJOURS 'PENDING' pour que la brigade/barista puisse préparer et valider !
-      const isTakeaway = !isPaidLater && (!tableNumber || Number(tableNumber) === 0);
+      const isTakeaway = (!tableNumber || Number(tableNumber) === 0) || body.orderType === 'TAKEAWAY' || !isPaidLater;
       const destinationService = (!hasKitchenItems && hasBarItems) ? 'BAR' : 'KITCHEN';
 
       const newOrder = await tx.order.create({
         data: {
           tenantId: resolvedTenantId,
           orderType: isTakeaway ? 'TAKEAWAY' : 'TABLE',
-          tableNumber: isPaidLater ? (tableNumber || 0) : 0,
-          spaceType: isPaidLater ? 'TABLE' : 'COUNTER',
+          tableNumber: isTakeaway ? 0 : Number(tableNumber || 0),
+          spaceType: isTakeaway ? 'COUNTER' : 'TABLE',
           destinationService,
           locationDetail: isStaffMeal 
             ? ('REPAS PERSONNEL - ' + employeeName.trim())
-            : (isPaidLater 
-              ? (tableNumber ? 'TABLE ' + tableNumber : 'SUR PLACE') 
-              : 'À EMPORTER - Comptoir 1'),
+            : (isTakeaway 
+              ? 'À EMPORTER - Comptoir 1'
+              : (tableNumber ? 'TABLE ' + tableNumber : 'SUR PLACE')),
           customerName: isStaffMeal
             ? ('Employé : ' + employeeName.trim())
-            : (customerName || (isPaidLater ? `Table ${tableNumber || 0}` : 'Client Comptoir')),
+            : (customerName || (isTakeaway ? 'Client Comptoir' : `Table ${tableNumber || 0}`)),
           employeeId: isStaffMeal ? (employeeId || undefined) : undefined,
           employeeName: isStaffMeal ? employeeName.trim() : undefined,
           status: 'PENDING',

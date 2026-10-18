@@ -70,10 +70,10 @@ export async function GET(req: Request) {
     const startOfTodayDakar = getDakarStartOfToday();
 
     // Recherche des commandes actives (non annulées, non totalement servies)
+    // Récupère toutes les commandes PENDING et PREPARING pour ce restaurant (TABLE, TAKEAWAY, EXPRESS, COUNTER)
     const dbOrders = await (prisma as any).order.findMany({
       where: {
         tenantId: resolvedTenantId,
-        createdAt: { gte: startOfTodayDakar },
         status: {
           in: ['PENDING', 'PREPARING'],
         },
