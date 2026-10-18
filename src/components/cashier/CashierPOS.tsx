@@ -42,7 +42,11 @@ import {
   MapPin,
   Layers,
   LayoutGrid,
-  List
+  List,
+  Settings,
+  ChevronDown,
+  Plus,
+  Eye,
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
@@ -111,6 +115,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
   // 🖨️ États Gestion Imprimante (Bluetooth & Système / PDF)
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [printerType, setPrinterType] = useState<'native' | 'bluetooth'>('native');
   const [isBluetoothConnected, setIsBluetoothConnected] = useState(false);
   const [bluetoothDeviceName, setBluetoothDeviceName] = useState<string>('');
@@ -1625,23 +1630,20 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   // 🏪 VUE 2 : ESPACE CAISSE OPÉRATIONNEL (CAISSIER AUTHENTIFIÉ SOUS CODE PIN)
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 space-y-6">
-      {/* 1. TOP HEADER & CASHIER BAR */}
-      <header className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black shadow-xs">
-                <Receipt className="w-5 h-5" />
-              </div>
-              <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                Poste Caisse — Lou Ame Tay?
+      {/* 1. TOP HEADER & CASHIER BAR (Poste de travail épuré et focus) */}
+      <header className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        {/* A. Bloc discret à gauche (Session, Restaurant, Caissier) */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
+                {restaurantName || 'Poste Caisse'}
               </h1>
 
-
               {currentSession ? (
-                <span className="text-[11px] font-black text-emerald-900 bg-emerald-100 border border-emerald-300 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                  Caisse Ouverte
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Caisse ouverte
                 </span>
               ) : (
                 <button
@@ -1650,235 +1652,274 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     if (currentCashier) setIsOpenSessionModalOpen(true);
                     else setIsPinModalOpen(true);
                   }}
-                  className="text-[11px] font-black text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs hover:bg-amber-200 cursor-pointer transition-all"
+                  className="inline-flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full font-medium transition-colors cursor-pointer"
                 >
-                  <Unlock className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Caisse Fermée • Cliquez pour ouvrir</span>
+                  <Unlock className="w-3 h-3 text-amber-600" />
+                  <span>Caisse fermée • Ouvrir</span>
                 </button>
               )}
             </div>
 
-            {/* Sub-header info with Cashier and Contact */}
-            <div className="flex items-center gap-2.5 flex-wrap text-xs">
-              <span className="text-slate-800 font-black flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl">
-                <Store className="w-3.5 h-3.5 text-amber-600" />
-                {restaurantName}
-              </span>
-              <span className="text-slate-300">•</span>
-              
+            <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
               {currentCashier ? (
-                <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl text-slate-800 font-bold">
-                  <User className="w-3.5 h-3.5 text-slate-600" />
-                  <span>En poste : <strong>{currentCashier.name}</strong> ({currentCashier.shift})</span>
-                  {currentSession && (
-                    <span className="text-slate-500 text-[11px] font-mono">
-                      • Fond : {formatFCFA(Number(currentSession.openingFloat))}
-                    </span>
-                  )}
-                </div>
+                <span>
+                  Caissier : <strong className="text-slate-700 font-semibold">{currentCashier.name}</strong> ({currentCashier.shift})
+                </span>
               ) : (
                 <button
                   type="button"
                   onClick={() => setIsPinModalOpen(true)}
-                  className="text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-lg flex items-center gap-1"
+                  className="text-slate-600 hover:text-slate-900 underline font-medium"
                 >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>S'identifier avec code PIN</span>
+                  S&apos;identifier (Code PIN)
                 </button>
               )}
 
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-700 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                📞 Gérance : <a href={`tel:${restaurantPhone}`} className="text-amber-900 hover:underline">{restaurantPhone}</a>
-              </span>
+              {currentSession && (
+                <>
+                  <span className="text-slate-300">•</span>
+                  <span className="font-mono text-slate-500">
+                    Fond : {formatFCFA(Number(currentSession.openingFloat))}
+                  </span>
+                </>
+              )}
+
+              {restaurantPhone && (
+                <>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-slate-500">
+                    Gérance : <a href={`tel:${restaurantPhone}`} className="hover:text-slate-800">{restaurantPhone}</a>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Quick Actions, Network Status & KPIs */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Badge État Réseau Sénégal */}
-          {isOffline ? (
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 border border-rose-300 text-rose-800 rounded-2xl text-xs font-black animate-pulse shadow-2xs">
-              <WifiOff className="w-4 h-4 text-rose-600" />
-              <span>Mode Hors-Ligne</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl text-xs font-black shadow-2xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Réseau En Ligne</span>
-            </div>
-          )}
-
-          {/* Bouton de Synchronisation de la File d'Attente Locale */}
-          {pendingSyncCount > 0 && (
-            <button
-              type="button"
-              onClick={handleManualSync}
-              disabled={isSyncing || isOffline}
-              className="px-3.5 py-2 min-h-[44px] bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer touch-manipulation border border-amber-500/30"
-              title="Synchroniser les commandes enregistrées hors-ligne"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>En attente de synchro ({pendingSyncCount})</span>
-            </button>
-          )}
-
-          {/* Bouton Simulation Coupure Réseau (QA Terrain Sénégal) */}
-          <button
-            type="button"
-            onClick={handleToggleNetworkOutage}
-            className={`px-3 py-2 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 border active:scale-95 cursor-pointer touch-manipulation ${
-              isOffline
-                ? 'bg-rose-600 text-white border-rose-700 shadow-md animate-pulse'
-                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-            }`}
-            title="Simuler une coupure réseau Orange/Free"
-          >
-            {isOffline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4 text-slate-500" />}
-            <span>{isOffline ? 'Rétablir Réseau' : '🧪 Tester Coupure Réseau'}</span>
-          </button>
-
-          {/* 🖨️ Bouton Paramètres Imprimante Thermique */}
-          <button
-            type="button"
-            onClick={() => setIsPrinterModalOpen(true)}
-            className="px-3.5 py-2 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-2xl border border-slate-300 transition-all flex items-center gap-2 active:scale-95 cursor-pointer touch-manipulation shadow-2xs"
-            title="Configurer l'imprimante thermique (Bluetooth / Système)"
-          >
-            <Printer className="w-4 h-4 text-slate-700" />
-            <span className="hidden sm:inline">Imprimante :</span>
-            <span className={printerType === 'bluetooth' ? 'text-indigo-600 font-black' : 'text-slate-600 font-bold'}>
-              {printerType === 'bluetooth' ? 'BT 80mm' : 'Système/PDF'}
-            </span>
-          </button>
-
-          {/* Bouton Rouge Clôture de Caisse */}
+        {/* B. Actions & Menu Outils (À droite) */}
+        <div className="flex items-center gap-2.5 flex-wrap self-end md:self-auto relative">
+          {/* Bouton Rouge Clôture de Caisse (sobre, contour rouge) */}
           {currentSession && (
             <button
               type="button"
               onClick={handleOpenCloseSessionModal}
-              className="px-4 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all cursor-pointer touch-manipulation"
+              className="px-3.5 py-2 min-h-[44px] bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 font-semibold text-xs rounded-xl shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
               title="Clôturer la caisse et imprimer le rapport Z 80mm"
             >
-              <Lock className="w-4 h-4" />
+              <Lock className="w-3.5 h-3.5 text-red-500" />
               <span>Clôturer la Caisse (Z)</span>
             </button>
           )}
 
-          {/* Bouton Déconnexion Caissier UNIQUE & ALIGNÉ À DROITE */}
+          {/* Menu Déroulant "Paramètres & Réseau" ⚙️ */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+              className="px-3 py-2 min-h-[44px] bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+              title="Outils & Paramètres techniques"
+            >
+              <Settings className="w-4 h-4 text-slate-500" />
+              <span className="hidden sm:inline">Paramètres</span>
+              {isOffline && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              )}
+              {pendingSyncCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              )}
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {/* Menu Popover */}
+            {isSettingsMenuOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 text-xs space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
+                  <span className="font-semibold text-slate-800">Outils &amp; Paramètres</span>
+                  <button
+                    onClick={() => setIsSettingsMenuOpen(false)}
+                    className="p-1 hover:bg-slate-100 rounded-lg text-slate-400"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* État Réseau */}
+                <div className="px-3 py-2 flex items-center justify-between bg-slate-50 rounded-xl">
+                  <span className="text-slate-600">Connexion :</span>
+                  {isOffline ? (
+                    <span className="font-semibold text-rose-600 flex items-center gap-1">
+                      <WifiOff className="w-3.5 h-3.5" /> Hors-Ligne
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-emerald-600 flex items-center gap-1">
+                      <Wifi className="w-3.5 h-3.5" /> En Ligne
+                    </span>
+                  )}
+                </div>
+
+                {/* Bouton Synchro */}
+                {pendingSyncCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleManualSync();
+                      setIsSettingsMenuOpen(false);
+                    }}
+                    disabled={isSyncing || isOffline}
+                    className="w-full text-left px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-medium flex items-center justify-between transition-colors"
+                  >
+                    <span>Synchroniser commandes</span>
+                    <span className="font-mono font-bold">({pendingSyncCount})</span>
+                  </button>
+                )}
+
+                {/* Bouton Imprimante */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPrinterModalOpen(true);
+                    setIsSettingsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-xl font-medium flex items-center justify-between transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Printer className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Imprimante 80mm</span>
+                  </span>
+                  <span className="text-slate-500 text-[11px]">
+                    {printerType === 'bluetooth' ? 'BT 80mm' : 'Système/PDF'}
+                  </span>
+                </button>
+
+                {/* Tester Coupure */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleToggleNetworkOutage();
+                    setIsSettingsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-xl font-medium flex items-center gap-2 transition-colors"
+                >
+                  <WifiOff className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{isOffline ? 'Rétablir Réseau' : 'Tester Coupure Réseau'}</span>
+                </button>
+
+                {/* Rafraîchir données */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchOrders();
+                    setIsSettingsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-xl font-medium flex items-center gap-2 transition-colors border-t border-slate-100"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span>Actualiser la caisse</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Lien texte discret Déconnexion */}
           <button
             type="button"
             onClick={handleLogoutCashier}
-            className="px-4 py-2.5 min-h-[48px] bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs rounded-2xl shadow-sm hover:shadow-md flex items-center gap-2 transition-all cursor-pointer touch-manipulation"
-            title="Déconnexion"
+            className="text-slate-500 hover:text-slate-800 text-xs font-medium flex items-center gap-1.5 px-2.5 py-2 transition-colors cursor-pointer"
+            title="Déconnexion du poste"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
+            <LogOut className="w-4 h-4 text-slate-400" />
             <span>Déconnexion</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={fetchOrders}
-            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all border border-slate-200 active:scale-[0.97] touch-manipulation"
-            title="Actualiser les données caisse"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-600' : ''}`} />
           </button>
         </div>
       </header>
 
-        {/* 💳 NOUVELLE CARTE UNIQUE ET ÉPURÉE DU CHIFFRE D'AFFAIRES DU JOUR */}
-        <CashierDailyRevenueCard orders={orders} className="shrink-0" />
+      {/* 💳 CARTE UNIQUE ET ÉPURÉE DU CHIFFRE D'AFFAIRES DU JOUR */}
+      <CashierDailyRevenueCard orders={orders} className="shrink-0" />
 
-        {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Plan de Salle vs Vente Directe vs Ventes Comptoir */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveMode('QR_ORDERS')}
-            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
-              activeMode === 'QR_ORDERS'
-                ? 'bg-slate-900 text-white border-slate-950 shadow-md ring-2 ring-slate-900/10'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            <span className="text-xl">🪑</span>
-            <span>Ventes sur Table</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
-              activeMode === 'QR_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
-            }`}>
-              {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+      {/* 2. NAVIGATION (Tabs style Shadcn UI - fins, alignés, soulignés) */}
+      <div className="border-b border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+        <button
+          type="button"
+          onClick={() => setActiveMode('QR_ORDERS')}
+          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeMode === 'QR_ORDERS'
+              ? 'border-slate-900 text-slate-900 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <UtensilsCrossed className="w-4 h-4 text-slate-400" />
+          <span>Ventes sur Table</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
+            activeMode === 'QR_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveMode('TABLE_PLAN');
+            fetchDbTables();
+          }}
+          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeMode === 'TABLE_PLAN'
+              ? 'border-slate-900 text-slate-900 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <MapPin className="w-4 h-4 text-slate-400" />
+          <span>Plan de Salle</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
+            activeMode === 'TABLE_PLAN' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {occupiedTablesCount > 0 ? `${occupiedTablesCount} occupée(s)` : 'Libres'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (!currentSession) {
+              toast.error("Veuillez d'abord ouvrir une session de caisse pour saisir une vente directe.");
+              setIsOpenSessionModalOpen(true);
+              return;
+            }
+            setActiveMode('NEW_ORDER');
+          }}
+          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeMode === 'NEW_ORDER'
+              ? 'border-emerald-600 text-emerald-700 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Plus className="w-4 h-4 text-slate-400" />
+          <span>+ Vente Directe</span>
+          {cartItems.length > 0 && (
+            <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
+              {cartItems.reduce((s, i) => s + i.quantity, 0)}
             </span>
-          </button>
+          )}
+        </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveMode('TABLE_PLAN');
-              fetchDbTables();
-            }}
-            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
-              activeMode === 'TABLE_PLAN'
-                ? 'bg-indigo-900 text-white border-indigo-950 shadow-md ring-2 ring-indigo-900/10'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            <span className="text-xl">🗺️</span>
-            <span>Plan de Salle</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
-              activeMode === 'TABLE_PLAN'
-                ? 'bg-white/20 text-white'
-                : occupiedTablesCount > 0
-                ? 'bg-rose-100 text-rose-800'
-                : 'bg-emerald-100 text-emerald-800'
-            }`}>
-              {occupiedTablesCount > 0 ? `${occupiedTablesCount} occupée(s)` : 'Libres'}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (!currentSession) {
-                toast.error("Veuillez d'abord ouvrir une session de caisse pour saisir une vente directe.");
-                setIsOpenSessionModalOpen(true);
-                return;
-              }
-              setActiveMode('NEW_ORDER');
-            }}
-            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
-              activeMode === 'NEW_ORDER'
-                ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-400/30'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            <span className="text-xl">🛍️</span>
-            <span>+ Vente Directe</span>
-            {cartItems.length > 0 && (
-              <span className="bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full text-xs font-mono font-black">
-                {cartItems.reduce((s, i) => s + i.quantity, 0)}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveMode('TAKEAWAY_ORDERS')}
-            className={`py-3.5 px-3 min-h-[50px] rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation border ${
-              activeMode === 'TAKEAWAY_ORDERS'
-                ? 'bg-emerald-700 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            <span className="text-xl">🧾</span>
-            <span>Ventes Comptoir</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
-              activeMode === 'TAKEAWAY_ORDERS' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
-            }`}>
-              {takeawayOrders.length}
-            </span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setActiveMode('TAKEAWAY_ORDERS')}
+          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeMode === 'TAKEAWAY_ORDERS'
+              ? 'border-slate-900 text-slate-900 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Receipt className="w-4 h-4 text-slate-400" />
+          <span>Ventes Comptoir</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
+            activeMode === 'TAKEAWAY_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {takeawayOrders.length}
+          </span>
+        </button>
+      </div>
 
       {activeMode === 'NEW_ORDER' ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -2306,21 +2347,21 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         <>
       {/* 1.5. BANDEAU DES DEMANDES D'ADDITION ET APPELS DE SALLE */}
       {waiterCalls.length > 0 && (
-        <section className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-purple-400/80 space-y-3 animate-in fade-in">
+        <section className="bg-white border-2 border-amber-300 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-500/30 text-purple-200 border border-purple-400/40 rounded-2xl animate-bounce">
-                <Receipt className="w-5 h-5 text-amber-300" />
+              <div className="p-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl">
+                <Receipt className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
                   <span>Demande d&apos;addition en salle</span>
-                  <span className="bg-amber-400 text-slate-950 text-[11px] font-black px-2.5 py-0.5 rounded-full">
+                  <span className="bg-amber-100 text-amber-900 text-xs font-semibold px-2 py-0.5 rounded-full border border-amber-200">
                     {waiterCalls.length} en attente
                   </span>
                 </h3>
-                <p className="text-xs text-purple-200">
-                  Des clients demandent leur note à table. Préparez le ticket et procédez au règlement ci-dessous.
+                <p className="text-xs text-slate-500">
+                  Des clients demandent leur note à table. Préparez le ticket et procédez au règlement.
                 </p>
               </div>
             </div>
@@ -2329,13 +2370,13 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               {waiterCalls.map((call) => (
                 <div
                   key={call.id}
-                  className="bg-white/10 hover:bg-white/20 border border-purple-300/40 px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs font-black transition-all"
+                  className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-800"
                 >
-                  <span className="text-amber-300">Table {call.tableNumber}</span>
+                  <span>Table {call.tableNumber}</span>
                   <button
                     type="button"
                     onClick={() => handleResolveWaiterCall(call.id)}
-                    className="ml-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer"
+                    className="ml-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                     title="Acquitter l'appel"
                   >
                     Acquitter ✓
@@ -2349,19 +2390,19 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
       {/* 2. FILTER TABS & VIEW TOGGLE (DATA TABLE vs CARDS) */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           <button
             type="button"
             onClick={() => setActiveFilter('ALL')}
-            className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+            className={`px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 border cursor-pointer ${
               activeFilter === 'ALL'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'
             }`}
           >
             <span>Toutes les Tables Ouvertes</span>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-              activeFilter === 'ALL' ? 'bg-white/20 text-white font-black' : 'bg-slate-100 text-slate-700 font-bold'
+              activeFilter === 'ALL' ? 'bg-white/20 text-white font-bold' : 'bg-slate-100 text-slate-600 font-semibold'
             }`}>
               {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
             </span>
@@ -2370,15 +2411,17 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           <button
             type="button"
             onClick={() => setActiveFilter('TABLE')}
-            className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+            className={`px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 border cursor-pointer ${
               activeFilter === 'TABLE'
-                ? 'bg-amber-400 text-slate-950 border-amber-500/40 shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'
             }`}
           >
-            <UtensilsCrossed className="w-4 h-4 text-slate-950 shrink-0" />
+            <UtensilsCrossed className="w-3.5 h-3.5 text-slate-400" />
             <span>Tables à Encaisser</span>
-            <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono font-black">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+              activeFilter === 'TABLE' ? 'bg-white/20 text-white font-bold' : 'bg-slate-100 text-slate-600 font-semibold'
+            }`}>
               {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length}
             </span>
           </button>
@@ -2386,16 +2429,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           <button
             type="button"
             onClick={() => setActiveFilter('SERVED')}
-            className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+            className={`px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 border cursor-pointer ${
               activeFilter === 'SERVED'
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'
             }`}
           >
-            <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
             <span>Tables Clôturées du Jour</span>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-              activeFilter === 'SERVED' ? 'bg-white/20 text-white font-black' : 'bg-emerald-100 text-emerald-800 font-bold'
+              activeFilter === 'SERVED' ? 'bg-white/20 text-white font-bold' : 'bg-slate-100 text-slate-600 font-semibold'
             }`}>
               {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.status === 'SERVED' && o.paymentStatus === 'PAID').length}
             </span>
@@ -2403,29 +2446,29 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </div>
 
         {/* Sélecteur de mode d'affichage : Tableau de Données (Par défaut) vs Cartes */}
-        <div className="flex items-center bg-white p-1 border border-slate-200 rounded-2xl shadow-2xs">
+        <div className="flex items-center bg-white p-1 border border-slate-200 rounded-xl shadow-2xs">
           <button
             type="button"
             onClick={() => setOrdersViewMode('TABLE')}
-            className={`px-3.5 py-1.5 min-h-[40px] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 min-h-[38px] rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
               ordersViewMode === 'TABLE'
-                ? 'bg-slate-900 text-white shadow-xs font-black'
+                ? 'bg-slate-900 text-white shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
-            title="Vue Tableau de Données (Recherche instantanée & Pagination)"
+            title="Vue Tableau de Données"
           >
             <List className="w-4 h-4" />
-            <span>Tableau (Data Table)</span>
+            <span>Tableau</span>
           </button>
           <button
             type="button"
             onClick={() => setOrdersViewMode('CARDS')}
-            className={`px-3.5 py-1.5 min-h-[40px] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 min-h-[38px] rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
               ordersViewMode === 'CARDS'
-                ? 'bg-slate-900 text-white shadow-xs font-black'
+                ? 'bg-slate-900 text-white shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
-            title="Vue Cartes Visuelles"
+            title="Vue Cartes"
           >
             <LayoutGrid className="w-4 h-4" />
             <span>Cartes</span>
@@ -2435,51 +2478,50 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
       {/* 3. READY TO PICKUP BANNER */}
       {readyOrders.length > 0 && (
-        <section className="bg-amber-50/70 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-xs space-y-3">
+        <section className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
-              <h3 className="text-sm sm:text-base font-black text-amber-950">
-                📦 Commandes Prêtes à Retirer ({readyOrders.length})
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="text-sm font-semibold text-slate-900">
+                Commandes Prêtes à Retirer ({readyOrders.length})
               </h3>
             </div>
-            <span className="text-xs text-amber-900 font-bold">À remettre aux clients</span>
+            <span className="text-xs text-slate-500 font-medium">À remettre aux clients</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {readyOrders.map((ord) => (
               <div
                 key={ord.id}
-                className="bg-white border border-amber-200 p-3.5 rounded-2xl flex items-center justify-between gap-2 shadow-2xs"
+                className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl flex items-center justify-between gap-2"
               >
                 <div className="min-w-0 space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-black text-amber-700 text-xs">
+                    <span className="font-mono font-bold text-slate-900 text-xs">
                       #{ord.id.slice(-5).toUpperCase()}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500">
-                      {ord.orderType === 'EXPRESS' || ord.tableNumber === 0 ? '⚡ Express' : `Table ${ord.tableNumber}`}
+                    <span className="text-[10px] text-slate-500">
+                      {ord.orderType === 'EXPRESS' || ord.tableNumber === 0 ? 'Comptoir' : `Table ${ord.tableNumber}`}
                     </span>
-                    {renderPaymentBadge(ord.paymentMethod)}
                   </div>
-                  <span className="text-xs font-bold text-slate-900 block truncate">
-                    {ord.customerName || `${ord.items.length} articles`} • {formatFCFA(getOrderTotal(ord))}
+                  <span className="text-xs font-semibold text-slate-900 block truncate">
+                    {formatFCFA(getOrderTotal(ord))}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => handleCallCustomer(ord)}
-                    className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl transition-all active:scale-[0.97]"
+                    className="p-2 h-9 w-9 flex items-center justify-center bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg transition-colors cursor-pointer"
                     title="Appeler le client"
                   >
-                    <Volume2 className="w-4 h-4" />
+                    <Volume2 className="w-3.5 h-3.5 text-slate-500" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus(ord.id, 'SERVED')}
-                    className="px-3 py-2 min-h-[40px] bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs transition-all active:scale-[0.97]"
+                    className="px-2.5 py-1.5 h-9 border border-emerald-600 bg-white hover:bg-emerald-50 text-emerald-700 font-semibold text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
                     title="Marquer comme retirée"
                   >
                     Retiré ✓
@@ -2537,47 +2579,75 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         ) : (
           activeOrders.map((order) => {
             const isExpress = order.orderType === 'EXPRESS' || order.tableNumber === 0;
+            const isPaid = order.paymentStatus === 'PAID';
+            const isReady = order.status === 'READY';
+            const isPending = order.status === 'PENDING';
+            const isPreparing = order.status === 'PREPARING';
+            const isServed = order.status === 'SERVED';
+
+            // Bordure gauche sémantique selon l'état
+            const borderLeftColor = (isReady || (isServed && isPaid))
+              ? 'border-l-emerald-500'
+              : isPending
+              ? 'border-l-amber-400'
+              : isPreparing
+              ? 'border-l-slate-400'
+              : 'border-l-slate-300';
 
             return (
               <div
                 key={order.id}
-                className={`bg-white rounded-3xl border-2 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between transition-all ${
-                  isExpress ? 'border-amber-300' : 'border-slate-200'
-                }`}
+                className={`bg-white rounded-2xl border border-slate-200 ${borderLeftColor} border-l-4 shadow-xs hover:shadow-md flex flex-col justify-between transition-all overflow-hidden`}
               >
-                {/* Card Header */}
-                <div
-                  className={`p-4 flex items-center justify-between ${
-                    isExpress
-                      ? 'bg-slate-900 text-amber-400'
-                      : order.status === 'PENDING'
-                      ? 'bg-amber-400 text-slate-950'
-                      : 'bg-slate-900 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-base sm:text-lg font-black tracking-tight">
-                      {isExpress ? '⚡ COMPTOIR' : (order.locationDetail || `TABLE ${order.tableNumber}`)}
+                {/* En-tête de carte épuré : 2 badges max + Heure */}
+                <div className="px-4 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-bold text-slate-900 truncate">
+                      {isExpress ? '⚡ Comptoir' : (order.locationDetail || `Table ${order.tableNumber}`)}
                     </span>
-                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
-                      order.status === 'PENDING' && !isExpress ? 'bg-black/10 text-slate-950' : 'bg-white/15 text-white'
-                    }`}>
-                      #{order.id.slice(-5).toUpperCase()}
+                    <span className="text-[11px] font-mono text-slate-500 font-medium">
+                      #{order.id.slice(-4).toUpperCase()}
                     </span>
-                    {renderPaymentBadge(order.paymentMethod)}
+                    {/* Badge 2 : Statut unique */}
+                    {isPaid ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Payée
+                      </span>
+                    ) : isReady ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Prête
+                      </span>
+                    ) : isPreparing ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                        En cuisine
+                      </span>
+                    ) : isServed ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        À encaisser
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        En attente
+                      </span>
+                    )}
                   </div>
 
-                  <span className="text-[11px] font-bold opacity-90">
-                    {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'En direct'}
+                  <span className="text-[11px] font-mono text-slate-400 shrink-0">
+                    {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                   </span>
                 </div>
 
-                {/* Card Body */}
+                {/* Corps de carte : client & articles */}
                 <div className="p-4 space-y-3 flex-1">
                   {order.customerName && (
-                    <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Client : <strong>{order.customerName}</strong></span>
+                    <div className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
+                      <User className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Client : <strong className="text-slate-800">{order.customerName}</strong></span>
                     </div>
                   )}
 
@@ -2585,16 +2655,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     {order.items.map((item, idx) => (
                       <div key={idx} className="text-xs flex items-start justify-between gap-2 border-b border-slate-50 pb-1">
                         <div className="min-w-0">
-                          <span className="font-black text-slate-900">{item.quantity}x</span>{' '}
-                          <span className="font-bold text-slate-800">{item.name}</span>
+                          <span className="font-bold text-slate-900">{item.quantity}x</span>{' '}
+                          <span className="text-slate-700 font-medium">{item.name}</span>
                           {item.options?.side && (
-                            <div className="text-[11px] text-slate-500 pl-4">&gt; {item.options.side}</div>
+                            <div className="text-[11px] text-slate-400 pl-4">&gt; {item.options.side}</div>
                           )}
                           {item.options?.spiceLevel && (
-                            <div className="text-[11px] text-slate-500 pl-4">&gt; {item.options.spiceLevel}</div>
+                            <div className="text-[11px] text-slate-400 pl-4">&gt; {item.options.spiceLevel}</div>
                           )}
                         </div>
-                        <span className="font-mono font-bold text-slate-700 shrink-0">
+                        <span className="font-mono text-xs text-slate-600 shrink-0">
                           {formatFCFA(Number(item.price) * Number(item.quantity))}
                         </span>
                       </div>
@@ -2602,52 +2672,44 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   </div>
 
                   {order.customerNote && (
-                    <div className="text-[11px] italic bg-amber-50/80 border border-amber-200/80 text-amber-900 p-2.5 rounded-xl">
-                      <strong>Note client :</strong> {order.customerNote}
+                    <div className="text-[11px] italic bg-slate-50 border border-slate-200 text-slate-600 p-2 rounded-xl">
+                      <strong>Note :</strong> {order.customerNote}
                     </div>
                   )}
                 </div>
 
-                {/* Card Footer Actions */}
-                <div className="p-4 bg-slate-50 border-t border-slate-100 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-600 font-bold uppercase">
-                      {order.status === 'SERVED' ? 'Total Encaissé :' : 'Total à Encaisser :'}
+                {/* Pied de carte : Montant FCFA XXL & Actions */}
+                <div className="p-4 bg-white border-t border-slate-100 space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      {isServed && isPaid ? 'Total Encaissé' : 'Total Net'}
                     </span>
-                    <span className="text-base font-black text-slate-950 font-mono">{formatFCFA(getOrderTotal(order))}</span>
+                    <span className="text-2xl font-bold font-mono text-slate-900">
+                      {formatFCFA(getOrderTotal(order))}
+                    </span>
                   </div>
 
-                  {order.status === 'SERVED' && order.paymentStatus === 'PAID' ? (
+                  {isServed && isPaid ? (
                     <div className="space-y-2">
-                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold">
-                        <span className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          <span>Servie &amp; Clôturée</span>
-                        </span>
-                        <span className="font-mono text-[11px] text-emerald-700">
-                          {order.servedAt ? new Date(order.servedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Terminée'}
-                        </span>
-                      </div>
-
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => handlePrintReceipt(order)}
-                          className="min-h-[46px] px-3 bg-slate-900 hover:bg-slate-800 text-amber-400 font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+                          className="h-10 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
                           title="Réimprimer le ticket de caisse 80mm"
                         >
-                          <Printer className="w-4 h-4 shrink-0" />
+                          <Printer className="w-3.5 h-3.5 text-slate-500" />
                           <span>Ticket 80mm</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => handleSendWhatsAppReceipt(order)}
-                          className="min-h-[46px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+                          className="h-10 px-3 bg-white hover:bg-emerald-50 text-emerald-700 border border-slate-200 hover:border-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
                           title="Envoyer le reçu numérique par WhatsApp"
                         >
-                          <MessageCircle className="w-4 h-4 fill-current shrink-0" />
-                          <span>Reçu WhatsApp</span>
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>WhatsApp</span>
                         </button>
                       </div>
 
@@ -2656,133 +2718,108 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                           type="button"
                           onClick={() => handleReleaseTable(order.tableNumber)}
                           disabled={releasingTableNum === order.tableNumber}
-                          className="w-full min-h-[46px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer touch-manipulation"
-                          title="Libérer la table et la remettre en service"
+                          className="w-full h-10 px-3 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          title="Libérer la table"
                         >
-                          <DoorOpen className="w-4 h-4 shrink-0" />
-                          <span>{releasingTableNum === order.tableNumber ? 'Libération...' : '🧹 Libérer la Table (Remettre Libre)'}</span>
+                          <DoorOpen className="w-3.5 h-3.5 text-slate-500" />
+                          <span>{releasingTableNum === order.tableNumber ? 'Libération...' : `Libérer la Table ${order.tableNumber}`}</span>
                         </button>
                       )}
                     </div>
                   ) : (
-                    <>
-                      {order.status === 'SERVED' ? (
-                        <div className="p-2.5 bg-amber-50 border-2 border-amber-400 rounded-2xl flex items-center justify-between text-xs text-amber-950 font-black shadow-xs">
-                          <span className="flex items-center gap-1.5">
-                            <span className="text-base">🍽️</span>
-                            <span>Servie — En attente de paiement</span>
-                          </span>
-                          <span className="bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                            Non Encaissée
-                          </span>
-                        </div>
-                      ) : (
+                    <div className="space-y-2">
+                      {/* Contrôles d'état cuisine / ticket si commande en cours */}
+                      {!isServed && (
                         <div className="grid grid-cols-3 gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                            className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
+                            className={`h-8 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-all border cursor-pointer ${
                               order.status === 'PREPARING'
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                                : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-200'
+                                ? 'bg-slate-900 text-white border-slate-900'
+                                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                             }`}
                           >
-                            <ChefHat className="w-3.5 h-3.5" />
-                            <span>Préparer</span>
+                            <ChefHat className="w-3 h-3" />
+                            <span>Cuisine</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => handleUpdateStatus(order.id, 'READY')}
-                            className={`py-2 px-1.5 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
+                            className={`h-8 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-all border cursor-pointer ${
                               order.status === 'READY'
-                                ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                                : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                             }`}
                           >
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <Check className="w-3 h-3 stroke-[2.5]" />
                             <span>Prête</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => handlePrintReceipt(order)}
-                            className="py-2 px-1.5 min-h-[40px] bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.97] transition-all"
-                            title="Imprimer ticket de caisse"
+                            className="h-8 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                            title="Imprimer l'addition"
                           >
-                            <Printer className="w-3.5 h-3.5" />
+                            <Printer className="w-3 h-3 text-slate-500" />
                             <span>Ticket</span>
                           </button>
                         </div>
                       )}
 
-                      {/* Bouton Final Encaisser & Clôturer */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1 justify-between text-[11px]">
-                          <span className="text-slate-500 font-bold">Règlement :</span>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenPaymentModal(order, 'CASH')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-emerald-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Encaisser en Espèces"
-                            >
-                              <Banknote className="w-3 h-3" />
-                              <span>Cash</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenPaymentModal(order, 'WAVE')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-cyan-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Encaisser en Wave"
-                            >
-                              <Smartphone className="w-3 h-3" />
-                              <span>Wave</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenPaymentModal(order, 'ORANGE_MONEY')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-orange-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Encaisser en Orange Money"
-                            >
-                              <Phone className="w-3 h-3" />
-                              <span>OM</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenPaymentModal(order, 'YAS_MONEY')}
-                              className="px-2 py-1 rounded bg-slate-200 hover:bg-purple-600 hover:text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Encaisser en Yas Money"
-                            >
-                              <CreditCard className="w-3 h-3" />
-                              <span>Yas</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleOpenPaymentModal(order, 'CASH')}
-                          className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer touch-manipulation"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Encaisser &amp; Clôturer</span>
-                        </button>
-
-                        {order.tableNumber > 0 && (
+                      {/* Raccourcis modes de paiement discrets */}
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[11px] text-slate-400 font-medium">Mode rapide :</span>
+                        <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => handleReleaseTable(order.tableNumber)}
-                            disabled={releasingTableNum === order.tableNumber}
-                            className="w-full min-h-[38px] px-3 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-700 border border-slate-200 hover:border-rose-300 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation"
-                            title="Tenter de libérer la table"
+                            onClick={() => handleOpenPaymentModal(order, 'CASH')}
+                            className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold transition-colors cursor-pointer"
                           >
-                            <DoorOpen className="w-3.5 h-3.5" />
-                            <span>Libérer la Table {order.tableNumber}</span>
+                            Cash
                           </button>
-                        )}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPaymentModal(order, 'WAVE')}
+                            className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold transition-colors cursor-pointer"
+                          >
+                            Wave
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPaymentModal(order, 'ORANGE_MONEY')}
+                            className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold transition-colors cursor-pointer"
+                          >
+                            OM
+                          </button>
+                        </div>
                       </div>
-                    </>
+
+                      {/* Bouton d'action primaire : Encaisser (Émeraude) */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPaymentModal(order, 'CASH')}
+                        className="w-full h-11 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Encaisser {formatFCFA(getOrderTotal(order))}</span>
+                      </button>
+
+                      {order.tableNumber > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleReleaseTable(order.tableNumber)}
+                          disabled={releasingTableNum === order.tableNumber}
+                          className="w-full h-8 text-[11px] text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg font-medium flex items-center justify-center gap-1 transition-all cursor-pointer"
+                          title="Libérer la table"
+                        >
+                          <DoorOpen className="w-3 h-3" />
+                          <span>Libérer la Table {order.tableNumber}</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

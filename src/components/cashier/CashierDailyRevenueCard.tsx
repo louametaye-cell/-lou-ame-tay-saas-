@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { TrendingUp, Banknote, Smartphone, CreditCard } from 'lucide-react';
 import { OrderType } from '@/types';
 
 interface CashierDailyRevenueCardProps {
@@ -10,10 +9,11 @@ interface CashierDailyRevenueCardProps {
 }
 
 /**
- * Carte Unique de Chiffre d'Affaires du Jour pour le Poste Caisse
+ * Carte Unique et Épurée du Chiffre d'Affaires du Jour (Poste Caisse Focus)
  * - Calcule en temps réel la somme des commandes PAID du jour (createdAt >= startOfToday)
  * - Exclut rigoureusement les commandes CANCELLED et les repas personnels STAFF_MEAL / STAFF_NP
- * - Ventile par Espèces (Cash), Mobile Money (Wave, Orange Money, Free) et TPE (Carte)
+ * - Palette neutre : Total en grand (text-4xl text-slate-900 font-mono font-bold)
+ * - Répartition sobre et discrète (Espèces / Mobile Money / TPE) sans fonds colorés agressifs
  */
 export const CashierDailyRevenueCard: React.FC<CashierDailyRevenueCardProps> = ({
   orders,
@@ -21,7 +21,6 @@ export const CashierDailyRevenueCard: React.FC<CashierDailyRevenueCardProps> = (
 }) => {
   // Calcul dynamique et réactif du Chiffre d'Affaires réel du jour
   const breakdown = useMemo(() => {
-    // Calcul du début de journée dans le fuseau horaire sénégalais (Africa/Dakar - UTC+0)
     let startOfToday: number;
     try {
       const now = new Date();
@@ -54,15 +53,14 @@ export const CashierDailyRevenueCard: React.FC<CashierDailyRevenueCardProps> = (
       const isStaffMeal = o.paymentMethod === 'STAFF_MEAL' || o.paymentStatus === 'STAFF_NP' || (o as any).employeeName;
       if (isStaffMeal) return;
 
-      // 4. Vérification de la date de la journée (données chaudes)
+      // 4. Vérification de la date de la journée
       const orderTime = o.createdAt ? new Date(o.createdAt).getTime() : 0;
       if (orderTime < startOfToday) return;
 
-      // Montant de la commande
       const amount = Number((o as any).totalAmount ?? o.total ?? 0);
       if (isNaN(amount) || amount <= 0) return;
 
-      // 5. Ventilation précise par mode de règlement
+      // 5. Ventilation par mode de règlement
       const method = (o.paymentMethod || 'CASH').toUpperCase();
 
       if (method === 'CASH') {
@@ -83,7 +81,6 @@ export const CashierDailyRevenueCard: React.FC<CashierDailyRevenueCardProps> = (
       ) {
         cardTotal += amount;
       } else {
-        // Fallback en espèces si moyen non spécifié
         cashTotal += amount;
       }
     });
@@ -100,85 +97,62 @@ export const CashierDailyRevenueCard: React.FC<CashierDailyRevenueCardProps> = (
 
   return (
     <div
-      className={`bg-white border border-slate-200 rounded-2xl shadow-xs hover:shadow-md transition-shadow p-5 sm:p-6 ${className}`}
+      className={`bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4 ${className}`}
     >
-      {/* 1. En-tête discret */}
-      <div className="flex items-center justify-between gap-2 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shadow-2xs">
-            <TrendingUp className="w-4 h-4" />
-          </div>
-          <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
-            Chiffre d'Affaires du Jour
-          </span>
-        </div>
-        <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg">
+      {/* 1. Titre et Indicateur de Période sobre */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">
+          Chiffre d&apos;Affaires du Jour
+        </h2>
+        <span className="text-xs font-medium text-slate-400">
           Encaissé Réel
         </span>
       </div>
 
-      {/* 2. Chiffre Principal XXL */}
-      <div className="my-2 flex items-baseline gap-2">
-        <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight">
+      {/* 2. Total Principal XXL en noir pur font-mono font-bold */}
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl sm:text-4xl font-bold font-mono text-slate-900 tracking-tight">
           {breakdown.totalRevenue.toLocaleString('fr-FR')}
         </span>
-        <span className="text-base sm:text-lg font-bold text-slate-500">FCFA</span>
+        <span className="text-base sm:text-lg font-semibold font-mono text-slate-500">
+          FCFA
+        </span>
       </div>
 
-      {/* 3. Séparateur fin */}
-      <div className="border-t border-slate-100 my-4" />
+      {/* 3. Séparateur discret */}
+      <div className="border-t border-slate-100" />
 
-      {/* 4. Ventilation en 3 colonnes : Espèces, Mobile Money, TPE */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* 🟢 Espèces */}
-        <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 bg-emerald-600 text-white rounded-lg shrink-0">
-              <Banknote className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-emerald-800 block uppercase tracking-wider">
-                Espèces
-              </span>
-              <span className="text-sm sm:text-base font-black text-emerald-950 font-mono truncate block">
-                {breakdown.cashTotal.toLocaleString('fr-FR')} FCFA
-              </span>
-            </div>
-          </div>
+      {/* 4. Ventilation en puces discrètes et texte gris aligné */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+        {/* Espèces */}
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+          <span className="text-slate-500">Espèces :</span>
+          <span className="font-mono font-bold text-slate-900">
+            {breakdown.cashTotal.toLocaleString('fr-FR')} FCFA
+          </span>
         </div>
 
-        {/* 🔵 Mobile Money (Wave, OM, Free) */}
-        <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 bg-blue-600 text-white rounded-lg shrink-0">
-              <Smartphone className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-blue-800 block uppercase tracking-wider">
-                Mobile Money
-              </span>
-              <span className="text-sm sm:text-base font-black text-blue-950 font-mono truncate block">
-                {breakdown.mobileMoneyTotal.toLocaleString('fr-FR')} FCFA
-              </span>
-            </div>
-          </div>
+        <span className="text-slate-200 hidden sm:inline">•</span>
+
+        {/* Mobile Money */}
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+          <span className="text-slate-500">Mobile Money (Wave/OM) :</span>
+          <span className="font-mono font-bold text-slate-900">
+            {breakdown.mobileMoneyTotal.toLocaleString('fr-FR')} FCFA
+          </span>
         </div>
 
-        {/* 🟣 Terminal TPE (Carte Bancaire) */}
-        <div className="p-3 bg-purple-50/70 border border-purple-200/80 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 bg-purple-600 text-white rounded-lg shrink-0">
-              <CreditCard className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-purple-800 block uppercase tracking-wider">
-                Terminal TPE
-              </span>
-              <span className="text-sm sm:text-base font-black text-purple-950 font-mono truncate block">
-                {breakdown.cardTotal.toLocaleString('fr-FR')} FCFA
-              </span>
-            </div>
-          </div>
+        <span className="text-slate-200 hidden sm:inline">•</span>
+
+        {/* TPE / Carte */}
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+          <span className="text-slate-500">TPE Carte :</span>
+          <span className="font-mono font-bold text-slate-900">
+            {breakdown.cardTotal.toLocaleString('fr-FR')} FCFA
+          </span>
         </div>
       </div>
     </div>
