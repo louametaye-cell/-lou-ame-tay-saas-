@@ -564,8 +564,104 @@ export class EscPosPrinterService {
       discrepancyColor = '#2563eb'; // Bleu
     }
 
+    // Extraction d'audit enrichi éventuel (JSON structuré)
+    let auditObj: any = session.closureAudit || null;
+    let comparisonObj: any = session.comparison || null;
+    let userRawNotes = typeof session.notes === 'string' ? session.notes : '';
+
+    if (!auditObj && userRawNotes) {
+      try {
+        const parsed = JSON.parse(userRawNotes);
+        if (parsed && typeof parsed === 'object') {
+          auditObj = parsed;
+          userRawNotes = parsed.userNotes || '';
+          if (parsed.discrepancies) {
+            // Reconstitution comparison si besoin
+          }
+        }
+      } catch (e) {
+        // Plain text notes
+      }
+    }
+
+    if (auditObj?.userNotes !== undefined) {
+      userRawNotes = auditObj.userNotes;
+    }
+
     const printWindow = window.open('', '_blank', 'width=460,height=750');
     if (!printWindow) return;
+
+    // Génération du bloc coupures si disponible
+    const denominations = auditObj?.denominations || session.denominations || null;
+    let denominationsHtml = '';
+    if (denominations && typeof denominations === 'object') {
+      const denomRows = Object.entries(denominations)
+        .map(([val, qty]) => ({ val: Number(val), qty: Number(qty) || 0 }))
+        .filter((d) => d.qty > 0)
+        .sort((a, b) => b.val - a.val)
+        .map((d) => `
+          <div class="row" style="font-size: 11px;">
+            <span>• ${formatFCFA(d.val)} × ${d.qty}</span>
+            <span class="bold">${formatFCFA(d.val * d.qty)}</span>
+          </div>
+        `)
+        .join('');
+
+      if (denomRows) {
+        denominationsHtml = `
+          <div class="divider"></div>
+          <div class="bold" style="margin-bottom: 3px;">DÉTAIL COUPURES BILAN TIROIR :</div>
+          ${denomRows}
+        `;
+      }
+    }
+
+    // Tableau comparatif multi-canaux si disponible
+    let multiChannelHtml = '';
+    if (comparisonObj) {
+      const channels = [
+        { key: 'cash', label: 'Espèces (Tiroir)' },
+        { key: 'wave', label: 'Wave' },
+        { key: 'orangeMoney', label: 'Orange Money' },
+        { key: 'freeMoney', label: 'Free Money' },
+        { key: 'card', label: 'Cartes / TPE' },
+      ];
+
+      const rowsHtml = channels.map((c) => {
+        const item = comparisonObj[c.key];
+        if (!item) return '';
+        const diff = Number(item.discrepancy) || 0;
+        const diffColor = diff === 0 ? '#059669' : diff > 0 ? '#2563eb' : '#dc2626';
+        const diffSign = diff > 0 ? '+' : '';
+        return `
+          <div style="margin-bottom: 4px; font-size: 11px;">
+            <div class="row bold">
+              <span>${c.label}</span>
+              <span style="color: ${diffColor};">${diffSign}${formatFCFA(diff)}</span>
+            </div>
+            <div class="row" style="color: #555; font-size: 10px;">
+              <span>Attendu : ${formatFCFA(item.expected)}</span>
+              <span>Compté : ${formatFCFA(item.counted)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const totalItem = comparisonObj.total;
+      const totalDiff = Number(totalItem?.discrepancy) || 0;
+      const totalColor = totalDiff === 0 ? '#059669' : totalDiff > 0 ? '#2563eb' : '#dc2626';
+
+      multiChannelHtml = `
+        <div class="divider"></div>
+        <div class="bold" style="margin-bottom: 4px;">CONTRÔLE COMPARATIF MULTI-CANAUX :</div>
+        ${rowsHtml}
+        <div class="double-divider"></div>
+        <div class="row bold" style="font-size: 12px;">
+          <span>ÉCART CONSOLIDÉ GLOBAL :</span>
+          <span style="color: ${totalColor};">${totalDiff > 0 ? '+' : ''}${formatFCFA(totalDiff)}</span>
+        </div>
+      `;
+    }
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -637,18 +733,22 @@ export class EscPosPrinterService {
           </div>
           <div class="double-divider"></div>
 
-          <div class="bold" style="margin-bottom: 4px;">CONTROLE TIROIR-CAISSE (ESPECES) :</div>
-          <div class="row"><span>Espèces théoriques (Fond+Ventes):</span> <span class="bold">${formatFCFA(expectedCash)}</span></div>
-          <div class="row"><span>Espèces réelles comptées:</span> <span class="bold">${formatFCFA(countedCash)}</span></div>
-          <div class="row bold" style="font-size: 13px; color: ${discrepancyColor};">
-            <span>ÉCART DE CAISSE :</span>
-            <span>${discrepancyLabel}</span>
-          </div>
+          ${multiChannelHtml || `
+            <div class="bold" style="margin-bottom: 4px;">CONTROLE TIROIR-CAISSE (ESPECES) :</div>
+            <div class="row"><span>Espèces théoriques (Fond+Ventes):</span> <span class="bold">${formatFCFA(expectedCash)}</span></div>
+            <div class="row"><span>Espèces réelles comptées:</span> <span class="bold">${formatFCFA(countedCash)}</span></div>
+            <div class="row bold" style="font-size: 13px; color: ${discrepancyColor};">
+              <span>ÉCART DE CAISSE :</span>
+              <span>${discrepancyLabel}</span>
+            </div>
+          `}
 
-          ${session.notes ? `
+          ${denominationsHtml}
+
+          ${userRawNotes ? `
             <div class="divider"></div>
             <div class="bold">Notes / Observations :</div>
-            <div style="font-size: 11px;">${session.notes}</div>
+            <div style="font-size: 11px;">${userRawNotes}</div>
           ` : ''}
 
           <div class="divider"></div>

@@ -63,12 +63,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, session: null });
     }
 
-    // Compute live sales since session opened (strictement limitées aux commandes payées / PAID et non annulées)
+    // Compute live sales since session opened (strictement limitées aux commandes payées / PAID et non annulées, hors repas personnel)
     const orders = await prisma.order.findMany({
       where: {
         tenantId: session.tenantId,
         paymentStatus: 'PAID',
         status: { not: 'CANCELLED' },
+        paymentMethod: { not: PaymentMethod.STAFF_MEAL },
         OR: [
           { cashSessionId: session.id },
           {
@@ -233,16 +234,30 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { sessionId, countedCash, notes } = body;
+    const { 
+      sessionId, 
+      countedCash, 
+      countedWave = 0, 
+      countedOM = 0, 
+      countedFree = 0, 
+      countedCard = 0, 
+      denominations = {}, 
+      notes 
+    } = body;
 
     if (!sessionId) {
       return NextResponse.json({ error: 'Identifiant de session requis' }, { status: 400 });
     }
 
-    const countedVal = Number(countedCash);
-    if (isNaN(countedVal) || countedVal < 0) {
-      return NextResponse.json({ error: 'Le montant d\'espèces compté doit être un nombre valide' }, { status: 400 });
+    const countedCashVal = Number(countedCash);
+    if (isNaN(countedCashVal) || countedCashVal < 0) {
+      return NextResponse.json({ error: 'Le montant d\'espèces compté doit être un nombre valide (≥ 0 FCFA)' }, { status: 400 });
     }
+
+    const countedWaveVal = Math.max(0, Number(countedWave) || 0);
+    const countedOMVal = Math.max(0, Number(countedOM) || 0);
+    const countedFreeVal = Math.max(0, Number(countedFree) || 0);
+    const countedCardVal = Math.max(0, Number(countedCard) || 0);
 
     const session = await prisma.cashSession.findUnique({
       where: { id: sessionId },
@@ -269,12 +284,13 @@ export async function PATCH(req: Request) {
 
     const closedAt = new Date();
 
-    // Query all served and paid orders during this session (strictement limitées aux commandes payées / PAID et non annulées)
+    // Query all served and paid orders during this session (strictement limitées aux commandes payées / PAID et non annulées, hors repas personnel)
     const orders = await prisma.order.findMany({
       where: {
         tenantId: session.tenantId,
         paymentStatus: 'PAID',
         status: { not: 'CANCELLED' },
+        paymentMethod: { not: PaymentMethod.STAFF_MEAL },
         OR: [
           { cashSessionId: session.id },
           {
@@ -325,8 +341,55 @@ export async function PATCH(req: Request) {
 
     const totalRevenue = totalCash + totalWave + totalOM + totalYas + totalCard;
     const openingFloat = Number(session.openingFloat) || 0;
+    
+    // Attendu théorique par canal
     const expectedCash = openingFloat + totalCash;
-    const cashDiscrepancy = countedVal - expectedCash;
+    const expectedWave = totalWave;
+    const expectedOM = totalOM;
+    const expectedFree = totalYas;
+    const expectedCard = totalCard;
+    const expectedTotal = openingFloat + totalRevenue;
+
+    // Compté déclaré par canal
+    const countedTotal = countedCashVal + countedWaveVal + countedOMVal + countedFreeVal + countedCardVal;
+
+    // Écarts de caisse par canal (Compté - Attendu)
+    const cashDiscrepancy = countedCashVal - expectedCash;
+    const waveDiscrepancy = countedWaveVal - expectedWave;
+    const omDiscrepancy = countedOMVal - expectedOM;
+    const freeDiscrepancy = countedFreeVal - expectedFree;
+    const cardDiscrepancy = countedCardVal - expectedCard;
+    const totalDiscrepancy = countedTotal - expectedTotal;
+
+    // Structure d'audit enrichie pour traçabilité comptable infalsifiable
+    const closureAudit = {
+      userNotes: notes?.trim() || '',
+      denominations: denominations && typeof denominations === 'object' ? denominations : null,
+      counted: {
+        cash: countedCashVal,
+        wave: countedWaveVal,
+        orangeMoney: countedOMVal,
+        freeMoney: countedFreeVal,
+        card: countedCardVal,
+        total: countedTotal
+      },
+      expected: {
+        cash: expectedCash,
+        wave: expectedWave,
+        orangeMoney: expectedOM,
+        freeMoney: expectedFree,
+        card: expectedCard,
+        total: expectedTotal
+      },
+      discrepancies: {
+        cash: cashDiscrepancy,
+        wave: waveDiscrepancy,
+        orangeMoney: omDiscrepancy,
+        freeMoney: freeDiscrepancy,
+        card: cardDiscrepancy,
+        total: totalDiscrepancy
+      }
+    };
 
     // Update and finalize session
     const updated = await prisma.cashSession.update({
@@ -334,7 +397,7 @@ export async function PATCH(req: Request) {
       data: {
         status: 'CLOSED',
         closedAt,
-        countedCash: countedVal,
+        countedCash: countedCashVal,
         expectedCash,
         cashDiscrepancy,
         totalCash,
@@ -344,7 +407,7 @@ export async function PATCH(req: Request) {
         totalCard,
         totalRevenue,
         orderCount: orders.length,
-        notes: notes?.trim() || null
+        notes: JSON.stringify(closureAudit)
       },
       include: {
         cashier: true,
@@ -359,13 +422,59 @@ export async function PATCH(req: Request) {
       }
     });
 
+    const comparison = {
+      cash: {
+        label: 'Espèces (Fond + Ventes)',
+        expected: expectedCash,
+        counted: countedCashVal,
+        discrepancy: cashDiscrepancy
+      },
+      wave: {
+        label: 'Wave',
+        expected: expectedWave,
+        counted: countedWaveVal,
+        discrepancy: waveDiscrepancy
+      },
+      orangeMoney: {
+        label: 'Orange Money',
+        expected: expectedOM,
+        counted: countedOMVal,
+        discrepancy: omDiscrepancy
+      },
+      freeMoney: {
+        label: 'Free Money (Yas)',
+        expected: expectedFree,
+        counted: countedFreeVal,
+        discrepancy: freeDiscrepancy
+      },
+      card: {
+        label: 'Cartes / TPE',
+        expected: expectedCard,
+        counted: countedCardVal,
+        discrepancy: cardDiscrepancy
+      },
+      total: {
+        label: 'TOTAL GLOBAL',
+        expected: expectedTotal,
+        counted: countedTotal,
+        discrepancy: totalDiscrepancy
+      }
+    };
+
     return NextResponse.json({
       success: true,
-      session: updated,
-      message: 'Clôture de caisse validée et enregistrée'
+      session: {
+        ...updated,
+        comparison,
+        closureAudit
+      },
+      comparison,
+      closureAudit,
+      message: 'Clôture de caisse validée et enregistrée avec succès'
     });
   } catch (error) {
     console.error('Erreur clôture de caisse:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la clôture de caisse' }, { status: 500 });
   }
 }
+

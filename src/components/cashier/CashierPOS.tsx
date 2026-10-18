@@ -46,6 +46,7 @@ import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
 import { TactileGrid } from './TactileGrid';
 import { CashierCart, CashierCartItem } from './CashierCart';
+import { CashClosureModal } from './CashClosureModal';
 import { EscPosPrinterService } from '@/services/EscPosPrinterService';
 import { 
   resilientFetch, 
@@ -1128,26 +1129,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
   };
 
-  // Open Close Session Modal & Fetch live totals
-  const handleOpenCloseSessionModal = async () => {
+  // Open Close Session Modal (Clôture à l'aveugle multi-devises)
+  const handleOpenCloseSessionModal = () => {
     if (!currentSession) {
       toast.error('Aucune session active à clôturer');
       return;
     }
-
-    try {
-      const res = await fetch(`/api/cashier/session?sessionId=${currentSession.id}`);
-      const data = await res.json();
-      if (data.success && data.session) {
-        setLiveSessionDetails(data.session);
-        setCountedCashInput('');
-        setClosingNotes('');
-        setIsCloseSessionModalOpen(true);
-      }
-    } catch (e) {
-      toast.error('Erreur lors du calcul du bilan de session');
-    }
+    setLiveSessionDetails(currentSession);
+    setIsCloseSessionModalOpen(true);
   };
+
 
   // Submit Session Closure & Print Ticket Z
   const handleConfirmCloseSession = async (e: React.FormEvent) => {
@@ -2972,150 +2963,21 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </div>
       )}
 
-      {/* MODAL 3 : CLÔTURE COMPTABLE (RAPPORT Z 80MM) */}
-      {isCloseSessionModalOpen && liveSessionDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-slate-900 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="text-center space-y-1 border-b border-slate-100 pb-4">
-              <div className="w-12 h-12 bg-red-100 text-red-800 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-black text-slate-900">Clôture Comptable de Caisse</h3>
-              <p className="text-xs text-slate-500">
-                Caissier : <strong>{currentCashier?.name}</strong> • Ouvert depuis le {new Date(liveSessionDetails.openedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
-
-            {/* Bilan des Recettes Théoriques */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5 text-xs">
-              <div className="font-bold text-slate-700 uppercase tracking-wider text-[11px]">Ventilation des Recettes :</div>
-              
-              <div className="flex justify-between">
-                <span className="text-slate-600">• Fond de caisse initial :</span>
-                <span className="font-mono font-bold text-slate-900">{formatFCFA(Number(liveSessionDetails.openingFloat))}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">• Ventes Espèces (Cash) :</span>
-                <span className="font-mono font-bold text-slate-900">{formatFCFA(liveSessionDetails.liveTotals?.cash || 0)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">• Ventes Wave :</span>
-                <span className="font-mono font-bold text-cyan-800">{formatFCFA(liveSessionDetails.liveTotals?.wave || 0)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">• Ventes Orange Money :</span>
-                <span className="font-mono font-bold text-orange-800">{formatFCFA(liveSessionDetails.liveTotals?.orangeMoney || 0)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">• Ventes Yas Money (Free) :</span>
-                <span className="font-mono font-bold text-purple-800">{formatFCFA(liveSessionDetails.liveTotals?.yasMoney || 0)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">• Ventes Carte / TPE :</span>
-                <span className="font-mono font-bold text-blue-800">{formatFCFA(liveSessionDetails.liveTotals?.card || 0)}</span>
-              </div>
-
-              <div className="pt-2 border-t border-slate-200 flex justify-between font-black text-sm">
-                <span>TOTAL RECETTES SHIFT :</span>
-                <span className="font-mono text-slate-950">{formatFCFA(liveSessionDetails.liveTotals?.totalRevenue || 0)}</span>
-              </div>
-            </div>
-
-            {/* Comptage Réel & Calcul d'Écart */}
-            <form onSubmit={handleConfirmCloseSession} className="space-y-4">
-              <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-3">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-amber-950">Espèces théoriques attendues dans le tiroir :</span>
-                  <span className="font-mono font-black text-amber-950">
-                    {formatFCFA(Number(liveSessionDetails.openingFloat) + (liveSessionDetails.liveTotals?.cash || 0))}
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                    Montant d'espèces réellement compté dans le tiroir-caisse :
-                  </label>
-                  <div className="relative">
-                    <Banknote className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
-                    <input
-                      type="number"
-                      min="0"
-                      step="100"
-                      value={countedCashInput}
-                      onChange={(e) => setCountedCashInput(e.target.value)}
-                      placeholder="Ex: 85000"
-                      required
-                      className="w-full pl-11 pr-16 py-3 bg-white border border-slate-200 rounded-xl text-base font-mono font-black focus:outline-hidden focus:border-red-500 transition-all"
-                    />
-                    <span className="absolute right-3.5 top-3.5 text-xs font-bold text-slate-400">FCFA</span>
-                  </div>
-                </div>
-
-                {/* Live Discrepancy indicator */}
-                {countedCashInput && (
-                  (() => {
-                    const expected = Number(liveSessionDetails.openingFloat) + (liveSessionDetails.liveTotals?.cash || 0);
-                    const diff = Number(countedCashInput) - expected;
-                    if (diff === 0) {
-                      return (
-                        <div className="p-2.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-black flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                          <span>Caisse parfaitement équilibrée (Écart : 0 FCFA)</span>
-                        </div>
-                      );
-                    } else if (diff > 0) {
-                      return (
-                        <div className="p-2.5 bg-blue-100 text-blue-900 border border-blue-300 rounded-xl text-xs font-black flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-blue-700" />
-                          <span>Excédent de caisse constaté : +{formatFCFA(diff)}</span>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="p-2.5 bg-red-100 text-red-900 border border-red-300 rounded-xl text-xs font-black flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-red-700" />
-                          <span>Déficit / Manquant de caisse constaté : {formatFCFA(diff)}</span>
-                        </div>
-                      );
-                    }
-                  })()
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Observations / Notes de clôture (facultatif) :
-                </label>
-                <input
-                  type="text"
-                  value={closingNotes}
-                  onChange={(e) => setClosingNotes(e.target.value)}
-                  placeholder="Ex: Rendu de monnaie validé, rouleau ticket changé..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden focus:border-slate-400 transition-all"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCloseSessionModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition-all"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={isClosingSession || !countedCashInput}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-black text-xs rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>{isClosingSession ? 'Clôture en cours...' : 'Imprimer Ticket Z & Clôturer'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* MODAL 3 : CLÔTURE COMPTABLE INTELLIGENTE MULTI-CANAUX (RAPPORT Z 80MM) */}
+      <CashClosureModal
+        isOpen={isCloseSessionModalOpen}
+        onClose={() => setIsCloseSessionModalOpen(false)}
+        onSessionClosed={(closedSession) => {
+          setIsCloseSessionModalOpen(false);
+          setCurrentSession(null);
+          setCurrentCashier(null);
+          localStorage.removeItem('current_cashier');
+          toast.info('Session de caisse clôturée avec succès. Vous pouvez démarrer un nouveau shift.');
+        }}
+        session={liveSessionDetails || currentSession}
+        cashierName={currentCashier?.name}
+        restaurantName={restaurantName}
+      />
 
       {/* MODAL 4 : ENCAISSEMENT OBLIGATOIRE DE COMMANDE AVEC CALCUL MONNAIE */}
       {isPaymentModalOpen && orderToPay && (
