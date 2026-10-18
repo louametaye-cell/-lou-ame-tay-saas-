@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   UtensilsCrossed,
   MapPin,
-  Tag
+  Tag,
+  Trash2
 } from 'lucide-react';
 import { OrderType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
@@ -25,6 +26,7 @@ interface OrderDetailModalProps {
   onPayOrder?: (order: OrderType) => void;
   onPrintReceipt?: (order: OrderType) => void;
   onSendWhatsApp?: (order: OrderType) => void;
+  onCancelOrder?: (order: OrderType) => void;
 }
 
 export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
@@ -33,7 +35,8 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onClose,
   onPayOrder,
   onPrintReceipt,
-  onSendWhatsApp
+  onSendWhatsApp,
+  onCancelOrder
 }) => {
   if (!isOpen || !order) return null;
 
@@ -261,6 +264,36 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">WhatsApp</span>
             </button>
+          )}
+
+          {/* Bouton Annulation Conditionnelle */}
+          {onCancelOrder && order.status !== 'CANCELLED' && !isPaid && !isStaffMeal && (
+            order.status === 'PENDING' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onCancelOrder(order);
+                }}
+                className="py-3 px-3.5 min-h-[46px] bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                title="Annuler la commande (En attente)"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Annuler</span>
+              </button>
+            ) : (order.status === 'PREPARING' || order.status === 'READY') ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onCancelOrder(order);
+                }}
+                className="py-3 px-3.5 min-h-[46px] bg-slate-100 text-slate-400 opacity-40 cursor-not-allowed font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 transition-all"
+                title="Impossible d'annuler : la cuisine a déjà commencé la préparation. Contactez le gérant."
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="line-through">Annuler</span>
+              </button>
+            ) : null
           )}
 
           <button

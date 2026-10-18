@@ -47,6 +47,7 @@ import {
   ChevronDown,
   Plus,
   Eye,
+  Trash2,
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
@@ -118,6 +119,11 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [lastDirectOrder, setLastDirectOrder] = useState<any>(null);
   const [lastCashChange, setLastCashChange] = useState<number>(0);
   const [whatsAppRecipientPhone, setWhatsAppRecipientPhone] = useState<string>('');
+
+  // 🛑 États Modale d'Annulation de Commande (Règles strictes PENDING vs PREPARING)
+  const [orderToCancel, setOrderToCancel] = useState<OrderType | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancellingOrder, setIsCancellingOrder] = useState(false);
 
   // 🖨️ États Gestion Imprimante (Bluetooth & Système / PDF)
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
@@ -1036,6 +1042,77 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     } catch (e) {
       setPendingSyncCount(getOfflineQueue('CASHIER').length);
       toast.warning(`📡 Mode Hors-Ligne : Statut "${status}" enregistré en local. Synchronisation automatique au retour réseau.`);
+    }
+  };
+
+  // 🛑 Gestion sécurisée de l'annulation de commande (Cas 1: PENDING vs Cas 2: PREPARING/READY)
+  const handleRequestCancel = (order: OrderType) => {
+    // Cas 2 : Si la cuisine a déjà commencé la préparation ou si la commande est prête
+    if (order.status === 'PREPARING' || order.status === 'READY') {
+      toast.error("Impossible d'annuler : la cuisine a déjà commencé la préparation. Contactez le gérant.", {
+        duration: 6000,
+      });
+      return;
+    }
+
+    if (order.status === 'CANCELLED') {
+      toast.info("Cette commande est déjà annulée.");
+      return;
+    }
+
+    if (order.paymentStatus === 'PAID') {
+      toast.error("Impossible d'annuler une commande déjà encaissée. Contactez le gérant pour régularisation.");
+      return;
+    }
+
+    // Cas 1 : Statut PENDING -> Ouvrir la modale de confirmation
+    setOrderToCancel(order);
+    setIsCancelModalOpen(true);
+  };
+
+  const handleConfirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+    setIsCancellingOrder(true);
+
+    try {
+      const res = await fetch(`/api/cashier/orders/${orderToCancel.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: 'Annulation demandée en caisse',
+          cashierId: currentCashier?.id,
+          restaurantId: restaurantId || (orderToCancel as any).restaurantId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Impossible d'annuler la commande");
+        return;
+      }
+
+      // Mise à jour optimiste immédiate dans l'UI
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderToCancel.id ? { ...o, status: 'CANCELLED' as OrderStatus } : o))
+      );
+
+      // Mettre à jour la modale de détail si celle-ci était ouverte
+      if (selectedOrderForDetail?.id === orderToCancel.id) {
+        setSelectedOrderForDetail((prev) => (prev ? { ...prev, status: 'CANCELLED' as OrderStatus } : null));
+      }
+
+      toast.success(`Commande #${orderToCancel.id.slice(-5).toUpperCase()} annulée avec succès.`);
+      setIsCancelModalOpen(false);
+      setOrderToCancel(null);
+
+      // Rafraîchir les sessions si nécessaire
+      if (restaurantId) fetchActiveSession(restaurantId);
+    } catch (err) {
+      console.error("Erreur lors de l'annulation:", err);
+      toast.error("Erreur réseau lors de l'annulation de la commande");
+    } finally {
+      setIsCancellingOrder(false);
     }
   };
 
@@ -2607,6 +2684,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           onViewOrder={handleViewOrder}
           onPayOrder={(ord) => handleOpenPaymentModal(ord)}
           onPrintReceipt={(ord) => printOrderReceipt(ord)}
+          onCancelOrder={handleRequestCancel}
           isLoading={isLoading}
         />
       ) : (
@@ -2704,9 +2782,32 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                     )}
                   </div>
 
-                  <span className="text-[11px] font-mono text-slate-400 shrink-0">
-                    {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    </span>
+                    {!isPaid && order.status !== 'CANCELLED' && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRequestCancel(order);
+                        }}
+                        className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                          order.status === 'PENDING'
+                            ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                            : 'text-slate-300 opacity-40 cursor-not-allowed'
+                        }`}
+                        title={
+                          order.status === 'PENDING'
+                            ? 'Annuler la commande (En attente)'
+                            : "Impossible d'annuler : la cuisine a déjà commencé la préparation. Contactez le gérant."
+                        }
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Corps de carte : client & articles */}
@@ -3758,7 +3859,93 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         onPayOrder={(ord) => handleOpenPaymentModal(ord)}
         onPrintReceipt={(ord) => printOrderReceipt(ord)}
         onSendWhatsApp={(ord) => handleSendWhatsAppReceipt(ord)}
+        onCancelOrder={handleRequestCancel}
       />
+
+      {/* MODAL 6 : CONFIRMATION SÉCURISÉE D'ANNULATION DE COMMANDE */}
+      {isCancelModalOpen && orderToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-rose-100 text-slate-900 my-auto overflow-hidden flex flex-col p-6 space-y-4">
+            
+            {/* Header Icon + Titre */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0 shadow-xs">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-black text-slate-950">
+                  Annuler la commande #{orderToCancel.id.slice(-5).toUpperCase()} ?
+                </h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Cette commande sera immédiatement annulée et retirée de la brigade cuisine (KDS).
+                </p>
+              </div>
+            </div>
+
+            {/* Récapitulatif commande */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-medium">Emplacement :</span>
+                <span className="font-bold text-slate-900">
+                  {orderToCancel.locationDetail || (orderToCancel.orderType === 'EXPRESS' || orderToCancel.tableNumber === 0 ? 'Comptoir Express' : `Table ${orderToCancel.tableNumber}`)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-medium">Articles :</span>
+                <span className="font-bold text-slate-900">
+                  {orderToCancel.items?.length || 0} article(s)
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-2">
+                <span className="text-slate-500 font-medium">Total de la commande :</span>
+                <span className="font-mono font-black text-slate-950 text-sm">
+                  {formatFCFA(getOrderTotal(orderToCancel))}
+                </span>
+              </div>
+            </div>
+
+            {/* Avertissement règle métier */}
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-3 text-[11px] font-semibold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>Cette action est définitive. Les articles ne seront pas préparés en cuisine.</span>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCancelModalOpen(false);
+                  setOrderToCancel(null);
+                }}
+                disabled={isCancellingOrder}
+                className="flex-1 py-3 px-4 min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-2xl transition-all cursor-pointer"
+              >
+                Non, Conserver
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancelOrder}
+                disabled={isCancellingOrder}
+                className="flex-1 py-3 px-4 min-h-[48px] bg-rose-600 hover:bg-rose-700 active:scale-98 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                {isCancellingOrder ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Annulation...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Oui, Annuler</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

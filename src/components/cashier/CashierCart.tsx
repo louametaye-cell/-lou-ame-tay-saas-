@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Minus, Plus, Trash2, Banknote, Smartphone, Check, User, Phone, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, Trash2, Banknote, Smartphone, Check, User, Phone, AlertTriangle, Receipt, X } from 'lucide-react';
 import { formatFCFA } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -34,13 +34,15 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
   const [orderMode, setOrderMode] = useState<'COMPTOIR' | 'TABLE'>('COMPTOIR');
   const [tableNumber, setTableNumber] = useState<string>('');
   const [cashReceived, setCashReceived] = useState<string>('');
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const total = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
   const receivedNum = Number(cashReceived) || 0;
   const changeGiven = receivedNum >= total ? receivedNum - total : 0;
   const isCashInsufficient = paymentMethod === 'CASH' && orderMode === 'COMPTOIR' && total > 0 && receivedNum < total;
 
-  const handleSubmit = async () => {
+  // Étape 1 : Validation des données et ouverture de la modale de confirmation
+  const handlePreSubmit = () => {
     if (items.length === 0) return;
     
     // Validation stricte repas personnel
@@ -56,6 +58,13 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
         return;
       }
     }
+
+    setIsConfirmModalOpen(true);
+  };
+
+  // Étape 2 : Confirmation finale et soumission
+  const handleConfirmSubmit = async () => {
+    setIsConfirmModalOpen(false);
 
     const isPaidLater = orderMode === 'TABLE' && paymentMethod !== 'STAFF_MEAL';
     const finalTable = isPaidLater ? (parseInt(tableNumber) || 0) : 0;
@@ -300,7 +309,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
 
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={handlePreSubmit}
               disabled={isSubmitting || items.length === 0 || isCashInsufficient}
               className={`w-full min-h-[52px] py-3.5 text-white rounded-2xl font-black text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] touch-manipulation cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 paymentMethod === 'STAFF_MEAL' ? 'bg-purple-700 hover:bg-purple-800' : 'bg-emerald-600 hover:bg-emerald-500'
@@ -321,7 +330,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
         ) : (
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={handlePreSubmit}
             disabled={isSubmitting || items.length === 0}
             className="w-full min-h-[52px] py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white rounded-2xl font-black text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] touch-manipulation cursor-pointer"
           >
@@ -335,6 +344,104 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
           </button>
         )}
       </div>
+
+      {/* 🛡️ MODALE DE CONFIRMATION AVANT ENCAISSEMENT (Mission 1) */}
+      {isConfirmModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-center space-y-4 animate-in zoom-in-95">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto shadow-xs">
+              <Receipt className="w-7 h-7 text-emerald-700" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                {orderMode === 'TABLE' ? 'Confirmer l\'envoi en cuisine ?' : 'Confirmer la vente ?'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Veuillez vérifier les informations avant validation.
+              </p>
+            </div>
+
+            {/* Récapitulatif épuré */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left space-y-2.5 text-xs">
+              <div className="flex justify-between items-center text-sm font-black text-slate-900">
+                <span className="text-slate-500 font-bold uppercase tracking-wide text-xs">Total :</span>
+                <span className="font-mono text-base text-emerald-950">{formatFCFA(total)}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="text-slate-500 font-medium">Mode de règlement :</span>
+                <span className="font-bold">
+                  {paymentMethod === 'CASH'
+                    ? 'Espèces'
+                    : paymentMethod === 'WAVE'
+                    ? 'Wave'
+                    : paymentMethod === 'ORANGE_MONEY'
+                    ? 'Orange Money'
+                    : 'Repas Personnel (NP)'}
+                </span>
+              </div>
+
+              {paymentMethod === 'CASH' && orderMode === 'COMPTOIR' && (
+                <>
+                  <div className="flex justify-between items-center text-slate-700">
+                    <span className="text-slate-500 font-medium">Montant reçu :</span>
+                    <span className="font-mono font-bold">{formatFCFA(receivedNum)}</span>
+                  </div>
+                  <div className="p-2.5 bg-emerald-100/80 border border-emerald-300 rounded-xl flex justify-between items-center text-emerald-950 font-bold">
+                    <span>Monnaie à rendre :</span>
+                    <span className="font-mono font-black text-base text-emerald-900">{formatFCFA(changeGiven)}</span>
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-between items-center text-slate-700 pt-1.5 border-t border-slate-200">
+                <span className="text-slate-500 font-medium">Destination :</span>
+                <span className="font-bold">
+                  {orderMode === 'TABLE' ? `Sur place (Table ${tableNumber || '?'})` : 'Comptoir'}
+                </span>
+              </div>
+
+              {(customerName.trim() || employeeName.trim()) && (
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="text-slate-500 font-medium">{paymentMethod === 'STAFF_MEAL' ? 'Employé :' : 'Client :'}</span>
+                  <span className="font-bold truncate max-w-[160px]">
+                    {paymentMethod === 'STAFF_MEAL' ? employeeName : customerName}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Boutons d'action : Primaire vert & Secondaire gris */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={handleConfirmSubmit}
+                disabled={isSubmitting}
+                className="w-full min-h-[48px] py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation disabled:opacity-50"
+              >
+                <Check className="w-5 h-5 stroke-[2.5]" />
+                <span>
+                  {orderMode === 'TABLE'
+                    ? 'Oui, Envoyer en Cuisine'
+                    : paymentMethod === 'STAFF_MEAL'
+                    ? 'Oui, Valider le Bon NP'
+                    : 'Oui, Encaisser et Imprimer'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsConfirmModalOpen(false)}
+                disabled={isSubmitting}
+                className="w-full min-h-[44px] py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors cursor-pointer touch-manipulation"
+              >
+                Non, Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

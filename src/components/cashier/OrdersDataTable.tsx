@@ -17,7 +17,8 @@ import {
   UserCheck, 
   ArrowUpDown,
   RefreshCw,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { OrderType } from '@/types';
 import { formatFCFA } from '@/lib/utils';
@@ -27,6 +28,7 @@ interface OrdersDataTableProps {
   onViewOrder: (order: OrderType) => void;
   onPayOrder: (order: OrderType) => void;
   onPrintReceipt: (order: OrderType) => void;
+  onCancelOrder?: (order: OrderType) => void;
   isLoading?: boolean;
 }
 
@@ -35,6 +37,7 @@ export const OrdersDataTable: React.FC<OrdersDataTableProps> = ({
   onViewOrder,
   onPayOrder,
   onPrintReceipt,
+  onCancelOrder,
   isLoading = false
 }) => {
   // Filtres et Recherche
@@ -440,6 +443,29 @@ export const OrdersDataTable: React.FC<OrdersDataTableProps> = ({
                         >
                           <Printer className="w-3.5 h-3.5" />
                         </button>
+
+                        {/* Bouton Annulation Conditionnelle */}
+                        {onCancelOrder && order.status !== 'CANCELLED' && !isPaid && !isStaffMeal && (
+                          order.status === 'PENDING' ? (
+                            <button
+                              type="button"
+                              onClick={() => onCancelOrder(order)}
+                              className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all cursor-pointer"
+                              title="Annuler la commande (En attente)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (order.status === 'PREPARING' || order.status === 'READY') ? (
+                            <button
+                              type="button"
+                              onClick={() => onCancelOrder(order)}
+                              className="p-1.5 bg-slate-100 text-slate-400 opacity-40 cursor-not-allowed rounded-xl transition-all"
+                              title="Impossible d'annuler : la cuisine a déjà commencé la préparation. Contactez le gérant."
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          ) : null
+                        )}
 
                       </div>
                     </td>
