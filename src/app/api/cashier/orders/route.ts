@@ -252,7 +252,7 @@ export async function POST(req: Request) {
               : (tableNumber ? 'TABLE ' + tableNumber : 'SUR PLACE')),
           customerName: isStaffMeal
             ? ('Employé : ' + employeeName.trim())
-            : (customerName || (isTakeaway ? 'Client Comptoir' : `Table ${tableNumber || 0}`)),
+            : (customerName && String(customerName).trim() ? String(customerName).trim() : (isTakeaway ? 'Client anonyme' : `Table ${tableNumber || 0}`)),
           employeeId: isStaffMeal ? (employeeId || undefined) : undefined,
           employeeName: isStaffMeal ? employeeName.trim() : undefined,
           status: 'PENDING',

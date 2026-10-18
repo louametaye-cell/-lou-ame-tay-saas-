@@ -119,18 +119,16 @@ export async function POST(
       resolvedMethod = paymentMethod as PaymentMethod;
     }
 
-    // 4. Mettre à jour la commande
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
-        status: 'SERVED',
+        // Intégrité Règle 10.4 : Ne jamais écraser le statut de préparation (PENDING/PREPARING/READY) lors d'un encaissement financier
         paymentStatus: isStaffMeal ? 'STAFF_NP' : 'PAID',
         paymentMethod: resolvedMethod,
         employeeId: employeeId || undefined,
         employeeName: employeeName ? String(employeeName).trim() : undefined,
         cashierId: cashierId || undefined,
         cashSessionId: cashSessionId || undefined,
-        servedAt: new Date(),
         transactionRef: transactionRef ? String(transactionRef).trim() : (isStaffMeal ? `NP-${Date.now()}` : undefined),
       },
       include: {

@@ -113,6 +113,12 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
+  // 🎉 États Modale de Confirmation de Succès (Vente Directe)
+  const [isDirectSuccessModalOpen, setIsDirectSuccessModalOpen] = useState(false);
+  const [lastDirectOrder, setLastDirectOrder] = useState<any>(null);
+  const [lastCashChange, setLastCashChange] = useState<number>(0);
+  const [whatsAppRecipientPhone, setWhatsAppRecipientPhone] = useState<string>('');
+
   // 🖨️ États Gestion Imprimante (Bluetooth & Système / PDF)
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
@@ -270,6 +276,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     }
   };
 
+
   useEffect(() => {
     if (activeMode === 'NEW_ORDER' && menuCategories.length === 0) {
       const targetResto = currentCashier?.tenantId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
@@ -303,7 +310,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     customerName: string, 
     isPaidLater: boolean = false, 
     tableNumber: number = 0,
-    employeeNameParam?: string
+    employeeNameParam?: string,
+    cashDetails?: { amountReceived: number; changeGiven: number }
   ) => {
     setIsSubmittingNewOrder(true);
     const effectiveRestoId = currentCashier?.tenantId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
@@ -329,8 +337,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         restaurantId: effectiveRestoId,
         orderType: tableNumber === 0 ? 'TAKEAWAY' : 'TABLE',
         tableNumber: tableNumber,
-        customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
-        status: isPaidLater ? 'PENDING' : 'SERVED',
+        customerName: customerName || (tableNumber === 0 ? 'Client anonyme' : `Table ${tableNumber}`),
+        status: 'PENDING',
         paymentStatus: isPaidLater ? 'PENDING' : (method === 'STAFF_MEAL' ? 'STAFF_NP' : 'PAID') as any,
         paymentMethod: method as any,
         employeeName: employeeNameParam,
@@ -362,7 +370,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
       toast.warning(`📡 Mode Hors-Ligne : Commande enregistrée localement (${formatFCFA(totalOrderAmount)}). Ticket imprimé ! En attente de synchro.`);
       setCartItems([]);
-      setActiveMode('QR_ORDERS');
+      
+      if (tableNumber === 0 && !isPaidLater) {
+        setLastDirectOrder(offlineOrder);
+        setLastCashChange(cashDetails?.changeGiven || 0);
+        const phoneMatch = (customerName || '').match(/(?:\+?221\s?)?[76][0-9\s]{7,10}/);
+        setWhatsAppRecipientPhone(phoneMatch ? phoneMatch[0].replace(/\s+/g, '') : '');
+        setIsDirectSuccessModalOpen(true);
+      } else {
+        setActiveMode('QR_ORDERS');
+      }
       setIsSubmittingNewOrder(false);
       return;
     }
@@ -389,9 +406,19 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           printOrderReceipt(data.order);
         }
         setCartItems([]);
-        setActiveMode(tableNumber === 0 ? 'TAKEAWAY_ORDERS' : 'QR_ORDERS');
         fetchActiveSession(effectiveRestoId);
         fetchOrders();
+
+        // 🎉 Déclenchement de la modale de succès après validation
+        if (tableNumber === 0 && !isPaidLater && data.order) {
+          setLastDirectOrder(data.order);
+          setLastCashChange(cashDetails?.changeGiven || 0);
+          const phoneMatch = (customerName || '').match(/(?:\+?221\s?)?[76][0-9\s]{7,10}/);
+          setWhatsAppRecipientPhone(phoneMatch ? phoneMatch[0].replace(/\s+/g, '') : '');
+          setIsDirectSuccessModalOpen(true);
+        } else {
+          setActiveMode(tableNumber === 0 ? 'TAKEAWAY_ORDERS' : 'QR_ORDERS');
+        }
       } else {
         toast.error(data.error || 'Erreur lors de la commande');
       }
@@ -403,8 +430,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         restaurantId: effectiveRestoId,
         orderType: tableNumber === 0 ? 'TAKEAWAY' : 'TABLE',
         tableNumber: tableNumber,
-        customerName: customerName || (tableNumber === 0 ? 'Comptoir Express' : `Table ${tableNumber}`),
-        status: isPaidLater ? 'PENDING' : 'SERVED',
+        customerName: customerName || (tableNumber === 0 ? 'Client anonyme' : `Table ${tableNumber}`),
+        status: 'PENDING',
         paymentStatus: isPaidLater ? 'PENDING' : 'PAID',
         paymentMethod: method as any,
         items: cartItems.map((item, idx) => ({
@@ -436,7 +463,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
       toast.warning(`📡 Coupure réseau détectée : Commande enregistrée localement. Ticket imprimé ! En attente de synchro.`);
       setCartItems([]);
-      setActiveMode('QR_ORDERS');
+      
+      if (tableNumber === 0 && !isPaidLater) {
+        setLastDirectOrder(offlineOrder);
+        setLastCashChange(cashDetails?.changeGiven || 0);
+        const phoneMatch = (customerName || '').match(/(?:\+?221\s?)?[76][0-9\s]{7,10}/);
+        setWhatsAppRecipientPhone(phoneMatch ? phoneMatch[0].replace(/\s+/g, '') : '');
+        setIsDirectSuccessModalOpen(true);
+      } else {
+        setActiveMode('QR_ORDERS');
+      }
     } finally {
       setIsSubmittingNewOrder(false);
     }
@@ -1025,9 +1061,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     });
   };
 
-  const handleSendWhatsAppReceipt = (order: OrderType) => {
-    const itemsList = order.items
-      .map((item) => `• ${item.quantity}x ${item.name} (${formatFCFA((item.price || 0) * (item.quantity || 1))})`)
+  const handleSendWhatsAppReceipt = (order: OrderType | any, targetPhone?: string) => {
+    if (!order) return;
+    const phoneToUse = targetPhone || whatsAppRecipientPhone || order.customerName?.match(/(?:\+?221\s?)?[76][0-9\s]{7,10}/)?.[0]?.replace(/\s+/g, '') || '';
+    const cleanPhone = phoneToUse.replace(/[^0-9]/g, '');
+    const formattedPhone = cleanPhone.startsWith('221') ? cleanPhone : (cleanPhone ? `221${cleanPhone}` : '');
+
+    const itemsList = (order.items || [])
+      .map((item: any) => `• ${item.quantity}x ${item.name} (${formatFCFA((item.price || 0) * (item.quantity || 1))})`)
       .join('\n');
 
     const tableLabel = order.tableNumber && order.tableNumber > 0 ? `Table ${order.tableNumber}` : 'Comptoir';
@@ -1049,7 +1090,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       `🔗 Consulter mon reçu certifié : ${receiptUrl}`;
 
     const encoded = encodeURIComponent(message);
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    const url = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encoded}` : `https://api.whatsapp.com/send?text=${encoded}`;
+    window.open(url, '_blank');
   };
 
   // Cashier PIN Login Handlers
@@ -1887,16 +1929,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             }
             setActiveMode('NEW_ORDER');
           }}
-          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+          className={`my-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer shadow-sm ${
             activeMode === 'NEW_ORDER'
-              ? 'border-emerald-600 text-emerald-700 font-bold'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'bg-emerald-600 text-white ring-2 ring-emerald-400 ring-offset-2'
+              : 'bg-emerald-600 hover:bg-emerald-500 text-white'
           }`}
         >
-          <Plus className="w-4 h-4 text-slate-400" />
+          <Plus className="w-4 h-4 stroke-[3] text-white" />
           <span>+ Vente Directe</span>
           {cartItems.length > 0 && (
-            <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">
+            <span className="bg-white text-emerald-800 px-2 py-0.5 rounded-full text-xs font-mono font-black shadow-xs">
               {cartItems.reduce((s, i) => s + i.quantity, 0)}
             </span>
           )}
@@ -2006,12 +2048,16 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
                   {/* Card Body */}
                   <div className="p-4 space-y-3 flex-1">
-                    {order.customerName && (
-                      <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Client : <strong>{order.customerName}</strong></span>
+                    <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl flex items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span className="truncate">
+                          Client : <strong className={order.customerName && order.customerName !== 'Client anonyme' ? 'text-slate-900' : 'text-slate-500 italic'}>
+                            {order.customerName && order.customerName !== 'Client anonyme' ? order.customerName : 'Client anonyme'}
+                          </strong>
+                        </span>
                       </div>
-                    )}
+                    </div>
 
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                       {order.items.map((item, idx) => (
@@ -2045,14 +2091,24 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => printOrderReceipt(order)}
-                      className="w-full py-2.5 px-3 min-h-[44px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
-                    >
-                      <Printer className="w-4 h-4 text-amber-400" />
-                      <span>Réimprimer le Ticket</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => printOrderReceipt(order)}
+                        className="py-2.5 px-2 min-h-[44px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                      >
+                        <Printer className="w-4 h-4 text-amber-400" />
+                        <span>Ticket</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendWhatsAppReceipt(order)}
+                        className="py-2.5 px-2 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                      >
+                        <MessageCircle className="w-4 h-4 text-white" />
+                        <span>WhatsApp</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -3561,6 +3617,118 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                   Terminer
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4B : CONFIRMATION SUCCÈS VENTE DIRECTE ENCAISSÉE */}
+      {isDirectSuccessModalOpen && lastDirectOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-emerald-500 text-slate-900 space-y-5 text-center relative overflow-hidden">
+            {/* Ruban haut vert */}
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 border-2 border-emerald-300 flex items-center justify-center shadow-lg shadow-emerald-500/20 animate-bounce">
+                <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  VENTE DIRECTE ENCAISSÉE !
+                </h3>
+                <p className="text-xs text-slate-500 font-bold mt-0.5">
+                  Ticket #{lastDirectOrder.id ? lastDirectOrder.id.slice(-5).toUpperCase() : 'OK'} •{' '}
+                  <span className="text-emerald-700 font-black">
+                    {lastDirectOrder.customerName && lastDirectOrder.customerName !== 'Client anonyme'
+                      ? lastDirectOrder.customerName
+                      : 'Client anonyme'}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {/* Total Encaissé XXL & Rendu de monnaie */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2">
+              <div>
+                <span className="text-[11px] uppercase tracking-wider text-emerald-800 font-bold block">
+                  Montant Total Encaissé
+                </span>
+                <span className="text-3xl sm:text-4xl font-black font-mono text-emerald-950">
+                  {formatFCFA(getOrderTotal(lastDirectOrder))}
+                </span>
+              </div>
+              {lastCashChange > 0 && (
+                <div className="pt-2 border-t border-emerald-200/80 flex items-center justify-between text-xs">
+                  <span className="font-bold text-emerald-800">Monnaie rendue au client :</span>
+                  <span className="font-mono font-black text-emerald-900 text-sm">
+                    {formatFCFA(lastCashChange)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Saisie rapide téléphone si besoin pour WhatsApp */}
+            <div className="text-left space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              <label className="block text-[11px] font-bold text-slate-700">
+                Téléphone pour le reçu WhatsApp (facultatif) :
+              </label>
+              <div className="relative">
+                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="tel"
+                  placeholder="Ex: 77 123 45 67"
+                  value={whatsAppRecipientPhone}
+                  onChange={(e) => setWhatsAppRecipientPhone(e.target.value)}
+                  className="w-full text-xs font-mono font-bold pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-300 focus:border-emerald-500 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Les 3 Actions Demandées */}
+            <div className="space-y-2 pt-1">
+              <div className="grid grid-cols-2 gap-2">
+                {/* 1. Imprimer le ticket */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    printOrderReceipt(lastDirectOrder);
+                  }}
+                  className="py-3 px-3 min-h-[48px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 touch-manipulation"
+                >
+                  <Printer className="w-4 h-4 text-amber-400" />
+                  <span>Imprimer Ticket</span>
+                </button>
+
+                {/* 2. Envoyer par WhatsApp */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSendWhatsAppReceipt(lastDirectOrder, whatsAppRecipientPhone);
+                  }}
+                  className="py-3 px-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 touch-manipulation"
+                >
+                  <MessageCircle className="w-4 h-4 text-white" />
+                  <span>WhatsApp</span>
+                </button>
+              </div>
+
+              {/* 3. Nouvelle Vente */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDirectSuccessModalOpen(false);
+                  setLastDirectOrder(null);
+                  setLastCashChange(0);
+                  setWhatsAppRecipientPhone('');
+                  setCartItems([]);
+                  setActiveMode('NEW_ORDER');
+                }}
+                className="w-full py-3 min-h-[48px] bg-amber-400 hover:bg-amber-500 text-slate-950 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 touch-manipulation"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Nouvelle Vente</span>
+              </button>
             </div>
           </div>
         </div>

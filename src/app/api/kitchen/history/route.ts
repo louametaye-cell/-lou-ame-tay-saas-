@@ -101,7 +101,7 @@ export async function GET(req: Request) {
 
       // La commande ne va dans l'historique de cette station QUE si ses items ont été traités (READY ou SERVED)
       // Ne JAMAIS afficher de commande dont les items de la station sont encore PENDING !
-      const isStationTreated = stationItems.every((i: any) => i.status === 'READY' || i.status === 'SERVED') || o.status === 'SERVED';
+      const isStationTreated = stationItems.length > 0 && stationItems.every((i: any) => i.status === 'READY' || i.status === 'SERVED');
       if (!isStationTreated) continue;
 
       // Détermination claire de l'origine
