@@ -35,6 +35,23 @@ export async function POST(req: Request) {
             qrScansToday: { increment: 1 },
           },
         });
+
+        // Track scan on specific table and its physical support
+        if (tableNumber !== undefined && tableNumber !== null) {
+          const parsedTableNum = parseInt(String(tableNumber), 10);
+          if (!isNaN(parsedTableNum)) {
+            await (prisma as any).table.updateMany({
+              where: {
+                tenantId: dbTenant.id,
+                tableNumber: parsedTableNum,
+              },
+              data: {
+                scansToday: { increment: 1 },
+                totalScans: { increment: 1 },
+              },
+            });
+          }
+        }
       }
     } catch (e) {
       // Non-blocking

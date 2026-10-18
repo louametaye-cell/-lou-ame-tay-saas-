@@ -39,6 +39,7 @@ import {
   Upload,
   Key,
   User,
+  Boxes,
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -57,6 +58,7 @@ import { RestaurantEditModal } from '@/components/RestaurantEditModal';
 import { WhatsAppReminderModal } from '@/components/WhatsAppReminderModal';
 import { SupportAIAssistant } from '@/components/SupportAIAssistant';
 import { SAVManagementPanel } from '@/components/super-admin/SAVManagementPanel';
+import { HardwareCatalogPanel } from '@/components/super-admin/HardwareCatalogPanel';
 import { SenegalRestaurantsMap } from '@/components/super-admin/SenegalRestaurantsMap';
 import { toast } from 'sonner';
 
@@ -531,6 +533,20 @@ export default function SuperAdminDashboardPage() {
                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
                 <span>Carte Réseau Sénégal</span>
               </a>
+              <a
+                href="#catalogue-materiel"
+                className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all flex items-center gap-1"
+              >
+                <Boxes className="w-3.5 h-3.5 text-slate-400" />
+                <span>Catalogue & Stock Matériel</span>
+              </a>
+              <Link
+                href="/dashboard/supports-performance"
+                className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all flex items-center gap-1"
+              >
+                <QrCode className="w-3.5 h-3.5 text-slate-400" />
+                <span>Télémétrie Supports</span>
+              </Link>
               <Link
                 href="/super-admin/plans"
                 className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all flex items-center gap-1"
@@ -560,6 +576,19 @@ export default function SuperAdminDashboardPage() {
 
           {/* SECTION : PANNEAU DE GESTION SAV CENTRALISÉ & COMMANDES QR CODES */}
           <SAVManagementPanel />
+
+          {/* SECTION : CATALOGUE & STOCK MATÉRIEL ERP (BOIS & ACRYLIQUE) */}
+          <section id="catalogue-materiel" className="scroll-mt-24">
+            <HardwareCatalogPanel
+              restaurants={restaurants.map((r) => ({
+                id: r.id,
+                businessName: r.name,
+                subdomain: r.subdomain,
+                ownerName: r.ownerName,
+                parrainageCredits: (r as any).parrainageCredits,
+              }))}
+            />
+          </section>
 
           {/* BANNIÈRE D'ALERTE : EXPIRATIONS DANS LES 5 JOURS (J-5 WHATSAPP AUTOMATISÉ) */}
           {expiringSoonRestaurants.length > 0 && (
