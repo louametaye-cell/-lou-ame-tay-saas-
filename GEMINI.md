@@ -158,3 +158,32 @@ Cette section consacre les règles de design et de télémétrie de la console d
 - **Matrice des Plats Stars** : Calcul automatique pour chaque établissement du plat le plus commandé avec volume de ventes (`salesCount`) et tarif unitaire FCFA.
 - **Heatmap 24h & Heures de Rush** : Distribution horaire de 00h à 23h mettant en lumière les 4 pics réels du marché sénégalais (13h déjeuner, 15h plage/détente, 19h dîner, 22h-23h soirée lounge).
 - **Module E-Réputation** : Suivi de la note de satisfaction certifiée Lou Ame Tay (4.8/5 ⭐) et lien direct sortant vers les fiches Google Maps des restaurants partenaires.
+
+---
+
+## Section 14 — Architecture POS Caisse Focus, Routage Multi-Stations (Kitchen/Bar), Écran Retrait TV et ERP Matériel
+
+### 14.1 — Dissociation Hermétique Statuts Financiers vs Statuts Opérationnels (Règle d'Or Inviolable)
+- **Le Paiement ne Cuit Pas les Plats** : Une action financière (marquer `paymentStatus: 'PAID'`) ne doit JAMAIS modifier le statut opérationnel de préparation (`status: 'PENDING' | 'PREPARING'`), ni affecter `servedAt`.
+- **Ventes Comptoir (Takeaway)** : Payées d'avance au comptoir mais préparées ensuite par la cuisine. Elles DOIVENT impérativement conserver `status: 'PENDING'` lors de l'encaissement pour apparaître sur le KDS Cuisine et dans la colonne "En Préparation" du Retrait TV.
+- **Historique de Station** : Une commande n'entre dans l'historique d'une station (`/api/kitchen/history` ou `/api/bar/history`) QUE si tous ses articles rattachés à cette station sont `READY` ou `SERVED`. Jamais si des articles sont encore `PENDING` !
+
+### 14.2 — Routage Chirurgical Multi-Stations (`StationType`)
+- **Partitionnement Automatique** : Tout article ou catégorie est typé `KITCHEN` (cuisine) ou `BAR` (boissons).
+- **Écrans Dédiés** : `/kitchen` filtre strictement les items cuisine, `/bar` filtre les boissons. Une commande mixte est traitée en parallèle sans collision.
+
+### 14.3 — Écran Retrait Guichet TV (`/pickup/[restaurantId]`)
+- **Grille 2 Colonnes Géantes** : Colonne Gauche Bleue "EN PRÉPARATION" (`PENDING`/`PREPARING`) vs Colonne Droite Verte Émeraude "PRÊT À RETIRER" (`READY`).
+- **Confirmation Multi-Sensorielle** : Déclenchement automatique du Carillon Web Audio synthétisé à 2 tons (`playDingDongChime()`) et annonce vocale (`speakReadyOrder()`) lors du passage à `READY`.
+- **Rétention 45s** : Maintien temporaire des commandes récemment remises (`SERVED`) pour éviter la disparition brutale sous les yeux du client.
+
+### 14.4 — Caisse Focus 2.0 & Vente Directe Terrain
+- **Bouton « + Vente Directe »** : Mis en avant en émeraude plein contrasté (`bg-emerald-600 text-white shadow-sm font-semibold hover:bg-emerald-500`) avec pastille dynamique du nombre d'articles.
+- **Calcul Automatique de Monnaie (Espèces)** : Champ tactile obligatoire, raccourcis billets FCFA (1 000, 2 000, 5 000, 10 000 FCFA), affichage XXL de la monnaie à rendre en vert, et verrouillage strict du bouton d'encaissement tant que le montant reçu est inférieur au total.
+- **Modale de Confirmation de Succès** : Déclenchée après validation avec badge `CheckCircle2` géant, total FCFA, rendu monnaie, et les 3 actions rapides : Imprimer Ticket, WhatsApp, Nouvelle Vente.
+- **WhatsApp 1-Clic** : Détection du téléphone client (+221...) et génération automatique du ticket numérique prêt à l'envoi.
+
+### 14.5 — ERP Matériel & Facturation Découplée
+- **Double Flux de Facturation** : Facture unique `SETUP` pour le matériel physique (supports bois/acrylique, marine vernis, gravure anti-vol, kits SAV) et Facture mensuelle `RECURRING` pour l'abonnement SaaS (7 packs).
+- **Parrainage B2B** : Crédit de 5 supports offerts déduits du stock physique mais facturés 0 FCFA au parrain.
+
