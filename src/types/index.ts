@@ -338,6 +338,9 @@ export interface OrderType {
   orderType?: OrderServiceType;
   spaceType?: SpaceType | null;
   destinationService?: DestinationService | null;
+  orderOrigin?: 'TABLE' | 'ROOM' | 'COUNTER' | string | null;
+  orderDestination?: 'KITCHEN' | 'BAR' | 'ROOM_SERVICE' | 'RECEPTION' | string | null;
+  originLabel?: string | null;
   customerName?: string | null;
   customerNote?: string | null;
   employeeId?: string | null;

@@ -51,6 +51,7 @@ import { CashierCart, CashierCartItem } from './CashierCart';
 import { CashClosureModal } from './CashClosureModal';
 import { OrdersDataTable } from './OrdersDataTable';
 import { OrderDetailModal } from './OrderDetailModal';
+import { CashierDailyRevenueCard } from './CashierDailyRevenueCard';
 import { EscPosPrinterService } from '@/services/EscPosPrinterService';
 import { 
   resilientFetch, 
@@ -904,6 +905,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         if (effectiveRestoId) {
           fetchActiveSession(effectiveRestoId);
           fetchWaiterCalls();
+          fetchOrders();
         }
 
         // Maintenir l'état vert éclatant de succès 1.2s pour confirmation visuelle instantanée
@@ -1775,32 +1777,19 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             <span>Déconnexion</span>
           </button>
 
-          <div className="bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xs">
-            <DollarSign className="w-4 h-4 text-emerald-600" />
-            <div>
-              <span className="text-[10px] text-emerald-700 font-bold block uppercase">Caisse du Jour</span>
-              <span className="text-sm font-black text-emerald-950 font-mono">{formatFCFA(totalRevenue)}</span>
-            </div>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-2xs">
-            <Zap className="w-4 h-4 text-amber-600" />
-            <div>
-              <span className="text-[10px] text-amber-700 font-bold block uppercase">Ventes Express</span>
-              <span className="text-sm font-black text-amber-950 font-mono">{formatFCFA(expressRevenue)}</span>
-            </div>
-          </div>
-
           <button
             type="button"
             onClick={fetchOrders}
             className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all border border-slate-200 active:scale-[0.97] touch-manipulation"
-            title="Actualiser"
+            title="Actualiser les données caisse"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-600' : ''}`} />
           </button>
         </div>
       </header>
+
+        {/* 💳 NOUVELLE CARTE UNIQUE ET ÉPURÉE DU CHIFFRE D'AFFAIRES DU JOUR */}
+        <CashierDailyRevenueCard orders={orders} className="shrink-0" />
 
         {/* Navigation Principale Caisse v2.3 : Ventes sur Table vs Plan de Salle vs Vente Directe vs Ventes Comptoir */}
         <div className="grid grid-cols-2 lg:grid-cols-4 bg-white rounded-3xl shadow-sm border border-slate-200 p-2 gap-2 shrink-0">

@@ -10,6 +10,7 @@ interface KitchenHistoryProps {
   restaurantName?: string;
   onRestoreOrder?: (orderId: string) => void;
   refreshTrigger?: number;
+  station?: string;
 }
 
 export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
@@ -17,6 +18,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   restaurantName,
   onRestoreOrder,
   refreshTrigger = 0,
+  station = 'KITCHEN',
 }) => {
   const [historyOrders, setHistoryOrders] = useState<OrderType[]>([]);
   const [totalDishesServed, setTotalDishesServed] = useState(0);
@@ -34,7 +36,10 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
   const fetchHistory = useCallback(async () => {
     try {
       const targetId = getEffectiveId();
-      const url = targetId ? `/api/kitchen/history?restaurantId=${encodeURIComponent(targetId)}` : '/api/kitchen/history';
+      let url = targetId ? `/api/kitchen/history?restaurantId=${encodeURIComponent(targetId)}` : '/api/kitchen/history';
+      if (station && station !== 'ALL') {
+        url += `${url.includes('?') ? '&' : '?'}station=${encodeURIComponent(station)}`;
+      }
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -46,7 +51,7 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [getEffectiveId]);
+  }, [getEffectiveId, station]);
 
   useEffect(() => {
     fetchHistory();
@@ -136,10 +141,21 @@ export const KitchenHistory: React.FC<KitchenHistoryProps> = ({
                     ✓
                   </div>
                   <div>
-                    <span className="text-sm font-black text-slate-900">
-                      Table {order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber}
-                    </span>
-                    <span className="text-xs text-slate-500 ml-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-black text-slate-900">
+                        {(order as any).originLabel || (
+                          (order.orderOrigin === 'ROOM' || order.spaceType === 'ROOM' || (order.locationDetail && order.locationDetail.toLowerCase().includes('chambre')))
+                            ? (order.locationDetail || `Chambre ${order.tableNumber} - Room Service`)
+                            : (order.orderOrigin === 'COUNTER' || order.orderType === 'TAKEAWAY' || order.tableNumber === 0)
+                            ? 'À Emporter / Comptoir'
+                            : `Table ${order.tableNumber < 10 ? `0${order.tableNumber}` : order.tableNumber}`
+                        )}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                        {order.status === 'SERVED' ? 'Expédié en salle' : order.status === 'READY' ? 'Prêt au passe' : 'En préparation'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-500 mt-0.5 block">
                       ⏱ {servedTimeFormatted} • {itemCount} item{itemCount > 1 ? 's' : ''} ({order.items.map((i) => `${i.quantity}x ${i.name || i.menuItem?.name || 'Plat'}`).join(', ')})
                     </span>
                   </div>

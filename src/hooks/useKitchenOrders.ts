@@ -82,11 +82,12 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
 
     try {
       let url = restaurantId
-        ? `/api/orders?restaurantId=${restaurantId}`
-        : '/api/orders';
+        ? `/api/kitchen/orders?restaurantId=${encodeURIComponent(restaurantId)}`
+        : '/api/kitchen/orders';
 
-      if (service && service !== 'ALL') {
-        url += `${url.includes('?') ? '&' : '?'}service=${encodeURIComponent(service)}`;
+      const effectiveStation = service || 'KITCHEN';
+      if (effectiveStation && effectiveStation !== 'ALL') {
+        url += `${url.includes('?') ? '&' : '?'}station=${encodeURIComponent(effectiveStation)}`;
       }
 
       const headers: Record<string, string> = {};

@@ -143,6 +143,7 @@ export default function DashboardKitchenPage() {
             <KitchenHistory
               restaurantId={restaurantId}
               restaurantName={restaurantName}
+              station="KITCHEN"
             />
           )}
         </main>

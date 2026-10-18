@@ -7,6 +7,19 @@ import { invalidateLiveOrdersCache, invalidateDashboardStatsCache } from '@/lib/
 import { startTimer, logPerformance, logApiCall, createApiErrorResponse } from '@/lib/logger';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
+import { isDrinkOrBarItem } from '@/lib/order-routing';
+
+// Calcul du début de journée dans le fuseau horaire sénégalais (Africa/Dakar - UTC+0)
+function getDakarStartOfToday(): Date {
+  const now = new Date();
+  const dakarDateStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Dakar',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+  return new Date(`${dakarDateStr}T00:00:00.000Z`);
+}
 
 export async function GET(req: Request) {
   const timer = startTimer();
@@ -39,7 +52,8 @@ export async function GET(req: Request) {
       });
       if (dbTenant) {
         resolvedTenantId = dbTenant.id;
-        if (!isAuthorizedTenant(req, dbTenant.id, dbTenant.subdomain)) {
+        const isKds = searchParams.has('service') || searchParams.has('station') || req.headers.has('x-kds-token');
+        if (!isKds && !isAuthorizedTenant(req, dbTenant.id, dbTenant.subdomain)) {
           return NextResponse.json(
             { error: 'Accès non autorisé : Session d\'exploitation requise (Gérant, Caisse ou Cuisine)' },
             { status: 401 }
@@ -55,8 +69,15 @@ export async function GET(req: Request) {
       );
     }
 
-    const serviceFilter = searchParams.get('service') || searchParams.get('destinationService');
-    const whereClause: any = resolvedTenantId ? { tenantId: resolvedTenantId } : {};
+    const serviceFilter = searchParams.get('station') || searchParams.get('service') || searchParams.get('destinationService');
+    const startOfTodayDakar = getDakarStartOfToday();
+
+    const whereClause: any = {
+      tenantId: resolvedTenantId,
+      createdAt: { gte: startOfTodayDakar },
+      status: { not: 'CANCELLED' },
+    };
+
     if (serviceFilter && serviceFilter.toUpperCase() !== 'ALL') {
       whereClause.destinationService = serviceFilter.toUpperCase();
     }
@@ -69,15 +90,31 @@ export async function GET(req: Request) {
         zone: true,
       },
       orderBy: { createdAt: 'desc' },
-      take: 50,
+      take: 60,
     });
 
-    const mappedOrders = dbOrders.map((o: any) => ({
-      ...o,
-      total: Number(o.totalAmount ?? o.total ?? 0),
-      totalAmount: Number(o.totalAmount ?? o.total ?? 0),
-      orderType: o.orderType || ((o.tableNumber === 0 || o.tableNumber === null || !o.tableNumber) ? 'TAKEAWAY' : 'TABLE'),
-    }));
+    const mappedOrders = dbOrders.map((o: any) => {
+      const isExpress = o.orderType === 'EXPRESS' || o.orderType === 'TAKEAWAY' || o.tableNumber === 0;
+      const isRoom = o.spaceType === 'ROOM' || (o.locationDetail && o.locationDetail.toLowerCase().includes('chambre'));
+      
+      let originLabel = `Table ${o.tableNumber < 10 ? `0${o.tableNumber}` : o.tableNumber}`;
+      if (isRoom) {
+        originLabel = o.locationDetail || `Chambre ${o.tableNumber} - Room Service`;
+      } else if (isExpress) {
+        originLabel = 'À Emporter / Comptoir';
+      }
+
+      return {
+        ...o,
+        total: Number(o.totalAmount ?? o.total ?? 0),
+        totalAmount: Number(o.totalAmount ?? o.total ?? 0),
+        orderType: o.orderType || (isExpress ? 'TAKEAWAY' : 'TABLE'),
+        orderOrigin: isRoom ? 'ROOM' : isExpress ? 'COUNTER' : 'TABLE',
+        orderDestination: o.destinationService || 'KITCHEN',
+        originLabel,
+        locationDetail: o.locationDetail || originLabel,
+      };
+    });
 
     logApiCall({
       method: 'GET',
@@ -284,7 +321,7 @@ export async function POST(req: Request) {
       console.warn('Erreur vérification anti-doublon:', e);
     }
 
-    // Résolution intelligente du type d'espace et du service destinataire
+    // Résolution intelligente du type d'espace (orderOrigin) et du service destinataire (orderDestination)
     let effectiveSpaceType = spaceType || null;
     let effectiveDestination = destinationService || null;
     let matchedTableId: string | null = null;
@@ -309,18 +346,39 @@ export async function POST(req: Request) {
       } catch (err) {}
     }
 
-    if (!effectiveDestination) {
-      if (effectiveSpaceType === 'POOL') effectiveDestination = 'BAR';
-      else if (effectiveSpaceType === 'ROOM') effectiveDestination = 'ROOM_SERVICE';
-      else if (effectiveSpaceType === 'COUNTER') effectiveDestination = 'RECEPTION';
-      else effectiveDestination = 'KITCHEN';
+    // 1. Détection de l'origine (TABLE, ROOM, COUNTER)
+    const isCounter = isExpress || cleanTableNum === 0 || orderType === 'EXPRESS' || orderType === 'TAKEAWAY' || effectiveSpaceType === 'COUNTER';
+    const isRoomDetected = effectiveSpaceType === 'ROOM' || 
+                           cleanTableNum >= 100 || 
+                           (locationDetail && (locationDetail.toLowerCase().includes('chambre') || locationDetail.toLowerCase().includes('room')));
+
+    if (isRoomDetected) {
+      effectiveSpaceType = 'ROOM';
+      if (!locationDetail) {
+        locationDetail = `Chambre ${cleanTableNum} - Room Service`;
+      }
+    } else if (isCounter) {
+      effectiveSpaceType = 'COUNTER';
+      if (!locationDetail) {
+        locationDetail = 'À Emporter / Comptoir';
+      }
+    } else {
+      effectiveSpaceType = 'TABLE';
+      if (!locationDetail && cleanTableNum > 0) {
+        locationDetail = `Table ${cleanTableNum < 10 ? `0${cleanTableNum}` : cleanTableNum}`;
+      }
     }
 
-    if (!locationDetail && effectiveSpaceType && effectiveSpaceType !== 'TABLE') {
-      if (effectiveSpaceType === 'ROOM') locationDetail = `CHAMBRE ${cleanTableNum}`;
-      else if (effectiveSpaceType === 'POOL') locationDetail = `PISCINE ${cleanTableNum}`;
-      else if (effectiveSpaceType === 'VIP_AREA') locationDetail = `SALON VIP ${cleanTableNum}`;
-      else if (effectiveSpaceType === 'COUNTER') locationDetail = `COMPTOIR ${cleanTableNum}`;
+    // 2. Routage discipliné vers le poste KDS :
+    // Si TOUS les articles relèvent du bar/boissons -> Destination BAR
+    // S'il y a des plats cuisinés / nourriture -> Destination KITCHEN (même en chambre ou au comptoir !)
+    if (!effectiveDestination) {
+      const hasOnlyDrinks = items.every(isDrinkOrBarItem);
+      if (hasOnlyDrinks) {
+        effectiveDestination = 'BAR';
+      } else {
+        effectiveDestination = 'KITCHEN';
+      }
     }
 
     const newOrder = await (prisma as any).order.create({
@@ -328,7 +386,7 @@ export async function POST(req: Request) {
         tenantId: validTenantId,
         tableId: matchedTableId || undefined,
         tableNumber: cleanTableNum,
-        orderType: (isExpress || cleanTableNum === 0) ? 'TAKEAWAY' : 'TABLE',
+        orderType: isCounter ? 'TAKEAWAY' : 'TABLE',
         spaceType: effectiveSpaceType || undefined,
         destinationService: effectiveDestination || undefined,
         customerName: customerName ? String(customerName).trim() : null,

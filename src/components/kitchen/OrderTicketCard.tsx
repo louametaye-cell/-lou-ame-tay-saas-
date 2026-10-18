@@ -101,6 +101,17 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
   const orderAgeMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
   const isDelayed = order.status !== 'SERVED' && order.status !== 'CANCELLED' && orderAgeMinutes >= 15;
 
+  // Détermination de l'origine exacte (Mission 6 KDS)
+  const isRoom = order.orderOrigin === 'ROOM' || order.spaceType === 'ROOM' || (order.locationDetail && order.locationDetail.toLowerCase().includes('chambre'));
+  const isCounter = order.orderOrigin === 'COUNTER' || isExpressOrder;
+
+  let displayOrigin = `TABLE ${formattedTable}`;
+  if (isRoom) {
+    displayOrigin = (order.locationDetail || `CHAMBRE ${formattedTable} — ROOM SERVICE`).toUpperCase();
+  } else if (isCounter) {
+    displayOrigin = 'À EMPORTER / COMPTOIR';
+  }
+
   return (
     <article
       className={`rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-md ${
@@ -108,8 +119,10 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
           ? 'border-rose-600 bg-rose-50/30 ring-4 ring-rose-500/30'
           : isDelayed
           ? 'animate-pulse bg-red-100 border-red-500 ring-4 ring-red-500/50 shadow-red-500/20'
-          : isExpressOrder
-          ? 'bg-white border-purple-400'
+          : isRoom
+          ? 'bg-white border-purple-500 ring-2 ring-purple-500/20'
+          : isCounter
+          ? 'bg-white border-amber-400 ring-2 ring-amber-400/20'
           : is100PercentBar
           ? 'bg-white border-blue-300'
           : order.status === 'PENDING'
@@ -138,14 +151,16 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
         </div>
       )}
 
-      {/* 1. Header Box with Table Number, Chrono & Payment */}
+      {/* 1. Header Box with Origin (Table / Room / Counter), Chrono & Order ID */}
       <div
         className={`p-4 flex items-center justify-between gap-2 ${
           order.status === 'CANCELLED'
             ? 'bg-rose-950 text-white'
             : isDelayed
             ? 'bg-red-600 text-white'
-            : isExpressOrder
+            : isRoom
+            ? 'bg-purple-900 text-white'
+            : isCounter
             ? 'bg-slate-900 text-amber-400'
             : is100PercentBar
             ? 'bg-blue-600 text-white'
@@ -160,24 +175,26 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
       >
         <div className="flex items-center gap-2">
           <span className="text-xl sm:text-2xl font-black tracking-tight flex flex-col leading-tight">
-            <span className="font-black uppercase tracking-wide">
-              {order.locationDetail 
-                ? order.locationDetail.toUpperCase() 
-                : isExpressOrder 
-                ? '⚡ COMPTOIR EXPRESS' 
-                : `TABLE ${formattedTable}`}
+            <span className="font-black uppercase tracking-wide flex items-center gap-1.5">
+              {isRoom && <span>🛎️</span>}
+              {isCounter && <span>🥡</span>}
+              {!isRoom && !isCounter && <span>🍽️</span>}
+              <span>{displayOrigin}</span>
             </span>
-            {order.destinationService && (
+            {isRoom && (
+              <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-md mt-1 self-start inline-flex items-center gap-1 shadow-2xs">
+                🛎️ Room Service Chambre
+              </span>
+            )}
+            {order.destinationService && !isRoom && (
               <span className="text-[11px] font-black uppercase tracking-wider bg-black/25 text-white px-2 py-0.5 rounded-md mt-1 self-start inline-flex items-center gap-1 shadow-2xs">
                 {order.destinationService === 'BAR' && '🍹 Service Bar'}
-                {order.destinationService === 'ROOM_SERVICE' && '🛎️ Room Service'}
-                {order.destinationService === 'RECEPTION' && '🏨 Réception'}
                 {order.destinationService === 'KITCHEN' && '🍳 Cuisine'}
               </span>
             )}
             {order.zoneId && <span className="text-[10px] text-white/80 font-normal mt-0.5">ZONE ID: {order.zoneId}</span>}
           </span>
-          <span className="text-xs font-mono font-bold bg-black/15 px-2 py-0.5 rounded-md">
+          <span className="text-xs font-mono font-bold bg-black/20 px-2 py-0.5 rounded-md">
             #{order.id.slice(-5).toUpperCase()}
           </span>
         </div>

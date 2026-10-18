@@ -82,13 +82,18 @@ export default function KitchenKDSView({
     }
   }, [initialRestaurantId, initialPlanSlug, initialRestaurantName]);
 
-  const [selectedService, setSelectedService] = useState<string>(() => {
+  // Configuration stricte du poste KDS : par défaut KITCHEN (Cuisine), BAR si station=bar dans l'URL
+  const [station, setStation] = useState<'KITCHEN' | 'BAR' | 'ALL'>('KITCHEN');
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      return params.get('service')?.toUpperCase() || 'ALL';
+      const s = (params.get('station') || params.get('service') || '').toUpperCase();
+      if (s === 'BAR') setStation('BAR');
+      else if (s === 'ALL') setStation('ALL');
+      else setStation('KITCHEN');
     }
-    return 'ALL';
-  });
+  }, []);
 
   const [isSimulatingOffline, setIsSimulatingOffline] = useState(false);
 
@@ -104,7 +109,7 @@ export default function KitchenKDSView({
     refetch,
   } = useKitchenOrders({
     restaurantId,
-    service: selectedService,
+    service: station,
     isAudioEnabled,
     pollIntervalMs: 3500,
   });
@@ -278,41 +283,7 @@ export default function KitchenKDSView({
           onAcknowledgeAll={handleAcknowledgeAll}
         />
 
-        {/* Multi-Service Destination Selector Bar (v2.3 Hôtellerie & Restauration) */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-2.5 shadow-xs flex items-center justify-between gap-3 overflow-x-auto">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1">
-              <span>Poste KDS :</span>
-            </span>
-            {[
-              { id: 'ALL', label: '🌐 Tous les Services', color: 'bg-slate-900 text-white' },
-              { id: 'KITCHEN', label: '🍳 Cuisine', color: 'bg-amber-500 text-slate-950' },
-              { id: 'BAR', label: '🍹 Bar', color: 'bg-blue-600 text-white' },
-              { id: 'ROOM_SERVICE', label: '🛎️ Room Service', color: 'bg-purple-600 text-white' },
-              { id: 'RECEPTION', label: '🏨 Réception', color: 'bg-emerald-600 text-white' },
-            ].map((srv) => (
-              <button
-                key={srv.id}
-                type="button"
-                onClick={() => setSelectedService(srv.id)}
-                className={`min-h-[42px] px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer touch-manipulation flex items-center gap-1.5 ${
-                  selectedService === srv.id
-                    ? `${srv.color} shadow-sm ring-2 ring-slate-900/10`
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'
-                }`}
-              >
-                <span>{srv.label}</span>
-              </button>
-            ))}
-          </div>
-          {selectedService !== 'ALL' && (
-            <span className="text-[11px] font-black px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
-              Filtre actif : {selectedService}
-            </span>
-          )}
-        </div>
-
-        {/* View Tabs Selector */}
+        {/* View Tabs Selector avec badge de poste KDS fixe (aucune manipulation manuelle requise) */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 flex-wrap">
           <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
@@ -342,8 +313,13 @@ export default function KitchenKDSView({
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono font-medium">
-            {pendingCount + preparingCount} en cuisine • {servedCount} servie(s)
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs font-black px-3.5 py-1.5 rounded-xl bg-slate-900 text-white flex items-center gap-1.5 shadow-2xs">
+              {station === 'BAR' ? '🍹 POSTE BAR & BOISSONS' : '🍳 POSTE CUISINE CHAUDE'}
+            </span>
+            <div className="text-xs text-slate-500 font-mono font-medium hidden sm:inline">
+              {pendingCount + preparingCount} en attente • {servedCount} traitée(s)
+            </div>
           </div>
         </div>
 
@@ -363,6 +339,7 @@ export default function KitchenKDSView({
           <KitchenHistory
             restaurantId={restaurantId}
             restaurantName={restaurantName}
+            station={station}
           />
         )}
       </main>
