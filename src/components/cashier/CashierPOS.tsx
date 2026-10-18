@@ -1669,6 +1669,92 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     );
   }
 
+  const navigationTabs = (
+    <div className="border-b border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+      <button
+        type="button"
+        onClick={() => setActiveMode('QR_ORDERS')}
+        className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+          activeMode === 'QR_ORDERS'
+            ? 'border-slate-900 text-slate-900 font-bold'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+        }`}
+      >
+        <UtensilsCrossed className="w-4 h-4 text-slate-400" />
+        <span>Ventes sur Table</span>
+        <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
+          activeMode === 'QR_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+        }`}>
+          {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMode('TABLE_PLAN');
+          fetchDbTables();
+        }}
+        className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+          activeMode === 'TABLE_PLAN'
+            ? 'border-slate-900 text-slate-900 font-bold'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+        }`}
+      >
+        <MapPin className="w-4 h-4 text-slate-400" />
+        <span>Plan de Salle</span>
+        <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
+          activeMode === 'TABLE_PLAN' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+        }`}>
+          {occupiedTablesCount > 0 ? `${occupiedTablesCount} occupée(s)` : 'Libres'}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          if (!currentSession) {
+            toast.error("Veuillez d'abord ouvrir une session de caisse pour saisir une vente directe.");
+            setIsOpenSessionModalOpen(true);
+            return;
+          }
+          setActiveMode('NEW_ORDER');
+        }}
+        className={`my-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer shadow-sm ${
+          activeMode === 'NEW_ORDER'
+            ? 'bg-emerald-600 text-white ring-2 ring-emerald-400 ring-offset-2'
+            : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+        }`}
+      >
+        <Plus className="w-4 h-4 stroke-[3] text-white" />
+        <span>+ Vente Directe</span>
+        {cartItems.length > 0 && (
+          <span className="bg-white text-emerald-800 px-2 py-0.5 rounded-full text-xs font-mono font-black shadow-xs">
+            {cartItems.reduce((s, i) => s + i.quantity, 0)}
+          </span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setActiveMode('TAKEAWAY_ORDERS')}
+        className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+          activeMode === 'TAKEAWAY_ORDERS'
+            ? 'border-slate-900 text-slate-900 font-bold'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+        }`}
+      >
+        <Receipt className="w-4 h-4 text-slate-400" />
+        <span>Ventes Comptoir</span>
+        <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
+          activeMode === 'TAKEAWAY_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+        }`}>
+          {takeawayOrders.length}
+        </span>
+      </button>
+    </div>
+  );
+
   // 🏪 VUE 2 : ESPACE CAISSE OPÉRATIONNEL (CAISSIER AUTHENTIFIÉ SOUS CODE PIN)
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 space-y-6">
@@ -1875,106 +1961,23 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </div>
       </header>
 
-      {/* 💳 CARTE UNIQUE ET ÉPURÉE DU CHIFFRE D'AFFAIRES DU JOUR */}
-      <CashierDailyRevenueCard orders={orders} className="shrink-0" />
-
-      {/* 2. NAVIGATION (Tabs style Shadcn UI - fins, alignés, soulignés) */}
-      <div className="border-b border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
-        <button
-          type="button"
-          onClick={() => setActiveMode('QR_ORDERS')}
-          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeMode === 'QR_ORDERS'
-              ? 'border-slate-900 text-slate-900 font-bold'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <UtensilsCrossed className="w-4 h-4 text-slate-400" />
-          <span>Ventes sur Table</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
-            activeMode === 'QR_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-          }`}>
-            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setActiveMode('TABLE_PLAN');
-            fetchDbTables();
-          }}
-          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeMode === 'TABLE_PLAN'
-              ? 'border-slate-900 text-slate-900 font-bold'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <MapPin className="w-4 h-4 text-slate-400" />
-          <span>Plan de Salle</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
-            activeMode === 'TABLE_PLAN' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-          }`}>
-            {occupiedTablesCount > 0 ? `${occupiedTablesCount} occupée(s)` : 'Libres'}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (!currentSession) {
-              toast.error("Veuillez d'abord ouvrir une session de caisse pour saisir une vente directe.");
-              setIsOpenSessionModalOpen(true);
-              return;
-            }
-            setActiveMode('NEW_ORDER');
-          }}
-          className={`my-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer shadow-sm ${
-            activeMode === 'NEW_ORDER'
-              ? 'bg-emerald-600 text-white ring-2 ring-emerald-400 ring-offset-2'
-              : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-          }`}
-        >
-          <Plus className="w-4 h-4 stroke-[3] text-white" />
-          <span>+ Vente Directe</span>
-          {cartItems.length > 0 && (
-            <span className="bg-white text-emerald-800 px-2 py-0.5 rounded-full text-xs font-mono font-black shadow-xs">
-              {cartItems.reduce((s, i) => s + i.quantity, 0)}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveMode('TAKEAWAY_ORDERS')}
-          className={`py-3 px-4 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeMode === 'TAKEAWAY_ORDERS'
-              ? 'border-slate-900 text-slate-900 font-bold'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Receipt className="w-4 h-4 text-slate-400" />
-          <span>Ventes Comptoir</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
-            activeMode === 'TAKEAWAY_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-          }`}>
-            {takeawayOrders.length}
-          </span>
-        </button>
-      </div>
-
       {activeMode === 'NEW_ORDER' ? (
+        /* 🛒 MODE VENTE DIRECTE : LAYOUT POS ERGONOMIQUE PLEINE HAUTEUR */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* Grille Tactile des Produits (7/12 colonnes) */}
-          <div className="lg:col-span-7 xl:col-span-8 h-[calc(100vh-270px)] min-h-[560px]">
-            <TactileGrid
-              categories={menuCategories}
-              onAddItem={handleAddToCart}
-            />
+          {/* COLONNE GAUCHE (7/12) : CA + Onglets + Grille Tactile */}
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col space-y-4">
+            <CashierDailyRevenueCard orders={orders} className="shrink-0" />
+            {navigationTabs}
+            <div className="h-[calc(100vh-320px)] min-h-[520px]">
+              <TactileGrid
+                categories={menuCategories}
+                onAddItem={handleAddToCart}
+              />
+            </div>
           </div>
 
-          {/* Ticket de Caisse & Encaissement Direct (5/12 colonnes) */}
-          <div className="lg:col-span-5 xl:col-span-4 h-[calc(100vh-270px)] min-h-[560px]">
+          {/* COLONNE DROITE (5/12) : TICKET DE CAISSE PLEINE HAUTEUR (Full length) */}
+          <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-4 h-[calc(100vh-120px)] min-h-[680px] flex flex-col">
             <CashierCart
               items={cartItems}
               onUpdateQuantity={handleUpdateCartQuantity}
@@ -1984,7 +1987,15 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             />
           </div>
         </div>
-      ) : activeMode === 'TAKEAWAY_ORDERS' ? (
+      ) : (
+        <>
+          {/* 💳 CARTE UNIQUE ET ÉPURÉE DU CHIFFRE D'AFFAIRES DU JOUR */}
+          <CashierDailyRevenueCard orders={orders} className="shrink-0" />
+
+          {/* 2. NAVIGATION (Tabs style Shadcn UI - fins, alignés, soulignés) */}
+          {navigationTabs}
+
+          {activeMode === 'TAKEAWAY_ORDERS' ? (
         /* VUE 3 : HISTORIQUE DES VENTES COMPTOIR DU JOUR */
         <section className="space-y-4">
           <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
@@ -2883,6 +2894,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           })
         )}
       </main>
+      )}
+      </>
       )}
       </>
       )}

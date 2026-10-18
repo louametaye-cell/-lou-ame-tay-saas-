@@ -77,12 +77,12 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
   return (
     <div className="flex flex-col h-full bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
       {/* En-tête */}
-      <div className="p-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+      <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between shrink-0">
         <h2 className="font-black text-lg">Ticket Comptoir</h2>
         {items.length > 0 && (
           <button 
             onClick={onClear} 
-            className="min-h-[48px] px-3 text-rose-400 hover:text-rose-300 text-xs font-bold flex items-center gap-1 transition-colors touch-manipulation cursor-pointer"
+            className="min-h-[44px] px-3 text-rose-400 hover:text-rose-300 text-xs font-bold flex items-center gap-1 transition-colors touch-manipulation cursor-pointer"
           >
             <Trash2 className="w-4 h-4" /> Vider
           </button>
@@ -94,13 +94,13 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
         <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
           <button 
             onClick={() => setOrderMode('COMPTOIR')}
-            className={`flex-1 min-h-[48px] text-xs font-bold py-2 rounded-xl touch-manipulation cursor-pointer transition-all ${orderMode === 'COMPTOIR' ? 'bg-white shadow-xs text-slate-900 font-black' : 'text-slate-500'}`}
+            className={`flex-1 min-h-[44px] text-xs font-bold py-2 rounded-xl touch-manipulation cursor-pointer transition-all ${orderMode === 'COMPTOIR' ? 'bg-white shadow-xs text-slate-900 font-black' : 'text-slate-500'}`}
           >
             COMPTOIR
           </button>
           <button 
             onClick={() => setOrderMode('TABLE')}
-            className={`flex-1 min-h-[48px] text-xs font-bold py-2 rounded-xl touch-manipulation cursor-pointer transition-all ${orderMode === 'TABLE' ? 'bg-white shadow-xs text-slate-900 font-black' : 'text-slate-500'}`}
+            className={`flex-1 min-h-[44px] text-xs font-bold py-2 rounded-xl touch-manipulation cursor-pointer transition-all ${orderMode === 'TABLE' ? 'bg-white shadow-xs text-slate-900 font-black' : 'text-slate-500'}`}
           >
             SUR PLACE
           </button>
@@ -113,7 +113,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
               placeholder="N° Table"
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
-              className="w-full min-h-[48px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-amber-400 font-bold"
+              className="w-full min-h-[44px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-amber-400 font-bold"
             />
           )}
           <div className="relative w-full">
@@ -130,14 +130,14 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
                 if (paymentMethod === 'STAFF_MEAL') setEmployeeName(e.target.value);
                 else setCustomerName(e.target.value);
               }}
-              className="w-full min-h-[48px] pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-emerald-500 transition-all font-medium"
+              className="w-full min-h-[44px] pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-emerald-500 transition-all font-medium"
             />
           </div>
         </div>
       </div>
 
       {/* Liste des articles */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {items.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
             <ShoppingBag className="w-12 h-12 stroke-[1.5]" />
@@ -171,7 +171,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
       </div>
 
       {/* Total et Encaissement */}
-      <div className="p-4 bg-slate-50 border-t border-slate-200 shrink-0 space-y-3">
+      <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 shrink-0 space-y-2.5">
         <div className="flex justify-between items-baseline">
           <span className="text-slate-500 text-sm font-bold uppercase tracking-wider">Total</span>
           <span className="text-2xl font-black font-mono text-slate-900">{formatFCFA(total)}</span>
@@ -183,7 +183,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
               <button
                 type="button"
                 onClick={() => setPaymentMethod('CASH')}
-                className={`min-h-[48px] py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
+                className={`min-h-[44px] py-2 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
                   paymentMethod === 'CASH' ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-xs font-black' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200'
                 }`}
               >
@@ -193,7 +193,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
               <button
                 type="button"
                 onClick={() => setPaymentMethod('WAVE')}
-                className={`min-h-[48px] py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
+                className={`min-h-[44px] py-2 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
                   paymentMethod === 'WAVE' ? 'border-cyan-500 bg-cyan-50 text-cyan-900 shadow-xs font-black' : 'border-slate-200 bg-white text-slate-600 hover:border-cyan-200'
                 }`}
               >
@@ -203,7 +203,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
               <button
                 type="button"
                 onClick={() => setPaymentMethod('ORANGE_MONEY')}
-                className={`min-h-[48px] py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
+                className={`min-h-[44px] py-2 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
                   paymentMethod === 'ORANGE_MONEY' ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-xs font-black' : 'border-slate-200 bg-white text-slate-600 hover:border-orange-200'
                 }`}
               >
@@ -213,7 +213,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
               <button
                 type="button"
                 onClick={() => setPaymentMethod('STAFF_MEAL')}
-                className={`min-h-[48px] py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
+                className={`min-h-[44px] py-2 rounded-xl flex flex-col items-center justify-center gap-1 border-2 transition-all touch-manipulation cursor-pointer ${
                   paymentMethod === 'STAFF_MEAL' ? 'border-purple-600 bg-purple-50 text-purple-950 shadow-xs font-black ring-2 ring-purple-300' : 'border-slate-200 bg-white text-slate-600 hover:border-purple-200'
                 }`}
                 title="Repas du personnel (bon NP déduit sur salaire)"
@@ -237,7 +237,7 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
 
             {/* Point 4 : Calcul automatique du rendu de monnaie en espèces */}
             {paymentMethod === 'CASH' && items.length > 0 && (
-              <div className="space-y-2.5 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs animate-in fade-in">
+              <div className="space-y-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs animate-in fade-in">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
                     Montant reçu du client (FCFA) :
