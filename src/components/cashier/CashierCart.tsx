@@ -106,17 +106,17 @@ export function CashierCart({ items, onUpdateQuantity, onClear, onSubmit, isSubm
           </button>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col w-full gap-2">
           {orderMode === 'TABLE' && (
             <input
               type="number"
               placeholder="N° Table"
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
-              className="w-24 min-h-[48px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-amber-400 font-bold"
+              className="w-full min-h-[48px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-amber-400 font-bold"
             />
           )}
-          <div className="relative flex-1">
+          <div className="relative w-full">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
