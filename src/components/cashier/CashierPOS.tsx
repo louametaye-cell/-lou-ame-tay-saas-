@@ -40,13 +40,17 @@ import {
   DoorOpen,
   Sparkles,
   MapPin,
-  Layers
+  Layers,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { OrderType, OrderStatus, CashierType, CashSessionType } from '@/types';
 import { formatFCFA, playOrderSound } from '@/lib/utils';
 import { TactileGrid } from './TactileGrid';
 import { CashierCart, CashierCartItem } from './CashierCart';
 import { CashClosureModal } from './CashClosureModal';
+import { OrdersDataTable } from './OrdersDataTable';
+import { OrderDetailModal } from './OrderDetailModal';
 import { EscPosPrinterService } from '@/services/EscPosPrinterService';
 import { 
   resilientFetch, 
@@ -112,6 +116,10 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [isConnectingBt, setIsConnectingBt] = useState(false);
 
   const [activeMode, setActiveMode] = useState<'QR_ORDERS' | 'TABLE_PLAN' | 'NEW_ORDER' | 'TAKEAWAY_ORDERS'>('QR_ORDERS');
+  // Mode d'affichage des commandes du jour : 'TABLE' (Data Table - par défaut) ou 'CARDS' (Grille)
+  const [ordersViewMode, setOrdersViewMode] = useState<'TABLE' | 'CARDS'>('TABLE');
+  const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<OrderType | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [dbTables, setDbTables] = useState<any[]>([]);
   const [zones, setZones] = useState<any[]>([]);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('ALL');
@@ -743,6 +751,12 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [currentCashier, restaurantId, pinInput]);
+
+  // Visualiser le détail complet d'une commande
+  const handleViewOrder = (order: OrderType) => {
+    setSelectedOrderForDetail(order);
+    setIsDetailModalOpen(true);
+  };
 
   // Open the Mandatory Payment Modal
   const handleOpenPaymentModal = (order: OrderType, defaultMethod: string = 'CASH') => {
@@ -2344,58 +2358,90 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </section>
       )}
 
-      {/* 2. FILTER TABS (VENTES SUR TABLE EXCLUSIVEMENT) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          onClick={() => setActiveFilter('ALL')}
-          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
-            activeFilter === 'ALL'
-              ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
-          }`}
-        >
-          <span>Toutes les Tables Ouvertes</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-            activeFilter === 'ALL' ? 'bg-white/20 text-white font-black' : 'bg-slate-100 text-slate-700 font-bold'
-          }`}>
-            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
-          </span>
-        </button>
+      {/* 2. FILTER TABS & VIEW TOGGLE (DATA TABLE vs CARDS) */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setActiveFilter('ALL')}
+            className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+              activeFilter === 'ALL'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+            }`}
+          >
+            <span>Toutes les Tables Ouvertes</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+              activeFilter === 'ALL' ? 'bg-white/20 text-white font-black' : 'bg-slate-100 text-slate-700 font-bold'
+            }`}>
+              {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveFilter('TABLE')}
-          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
-            activeFilter === 'TABLE'
-              ? 'bg-amber-400 text-slate-950 border-amber-500/40 shadow-xs'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
-          }`}
-        >
-          <UtensilsCrossed className="w-4 h-4 text-slate-950 shrink-0" />
-          <span>Tables à Encaisser</span>
-          <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono font-black">
-            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilter('TABLE')}
+            className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+              activeFilter === 'TABLE'
+                ? 'bg-amber-400 text-slate-950 border-amber-500/40 shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+            }`}
+          >
+            <UtensilsCrossed className="w-4 h-4 text-slate-950 shrink-0" />
+            <span>Tables à Encaisser</span>
+            <span className="bg-slate-900/10 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-mono font-black">
+              {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveFilter('SERVED')}
-          className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
-            activeFilter === 'SERVED'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
-          }`}
-        >
-          <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
-          <span>Tables Clôturées du Jour</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-            activeFilter === 'SERVED' ? 'bg-white/20 text-white font-black' : 'bg-emerald-100 text-emerald-800 font-bold'
-          }`}>
-            {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.status === 'SERVED' && o.paymentStatus === 'PAID').length}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilter('SERVED')}
+            className={`px-4 min-h-[44px] rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 active:scale-[0.97] border ${
+              activeFilter === 'SERVED'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+            <span>Tables Clôturées du Jour</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+              activeFilter === 'SERVED' ? 'bg-white/20 text-white font-black' : 'bg-emerald-100 text-emerald-800 font-bold'
+            }`}>
+              {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && o.status === 'SERVED' && o.paymentStatus === 'PAID').length}
+            </span>
+          </button>
+        </div>
+
+        {/* Sélecteur de mode d'affichage : Tableau de Données (Par défaut) vs Cartes */}
+        <div className="flex items-center bg-white p-1 border border-slate-200 rounded-2xl shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setOrdersViewMode('TABLE')}
+            className={`px-3.5 py-1.5 min-h-[40px] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              ordersViewMode === 'TABLE'
+                ? 'bg-slate-900 text-white shadow-xs font-black'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Vue Tableau de Données (Recherche instantanée & Pagination)"
+          >
+            <List className="w-4 h-4" />
+            <span>Tableau (Data Table)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrdersViewMode('CARDS')}
+            className={`px-3.5 py-1.5 min-h-[40px] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              ordersViewMode === 'CARDS'
+                ? 'bg-slate-900 text-white shadow-xs font-black'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Vue Cartes Visuelles"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span>Cartes</span>
+          </button>
+        </div>
       </div>
 
       {/* 3. READY TO PICKUP BANNER */}
@@ -2456,8 +2502,17 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         </section>
       )}
 
-      {/* 4. ORDERS GRID */}
-      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+      {/* 4. ORDERS VIEW : DATA TABLE PAR DÉFAUT OU GRILLE DE CARTES */}
+      {ordersViewMode === 'TABLE' ? (
+        <OrdersDataTable
+          orders={orders}
+          onViewOrder={handleViewOrder}
+          onPayOrder={(ord) => handleOpenPaymentModal(ord)}
+          onPrintReceipt={(ord) => printOrderReceipt(ord)}
+          isLoading={isLoading}
+        />
+      ) : (
+        <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {activeOrders.length === 0 ? (
           <div className="col-span-full py-14 text-center text-slate-500 space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
             <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
@@ -2746,6 +2801,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           })
         )}
       </main>
+      )}
       </>
       )}
 
@@ -3483,6 +3539,19 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           </div>
         </div>
       )}
+
+      {/* MODAL 5 : DÉTAIL COMPLET DE COMMANDE */}
+      <OrderDetailModal
+        order={selectedOrderForDetail}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedOrderForDetail(null);
+        }}
+        onPayOrder={(ord) => handleOpenPaymentModal(ord)}
+        onPrintReceipt={(ord) => printOrderReceipt(ord)}
+        onSendWhatsApp={(ord) => handleSendWhatsAppReceipt(ord)}
+      />
     </div>
   );
 }

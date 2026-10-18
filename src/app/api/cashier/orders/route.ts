@@ -4,6 +4,68 @@ import { isAuthorizedTenant } from '@/lib/tenant-auth';
 import { createApiErrorResponse } from '@/lib/logger';
 
 
+// GET /api/cashier/orders
+// Récupération des commandes de la journée en cours (createdAt >= startOfToday) pour la caisse avec filtrage par statut
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const restaurantId = searchParams.get('restaurantId') || searchParams.get('tenantId');
+    const status = searchParams.get('status');
+
+    if (!restaurantId) {
+      return NextResponse.json({ error: 'Identifiant restaurant requis' }, { status: 400 });
+    }
+
+    const tenant = await prisma.tenant.findFirst({
+      where: {
+        OR: [{ id: restaurantId }, { subdomain: restaurantId }]
+      },
+      select: { id: true, subdomain: true }
+    });
+
+    if (!tenant) {
+      return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
+    }
+
+    // Début de la journée locale (00:00:00)
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const whereClause: any = {
+      tenantId: tenant.id,
+      createdAt: { gte: startOfToday }
+    };
+
+    if (status && status !== 'ALL') {
+      whereClause.status = status;
+    }
+
+    const orders = await prisma.order.findMany({
+      where: whereClause,
+      include: {
+        items: true,
+        waiter: { select: { id: true, name: true } },
+        cashier: { select: { id: true, name: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return NextResponse.json({
+      success: true,
+      orders: orders.map((o) => ({
+        ...o,
+        total: Number(o.totalAmount),
+        createdAt: o.createdAt.toISOString()
+      }))
+    });
+  } catch (error: any) {
+    return createApiErrorResponse(error, {
+      method: 'GET',
+      endpoint: '/api/cashier/orders'
+    });
+  }
+}
+
 // POST /api/cashier/orders
 // Création d'une commande directe depuis la caisse (déduit le stock de façon atomique)
 export async function POST(req: Request) {
