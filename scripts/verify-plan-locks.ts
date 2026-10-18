@@ -90,46 +90,63 @@ async function verifyPlanLocks() {
   // 3. Test du Garde Serveur (checkTenantFeatureAccess)
   console.log('\n📌 ÉTAPE 4 : Simulation des Appels API Serveur (Garde 403)...');
   
-  // Chercher ou créer un restaurant de test sous TÀMBALI
+  // Chercher ou assigner temporairement un restaurant de test sous TÀMBALI
   let testTenant = await (prisma as any).tenant.findFirst({
     where: {
-      plan: { slug: 'tambali' }
+      currentPlanId: tambaliPlan.id
     }
   });
 
+  let originalPlanId: string | null = null;
   if (!testTenant) {
-    // Si aucun tenant n'a explicitement tambali, prenons un tenant existant et passons son plan id
     testTenant = await (prisma as any).tenant.findFirst();
+    if (testTenant) {
+      originalPlanId = testTenant.currentPlanId;
+      await (prisma as any).tenant.update({
+        where: { id: testTenant.id },
+        data: { currentPlanId: tambaliPlan.id }
+      });
+    }
   }
 
   if (testTenant) {
-    console.log(`  Établissement testé : "${testTenant.businessName}" (${testTenant.subdomain})`);
+    console.log(`  Établissement testé : "${testTenant.businessName}" (${testTenant.subdomain}) sous pack TÀMBALI temporaire`);
 
-    // Test A : Fonctionnalité autorisée (MENU_MANAGEMENT)
-    const accessAllowed = await checkTenantFeatureAccess(testTenant.id, 'MENU_MANAGEMENT');
-    if (accessAllowed.allowed) {
-      console.log('  🟢 Test Vitrine MENU_MANAGEMENT : AUTORISÉ (200 OK attendu)');
-    } else {
-      console.error('  ❌ Échec : MENU_MANAGEMENT a été refusé pour un compte vitrine !');
-      errorsCount++;
-    }
+    try {
+      // Test A : Fonctionnalité autorisée (MENU_MANAGEMENT)
+      const accessAllowed = await checkTenantFeatureAccess(testTenant.id, 'MENU_MANAGEMENT');
+      if (accessAllowed.allowed) {
+        console.log('  🟢 Test Vitrine MENU_MANAGEMENT : AUTORISÉ (200 OK attendu)');
+      } else {
+        console.error('  ❌ Échec : MENU_MANAGEMENT a été refusé pour un compte vitrine !');
+        errorsCount++;
+      }
 
-    // Test B : Fonctionnalité bloquée (TABLE_ORDERING)
-    const accessBlockedOrder = await checkTenantFeatureAccess(testTenant.id, 'TABLE_ORDERING');
-    if (!accessBlockedOrder.allowed) {
-      console.log(`  🔒 Test Commande Table TABLE_ORDERING : BLOQUÉ (403 Paywall attendu : ${accessBlockedOrder.requiredPlanName})`);
-    } else {
-      console.error('  ❌ FAILLE CRITIQUE : TABLE_ORDERING débloqué sur pack vitrine !');
-      errorsCount++;
-    }
+      // Test B : Fonctionnalité bloquée (TABLE_ORDERING)
+      const accessBlockedOrder = await checkTenantFeatureAccess(testTenant.id, 'TABLE_ORDERING');
+      if (!accessBlockedOrder.allowed) {
+        console.log(`  🔒 Test Commande Table TABLE_ORDERING : BLOQUÉ (403 Paywall attendu : ${accessBlockedOrder.requiredPlanName})`);
+      } else {
+        console.error('  ❌ FAILLE CRITIQUE : TABLE_ORDERING débloqué sur pack vitrine !');
+        errorsCount++;
+      }
 
-    // Test C : Fonctionnalité bloquée (KITCHEN_KDS)
-    const accessBlockedKDS = await checkTenantFeatureAccess(testTenant.id, 'KITCHEN_KDS');
-    if (!accessBlockedKDS.allowed) {
-      console.log(`  🔒 Test Cuisine KDS KITCHEN_KDS : BLOQUÉ (403 Paywall attendu : ${accessBlockedKDS.requiredPlanName})`);
-    } else {
-      console.error('  ❌ FAILLE CRITIQUE : KITCHEN_KDS débloqué sur pack vitrine !');
-      errorsCount++;
+      // Test C : Fonctionnalité bloquée (KITCHEN_KDS)
+      const accessBlockedKDS = await checkTenantFeatureAccess(testTenant.id, 'KITCHEN_KDS');
+      if (!accessBlockedKDS.allowed) {
+        console.log(`  🔒 Test Cuisine KDS KITCHEN_KDS : BLOQUÉ (403 Paywall attendu : ${accessBlockedKDS.requiredPlanName})`);
+      } else {
+        console.error('  ❌ FAILLE CRITIQUE : KITCHEN_KDS débloqué sur pack vitrine !');
+        errorsCount++;
+      }
+    } finally {
+      // Restauration immédiate du plan d'origine de l'établissement
+      if (originalPlanId) {
+        await (prisma as any).tenant.update({
+          where: { id: testTenant.id },
+          data: { currentPlanId: originalPlanId }
+        });
+      }
     }
   }
 
