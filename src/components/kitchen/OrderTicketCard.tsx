@@ -229,6 +229,31 @@ export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
         </div>
       )}
 
+      {/* ⚠️ AVERTISSEMENTS CROSS-STATION (CUISINE <-> BAR) */}
+      {((order as any).hasBarItems || (order as any).crossStationWarning?.includes('boissons')) && (
+        <div className="bg-blue-600 text-white px-3.5 py-2 text-xs font-black uppercase tracking-wider flex items-center justify-between shadow-xs border-y border-blue-700 animate-pulse">
+          <div className="flex items-center gap-2">
+            <span className="text-base">⚠️</span>
+            <span className="font-black tracking-wide">Contient des boissons (Voir Bar)</span>
+          </div>
+          <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            BAR
+          </span>
+        </div>
+      )}
+
+      {((order as any).hasKitchenItems || (order as any).crossStationWarning?.includes('nourriture')) && (
+        <div className="bg-amber-600 text-white px-3.5 py-2 text-xs font-black uppercase tracking-wider flex items-center justify-between shadow-xs border-y border-amber-700 animate-pulse">
+          <div className="flex items-center gap-2">
+            <span className="text-base">⚠️</span>
+            <span className="font-black tracking-wide">Contient de la nourriture (Voir Cuisine)</span>
+          </div>
+          <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            CUISINE
+          </span>
+        </div>
+      )}
+
       {/* 2. Customer details & Assigned Waiter & Payment Badge */}
       <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs text-slate-600 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">

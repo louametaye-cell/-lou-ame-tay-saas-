@@ -260,19 +260,28 @@ export async function POST(req: Request) {
       } catch (e) {}
     }
 
-    // Validate items menuItemId foreign key
+    // Validate items menuItemId foreign key and fetch station metadata
     const rawMenuItemIds = items
       .map((i: any) => i.menuItemId || i.menuItem?.id)
       .filter((id: any) => typeof id === 'string' && id.length > 0);
 
     let existingMenuItemIdsSet = new Set<string>();
+    const dbItemMap = new Map<string, any>();
     if (rawMenuItemIds.length > 0) {
       try {
         const foundItems = await (prisma as any).menuItem.findMany({
           where: { id: { in: rawMenuItemIds } },
-          select: { id: true },
+          select: {
+            id: true,
+            name: true,
+            station: true,
+            category: { select: { station: true } },
+          },
         });
-        foundItems.forEach((m: any) => existingMenuItemIdsSet.add(m.id));
+        foundItems.forEach((m: any) => {
+          existingMenuItemIdsSet.add(m.id);
+          dbItemMap.set(m.id, m);
+        });
       } catch (e) {}
     }
 
@@ -404,13 +413,28 @@ export async function POST(req: Request) {
           create: items.map((i: any) => {
             const rawId = i.menuItemId || i.menuItem?.id;
             const safeOptions = i.options ? JSON.parse(JSON.stringify(i.options)) : undefined;
+            const dbItem = rawId ? dbItemMap.get(rawId) : null;
+            const itemName = i.name || i.menuItem?.name || dbItem?.name || 'Plat du jour';
+            
+            // Résolution précise de la station de préparation (KITCHEN ou BAR)
+            let itemStation: 'KITCHEN' | 'BAR' = 'KITCHEN';
+            if (dbItem?.station) {
+              itemStation = dbItem.station;
+            } else if (dbItem?.category?.station) {
+              itemStation = dbItem.category.station;
+            } else if (isDrinkOrBarItem(itemName)) {
+              itemStation = 'BAR';
+            }
+
             return {
               menuItemId: existingMenuItemIdsSet.has(rawId) ? rawId : undefined,
-              name: i.name || i.menuItem?.name || 'Plat du jour',
+              name: itemName,
               quantity: Number(i.quantity) || 1,
               price: Number(i.price || i.menuItem?.price) || 0,
               customNotes: i.notes || i.customNotes || null,
               selectedExtras: safeOptions,
+              station: itemStation,
+              status: 'PENDING' as const,
             };
           }),
         },

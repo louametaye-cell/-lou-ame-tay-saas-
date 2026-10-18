@@ -69,23 +69,15 @@ export async function GET(req: Request) {
 
     // Début de journée Dakar (GMT / UTC+0)
     const startOfTodayDakar = getDakarStartOfToday();
+    const targetStation = (stationParam || 'KITCHEN').toUpperCase() === 'BAR' ? 'BAR' : 'KITCHEN';
 
-    // Filtre non-bloquant : toutes les commandes traitées du jour (PREPARING, READY, SERVED)
-    const whereClause: any = {
-      tenantId: resolvedTenantId,
-      createdAt: { gte: startOfTodayDakar },
-      status: {
-        in: ['PREPARING', 'READY', 'SERVED'],
-      },
-    };
-
-    // Si station spécifique configurée (ex: KITCHEN ou BAR)
-    if (stationParam && stationParam.toUpperCase() !== 'ALL') {
-      whereClause.destinationService = stationParam.toUpperCase();
-    }
-
+    // Recherche des commandes du jour
     const dbOrders = await (prisma as any).order.findMany({
-      where: whereClause,
+      where: {
+        tenantId: resolvedTenantId,
+        createdAt: { gte: startOfTodayDakar },
+        status: { not: 'CANCELLED' },
+      },
       include: {
         items: true,
       },
@@ -94,7 +86,24 @@ export async function GET(req: Request) {
       },
     });
 
-    const memoryServedToday = dbOrders.map((o: any) => {
+    const memoryServedToday: any[] = [];
+
+    for (const o of dbOrders) {
+      const allItems = o.items || [];
+      // Pour l'historique de la station : ne retenir que les items de CETTE station
+      const stationItems = allItems.filter((i: any) => {
+        const itemStation = (i.station || 'KITCHEN').toUpperCase();
+        return itemStation === targetStation;
+      });
+
+      // Si la commande n'avait aucun item pour cette station, ignorer
+      if (stationItems.length === 0) continue;
+
+      // La commande ne va dans l'historique de cette station QUE si ses items ont été traités (READY ou SERVED)
+      // Ne JAMAIS afficher de commande dont les items de la station sont encore PENDING !
+      const isStationTreated = stationItems.every((i: any) => i.status === 'READY' || i.status === 'SERVED') || o.status === 'SERVED';
+      if (!isStationTreated) continue;
+
       // Détermination claire de l'origine
       const isExpress = o.orderType === 'EXPRESS' || o.orderType === 'TAKEAWAY' || o.tableNumber === 0;
       const isRoom = o.spaceType === 'ROOM' || (o.locationDetail && o.locationDetail.toLowerCase().includes('chambre'));
@@ -106,7 +115,7 @@ export async function GET(req: Request) {
         originLabel = 'À Emporter / Comptoir';
       }
 
-      return {
+      memoryServedToday.push({
         id: o.id,
         tableNumber: o.tableNumber,
         customerNote: o.customerNote,
@@ -123,18 +132,20 @@ export async function GET(req: Request) {
         orderDestination: o.destinationService || 'KITCHEN',
         locationDetail: o.locationDetail || originLabel,
         originLabel,
-        servedAt: o.servedAt ? o.servedAt.toISOString() : null,
+        servedAt: o.servedAt ? o.servedAt.toISOString() : o.updatedAt.toISOString(),
         createdAt: o.createdAt.toISOString(),
-        items: o.items.map((i: any) => ({
+        items: stationItems.map((i: any) => ({
           id: i.id,
           menuItemId: i.menuItemId,
           name: i.name,
           quantity: i.quantity,
           price: Number(i.price),
           notes: i.customNotes,
+          station: i.station || targetStation,
+          status: i.status || 'SERVED',
         })),
-      };
-    });
+      });
+    }
 
     const dishesCount = memoryServedToday.reduce(
       (sum: number, order: any) => sum + order.items.reduce((s: number, i: any) => s + (i.quantity || 1), 0),

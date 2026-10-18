@@ -173,15 +173,78 @@ export async function POST(req: Request) {
         }
       }
 
-      // 2. Création de la commande directe comptoir
+      // 2. Préparation des items avec résolution précise de leur station (KITCHEN ou BAR)
+      const isDrinkOrBarItem = (name: string) => {
+        const lower = (name || '').toLowerCase();
+        return (
+          lower.includes('cocktail') ||
+          lower.includes('bissap') ||
+          lower.includes('bouye') ||
+          lower.includes('gingembre') ||
+          lower.includes('boisson') ||
+          lower.includes('jus') ||
+          lower.includes('café') ||
+          lower.includes('cafe') ||
+          lower.includes('thé') ||
+          lower.includes('the') ||
+          lower.includes('soda') ||
+          lower.includes('coca') ||
+          lower.includes('sprite') ||
+          lower.includes('fanta') ||
+          lower.includes('eau') ||
+          lower.includes('bière') ||
+          lower.includes('biere') ||
+          lower.includes('gazelle') ||
+          lower.includes('flag') ||
+          lower.includes('vin')
+        );
+      };
+
+      const resolvedItemsData = [];
+      let hasBarItems = false;
+      let hasKitchenItems = false;
+
+      for (const item of items) {
+        let itemStation: 'KITCHEN' | 'BAR' = 'KITCHEN';
+        if (item.menuItemId) {
+          const dbItem = await tx.menuItem.findUnique({
+            where: { id: item.menuItemId },
+            include: { category: true }
+          });
+          if (dbItem) {
+            itemStation = dbItem.station || dbItem.category?.station || (isDrinkOrBarItem(dbItem.name) ? 'BAR' : 'KITCHEN');
+          } else {
+            itemStation = isDrinkOrBarItem(item.name) ? 'BAR' : 'KITCHEN';
+          }
+        } else {
+          itemStation = isDrinkOrBarItem(item.name) ? 'BAR' : 'KITCHEN';
+        }
+
+        if (itemStation === 'BAR') hasBarItems = true;
+        else hasKitchenItems = true;
+
+        resolvedItemsData.push({
+          menuItemId: item.menuItemId || undefined,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          station: itemStation,
+          status: 'PENDING' as const,
+        });
+      }
+
+      // 3. Création de la commande directe comptoir
+      // IMPORTANT : status TOUJOURS 'PENDING' pour que la brigade/barista puisse préparer et valider !
       const isTakeaway = !isPaidLater && (!tableNumber || Number(tableNumber) === 0);
+      const destinationService = (!hasKitchenItems && hasBarItems) ? 'BAR' : 'KITCHEN';
+
       const newOrder = await tx.order.create({
         data: {
           tenantId: resolvedTenantId,
           orderType: isTakeaway ? 'TAKEAWAY' : 'TABLE',
           tableNumber: isPaidLater ? (tableNumber || 0) : 0,
           spaceType: isPaidLater ? 'TABLE' : 'COUNTER',
-          destinationService: 'KITCHEN',
+          destinationService,
           locationDetail: isStaffMeal 
             ? ('REPAS PERSONNEL - ' + employeeName.trim())
             : (isPaidLater 
@@ -192,20 +255,15 @@ export async function POST(req: Request) {
             : (customerName || (isPaidLater ? `Table ${tableNumber || 0}` : 'Client Comptoir')),
           employeeId: isStaffMeal ? (employeeId || undefined) : undefined,
           employeeName: isStaffMeal ? employeeName.trim() : undefined,
-          status: (isTakeaway && !isPaidLater && !isStaffMeal) ? 'SERVED' : 'PENDING',
+          status: 'PENDING',
           paymentStatus: isStaffMeal ? 'STAFF_NP' : (isPaidLater ? 'UNPAID' : 'PAID'),
           paymentMethod: paymentMethod || 'CASH',
           totalAmount,
           cashierId: cashierId || undefined,
           cashSessionId: cashSessionId || undefined,
-          servedAt: isPaidLater ? null : new Date(),
+          servedAt: null,
           items: {
-            create: items.map((i: any) => ({
-              menuItemId: i.menuItemId,
-              name: i.name,
-              quantity: i.quantity,
-              price: i.price,
-            }))
+            create: resolvedItemsData
           }
         },
         include: {

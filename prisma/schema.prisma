@@ -108,6 +108,37 @@ enum OrderType {
   TAKEAWAY
 }
 
+enum StationType {
+  KITCHEN
+  BAR
+}
+
+enum MaterialType {
+  BOIS
+  ACRYLIQUE
+  ALUMINIUM
+}
+
+enum TargetSpace {
+  TABLE
+  ROOM
+  POOL
+  BEACH
+  BAR
+  COUNTER
+}
+
+enum FinishType {
+  STANDARD
+  MARINE_VERNIS
+}
+
+enum HardwareInvoiceType {
+  SETUP
+  SAV
+  PARRAINAGE
+}
+
 model Plan {
   id            String   @id @default(cuid())
   name          String
@@ -184,26 +215,29 @@ model Tenant {
   qrScansToday          Int                @default(0) @map("qr_scans_today")
   ordersToday           Int                @default(0) @map("orders_today")
   storageUsedMb         Int                @default(0) @map("storage_used_mb")
+  parrainageCredits     Int                @default(0) @map("parrainage_credits")
   branding              Json? // Personnalisation graphique (couleurs, polices, logo, réseaux, Google Avis)
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
 
-  plan          Plan                 @relation(fields: [currentPlanId], references: [id])
-  transactions  PaymentTransaction[]
-  categories    Category[]
-  zones         Zone[]
-  waiters       Waiter[]
-  tables        Table[]
-  orders        Order[]
-  combos        ComboDeal[]
-  upsellRules   UpsellRule[]
-  menuItems     MenuItem[]
-  tickets       SupportTicket[]
-  waiterCalls   WaiterCall[]
-  QRCodeOrder   QRCodeOrder[]
-  cashiers      Cashier[]
-  cashSessions  CashSession[]
-  StockMovement StockMovement[]
+  plan              Plan                     @relation(fields: [currentPlanId], references: [id])
+  transactions      PaymentTransaction[]
+  categories        Category[]
+  zones             Zone[]
+  waiters           Waiter[]
+  tables            Table[]
+  orders            Order[]
+  combos            ComboDeal[]
+  upsellRules       UpsellRule[]
+  menuItems         MenuItem[]
+  tickets           SupportTicket[]
+  waiterCalls       WaiterCall[]
+  QRCodeOrder       QRCodeOrder[]
+  cashiers          Cashier[]
+  cashSessions      CashSession[]
+  StockMovement     StockMovement[]
+  hardwareDotations TenantHardwareDotation[]
+  hardwareInvoices  HardwareInvoice[]
 
   @@map("tenants")
 }
@@ -213,8 +247,9 @@ model Category {
   tenantId     String   @map("tenant_id")
   name         String
   icon         String?
-  displayOrder Int      @default(0) @map("display_order")
-  createdAt    DateTime @default(now()) @map("created_at")
+  displayOrder Int         @default(0) @map("display_order")
+  station      StationType @default(KITCHEN)
+  createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -265,9 +300,13 @@ model Table {
   status             String              @default("FREE")
   clearedAt          DateTime?           @map("cleared_at")
   isActive           Boolean             @default(true) @map("is_active")
+  scansToday         Int                 @default(0) @map("scans_today")
+  totalScans         Int                 @default(0) @map("total_scans")
+  supportId          String?             @map("support_id")
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
 
+  support  QRSupportCatalog? @relation(fields: [supportId], references: [id], onDelete: SetNull)
   tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   zone     Zone?          @relation(fields: [zoneId], references: [id], onDelete: SetNull)
   sessions TableSession[]
@@ -307,9 +346,10 @@ model MenuItem {
   isAvailable    Boolean    @default(true) @map("is_available")
 
   // --- NOUVEAU : GESTION DES STOCKS ---
-  trackStock    Boolean @default(false) @map("track_stock")
-  currentStock  Int     @default(0) @map("current_stock")
-  lowStockAlert Int     @default(5) @map("low_stock_alert")
+  trackStock    Boolean     @default(false) @map("track_stock")
+  currentStock  Int         @default(0) @map("current_stock")
+  lowStockAlert Int         @default(5) @map("low_stock_alert")
+  station       StationType @default(KITCHEN)
   // ------------------------------------
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -434,13 +474,16 @@ model OrderItem {
   selectedSide   String? @map("selected_side")
   selectedSpice  String? @map("selected_spice")
   selectedExtras Json?   @map("selected_extras")
-  customNotes    String? @map("custom_notes")
+  customNotes    String?     @map("custom_notes")
+  station        StationType @default(KITCHEN)
+  status         OrderStatus @default(PENDING)
 
   order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([menuItemId])
+  @@index([station])
   @@map("order_items")
 }
 
@@ -606,4 +649,72 @@ model StockMovement {
   @@index([tenantId])
   @@index([menuItemId])
   @@map("stock_movements")
+}
+
+model QRSupportCatalog {
+  id                 String        @id @default(cuid())
+  name               String        // ex: "Cube VIP Bois", "Standee Chambre Acrylique", "Chevalet Piscine & Plage", "Pack SAV"
+  description        String?       @db.Text
+  material           MaterialType  @default(BOIS)
+  targetSpace        TargetSpace   @default(TABLE) @map("target_space")
+  finishType         FinishType    @default(STANDARD) @map("finish_type")
+  costPrice          Decimal       @default(0) @map("cost_price") @db.Decimal(10, 2)
+  sellingPrice       Decimal       @default(0) @map("selling_price") @db.Decimal(10, 2)
+  stockQuantity      Int           @default(0) @map("stock_quantity")
+  packagingIncluded  Boolean       @default(true) @map("packaging_included") // Pochette en jute premium offerte
+  antiTheftEngraving Boolean       @default(true) @map("anti_theft_engraving") // Gravure "Propriété de [Resto] - Propulsé par Lou Ame Tay"
+  imageUrl           String?       @map("image_url") @db.Text
+  isSavPack          Boolean       @default(false) @map("is_sav_pack")
+  isActive           Boolean       @default(true) @map("is_active")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  dotations          TenantHardwareDotation[]
+  tables             Table[]
+
+  @@map("qr_support_catalogs")
+}
+
+model TenantHardwareDotation {
+  id              String           @id @default(cuid())
+  tenantId        String           @map("tenant_id")
+  supportId       String           @map("support_id")
+  quantity        Int              @default(1)
+  unitPrice       Decimal          @map("unit_price") @db.Decimal(10, 2)
+  totalPrice      Decimal          @map("total_price") @db.Decimal(10, 2)
+  isSetupInvoiced Boolean          @default(false) @map("is_setup_invoiced")
+  invoiceType     String           @default("SETUP") @map("invoice_type") // SETUP, SAV, PARRAINAGE
+  isSponsored     Boolean          @default(false) @map("is_sponsored") // Offert via parrainage (0 FCFA)
+  notes           String?          @db.Text
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  support         QRSupportCatalog @relation(fields: [supportId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([supportId])
+  @@map("tenant_hardware_dotations")
+}
+
+model HardwareInvoice {
+  id            String              @id @default(cuid())
+  tenantId      String              @map("tenant_id")
+  invoiceNumber String              @unique @map("invoice_number")
+  invoiceType   HardwareInvoiceType @default(SETUP) @map("invoice_type")
+  amount        Decimal             @db.Decimal(10, 2)
+  status        PaymentStatus       @default(PENDING)
+  paymentMethod PaymentMethod       @default(CASH) @map("payment_method")
+  pdfUrl        String?             @map("pdf_url") @db.Text
+  notes         String?             @db.Text
+  items         Json?
+  paidAt        DateTime?           @map("paid_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("hardware_invoices")
 }

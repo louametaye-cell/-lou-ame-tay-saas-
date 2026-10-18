@@ -82,18 +82,24 @@ export default function KitchenKDSView({
     }
   }, [initialRestaurantId, initialPlanSlug, initialRestaurantName]);
 
-  // Configuration stricte du poste KDS : par défaut KITCHEN (Cuisine), BAR si station=bar dans l'URL
+  // Configuration stricte du poste KDS : par défaut KITCHEN (Cuisine), BAR si /bar ou station=bar dans l'URL
   const [station, setStation] = useState<'KITCHEN' | 'BAR' | 'ALL'>('KITCHEN');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const s = (params.get('station') || params.get('service') || '').toUpperCase();
-      if (s === 'BAR') setStation('BAR');
-      else if (s === 'ALL') setStation('ALL');
-      else setStation('KITCHEN');
+      const isBarPath = window.location.pathname.includes('/bar');
+      if (s === 'BAR' || isBarPath) {
+        setStation('BAR');
+        if (!initialRestaurantName) setRestaurantName('Écran Bar (Boissons)');
+      } else if (s === 'ALL') {
+        setStation('ALL');
+      } else {
+        setStation('KITCHEN');
+      }
     }
-  }, []);
+  }, [initialRestaurantName]);
 
   const [isSimulatingOffline, setIsSimulatingOffline] = useState(false);
 

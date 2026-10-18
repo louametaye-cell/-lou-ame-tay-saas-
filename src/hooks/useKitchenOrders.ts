@@ -199,15 +199,18 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
   // Update order status API call avec interceptor résilient
   const updateOrderStatus = useCallback(
     async (orderId: string, newStatus: OrderStatus): Promise<boolean> => {
-      // Mise à jour optimiste immédiate dans l'UI
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId ? { ...o, status: newStatus } : o
-        )
-      );
+      const effectiveStation = service || 'KITCHEN';
 
+      // Mise à jour optimiste immédiate dans l'UI (retire la commande de l'écran si elle est servie)
       if (newStatus === 'SERVED') {
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
         playKitchenServedAlert();
+      } else {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId ? { ...o, status: newStatus } : o
+          )
+        );
       }
 
       const result = await resilientFetch(
@@ -218,10 +221,14 @@ export function useKitchenOrders(options: UseKitchenOrdersOptions = {}) {
             'Content-Type': 'application/json',
             ...(restaurantId ? { 'x-kds-token': `kds_session_${restaurantId}` } : {})
           },
-          body: JSON.stringify({ status: newStatus, restaurantId }),
+          body: JSON.stringify({
+            status: newStatus,
+            restaurantId,
+            station: effectiveStation
+          }),
         },
         'KITCHEN',
-        `Mise à jour #${orderId.slice(-5)} -> ${newStatus}`
+        `Mise à jour #${orderId.slice(-5)} [${effectiveStation}] -> ${newStatus}`
       );
 
       if (result.isOfflineQueued) {

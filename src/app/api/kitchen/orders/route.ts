@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAuthorizedTenant } from '@/lib/tenant-auth';
 
 // Calcul du début de journée dans le fuseau horaire sénégalais (Africa/Dakar - UTC+0)
 function getDakarStartOfToday(): Date {
@@ -15,12 +14,15 @@ function getDakarStartOfToday(): Date {
 }
 
 // GET /api/kitchen/orders
-// Récupère les commandes actives de la journée pour l'écran KDS (filtrage strict par station)
+// Récupère les commandes actives de la journée pour l'écran Cuisine KDS
+// - Ne retourne QUE les commandes contenant des items KITCHEN
+// - Ne montre à la Cuisine QUE les items de nourriture
+// - Affiche un avertissement "⚠️ Contient des boissons (Voir Bar)" si la commande contient aussi des boissons
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tenantIdParam = searchParams.get('restaurantId') || searchParams.get('tenantId') || searchParams.get('subdomain');
-    const stationParam = (searchParams.get('station') || searchParams.get('service') || searchParams.get('destinationService') || 'KITCHEN').toUpperCase();
+    const stationParam = (searchParams.get('station') || 'KITCHEN').toUpperCase();
 
     let candidate = tenantIdParam;
     if (!candidate) {
@@ -67,32 +69,45 @@ export async function GET(req: Request) {
 
     const startOfTodayDakar = getDakarStartOfToday();
 
-    // Clause WHERE stricte pour les commandes actives de la brigade
-    const whereClause: any = {
-      tenantId: resolvedTenantId,
-      createdAt: { gte: startOfTodayDakar },
-      status: {
-        in: ['PENDING', 'PREPARING', 'READY'],
-      },
-    };
-
-    // Routage discipliné par poste KDS (Cuisine par défaut, Bar si configuré)
-    if (stationParam !== 'ALL') {
-      whereClause.destinationService = stationParam === 'BAR' ? 'BAR' : 'KITCHEN';
-    }
-
+    // Recherche des commandes actives (non annulées, non totalement servies)
     const dbOrders = await (prisma as any).order.findMany({
-      where: whereClause,
+      where: {
+        tenantId: resolvedTenantId,
+        createdAt: { gte: startOfTodayDakar },
+        status: {
+          in: ['PENDING', 'PREPARING'],
+        },
+      },
       include: {
         items: true,
         waiter: { select: { id: true, name: true } },
         zone: { select: { id: true, name: true } },
       },
-      orderBy: { createdAt: 'asc' }, // Premier entré, premier sorti (FIFO brigade)
+      orderBy: { createdAt: 'asc' }, // FIFO brigade
       take: 60,
     });
 
-    const mappedOrders = dbOrders.map((o: any) => {
+    const targetStation = stationParam === 'BAR' ? 'BAR' : 'KITCHEN';
+
+    const mappedOrders: any[] = [];
+
+    for (const o of dbOrders) {
+      const allItems = o.items || [];
+      // Filtrer les items destinés à la station concernée
+      const stationItems = allItems.filter((i: any) => {
+        const itemStation = (i.station || 'KITCHEN').toUpperCase();
+        return itemStation === targetStation && i.status !== 'SERVED';
+      });
+
+      // Si la commande n'a aucun item actif pour cette station, on l'ignore pour cet écran
+      if (stationItems.length === 0) continue;
+
+      // Détecter la présence d'items de l'autre station
+      const hasOtherStationItems = allItems.some((i: any) => {
+        const itemStation = (i.station || 'KITCHEN').toUpperCase();
+        return itemStation !== targetStation;
+      });
+
       const isExpress = o.orderType === 'EXPRESS' || o.orderType === 'TAKEAWAY' || o.tableNumber === 0;
       const isRoom = o.spaceType === 'ROOM' || (o.locationDetail && o.locationDetail.toLowerCase().includes('chambre'));
       
@@ -103,16 +118,30 @@ export async function GET(req: Request) {
         originLabel = 'À Emporter / Comptoir';
       }
 
-      return {
-        ...o,
+      mappedOrders.push({
+        id: o.id,
+        tenantId: o.tenantId,
+        tableNumber: o.tableNumber,
+        status: o.status,
+        paymentStatus: o.paymentStatus,
+        paymentMethod: o.paymentMethod,
+        customerName: o.customerName,
+        customerNote: o.customerNote,
         total: Number(o.totalAmount ?? o.total ?? 0),
         totalAmount: Number(o.totalAmount ?? o.total ?? 0),
+        orderType: o.orderType || (isExpress ? 'TAKEAWAY' : 'TABLE'),
         orderOrigin: isRoom ? 'ROOM' : isExpress ? 'COUNTER' : 'TABLE',
-        orderDestination: o.destinationService || 'KITCHEN',
         originLabel,
         locationDetail: o.locationDetail || originLabel,
         createdAt: o.createdAt.toISOString(),
-        items: o.items.map((i: any) => ({
+        station: targetStation,
+        hasBarItems: targetStation === 'KITCHEN' && hasOtherStationItems,
+        hasKitchenItems: targetStation === 'BAR' && hasOtherStationItems,
+        crossStationWarning: hasOtherStationItems 
+          ? (targetStation === 'KITCHEN' ? '⚠️ Contient des boissons (Voir Bar)' : '⚠️ Contient de la nourriture (Voir Cuisine)')
+          : null,
+        // La Cuisine ou le Bar ne voit QUE ses propres articles pour ne pas encombrer l'écran
+        items: stationItems.map((i: any) => ({
           id: i.id,
           menuItemId: i.menuItemId,
           name: i.name,
@@ -120,14 +149,18 @@ export async function GET(req: Request) {
           price: Number(i.price),
           notes: i.customNotes,
           options: i.selectedExtras,
+          station: i.station || targetStation,
+          status: i.status || 'PENDING',
         })),
-      };
-    });
+        allItemsCount: allItems.length,
+        stationItemsCount: stationItems.length,
+      });
+    }
 
     return NextResponse.json({
       success: true,
       orders: mappedOrders,
-      station: stationParam,
+      station: targetStation,
       restaurantName: dbTenant.businessName,
     });
   } catch (error: any) {
