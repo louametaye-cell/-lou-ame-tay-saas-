@@ -116,17 +116,27 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ initialPlan }) =
               </div>
 
               {/* Email */}
-              <div className="p-4 rounded-xl bg-[#F8F9FA] border border-gray-200 flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0">
+              <div className="p-4 rounded-xl bg-[#F8F9FA] border border-gray-200 flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-orange-100 text-[#FF6B00] flex items-center justify-center shrink-0 mt-0.5">
                   <Mail className="w-5 h-5" />
                 </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block">
-                    Email Professionnel
-                  </span>
-                  <span className="font-bold text-sm sm:text-base text-gray-900">
-                    contact@mgartswork.site
-                  </span>
+                <div className="space-y-1">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 block">
+                      Commercial &amp; Partenariats CHR
+                    </span>
+                    <a href="mailto:chr@louametay.online" className="font-bold text-sm sm:text-base text-gray-900 hover:text-orange-600 transition-colors">
+                      chr@louametay.online
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 block">
+                      Service Client &amp; Public
+                    </span>
+                    <a href="mailto:serviceclient@louametay.com" className="font-bold text-sm sm:text-base text-gray-900 hover:text-orange-600 transition-colors">
+                      serviceclient@louametay.com
+                    </a>
+                  </div>
                 </div>
               </div>
 

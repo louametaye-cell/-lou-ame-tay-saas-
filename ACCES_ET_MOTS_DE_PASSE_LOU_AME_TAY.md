@@ -10,7 +10,7 @@ La console d'administration centrale permet de superviser l'ensemble des établi
 | Rôle | URL de Connexion | Identifiant / Email | Mot de Passe |
 | :--- | :--- | :--- | :--- |
 | **Super Admin Principal** | `/super-admin` | `admin@louametay.com` | `SuperAdmin2024!` *(ou code Super-Admin)* |
-| **Direction DAW by MG** | `/super-admin` | `contact@mgartswork.site` | `LouAmeTay@2026!Admin` |
+| **Direction DAW by MG** | `/super-admin` | `ceo@louametay.com` | `LouAmeTay@2026!Admin` |
 
 ---
 
@@ -67,13 +67,15 @@ La console d'administration centrale permet de superviser l'ensemble des établi
 
 ---
 
-## 📞 4. CONTACT OFFICIEL DAW DIGITAL ARTS WORK
-* **Assistance Technique & Déploiement** : +221 77 458 74 74 / +221 77 130 36 78
-* **Email Professionnel** : contact@mgartswork.site
+## 📞 4. CONTACTS OFFICIELS LOU AME TAY & DAW DIGITAL ARTS WORK
+* **Assistance Technique & SAV 24/7** : +221 77 458 74 74 / +221 77 130 36 78 | `sav@louametay.online`
+* **Pôle Commercial & CHR** : `chr@louametay.online`
+* **Service Client & Informations** : `serviceclient@louametay.com`
+* **Direction Générale & Contrats** : `ceo@louametay.com`
 * **Siège Social** : Thiès, Sénégal — Quartier Fayou, Face Foot Salé
 * **Réseaux Sociaux** : @mgartswork (YouTube, Facebook, Instagram, TikTok)
 
 ---
 *Document produit par DAW Digital Arts Work — by MG*  
 *Signature de développeur Vibe Coder*  
-*Contact : contact@mgartswork.site | +221 77 458 74 74*
+*Contact : sav@louametay.online | +221 77 458 74 74*

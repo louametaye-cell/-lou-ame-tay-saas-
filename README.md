@@ -117,17 +117,21 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ---
 
-## 🏢 Éditeur & Contact Officiel
+## 🏢 Éditeur & Contacts Officiels
 - **Éditeur** : DAW Digital Arts Work — by MG
 - **Rôle** : CEO & Développeur (Dev) de Lou Ame Tay?
 - **Société** : Startup Sénégalaise
 - **Siège Social** : Thiès, Sénégal — Quartier Fayou, Face Foot Salé
 - **Téléphone principal** : +221 77 458 74 74
 - **Téléphone secondaire** : +221 77 130 36 78
-- **Email** : contact@mgartswork.site
+- **Emails Officiels** :
+  - **Service Client & Public** : `serviceclient@louametay.com`
+  - **Pôle Commercial CHR** : `chr@louametay.online`
+  - **Assistance Technique & SAV** : `sav@louametay.online`
+  - **Direction Générale & Contrats** : `ceo@louametay.com`
 - **Réseaux Sociaux** : @mgartswork (YouTube, Facebook, Instagram, TikTok)
 
 ---
 *Document produit par DAW Digital Arts Work — by MG*  
 *Signature de développeur Vibe Coder*  
-*Contact : contact@mgartswork.site | +221 77 458 74 74*
+*Contact : sav@louametay.online | +221 77 458 74 74*

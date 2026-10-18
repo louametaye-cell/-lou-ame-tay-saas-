@@ -1,6 +1,6 @@
 # 🇸🇳 Lou Ame Tay ? — Guide Officiel des Accès Partenaires & Production
 **Éditeur** : DAW Digital Arts Work — by MG  
-**Contact Direction & Support** : +221 77 458 74 74 / +221 77 130 36 78 | contact@mgartswork.site  
+**Contact Direction & Support** : +221 77 458 74 74 / +221 77 130 36 78 | `sav@louametay.online` / `ceo@louametay.com`  
 **Domaine Officiel** : https://www.louametay.com
 
 ---
@@ -29,4 +29,4 @@
 ---
 *Document produit par DAW Digital Arts Work — by MG*  
 *Signature de développeur Vibe Coder*  
-*Contact : contact@mgartswork.site | +221 77 458 74 74*
+*Contact : sav@louametay.online | +221 77 458 74 74*

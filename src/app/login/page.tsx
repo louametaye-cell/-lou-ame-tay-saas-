@@ -20,6 +20,7 @@ import {
   Volume2,
   Eye,
   EyeOff,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -250,18 +251,29 @@ export default function RestaurantLoginPage() {
             </form>
 
             {/* Support Contact */}
-            <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 relative z-10">
-              <a
-                href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>Assistance WhatsApp 24/7</span>
-              </a>
+            <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400 relative z-10">
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://wa.me/221774587474?text=Bonjour%20Lou%20Ame%20Tay,%20j'ai%20besoin%20d'aide%20pour%20me%20connecter%20à%20mon%20espace%20restaurant."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>WhatsApp 24/7</span>
+                </a>
+                <span>•</span>
+                <a
+                  href="mailto:sav@louametay.online"
+                  className="flex items-center gap-1.5 text-slate-300 hover:text-orange-400 font-bold transition-colors"
+                  title="Contacter le SAV"
+                >
+                  <Mail className="w-3.5 h-3.5 text-orange-400" />
+                  <span>sav@louametay.online</span>
+                </a>
+              </div>
 
-              <span className="text-slate-400 text-[11px] font-medium">Sénégal • 2026</span>
+              <span className="text-slate-500 text-[11px] font-medium">Sénégal • 2026</span>
             </div>
           </div>
         </div>

@@ -20,7 +20,8 @@ import {
   Database, 
   Server, 
   Zap,
-  PhoneCall
+  PhoneCall,
+  Mail
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -90,7 +91,7 @@ const FAQ_DATA: FAQItem[] = [
     id: 'faq-10',
     category: 'Support Technique',
     question: 'Comment contacter l\'assistance technique DAW Digital Arts Work — by MG ?',
-    answer: 'Notre équipe support sénégalaise est joignable 7j/7 de 8h à 23h via WhatsApp au +221 77 458 74 74 ou par email à contact@mgartswork.site. Une intervention à distance peut être déployée en moins de 15 minutes.',
+    answer: 'Notre équipe support sénégalaise est joignable 7j/7 de 8h à 23h via WhatsApp au +221 77 458 74 74 ou par email à sav@louametay.online. Une intervention à distance peut être déployée en moins de 15 minutes.',
   },
 ];
 
@@ -216,12 +217,21 @@ export default function DashboardHelpPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <a
+              href="mailto:sav@louametay.online"
+              className="min-h-[46px] px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm rounded-2xl transition-all border border-slate-200 flex items-center gap-2 cursor-pointer"
+              title="Envoyer un e-mail au support technique"
+            >
+              <Mail className="w-4 h-4 text-emerald-600" />
+              <span className="hidden md:inline">sav@louametay.online</span>
+              <span className="md:hidden">Email SAV</span>
+            </a>
             <button
               onClick={openWhatsAppSupport}
               className="min-h-[46px] px-5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>Ouvrir un ticket WhatsApp</span>
+              <span>Ticket WhatsApp</span>
             </button>
           </div>
         </div>
@@ -235,7 +245,7 @@ export default function DashboardHelpPage() {
           <div className="space-y-2 text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold px-3 py-1 rounded-full">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Assistance Téléphonique &amp; WhatsApp 7j/7</span>
+              <span>Assistance Téléphonique, WhatsApp &amp; Email 7j/7</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
               Une question ou un blocage technique ?
@@ -245,7 +255,14 @@ export default function DashboardHelpPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+            <a
+              href="mailto:sav@louametay.online"
+              className="min-h-[50px] px-5 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-sm rounded-2xl border border-white/20 flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Mail className="w-4 h-4 text-emerald-400" />
+              <span>sav@louametay.online</span>
+            </a>
             <button
               type="button"
               onClick={openWhatsAppSupport}

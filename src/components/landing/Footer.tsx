@@ -51,11 +51,22 @@ export const Footer: React.FC<FooterProps> = () => {
                 +221 77 130 36 78
               </a>
             </li>
-            <li className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
-              <a href="mailto:contact@mgartswork.site" className="hover:text-emerald-400 text-slate-300">
-                contact@mgartswork.site
-              </a>
+            <li className="flex items-start gap-2">
+              <Mail className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div>
+                  <a href="mailto:serviceclient@louametay.com" className="hover:text-emerald-400 text-slate-300 font-medium block">
+                    serviceclient@louametay.com
+                  </a>
+                  <span className="text-[11px] text-slate-400 block -mt-0.5">Service Client &amp; Public</span>
+                </div>
+                <div>
+                  <a href="mailto:chr@louametay.online" className="hover:text-emerald-400 text-slate-300 font-medium block">
+                    chr@louametay.online
+                  </a>
+                  <span className="text-[11px] text-slate-400 block -mt-0.5">Pôle Commercial CHR</span>
+                </div>
+              </div>
             </li>
           </ul>
         </div>
@@ -153,7 +164,7 @@ export const Footer: React.FC<FooterProps> = () => {
                   <p><strong>Siège Social :</strong> Thiès, Sénégal — Quartier Fayou, Face Foot Salé.</p>
                   <p><strong>Directeur de publication :</strong> CEO & Développeur Lou Ame Tay? (DAW Digital Arts Work — by MG).</p>
                   <p><strong>Hébergement :</strong> Serveurs Cloud Edge haute disponibilité certifiés SSL/HTTPS.</p>
-                  <p><strong>Contact :</strong> contact@mgartswork.site | +221 77 458 74 74 / +221 77 130 36 78.</p>
+                  <p><strong>Contact :</strong> serviceclient@louametay.com (Public) | chr@louametay.online (Pro CHR) | +221 77 458 74 74 / +221 77 130 36 78.</p>
                 </>
               )}
               {legalModalContent === 'cgv' && (

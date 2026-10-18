@@ -54,7 +54,8 @@ export function generateInvoiceHtml(data: InvoiceData): string {
           <strong>DAW DIGITAL ARTS WORK — BY MG</strong><br>
           NINEA : 007845612 / RCCM : SN-THS-2026-B-1234<br>
           Thiès, Sénégal — Quartier Fayou, Face Foot Salé (Siège Social)<br>
-          WhatsApp : +221 77 458 74 74 / +221 77 130 36 78
+          WhatsApp : +221 77 458 74 74 / +221 77 130 36 78<br>
+          Email officiel : ceo@louametay.com
         </div>
       </div>
 

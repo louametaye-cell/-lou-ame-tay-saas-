@@ -196,14 +196,14 @@ export const CONTRACT_ORDER_FORM_FIELDS = {
   editor: 'DAW Digital Arts Work — by MG',
   headquarters: 'Thiès, Sénégal — Quartier Fayou, Face Foot Salé (Siège Social)',
   contactPhones: '+221 77 458 74 74 / +221 77 130 36 78',
-  contactEmail: 'contact@mgartswork.site',
-  website: 'www.mgartswork.site',
+  contactEmail: 'ceo@louametay.com',
+  website: 'www.louametay.com',
   initialSetupFee: 50000,
   checklistItems: [
     'Prendre une photo nette de la fiche d\'inscription signée.',
     'Récupérer les photos du menu papier actuel du restaurant (ou fichier PDF/texte).',
     'Récupérer le logo du restaurant en bonne qualité (sur WhatsApp ou email).',
     'Noter le nombre exact de tables et la numérotation souhaitée (ex : Table 1 à 20, Terrasse 1 à 10).',
-    'Transmettre le pack complet sur le groupe WhatsApp commercial ou à contact@mgartswork.site pour livraison en 48h.'
+    'Transmettre le pack complet sur le groupe WhatsApp commercial ou à chr@louametay.online pour livraison en 48h.'
   ]
 };
