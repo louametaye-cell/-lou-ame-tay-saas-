@@ -22,11 +22,13 @@ import {
   Store,
   Receipt,
   Archive,
-  Trash2
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { CashierType, CashierShift } from '@/types';
 import { LockedFeatureGuard } from '@/components/paywall/LockedFeatureGuard';
 import { CashierManagementCard } from '@/components/dashboard/CashierManagementCard';
+import { generateSafeCashierPin, validateCashierPin } from '@/lib/password-policy';
 
 export default function CashiersManagementPage() {
   const [cashiers, setCashiers] = useState<CashierType[]>([]);
@@ -58,9 +60,9 @@ export default function CashiersManagementPage() {
     }
   }, []);
 
-  const fetchCashiers = async (tId: string) => {
+  const fetchCashiers = async (tId: string, isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const res = await fetch(`/api/tenant/cashiers?restaurantId=${encodeURIComponent(tId)}`, {
         headers: tId ? { 'x-tenant-token': tId } : {}
       });
@@ -73,7 +75,7 @@ export default function CashiersManagementPage() {
     } catch (e) {
       toast.error('Erreur réseau lors de la récupération des caissiers');
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
@@ -83,8 +85,9 @@ export default function CashiersManagementPage() {
       toast.error('Le nom du caissier est requis');
       return;
     }
-    if (!/^\d{4}$/.test(pinCode.trim())) {
-      toast.error('Le code PIN doit comporter exactement 4 chiffres');
+    const pinCheck = validateCashierPin(pinCode.trim());
+    if (!pinCheck.isValid) {
+      toast.error(pinCheck.error || 'Code PIN invalide');
       return;
     }
 
@@ -359,20 +362,31 @@ export default function CashiersManagementPage() {
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Code PIN Caisse (4 chiffres) <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Ex: 1234"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono tracking-widest font-black focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={pinCode}
+                    onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="Ex: 7391"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono tracking-widest font-black focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all text-center"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPinCode(generateSafeCashierPin())}
+                  className="px-3.5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Générer un PIN aléatoire non trivial à 4 chiffres"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Générer</span>
+                </button>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Sert à s'identifier sur l'écran caisse en 2 secondes.</p>
+              <p className="text-[11px] text-slate-400 mt-1">Codes triviaux (0000, 1234...) interdits.</p>
             </div>
 
             <div>
@@ -462,7 +476,7 @@ export default function CashiersManagementPage() {
                   cashier={c}
                   restaurantId={restaurantId}
                   restaurantName={restaurantName}
-                  onRefresh={() => fetchCashiers(restaurantId)}
+                  onRefresh={() => fetchCashiers(restaurantId, true)}
                 />
               ))}
             </div>

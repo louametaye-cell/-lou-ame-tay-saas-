@@ -53,28 +53,16 @@ export async function POST(req: Request) {
       }, { status: 404 });
     }
 
-    // 2. Vérification stricte du mot de passe
-    let isValid = false;
-    const isProd = process.env.NODE_ENV === 'production';
-
-    if (dbTenant.passwordHash) {
-      isValid = await bcrypt.compare(providedSecret, dbTenant.passwordHash);
-      if (!isValid && (providedSecret === '1234' || providedSecret === 'Pass1234!' || providedSecret === 'Demo123!')) {
-        const pilotSubdomains = ['madiba-restaurant', 'sams-prestige', 'anima-pizzeria', 'hotel-lat-dior'];
-        const pilotIds = ['tenant_madiba_restau', 'tenant_sams_restaurant', 'tenant_anima_pizzeria', 'tenant_hotel_lat_dior'];
-        if (pilotSubdomains.includes(dbTenant.subdomain) || pilotIds.includes(dbTenant.id)) {
-          isValid = true;
-        }
-      }
-    } else if (!isProd) {
-      // Fallback de développement uniquement pour les environnements de test locaux
-      const devPasswords = ['Pass1234!', 'Demo123!', 'Mgd2024!', 'Mda2024!', '1234', 'resto123', 'admin123'];
-      isValid = devPasswords.includes(providedSecret);
-    } else {
-      // En production, un compte sans hash sécurisé ne peut pas être accédé via fallback
-      console.error(`[SECURITY ALERT] Restaurant ${dbTenant.id} attempted login without passwordHash in production.`);
-      isValid = false;
+    // 2. Vérification cryptographique stricte du mot de passe
+    if (!dbTenant.passwordHash) {
+      console.error(`[SECURITY ALERT] Restaurant ${dbTenant.id} (${dbTenant.subdomain}) has no passwordHash configured.`);
+      return NextResponse.json(
+        { error: 'Compte restaurant non configuré pour la connexion sécurisée. Contactez la Direction DAW.' },
+        { status: 401 }
+      );
     }
+
+    const isValid = await bcrypt.compare(providedSecret, dbTenant.passwordHash);
 
     if (!isValid) {
       return NextResponse.json({ error: 'Identifiant ou mot de passe incorrect' }, { status: 401 });

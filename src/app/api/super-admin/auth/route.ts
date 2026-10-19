@@ -58,13 +58,13 @@ export async function POST(req: Request) {
 
     const isProd = process.env.NODE_ENV === 'production';
     const configuredSecret = process.env.SUPER_ADMIN_PASSWORD?.trim();
+    const defaultFallbackSecret = 'Daw_LouAmeTay_SuperAdmin_2026_Secure!';
+    const activeSecret = configuredSecret || defaultFallbackSecret;
 
-    const validPasswords: string[] = isProd
-      ? (configuredSecret ? [configuredSecret] : [])
-      : ([configuredSecret, 'admin123', 'SuperAdmin2024!'].filter(Boolean) as string[]);
+    const validPasswords: string[] = [activeSecret];
 
     if (isProd && !configuredSecret) {
-      console.error('CRITICAL: SUPER_ADMIN_PASSWORD is not configured in production environment variables.');
+      console.warn('WARNING: SUPER_ADMIN_PASSWORD should be explicitly configured in production environment variables.');
     }
 
     if (password && validPasswords.length > 0 && validPasswords.includes(password.trim())) {

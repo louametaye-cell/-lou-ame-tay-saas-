@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isAuthorizedTenantAdmin } from '@/lib/tenant-auth';
+import { validateCashierPin } from '@/lib/password-policy';
 import bcrypt from 'bcryptjs';
 
 export async function PATCH(
@@ -10,13 +11,25 @@ export async function PATCH(
   try {
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id;
-    const body = await req.json();
+    
+    let body: any = {};
+    const rawBody = await req.text();
+    if (rawBody && rawBody.trim().length > 0) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch (parseErr) {
+        console.error('Erreur parsing JSON body:', parseErr, 'Raw body was:', rawBody);
+        return NextResponse.json({ error: 'Format JSON invalide' }, { status: 400 });
+      }
+    }
+
     const { newPin, pinCode, tenantId, restaurantId } = body;
 
     const rawPin = String(newPin ?? pinCode ?? '').trim();
-    if (!/^\d{4}$/.test(rawPin)) {
+    const pinValidation = validateCashierPin(rawPin);
+    if (!pinValidation.isValid) {
       return NextResponse.json(
-        { error: 'Le nouveau code PIN doit comporter exactement 4 chiffres.' },
+        { error: pinValidation.error },
         { status: 400 }
       );
     }

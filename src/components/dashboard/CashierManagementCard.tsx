@@ -16,8 +16,11 @@ import {
   X,
   Save,
   MessageCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateSafeCashierPin, validateCashierPin } from '@/lib/password-policy';
 
 export interface CashierCardItem {
   id: string;
@@ -56,6 +59,8 @@ export function CashierManagementCard({
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'edit' | 'reset'>('edit');
   const [newPin, setNewPin] = useState('');
+  const [justGeneratedPin, setJustGeneratedPin] = useState<string | null>(null);
+  const [hasCopiedPin, setHasCopiedPin] = useState(false);
   const [isSubmittingPin, setIsSubmittingPin] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
@@ -68,15 +73,19 @@ export function CashierManagementCard({
   const openEditPinModal = () => {
     setModalMode('edit');
     setNewPin('');
+    setJustGeneratedPin(null);
+    setHasCopiedPin(false);
     setModalError(null);
     setModalSuccess(null);
     setIsPinModalOpen(true);
   };
 
   const openResetPinModal = () => {
-    const generated = Math.floor(1000 + Math.random() * 9000).toString();
+    const generated = generateSafeCashierPin();
     setModalMode('reset');
     setNewPin(generated);
+    setJustGeneratedPin(null);
+    setHasCopiedPin(false);
     setModalError(null);
     setModalSuccess(null);
     setIsPinModalOpen(true);
@@ -88,8 +97,9 @@ export function CashierManagementCard({
     setModalSuccess(null);
 
     const cleanPin = newPin.trim();
-    if (!/^\d{4}$/.test(cleanPin)) {
-      setModalError('Le nouveau code PIN doit comporter exactement 4 chiffres.');
+    const pinCheck = validateCashierPin(cleanPin);
+    if (!pinCheck.isValid) {
+      setModalError(pinCheck.error || 'Code PIN invalide.');
       return;
     }
 
@@ -116,17 +126,9 @@ export function CashierManagementCard({
         return;
       }
 
-      const successMsg =
-        data.message || `Code PIN de ${cashier.name} mis à jour avec succès.`;
-      setModalSuccess(successMsg);
-      toast.success(successMsg);
-      onRefresh();
-
-      setTimeout(() => {
-        setIsPinModalOpen(false);
-        setNewPin('');
-        setModalSuccess(null);
-      }, 900);
+      // 🔒 SUCCÈS : basculement immédiat vers l'écran de remise unique du PIN (pas de fermeture en 900ms)
+      setJustGeneratedPin(cleanPin);
+      toast.success(`Nouveau code PIN validé pour ${cashier.name} !`);
     } catch {
       const netErr = 'Erreur réseau lors de la connexion au serveur.';
       setModalError(netErr);
@@ -464,68 +466,157 @@ export function CashierManagementCard({
               </div>
             )}
 
-            <form onSubmit={handleSavePin} className="space-y-4">
-              <div>
-                <label
-                  htmlFor={`new-pin-input-${cashier.id}`}
-                  className="block text-xs font-black text-slate-800 mb-2"
-                >
-                  Nouveau code PIN (4 chiffres)
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    id={`new-pin-input-${cashier.id}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={4}
-                    pattern="\d{4}"
-                    value={newPin}
-                    onChange={(e) => {
-                      setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4));
-                      if (modalError) setModalError(null);
-                    }}
-                    placeholder="Ex: 2580"
-                    autoFocus
-                    required
-                    className="flex-1 px-4 py-3.5 bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-2xl font-mono font-black text-2xl tracking-[0.5em] text-center text-slate-900 outline-hidden transition-all"
-                  />
+            {justGeneratedPin ? (
+              /* ÉCRAN DE REMISE UNIQUE DU PIN GÉNÉRÉ */
+              <div className="space-y-4 animate-in fade-in">
+                <div className="p-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-emerald-900 tracking-wider">
+                      Nouveau Code PIN Caisse
+                    </span>
+                    <span className="text-[11px] font-black px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded-full">
+                      Affichage unique
+                    </span>
+                  </div>
+
+                  <div
+                    data-testid={`cashier-pin-generated-xxl-${cashier.id}`}
+                    className="font-mono font-black text-4xl tracking-[0.5em] text-emerald-800 bg-white border border-emerald-300 rounded-2xl py-4 text-center select-all shadow-inner"
+                  >
+                    {justGeneratedPin}
+                  </div>
+
+                  <p className="text-xs text-emerald-950 font-bold leading-relaxed">
+                    Transmettez ce code PIN à <strong>{cashier.name}</strong> dès maintenant. Par mesure de sécurité cryptographique, ce code est désormais haché avec bcrypt et ne sera plus jamais réaffiché en clair.
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-1">
                   <button
                     type="button"
                     onClick={() => {
-                      const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
-                      setNewPin(randomPin);
-                      setModalError(null);
+                      if (navigator?.clipboard) {
+                        navigator.clipboard.writeText(justGeneratedPin);
+                        setHasCopiedPin(true);
+                        toast.success('Code PIN copié dans le presse-papier !');
+                      }
                     }}
-                    className="min-h-[52px] px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-black border border-slate-300 flex items-center gap-1.5 transition-all cursor-pointer"
-                    title="Générer un PIN aléatoire à 4 chiffres"
+                    className={`w-full min-h-[48px] px-4 py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                      hasCopiedPin
+                        ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                    }`}
                   >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>Générer</span>
+                    {hasCopiedPin ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-700" />
+                        <span>Code PIN copié !</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 text-slate-600" />
+                        <span>Copier le code PIN</span>
+                      </>
+                    )}
+                  </button>
+
+                  {cashier.phone && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cleanPhone = (cashier.phone || '').replace(/[^0-9]/g, '');
+                        const msg = encodeURIComponent(
+                          `Bonjour ${cashier.name},\nVotre nouveau code PIN de caisse Lou Ame Tay pour ${restaurantName || 'votre établissement'} est : ${justGeneratedPin}.\nGardez ce code secret.`
+                        );
+                        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+                      }}
+                      className="w-full min-h-[48px] px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Transmettre sur WhatsApp ({cashier.phone})</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPinModalOpen(false);
+                      setJustGeneratedPin(null);
+                      setNewPin('');
+                      setHasCopiedPin(false);
+                      onRefresh();
+                    }}
+                    className="w-full min-h-[48px] px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-black transition-all cursor-pointer"
+                  >
+                    J&apos;ai bien noté le PIN • Fermer
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1.5">
-                  Le code PIN sera haché avec bcrypt (coût 10) avant d&apos;être enregistré en base de données.
-                </p>
               </div>
+            ) : (
+              /* FORMULAIRE DE SAISIE / GÉNÉRATION DU PIN */
+              <form onSubmit={handleSavePin} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor={`new-pin-input-${cashier.id}`}
+                    className="block text-xs font-black text-slate-800 mb-2"
+                  >
+                    Nouveau code PIN (4 chiffres)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id={`new-pin-input-${cashier.id}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      pattern="\d{4}"
+                      value={newPin}
+                      onChange={(e) => {
+                        setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4));
+                        if (modalError) setModalError(null);
+                      }}
+                      placeholder="Ex: 7391"
+                      autoFocus
+                      required
+                      className="flex-1 px-4 py-3.5 bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-2xl font-mono font-black text-2xl tracking-[0.5em] text-center text-slate-900 outline-hidden transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomPin = generateSafeCashierPin();
+                        setNewPin(randomPin);
+                        setModalError(null);
+                      }}
+                      className="min-h-[52px] px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-black border border-slate-300 flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Générer un PIN aléatoire non trivial à 4 chiffres"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Générer</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1.5">
+                    Le code PIN sera haché avec bcrypt (coût 10) avant d&apos;être enregistré en base de données.
+                  </p>
+                </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPinModalOpen(false)}
-                  className="min-h-[48px] px-4 py-2.5 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingPin || newPin.length !== 4}
-                  className="min-h-[48px] px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{isSubmittingPin ? 'Enregistrement...' : 'Enregistrer'}</span>
-                </button>
-              </div>
-            </form>
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPinModalOpen(false)}
+                    className="min-h-[48px] px-4 py-2.5 rounded-2xl text-xs font-black text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingPin || newPin.length !== 4}
+                    className="min-h-[48px] px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isSubmittingPin ? 'Enregistrement...' : 'Enregistrer'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

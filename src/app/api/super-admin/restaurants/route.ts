@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 import { resolveRestaurantCoordinates } from '@/lib/senegal-geo';
+import { validateManagerPassword, generateStrongPassword } from '@/lib/password-policy';
 
 export async function GET(req: Request) {
   try {
@@ -416,8 +417,17 @@ export async function POST(req: Request) {
       });
     }
 
-    const initialPassword = password && String(password).trim() ? String(password).trim() : 'Pass1234!';
-    const hashedPassword = await bcrypt.hash(initialPassword, 10);
+    let finalPassword = password && String(password).trim() ? String(password).trim() : '';
+    if (finalPassword) {
+      const pwdValidation = validateManagerPassword(finalPassword, uniqueSubdomain);
+      if (!pwdValidation.isValid) {
+        return NextResponse.json({ error: pwdValidation.error }, { status: 400 });
+      }
+    } else {
+      finalPassword = generateStrongPassword(14);
+    }
+
+    const hashedPassword = await bcrypt.hash(finalPassword, 10);
     const durationMonths = Number(months) || 3;
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + durationMonths);

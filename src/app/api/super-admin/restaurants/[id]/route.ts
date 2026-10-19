@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { isAuthorizedSuperAdmin } from '@/lib/admin-auth';
 import { isAuthorizedTenant } from '@/lib/tenant-auth';
 import { resolveRestaurantCoordinates } from '@/lib/senegal-geo';
+import { validateManagerPassword } from '@/lib/password-policy';
 
 // GET /api/super-admin/restaurants/[id]
 export async function GET(
@@ -185,6 +186,10 @@ async function handleUpdate(
     let securityUpdateData: any = {};
     const rawPass = (body.newPassword || body.password || '').trim();
     if (rawPass) {
+      const pwdValidation = validateManagerPassword(rawPass);
+      if (!pwdValidation.isValid) {
+        return NextResponse.json({ error: pwdValidation.error }, { status: 400 });
+      }
       const hashed = await bcrypt.hash(rawPass, 10);
       securityUpdateData.passwordHash = hashed;
     }

@@ -37,6 +37,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { CashierManagementCard } from '@/components/dashboard/CashierManagementCard';
+import { generateSafeCashierPin } from '@/lib/password-policy';
 
 type TabKey = 'identity' | 'hours' | 'zones' | 'cashiers' | 'payment' | 'notifications' | 'danger';
 
@@ -364,7 +365,7 @@ export default function DashboardSettingsPage() {
 
   // Caissiers
   const generateRandomPin = () => {
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
+    const pin = generateSafeCashierPin();
     setNewCashierPin(pin);
   };
 

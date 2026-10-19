@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { validateManagerPassword } from '@/lib/password-policy';
+import { isAuthorizedTenantAdmin } from '@/lib/tenant-auth';
 
 export async function PATCH(req: Request) {
   try {
@@ -14,13 +16,6 @@ export async function PATCH(req: Request) {
       );
     }
 
-    if (String(newPassword).length < 6) {
-      return NextResponse.json(
-        { error: 'Le nouveau mot de passe doit comporter au moins 6 caractères' },
-        { status: 400 }
-      );
-    }
-
     const tenant = await (prisma as any).tenant.findUnique({
       where: { id: restaurantId },
     });
@@ -29,6 +24,23 @@ export async function PATCH(req: Request) {
       return NextResponse.json(
         { error: 'Restaurant introuvable' },
         { status: 404 }
+      );
+    }
+
+    // 🔒 Contrôle d'autorisation strict : seul le gérant de ce tenant ou le Super-Admin peut modifier ce mot de passe
+    if (!isAuthorizedTenantAdmin(req, tenant.id, tenant.subdomain, restaurantId)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé : Session gérant invalide pour cet établissement.' },
+        { status: 403 }
+      );
+    }
+
+    // 🔒 Règle de complexité stricte (min 8 caractères, majuscule, chiffre, non trivial)
+    const passwordValidation = validateManagerPassword(String(newPassword), tenant.subdomain);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json(
+        { error: passwordValidation.error },
+        { status: 400 }
       );
     }
 

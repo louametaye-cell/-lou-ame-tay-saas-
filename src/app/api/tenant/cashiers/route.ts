@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CashierShift } from '@prisma/client';
 import { isAuthorizedTenantAdmin } from '@/lib/tenant-auth';
+import { validateCashierPin } from '@/lib/password-policy';
 import bcrypt from 'bcryptjs';
 
 function extractTenantFromCookie(req: Request): string | null {
@@ -134,8 +135,9 @@ export async function POST(req: Request) {
     }
 
     const cleanPin = String(pinCode || '').trim();
-    if (!cleanPin || !/^\d{4}$/.test(cleanPin)) {
-      return NextResponse.json({ error: 'Le code PIN doit comporter exactement 4 chiffres' }, { status: 400 });
+    const pinValidation = validateCashierPin(cleanPin);
+    if (!pinValidation.isValid) {
+      return NextResponse.json({ error: pinValidation.error }, { status: 400 });
     }
 
     const cleanPhone = phone && typeof phone === 'string' && phone.trim() ? phone.trim() : null;
