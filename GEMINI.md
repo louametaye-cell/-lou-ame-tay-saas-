@@ -187,3 +187,42 @@ Cette section consacre les règles de design et de télémétrie de la console d
 - **Double Flux de Facturation** : Facture unique `SETUP` pour le matériel physique (supports bois/acrylique, marine vernis, gravure anti-vol, kits SAV) et Facture mensuelle `RECURRING` pour l'abonnement SaaS (7 packs).
 - **Parrainage B2B** : Crédit de 5 supports offerts déduits du stock physique mais facturés 0 FCFA au parrain.
 
+---
+
+## Section 15 — Architecture PRA Multi-Tenant & Le Sanctuaire Financier Inviolable (RTO < 5 min)
+
+Cette section consacre les règles opérationnelles et techniques de sauvegarde et de reprise d'activité d'urgence pour tout établissement hébergé sur Lou Ame Tay ? :
+
+### 15.1 — Interdiction Absolue de Restauration Globale en Multi-Tenant
+- En cas de sinistre sur un seul restaurant, il est **formellement interdit** de restaurer la base de données PostgreSQL globale (backup Supabase ou dump cluster). Une telle action effacerait instantanément toutes les ventes et encaissements des autres établissements abonnés.
+- Toute opération de sauvegarde ou de restauration doit être **granulaire au niveau du tenant** (`TenantSnapshot`).
+
+### 15.2 — Le Principe Inviolable du Sanctuaire Financier
+- Une restauration technique (modes `MENU_CATALOG` ou `FULL_CONFIG`) ne supprime, ne modifie et n'écrase **JAMAIS** les flux financiers enregistrés (`cash_sessions`, `orders`, `order_items`, `payment_transactions`, et clôtures Z).
+- Si l'Hôtel Lat-Dior subit une perte de menu à 14h30 et restaure l'état de 03h00 du matin alors qu'il a encaissé 17 000 FCFA dans la matinée :
+  - La carte des plats, les prix et les tables sont rétablis à l'identique.
+  - **Les 17 000 FCFA encaissés restent 100% gravés en base**, la session de caisse en cours reste active avec son fond exact, et la clôture Z du soir est juste au centime près.
+- **Découplage de `OrderItem`** : Chaque ligne de commande conserve gravé son nom et son prix unitaire en FCFA au moment de la vente.
+- **Verrou Transactionnel PostgreSQL ACID Obligatoire** : Si le nombre de commandes (total ou payées) après restauration est inférieur à l'ancrage du snapshot (`financialAnchor`), la transaction `$transaction` déclenche un rollback immédiat et annule toute l'opération.
+
+### 15.3 — Outils d'Intervention d'Urgence Développeur DAW
+- **En Ligne de Commande (CLI)** :
+  - `npm run tenant:backup -- --tenant=[subdomain]`
+  - `npm run tenant:restore -- --tenant=[subdomain] --mode=menu_catalog`
+- **Dans la Console DAW (`/super-admin#sauvegardes-pra`)** :
+  - Onglet **`🛡️ Sauvegardes & PRA`** permettant de générer un snapshot, de télécharger le JSON d'archive, ou de restaurer l'établissement en moins de 30 secondes sous validation du mot de passe Super-Admin.
+
+---
+
+## Section 16 — Résilience Serverless Vercel ↔ Supabase (Transaction Pooler 6543) & Sécurité Isomorphique
+
+### 16.1 — Redirection Obligatoire vers le Transaction Pooler 6543
+- Les lambdas serverless Vercel ne doivent jamais se connecter directement à l'hôte IPv6 `db.[ref].supabase.co:5432` sous peine d'erreurs `Can't reach database server`.
+- Dans `src/lib/prisma.ts`, forcer systématiquement la redirection vers le Supabase Transaction Pooler port **6543** (`aws-0-eu-central-1.pooler.supabase.com:6543`) avec `pgbouncer=true`, `sslmode=require`, `connection_limit=10` et `pool_timeout=20`.
+
+### 16.2 — Sécurité Isomorphique des Mots de Passe & PIN
+- Ne jamais importer le module Node.js `crypto` (`crypto.randomInt`) dans un composant React Client. Utiliser la bibliothèque isomorphique [`src/lib/password-policy.ts`](file:///C:/Users/DELL/Desktop/Lou%20ame%20Tay%20menu%20digital%20Mda%20arts%20work/src/lib/password-policy.ts) s'appuyant sur `window.crypto.getRandomValues()` dans le navigateur et sur `crypto.randomBytes()` côté serveur.
+- Rejet strict des mots de passe et PIN triviaux (`Pass1234!`, `admin`, `password`, `1234`, `0000`, etc.) et des suites consécutives pour tous les rôles.
+- Remise sécurisée de PIN caissier : affichage unique en clair pour transmission au caissier, puis hashage bcrypt immédiat en base.
+
+
