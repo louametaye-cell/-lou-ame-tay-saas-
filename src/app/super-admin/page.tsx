@@ -40,6 +40,7 @@ import {
   Key,
   User,
   Boxes,
+  ShieldCheck,
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -60,6 +61,7 @@ import { SupportAIAssistant } from '@/components/SupportAIAssistant';
 import { SAVManagementPanel } from '@/components/super-admin/SAVManagementPanel';
 import { HardwareCatalogPanel } from '@/components/super-admin/HardwareCatalogPanel';
 import { SenegalRestaurantsMap } from '@/components/super-admin/SenegalRestaurantsMap';
+import { TenantBackupPanel } from '@/components/super-admin/TenantBackupPanel';
 import { toast } from 'sonner';
 
 export default function SuperAdminDashboardPage() {
@@ -561,6 +563,13 @@ export default function SuperAdminDashboardPage() {
                 <Store className="w-3.5 h-3.5 text-slate-400" />
                 <span>Diagnostic QA</span>
               </Link>
+              <a
+                href="#sauvegardes-pra"
+                className="px-3 py-1.5 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold transition-all flex items-center gap-1 border border-emerald-200/60"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Sauvegardes & PRA</span>
+              </a>
             </div>
           </div>
         </header>
@@ -1019,6 +1028,11 @@ export default function SuperAdminDashboardPage() {
             <SenegalRestaurantsMap
               restaurants={restaurants}
             />
+          </section>
+
+          {/* SECTION : SAUVEGARDES GRANULAIRES & RESTAURATION PRA (RTO < 5 MIN) */}
+          <section id="sauvegardes-pra" className="scroll-mt-24">
+            <TenantBackupPanel restaurants={restaurants} />
           </section>
 
           {/* SECTION : RECHERCHE & FILTRES DOUBLES (STATUT & FORMULE PACK) */}

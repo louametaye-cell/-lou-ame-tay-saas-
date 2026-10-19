@@ -13,7 +13,9 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "node prisma/seed.mjs",
     "audit:tenant": "node scripts/audit-multi-tenancy.js",
-    "test:plans": "npx tsx scripts/verify-plan-locks.ts"
+    "test:plans": "npx tsx scripts/verify-plan-locks.ts",
+    "tenant:backup": "npx tsx scripts/tenant-backup.ts",
+    "tenant:restore": "npx tsx scripts/tenant-restore.ts"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"

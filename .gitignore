@@ -41,3 +41,4 @@ scratch/
 capture teste MG/
 _BACKUP_SOURCE_LOCAL/
 scripts/rotate-real-accounts-passwords.ts
+backups/
