@@ -4,20 +4,25 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Supabase Pooler (port 5432 Session / 6543 Transaction)
+// Supabase Transaction Pooler (port 6543 avec PgBouncer) :
+// Nécessaire en environnement Serverless Vercel pour contourner l'IPv6 de l'hôte direct 5432
 const defaultDbUrl =
-  'postgresql://postgres.ghkxrrmxvhwoyodygohc:Digitalartswork%40mg2023@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require&connection_limit=10&pool_timeout=20';
+  'postgresql://postgres.ghkxrrmxvhwoyodygohc:Digitalartswork%40mg2023@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&connection_limit=10&pool_timeout=20';
 
 const envUrl = process.env.DATABASE_URL?.trim();
 
-let connectionUrl = envUrl && envUrl.startsWith('postgres') ? envUrl : defaultDbUrl;
+// Si DATABASE_URL pointe sur l'hôte direct 5432 non routable en IPv4 depuis Vercel, basculer sur le Pooler 6543
+let connectionUrl =
+  envUrl && envUrl.startsWith('postgres') && !envUrl.includes('db.ghkxrrmxvhwoyodygohc.supabase.co')
+    ? envUrl
+    : defaultDbUrl;
 
 // S'assurer que sslmode=require est présent
 if (!connectionUrl.includes('sslmode=')) {
   connectionUrl += connectionUrl.includes('?') ? '&sslmode=require' : '?sslmode=require';
 }
 
-// Si l'URL utilise le pooler (6543 ou 5432), s'assurer que pgbouncer et connection_limit sont présents
+// Si l'URL utilise le pooler 6543, s'assurer que pgbouncer est présent
 if (connectionUrl.includes('6543') && !connectionUrl.includes('pgbouncer=true')) {
   connectionUrl += connectionUrl.includes('?') ? '&pgbouncer=true' : '?pgbouncer=true';
 }
