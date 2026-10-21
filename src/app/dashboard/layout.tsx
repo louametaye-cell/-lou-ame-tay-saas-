@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { DashboardBackground } from '@/components/DashboardBackground';
 import { BottomNavMobile } from '@/components/dashboard/BottomNavMobile';
+import { AissatouChat } from '@/components/ai/AissatouChat';
 
 export const metadata: Metadata = {
   title: 'Tableau de Bord — Espace Gérant Lou Ame Tay?',
@@ -25,6 +26,9 @@ export default function DashboardLayout({
 
       {/* Barre de navigation mobile App-like */}
       <BottomNavMobile />
+
+      {/* Assistante IA Aissatou Copilote Gérant */}
+      <AissatouChat variant="gerant" />
     </div>
   );
 }

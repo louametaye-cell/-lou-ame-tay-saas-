@@ -74,11 +74,19 @@ export async function GET(req: Request) {
       }
     });
 
+    // Calcul cumul manquants équipe
+    const cashiers = await prisma.cashier.findMany({
+      where: { tenantId },
+      select: { totalMissingAmount: true }
+    });
+    const totalMissingAmount = cashiers.reduce((sum, c) => sum + Number(c.totalMissingAmount || 0), 0);
+
     const statsPayload = {
       todayRevenue: todayRevenue > 0 ? todayRevenue : 0,
       todayOrders: todayOrdersCount > 0 ? todayOrdersCount : 0,
       todayCovers: todayCovers > 0 ? todayCovers : 0,
       outOfStock: outOfStockItems,
+      totalMissingAmount,
       revenueChange: 0,
       ordersChange: 0,
       coversChange: 0,

@@ -581,6 +581,16 @@ model Cashier {
   shift     CashierShift @default(MORNING)
   schedule  String?
   isActive  Boolean      @default(true) @map("is_active")
+
+  // Sécurité Financière : Cumul des Manquants (Écarts Négatifs Z)
+  totalMissingAmount Float       @default(0) @map("total_missing_amount")
+  missingCount       Int         @default(0) @map("missing_count")
+  lastMissingAt      DateTime?   @map("last_missing_at")
+
+  // Sécurité RH : Verrouillage Horaire de Connexion
+  shiftStart        String?      @map("shift_start")
+  shiftEnd          String?      @map("shift_end")
+
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
 
@@ -717,4 +727,20 @@ model HardwareInvoice {
   @@index([tenantId])
   @@index([status])
   @@map("hardware_invoices")
+}
+
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String?  @map("tenant_id")
+  action     String   @map("action")
+  actorRole  String   @map("actor_role")
+  actorName  String?  @map("actor_name")
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId, createdAt])
+  @@map("audit_logs")
 }

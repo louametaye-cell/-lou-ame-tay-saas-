@@ -114,6 +114,13 @@ export async function GET(req: Request) {
         whatsappAlertNumber: branding.whatsappAlertNumber || tenant.phone || '',
       },
 
+      // 5. Clôture à l'aveugle (Sécurité Caisse)
+      cashierClosing: branding.cashierClosing || {
+        closingTime: '23:30',
+        blindClosingDelayMinutes: 150,
+        autoHideEnabled: true,
+      },
+
       // Métadonnées
       plan: tenant.plan?.slug?.toUpperCase() || 'TAMBALI',
       planName: tenant.plan?.name || 'TÀMBALI',
@@ -142,7 +149,7 @@ export async function PUT(req: Request) {
   const timer = startTimer();
   try {
     const body = await req.json();
-    const { restaurantId, subdomain, identity, openingHours, exceptionalClosure, payment, notifications } = body;
+    const { restaurantId, subdomain, identity, openingHours, exceptionalClosure, payment, notifications, cashierClosing } = body;
 
     const tenant = await resolveTenant(req, restaurantId, subdomain);
     if (!tenant) {
@@ -169,6 +176,13 @@ export async function PUT(req: Request) {
       ...(payment?.methods ? { paymentMethods: payment.methods } : {}),
       ...(payment?.merchants?.waveMerchantId ? { waveMerchantId: payment.merchants.waveMerchantId } : {}),
       ...(payment?.merchants?.omMerchantNumber ? { omMerchantNumber: payment.merchants.omMerchantNumber } : {}),
+      ...(cashierClosing ? {
+        cashierClosing: {
+          closingTime: cashierClosing.closingTime || '23:30',
+          blindClosingDelayMinutes: Number(cashierClosing.blindClosingDelayMinutes) || 150,
+          autoHideEnabled: cashierClosing.autoHideEnabled !== false,
+        }
+      } : {}),
       ...(notifications ? {
         kdsSoundEnabled: notifications.kdsSoundEnabled,
         kdsSoundType: notifications.kdsSoundType,

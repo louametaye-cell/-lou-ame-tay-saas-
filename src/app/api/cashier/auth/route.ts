@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
+import { isWithinCashierShift } from '@/lib/cashier-shift-guard';
 
 export async function GET() {
   try {
@@ -54,7 +55,8 @@ export async function POST(req: Request) {
         id: true,
         businessName: true,
         subdomain: true,
-        currency: true
+        currency: true,
+        phone: true,
       }
     });
 
@@ -123,6 +125,23 @@ export async function POST(req: Request) {
       });
     }
 
+    // 🔒 SÉCURITÉ RH : CONTRÔLE STRICT DU SHIFT HORAIRE
+    const shiftCheck = isWithinCashierShift(now, matchedCashier.shiftStart, matchedCashier.shiftEnd);
+    if (!shiftCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: shiftCheck.reason || 'Accès refusé en dehors des horaires de travail autorisés.',
+          code: 'OUT_OF_SHIFT',
+          shiftStart: shiftCheck.shiftStart,
+          shiftEnd: shiftCheck.shiftEnd,
+          currentHour: shiftCheck.currentHourStr,
+          managerPhone: tenant.phone,
+          cashierName: matchedCashier.name,
+        },
+        { status: 403 }
+      );
+    }
+
     // Check for open session for this cashier or tenant
     const activeSession = await prisma.cashSession.findFirst({
       where: {
@@ -150,7 +169,12 @@ export async function POST(req: Request) {
         name: matchedCashier.name,
         phone: matchedCashier.phone,
         shift: matchedCashier.shift,
-        schedule: matchedCashier.schedule
+        schedule: matchedCashier.schedule,
+        totalMissingAmount: matchedCashier.totalMissingAmount,
+        missingCount: matchedCashier.missingCount,
+        lastMissingAt: matchedCashier.lastMissingAt,
+        shiftStart: matchedCashier.shiftStart,
+        shiftEnd: matchedCashier.shiftEnd,
       },
       token: `cashier_session_${tenant.id}`,
       activeSession

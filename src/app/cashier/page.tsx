@@ -17,11 +17,10 @@ function CashierPageContent() {
 
   return (
     <ScreenShield userRole="CASHIER">
-      <CashierPOS initialRestaurantId={restaurantId} />
+      <CashierPOS initialRestaurantId={restaurantId} userRole="CASHIER" />
     </ScreenShield>
   );
 }
-
 
 export default function CashierPage() {
   return (

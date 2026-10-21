@@ -83,6 +83,11 @@ export async function GET(req: Request) {
         pinCode: true,
         shift: true,
         schedule: true,
+        shiftStart: true,
+        shiftEnd: true,
+        totalMissingAmount: true,
+        missingCount: true,
+        lastMissingAt: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -123,7 +128,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { tenantId, restaurantId, name, phone, pinCode, shift, schedule } = body;
+    const { tenantId, restaurantId, name, phone, pinCode, shift, schedule, shiftStart, shiftEnd } = body;
 
     const rawTenantId = tenantId || restaurantId || extractTenantFromCookie(req);
     if (!rawTenantId) {
@@ -218,6 +223,8 @@ export async function POST(req: Request) {
         pinCode: hashedPin,
         shift: validShift,
         schedule: schedule?.trim() || null,
+        shiftStart: shiftStart ? String(shiftStart).trim() : null,
+        shiftEnd: shiftEnd ? String(shiftEnd).trim() : null,
         isActive: true
       }
     });
@@ -237,5 +244,55 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Erreur création caissier:', error);
     return NextResponse.json({ error: 'Erreur serveur lors de la création du caissier' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, restaurantId, tenantId, name, phone, shift, schedule, shiftStart, shiftEnd, isActive } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID caissier manquant' }, { status: 400 });
+    }
+
+    const rawTenantId = tenantId || restaurantId || extractTenantFromCookie(req);
+    const cashier = await prisma.cashier.findUnique({
+      where: { id },
+      include: { tenant: true },
+    });
+
+    if (!cashier) {
+      return NextResponse.json({ error: 'Caissier introuvable' }, { status: 404 });
+    }
+
+    if (!isAuthorizedTenantAdmin(req, cashier.tenantId, cashier.tenant.subdomain, rawTenantId)) {
+      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 });
+    }
+
+    const updateData: any = {};
+    if (typeof name === 'string' && name.trim()) updateData.name = name.trim();
+    if (typeof phone === 'string') updateData.phone = phone.trim() || null;
+    if (shift && Object.values(CashierShift).includes(shift)) updateData.shift = shift;
+    if (schedule !== undefined) updateData.schedule = schedule?.trim() || null;
+    if (shiftStart !== undefined) updateData.shiftStart = shiftStart ? String(shiftStart).trim() : null;
+    if (shiftEnd !== undefined) updateData.shiftEnd = shiftEnd ? String(shiftEnd).trim() : null;
+    if (typeof isActive === 'boolean') updateData.isActive = isActive;
+
+    const updated = await prisma.cashier.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      cashier: {
+        ...updated,
+        pinCode: '••••',
+      },
+    });
+  } catch (error) {
+    console.error('Erreur mise à jour caissier:', error);
+    return NextResponse.json({ error: 'Erreur serveur lors de la mise à jour du caissier' }, { status: 500 });
   }
 }

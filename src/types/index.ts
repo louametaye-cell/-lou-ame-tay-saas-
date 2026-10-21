@@ -321,6 +321,11 @@ export interface RestaurantTableType {
   status: string;
   clearedAt?: string | null;
   isActive: boolean;
+  totalMissingAmount?: number;
+  missingCount?: number;
+  lastMissingAt?: string | null;
+  shiftStart?: string | null;
+  shiftEnd?: string | null;
   createdAt: string;
   updatedAt: string;
   zone?: {

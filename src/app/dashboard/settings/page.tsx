@@ -95,6 +95,11 @@ export default function DashboardSettingsPage() {
   const [newCashierPhone, setNewCashierPhone] = useState('');
   const [newCashierShift, setNewCashierShift] = useState('MORNING');
   const [newCashierPin, setNewCashierPin] = useState('');
+  const [cashierClosing, setCashierClosing] = useState({
+    closingTime: '23:30',
+    blindClosingDelayMinutes: 150,
+    autoHideEnabled: true,
+  });
 
   // 5. Paiement & Devise
   const [payment, setPayment] = useState({
@@ -159,6 +164,7 @@ export default function DashboardSettingsPage() {
           if (data.settings.exceptionalClosure) setExceptionalClosure(data.settings.exceptionalClosure);
           if (data.settings.payment) setPayment(data.settings.payment);
           if (data.settings.notifications) setNotifications(data.settings.notifications);
+          if (data.settings.cashierClosing) setCashierClosing(data.settings.cashierClosing);
         }
       }
 

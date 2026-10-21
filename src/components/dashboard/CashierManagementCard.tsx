@@ -30,6 +30,11 @@ export interface CashierCardItem {
   pinCode?: string;
   shift?: string;
   schedule?: string | null;
+  shiftStart?: string | null;
+  shiftEnd?: string | null;
+  totalMissingAmount?: number;
+  missingCount?: number;
+  lastMissingAt?: string | null;
   isActive: boolean;
   hasOpenSession?: boolean;
   sessions?: Array<{ id: string; status: string }>;
@@ -89,6 +94,37 @@ export function CashierManagementCard({
     setModalError(null);
     setModalSuccess(null);
     setIsPinModalOpen(true);
+  };
+
+  const handleResetMissing = async (cId: string, cName: string, amount: number) => {
+    const reason = window.prompt(
+      `Réinitialiser le passif de manquants de ${cName} (${amount.toLocaleString('fr-FR')} FCFA) ?\n\nSaisissez le motif de la régularisation (ex: Règlement espèces au bureau / Pardon de la direction) :`,
+      'Régularisation amiable par la direction'
+    );
+    if (!reason) return;
+
+    try {
+      const res = await fetch(`/api/tenant/cashiers/${cId}/reset-missing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(restaurantId ? { 'x-tenant-token': restaurantId } : {}),
+        },
+        body: JSON.stringify({
+          restaurantId,
+          reason,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Passif réinitialisé avec succès');
+        onRefresh();
+      } else {
+        toast.error(data.error || 'Erreur lors de la réinitialisation');
+      }
+    } catch {
+      toast.error('Erreur réseau');
+    }
   };
 
   const handleSavePin = async (e: React.FormEvent) => {
@@ -300,6 +336,55 @@ export function CashierManagementCard({
               <span>{cashier.schedule}</span>
             </div>
           )}
+
+          {/* ⏰ Horaires de Shift Autorisés */}
+          <div className="flex items-center justify-between text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-2xl flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 text-slate-700 font-bold">
+              <Clock className="w-3.5 h-3.5 text-slate-500" />
+              <span>Horaires de connexion :</span>
+            </div>
+            {cashier.shiftStart && cashier.shiftEnd ? (
+              <span className="font-mono font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg border border-slate-200">
+                {cashier.shiftStart} — {cashier.shiftEnd}
+              </span>
+            ) : (
+              <span className="text-slate-500 font-medium">Horaires libres</span>
+            )}
+          </div>
+
+          {/* 🛡️ Sécurité Financière : Passif & Manquants de Caisse */}
+          <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 flex-wrap ${
+            Number(cashier.totalMissingAmount || 0) > 0
+              ? Number(cashier.totalMissingAmount || 0) > 20000
+                ? 'bg-rose-100/80 border-rose-400 text-rose-950 animate-pulse'
+                : 'bg-rose-50 border-rose-200 text-rose-950'
+              : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+          }`}>
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-wider opacity-75">
+                Cumul Manquants (Clôtures Z)
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono font-black text-lg">
+                  {Number(cashier.totalMissingAmount || 0).toLocaleString('fr-FR')} FCFA
+                </span>
+                <span className="text-xs font-semibold opacity-80">
+                  ({cashier.missingCount || 0} session{(cashier.missingCount || 0) > 1 ? 's' : ''})
+                </span>
+              </div>
+            </div>
+
+            {Number(cashier.totalMissingAmount || 0) > 0 && (
+              <button
+                type="button"
+                onClick={() => handleResetMissing(cashier.id, cashier.name, cashier.totalMissingAmount || 0)}
+                className="px-3 py-1.5 bg-white border border-rose-300 hover:bg-rose-50 text-rose-800 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                title="Pardonner / Régulariser le manquant"
+              >
+                <span>Réinitialiser</span>
+              </button>
+            )}
+          </div>
 
           {/* Zone Code PIN sécurisée : jamais de hash bcrypt, uniquement •••• avec cadenas */}
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-3 flex-wrap">

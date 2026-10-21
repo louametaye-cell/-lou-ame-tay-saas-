@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { AissatouChat } from '@/components/ai/AissatouChat';
 import Link from 'next/link';
 import { 
   Building2, 

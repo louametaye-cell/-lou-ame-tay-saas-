@@ -42,6 +42,8 @@ export default function CashiersManagementPage() {
   const [pinCode, setPinCode] = useState('');
   const [shift, setShift] = useState<CashierShift>('MORNING');
   const [schedule, setSchedule] = useState('08h00 - 16h00 (Lundi au Samedi)');
+  const [shiftStart, setShiftStart] = useState('08:00');
+  const [shiftEnd, setShiftEnd] = useState('18:00');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPins, setShowPins] = useState<Record<string, boolean>>({});
 

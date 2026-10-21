@@ -6,8 +6,8 @@ import { ScreenShield } from '@/components/security/ScreenShield';
 
 export default function DashboardCashierPage() {
   return (
-    <ScreenShield userRole="CASHIER">
-      <CashierPOS />
+    <ScreenShield userRole="RESTAURANT_ADMIN">
+      <CashierPOS userRole="ADMIN" />
     </ScreenShield>
   );
 }

@@ -422,6 +422,23 @@ export async function PATCH(req: Request) {
       }
     });
 
+    // 🔒 SÉCURITÉ COMPTABLE & RH : Cumul des Manquants si écart négatif
+    if (cashDiscrepancy < 0 && session.cashierId) {
+      const missingVal = Math.abs(cashDiscrepancy);
+      try {
+        await prisma.cashier.update({
+          where: { id: session.cashierId },
+          data: {
+            totalMissingAmount: { increment: missingVal },
+            missingCount: { increment: 1 },
+            lastMissingAt: closedAt,
+          },
+        });
+      } catch (err) {
+        console.error('Erreur incrémentation manquant caissier:', err);
+      }
+    }
+
     const comparison = {
       cash: {
         label: 'Espèces (Fond + Ventes)',

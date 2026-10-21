@@ -71,9 +71,10 @@ import { toast } from 'sonner';
 
 interface CashierPOSProps {
   initialRestaurantId?: string;
+  userRole?: 'ADMIN' | 'CASHIER';
 }
 
-export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}) {
+export default function CashierPOS({ initialRestaurantId, userRole = 'CASHIER' }: CashierPOSProps = {}) {
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -81,6 +82,8 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
   const [restaurantName, setRestaurantName] = useState<string>('Caisse Restaurant');
   const [restaurantPhone, setRestaurantPhone] = useState<string>('+221 77 458 74 74');
   const [restaurantId, setRestaurantId] = useState<string>('');
+  const [closingConfig, setClosingConfig] = useState<any>();
+  const [shiftErrorDetails, setShiftErrorDetails] = useState<any>(null);
 
   // Cashier & Session States
   const [currentCashier, setCurrentCashier] = useState<CashierType | null>(null);
@@ -1937,9 +1940,23 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
 
             <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
               {currentCashier ? (
-                <span>
-                  Caissier : <strong className="text-slate-700 font-semibold">{currentCashier.name}</strong> ({currentCashier.shift})
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span>
+                    Caissier : <strong className="text-slate-700 font-semibold">{currentCashier.name}</strong> ({currentCashier.shift})
+                  </span>
+                  {Number((currentCashier as any).totalMissingAmount || 0) > 0 ? (
+                    <span
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 border border-rose-300 text-rose-800 rounded-md text-[11px] font-bold"
+                      title="Cumul de vos écarts de caisse négatifs constatés lors des clôtures Z"
+                    >
+                      <span>⚠️ Manquants : <strong>{formatFCFA((currentCashier as any).totalMissingAmount)}</strong> ({(currentCashier as any).missingCount || 0} clôtures)</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-md text-[11px] font-bold">
+                      <span>Caisse juste ✅</span>
+                    </span>
+                  )}
+                </div>
               ) : (
                 <button
                   type="button"
@@ -2113,7 +2130,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* COLONNE GAUCHE (7/12) : CA + Onglets + Grille Tactile */}
           <div className="lg:col-span-7 xl:col-span-8 flex flex-col space-y-4">
-            <CashierDailyRevenueCard orders={orders} className="shrink-0" />
+            <CashierDailyRevenueCard orders={orders} className="shrink-0" userRole={userRole} closingConfig={closingConfig} currentSession={currentSession} />
             {navigationTabs}
             <div className="h-[calc(100vh-320px)] min-h-[520px]">
               <TactileGrid
@@ -2137,7 +2154,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       ) : (
         <>
           {/* 💳 CARTE UNIQUE ET ÉPURÉE DU CHIFFRE D'AFFAIRES DU JOUR */}
-          <CashierDailyRevenueCard orders={orders} className="shrink-0" />
+          <CashierDailyRevenueCard orders={orders} className="shrink-0" userRole={userRole} closingConfig={closingConfig} currentSession={currentSession} />
 
           {/* 2. NAVIGATION (Tabs style Shadcn UI - fins, alignés, soulignés) */}
           {navigationTabs}
