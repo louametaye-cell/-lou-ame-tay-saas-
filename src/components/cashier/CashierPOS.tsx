@@ -312,6 +312,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     setCartItems(prev => prev.map(i => i.menuItemId === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
   };
 
+  // ⚠️ ATTENTION RÈGLE MÉTIER INVIOLABLE (ANTI-RÉGRESSION) :
+  // ⚠️ ATTENTION : NE JAMAIS LIBÉRER LA TABLE ICI. La libération se fait UNIQUEMENT dans /api/cashier/orders/[id]/pay/route.ts
+  // ⚠️ ATTENTION : isTakeaway doit être strictement true si tableNumber === 0 (et orderType === 'TAKEAWAY')
   const handleSubmitNewOrder = async (
     method: string, 
     customerName: string, 

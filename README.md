@@ -117,6 +117,63 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ---
 
+## 🛡️ Filets de Sécurité, Sauvegardes & Procédure de Rollback
+
+### 1. Tests Critiques Anti-Régression
+Avant tout déploiement en production, exécuter la suite de tests unitaires et E2E :
+```bash
+npm run test:critical
+```
+Ce test valide les 3 flux inviolables :
+- La libération de table uniquement après encaissement total (jamais par le KDS).
+- L'isolation stricte des ventes comptoir (`orderType === 'TAKEAWAY'`) sans collision avec les tables.
+- Le rafraîchissement temps réel (Polling <= 5s et WebSockets Supabase).
+
+### 2. Sauvegarde Automatique de la Base de Données
+Avant chaque mise en production majeure :
+```bash
+# Windows PowerShell
+npm run db:backup
+
+# Ou sauvegarde granulaire par établissement (Sanctuaire Financier)
+npm run tenant:backup -- --tenant=madiba-restaurant
+```
+
+### 3. Procédure Officielle de Rollback d'Urgence (En cas d'anomalie en production)
+
+Si un bug critique survient en production :
+
+1. **Identifier le dernier Tag Git ou Commit stable :**
+   ```bash
+   git log --oneline -n 10
+   git tag -l
+   ```
+2. **Revenir au tag ou commit stable :**
+   ```bash
+   # Créer une branche de secours ou pointer sur le commit stable (ex: v2.4.0)
+   git checkout main
+   git revert HEAD --no-edit
+   # Ou réaligner sur le commit stable validé :
+   git reset --hard [COMMIT_HASH_STABLE]
+   ```
+3. **Pousser immédiatement le retour arrière :**
+   ```bash
+   git push origin main --force
+   ```
+4. **Déployer le Rollback sur Vercel :**
+   ```bash
+   npx vercel --prod --yes
+   ```
+5. **Restauration de données (Règle d'or Section 15 GEMINI.md) :**
+   > ⚠️ **INTERDICTION ABSOLUE** de restaurer la base globale PostgreSQL sous peine d'effacer les encaissements des autres restaurants abonnés.
+   > Utiliser impérativement la restauration granulaire du tenant concerné :
+   ```bash
+   npm run tenant:restore -- --tenant=[slug-restaurant] --mode=menu_catalog
+   ```
+   *Le mode `menu_catalog` rétablit la carte des plats et tables à 100% tout en gravant dans le marbre tous les flux financiers encaissés.*
+
+---
+
 ## 🏢 Éditeur & Contacts Officiels
 - **Éditeur** : DAW Digital Arts Work — by MG
 - **Rôle** : CEO & Développeur (Dev) de Lou Ame Tay?

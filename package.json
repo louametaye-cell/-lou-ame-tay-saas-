@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "test:critical": "vitest run tests/critical-flows.spec.ts",
+    "db:backup": "powershell -ExecutionPolicy Bypass -File scripts/backup-db.ps1",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "node prisma/seed.mjs",

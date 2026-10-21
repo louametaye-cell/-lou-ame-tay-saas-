@@ -200,3 +200,23 @@ export async function executeReleaseTable({
     },
   });
 }
+
+
+/**
+ * 🔒 RÈGLE D'OR : Une table ne peut être libérée après encaissement QUE s'il ne reste
+ * aucune commande impayée active (non-annulée) pour cette table.
+ */
+export function shouldReleaseTableAfterPayment(
+  ordersOnTable: Array<{ id: string; status: string; paymentStatus: string }>,
+  currentPaidOrderId?: string
+): boolean {
+  const remainingUnpaid = ordersOnTable.filter((o) => {
+    // La commande courante vient d'être payée
+    if (currentPaidOrderId && o.id === currentPaidOrderId) return false;
+    if (o.status === 'CANCELLED') return false;
+    if (o.paymentStatus === 'PAID' || o.paymentStatus === 'STAFF_NP') return false;
+    return true;
+  });
+
+  return remainingUnpaid.length === 0;
+}

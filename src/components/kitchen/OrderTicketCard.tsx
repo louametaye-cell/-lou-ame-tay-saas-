@@ -27,6 +27,9 @@ interface OrderTicketCardProps {
   restaurantName?: string;
 }
 
+// ⚠️ ATTENTION RÈGLE MÉTIER INVIOLABLE (ANTI-RÉGRESSION) :
+// ⚠️ ATTENTION : NE JAMAIS LIBÉRER LA TABLE ICI. La libération se fait UNIQUEMENT dans /api/cashier/orders/[id]/pay/route.ts
+// Le KDS Cuisine gère uniquement le statut opérationnel de préparation (PREPARING, READY, SERVED).
 export const OrderTicketCard: React.FC<OrderTicketCardProps> = ({
   order,
   onUpdateStatus,
