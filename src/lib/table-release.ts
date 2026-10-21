@@ -135,16 +135,23 @@ export async function executeReleaseTable({
   });
 
   if (activeUnpaidOrders.length > 0) {
+    const totalUnpaid = activeUnpaidOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+    const orderDetails = activeUnpaidOrders
+      .map((o) => `#CMD-${o.id.slice(-5).toUpperCase()} (${Number(o.totalAmount)} FCFA, statut: ${o.status})`)
+      .join(', ');
+
     return NextResponse.json(
       {
-        error: 'Impossible de libérer : il reste des commandes non encaissées sur cette table.',
+        error: `Impossible de libérer la Table ${table.tableNumber} : il reste ${activeUnpaidOrders.length} commande(s) non encaissée(s) pour un total de ${totalUnpaid} FCFA [${orderDetails}]. Veuillez encaisser ou annuler ces commandes avant de libérer la table.`,
         code: 'UNPAID_ORDERS_EXIST',
         unpaidOrdersCount: activeUnpaidOrders.length,
+        totalUnpaidAmount: totalUnpaid,
         orders: activeUnpaidOrders.map((o) => ({
           id: o.id,
           amount: Number(o.totalAmount),
           status: o.status,
           paymentStatus: o.paymentStatus,
+          createdAt: o.createdAt,
         })),
       },
       { status: 400 }

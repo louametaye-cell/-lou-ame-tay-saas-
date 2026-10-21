@@ -71,11 +71,20 @@ export async function GET(req: Request) {
 
     const serviceFilter = searchParams.get('station') || searchParams.get('service') || searchParams.get('destinationService');
     const startOfTodayDakar = getDakarStartOfToday();
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const whereClause: any = {
       tenantId: resolvedTenantId,
-      createdAt: { gte: startOfTodayDakar },
       status: { not: 'CANCELLED' },
+      OR: [
+        // 1. Toutes les commandes de la journée en cours
+        { createdAt: { gte: startOfTodayDakar } },
+        // 2. 🔒 TOUTES les commandes actives encore impayées des dernières 24h (repas nocturnes à cheval sur minuit)
+        {
+          createdAt: { gte: twentyFourHoursAgo },
+          paymentStatus: { not: 'PAID' },
+        },
+      ],
     };
 
     if (serviceFilter && serviceFilter.toUpperCase() !== 'ALL') {
