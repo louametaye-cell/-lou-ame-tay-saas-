@@ -66,6 +66,7 @@ import {
   isNetworkOnline, 
   setSimulatedNetworkOutage 
 } from '@/lib/terrain-resilience';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface CashierPOSProps {
@@ -771,11 +772,60 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     fetchOrders();
     fetchWaiterCalls();
     fetchDbTables();
+
+    // ⚡ SUPABASE REALTIME : Écoute instantanée des événements INSERT / UPDATE sur la table 'orders'
+    const effectiveRestoId = currentCashier?.tenantId || restaurantId || (typeof window !== 'undefined' ? localStorage.getItem('current_restaurant_id') : '') || '';
+    let realtimeChannel: any = null;
+
+    try {
+      const channelName = `cashier-realtime-${effectiveRestoId || 'all'}`;
+      realtimeChannel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'orders' },
+          (payload: any) => {
+            const newRow = payload?.new;
+            if (!effectiveRestoId || !newRow?.tenant_id || newRow.tenant_id === effectiveRestoId || newRow.tenantId === effectiveRestoId) {
+              try {
+                playOrderSound();
+              } catch (soundErr) {}
+              const isCounter = newRow?.order_type === 'TAKEAWAY' || newRow?.table_number === 0 || !newRow?.table_number;
+              toast.success(
+                isCounter 
+                  ? '⚡ NOUVELLE VENTE COMPTOIR REÇUE !' 
+                  : `🔔 NOUVELLE COMMANDE TABLE ${newRow?.table_number || '?'} !`,
+                { duration: 5000 }
+              );
+              fetchOrders();
+              fetchWaiterCalls();
+              fetchDbTables();
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'orders' },
+          (payload: any) => {
+            const newRow = payload?.new;
+            if (!effectiveRestoId || !newRow?.tenant_id || newRow.tenant_id === effectiveRestoId || newRow.tenantId === effectiveRestoId) {
+              fetchOrders();
+              fetchWaiterCalls();
+              fetchDbTables();
+            }
+          }
+        )
+        .subscribe();
+    } catch (wsErr) {
+      console.warn('[CashierPOS] Échec abonnement Supabase Realtime (bascule polling 5s):', wsErr);
+    }
+
+    // 🔄 POLLING DE SECOURS (Toutes les 5 secondes)
     const interval = setInterval(() => {
       fetchOrders();
       fetchWaiterCalls();
       fetchDbTables();
-    }, 6000);
+    }, 5000);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
@@ -797,6 +847,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
     return () => {
       clearInterval(interval);
       window.removeEventListener('keydown', handleKeyDown);
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
     };
   }, [currentCashier, restaurantId, pinInput]);
 
@@ -1348,26 +1401,34 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       if (order.status === 'CANCELLED') return false;
 
       // 🚫 EXCLUSION COMPTOIR : Les ventes directes au comptoir ne doivent JAMAIS apparaître ici
-      const isTakeaway = order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || Number(order.tableNumber) === 0;
+      const isTakeaway = order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || (!order.tableNumber || Number(order.tableNumber) === 0);
       if (isTakeaway) return false;
 
-      const isPaidAndClosed = order.status === 'SERVED' && order.paymentStatus === 'PAID';
+      const isPaidAndClosed = (order.paymentStatus === 'PAID' || order.paymentStatus === 'STAFF_NP') && order.status === 'SERVED';
 
       if (activeFilter === 'ALL') return !isPaidAndClosed;
-      if (activeFilter === 'TABLE') return !isPaidAndClosed;
+      if (activeFilter === 'TABLE') return (order.paymentStatus !== 'PAID' && order.paymentStatus !== 'STAFF_NP');
       if (activeFilter === 'SERVED') return isPaidAndClosed;
       return true;
     });
   }, [orders, activeFilter]);
 
-  // 🧾 VENTES COMPTOIR DU JOUR : Liste dédiée des ventes directes / takeaway encaissées
+  // 🧾 VENTES COMPTOIR DU JOUR : Liste dédiée des ventes directes / takeaway
   const takeawayOrders = useMemo(() => {
     return orders.filter((order) => {
       if (order.status === 'CANCELLED') return false;
-      const isTakeaway = order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || Number(order.tableNumber) === 0;
+      const isTakeaway = order.orderType === 'TAKEAWAY' || order.orderType === 'EXPRESS' || (!order.tableNumber || Number(order.tableNumber) === 0);
       return isTakeaway;
     });
   }, [orders]);
+
+  const unpaidTakeawayOrders = useMemo(() => {
+    return takeawayOrders.filter((o) => o.paymentStatus !== 'PAID' && o.paymentStatus !== 'STAFF_NP');
+  }, [takeawayOrders]);
+
+  const paidTakeawayOrders = useMemo(() => {
+    return takeawayOrders.filter((o) => o.paymentStatus === 'PAID' || o.paymentStatus === 'STAFF_NP');
+  }, [takeawayOrders]);
 
   const readyOrders = useMemo(() => {
     return orders.filter((o) => o.status === 'READY');
@@ -1403,9 +1464,11 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       const tableNum = Number(t.tableNumber);
       const clearedAtTime = t.clearedAt ? new Date(t.clearedAt).getTime() : null;
 
-      // Commandes pour cette table (exclut TAKEAWAY et annulées, et antérieures à clearedAt)
+      // Commandes pour cette table (exclut TAKEAWAY et annulées)
       const tableOrders = orders.filter((o) => {
         if (o.orderType === 'TAKEAWAY' || o.orderType === 'EXPRESS' || Number(o.tableNumber) !== tableNum || o.status === 'CANCELLED') return false;
+        // 🔒 INTÉGRITÉ FINANCIÈRE : Une commande non payée n'est JAMAIS masquée par clearedAt
+        if (o.paymentStatus !== 'PAID' && o.paymentStatus !== 'STAFF_NP') return true;
         if (!clearedAtTime) return true;
         return new Date(o.createdAt).getTime() > clearedAtTime;
       });
@@ -1762,7 +1825,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
         <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
           activeMode === 'QR_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
         }`}>
-          {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && o.paymentStatus === 'PAID') && o.status !== 'CANCELLED').length}
+          {orders.filter((o) => (o.orderType === 'TABLE' || (!o.orderType && Number(o.tableNumber) > 0)) && !(o.status === 'SERVED' && (o.paymentStatus === 'PAID' || o.paymentStatus === 'STAFF_NP')) && o.status !== 'CANCELLED').length}
         </span>
       </button>
 
@@ -1823,10 +1886,14 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
       >
         <Receipt className="w-4 h-4 text-slate-400" />
         <span>Ventes Comptoir</span>
-        <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium ${
-          activeMode === 'TAKEAWAY_ORDERS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+        <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
+          unpaidTakeawayOrders.length > 0 
+            ? 'bg-amber-400 text-slate-950 animate-pulse' 
+            : activeMode === 'TAKEAWAY_ORDERS' 
+            ? 'bg-slate-900 text-white' 
+            : 'bg-slate-100 text-slate-600'
         }`}>
-          {takeawayOrders.length}
+          {unpaidTakeawayOrders.length > 0 ? `${unpaidTakeawayOrders.length} à encaisser` : takeawayOrders.length}
         </span>
       </button>
     </div>
@@ -2073,7 +2140,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
           {navigationTabs}
 
           {activeMode === 'TAKEAWAY_ORDERS' ? (
-        /* VUE 3 : HISTORIQUE DES VENTES COMPTOIR DU JOUR */
+        /* VUE 3 : HISTORIQUE ET GESTION DES VENTES COMPTOIR */
         <section className="space-y-4">
           <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
@@ -2083,13 +2150,18 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               <div>
                 <h2 className="text-base sm:text-lg font-black text-emerald-950">Ventes Directes &amp; Comptoir (Takeaway)</h2>
                 <p className="text-xs text-emerald-700">
-                  Historique certifié des ventes directes déjà encaissées. Les tickets sont réglés et justifiés dans votre rapport Z.
+                  Commandes à emporter ou au comptoir. Les commandes en attente peuvent être encaissées directement ci-dessous.
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {unpaidTakeawayOrders.length > 0 && (
+                <span className="text-xs font-bold text-amber-950 bg-amber-400 border border-amber-500 px-3 py-1.5 rounded-2xl shadow-xs animate-pulse">
+                  ⚠️ {unpaidTakeawayOrders.length} à encaisser
+                </span>
+              )}
               <span className="text-xs font-bold text-emerald-900 bg-white border border-emerald-300 px-4 py-2 rounded-2xl shadow-xs">
-                Total Ventes Comptoir : <strong className="font-mono text-emerald-950 text-sm sm:text-base font-black">{formatFCFA(expressRevenue)}</strong>
+                Total Encaissé : <strong className="font-mono text-emerald-950 text-sm sm:text-base font-black">{formatFCFA(expressRevenue)}</strong>
               </span>
             </div>
           </div>
@@ -2101,7 +2173,7 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
               </div>
               <h3 className="text-base font-bold text-slate-800">Aucune vente comptoir pour le moment</h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Les commandes enregistrées en mode "Vente Directe / Comptoir" apparaîtront automatiquement ici dès leur encaissement.
+                Les commandes enregistrées en mode "Vente Directe / Comptoir" apparaîtront automatiquement ici pour encaissement et suivi.
               </p>
               <button
                 type="button"
@@ -2113,93 +2185,152 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-              {takeawayOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="bg-white rounded-3xl border-2 border-emerald-300 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between transition-all"
-                >
-                  {/* Card Header */}
-                  <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-base sm:text-lg font-black tracking-tight text-amber-400">
-                        ⚡ COMPTOIR
-                      </span>
-                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white/15 text-white">
-                        #{order.id.slice(-5).toUpperCase()}
-                      </span>
-                      {renderPaymentBadge(order.paymentMethod)}
-                    </div>
-                    <span className="text-[11px] font-bold opacity-90 font-mono">
-                      {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'En direct'}
-                    </span>
-                  </div>
+              {takeawayOrders.map((order) => {
+                const isPaid = order.paymentStatus === 'PAID' || order.paymentStatus === 'STAFF_NP';
+                const isFinishedKds = order.status === 'READY' || order.status === 'SERVED';
 
-                  {/* Card Body */}
-                  <div className="p-4 space-y-3 flex-1">
-                    <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                        <span className="truncate">
-                          Client : <strong className={order.customerName && order.customerName !== 'Client anonyme' ? 'text-slate-900' : 'text-slate-500 italic'}>
-                            {order.customerName && order.customerName !== 'Client anonyme' ? order.customerName : 'Client anonyme'}
-                          </strong>
+                return (
+                  <div
+                    key={order.id}
+                    className={`bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between transition-all ${
+                      !isPaid 
+                        ? (isFinishedKds ? 'border-3 border-emerald-500 ring-2 ring-emerald-300/50' : 'border-2 border-amber-400')
+                        : 'border-2 border-emerald-300'
+                    }`}
+                  >
+                    {/* Card Header */}
+                    <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-base sm:text-lg font-black tracking-tight text-amber-400">
+                          ⚡ COMPTOIR
                         </span>
+                        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white/15 text-white">
+                          #{order.id.slice(-5).toUpperCase()}
+                        </span>
+                        {/* Badges d'état précis */}
+                        {!isPaid ? (
+                          isFinishedKds ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-400 shadow-2xs animate-pulse">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                              🟢 Prêt à encaisser
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400 text-slate-950 shadow-2xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
+                              🟡 À Encaisser
+                            </span>
+                          )
+                        ) : (
+                          renderPaymentBadge(order.paymentMethod)
+                        )}
+                      </div>
+                      <span className="text-[11px] font-bold opacity-90 font-mono">
+                        {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'En direct'}
+                      </span>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-4 space-y-3 flex-1">
+                      <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl flex items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">
+                            Client : <strong className={order.customerName && order.customerName !== 'Client anonyme' ? 'text-slate-900' : 'text-slate-500 italic'}>
+                              {order.customerName && order.customerName !== 'Client anonyme' ? order.customerName : 'Client anonyme'}
+                            </strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {order.items.map((item, idx) => (
+                          <div key={idx} className="text-xs flex items-start justify-between gap-2 border-b border-slate-50 pb-1">
+                            <div className="min-w-0">
+                              <span className="font-black text-slate-900">{item.quantity}x</span>{' '}
+                              <span className="font-bold text-slate-800">{item.name}</span>
+                            </div>
+                            <span className="font-mono font-bold text-slate-700 shrink-0">
+                              {formatFCFA(Number(item.price) * Number(item.quantity))}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                      {order.items.map((item, idx) => (
-                        <div key={idx} className="text-xs flex items-start justify-between gap-2 border-b border-slate-50 pb-1">
-                          <div className="min-w-0">
-                            <span className="font-black text-slate-900">{item.quantity}x</span>{' '}
-                            <span className="font-bold text-slate-800">{item.name}</span>
+                    {/* Card Footer Actions */}
+                    <div className="p-4 bg-slate-50 border-t border-slate-100 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-600 font-bold uppercase">{isPaid ? 'Total Encaissé :' : 'Total à Régler :'}</span>
+                        <span className="text-xl font-black text-slate-950 font-mono">{formatFCFA(getOrderTotal(order))}</span>
+                      </div>
+
+                      {!isPaid ? (
+                        <>
+                          {/* BOUTON ENCAISSER XXL POUR VENTES COMPTOIR EN ATTENTE */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPaymentModal(order)}
+                            className="w-full min-h-[48px] px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer touch-manipulation"
+                          >
+                            <CreditCard className="w-5 h-5" />
+                            <span>Encaisser {formatFCFA(getOrderTotal(order))}</span>
+                          </button>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => printOrderReceipt(order)}
+                              className="py-2.5 px-2 min-h-[44px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                            >
+                              <Printer className="w-4 h-4 text-amber-400" />
+                              <span>Ticket Addition</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSendWhatsAppReceipt(order)}
+                              className="py-2.5 px-2 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                            >
+                              <MessageCircle className="w-4 h-4 text-emerald-600" />
+                              <span>WhatsApp</span>
+                            </button>
                           </div>
-                          <span className="font-mono font-bold text-slate-700 shrink-0">
-                            {formatFCFA(Number(item.price) * Number(item.quantity))}
-                          </span>
-                        </div>
-                      ))}
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold">
+                            <span className="flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span>Encaissée &amp; Validée</span>
+                            </span>
+                            <span className="font-mono text-[11px] text-emerald-700">
+                              {order.servedAt ? new Date(order.servedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Payé'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => printOrderReceipt(order)}
+                              className="py-2.5 px-2 min-h-[44px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                            >
+                              <Printer className="w-4 h-4 text-amber-400" />
+                              <span>Ticket</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSendWhatsAppReceipt(order)}
+                              className="py-2.5 px-2 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
+                            >
+                              <MessageCircle className="w-4 h-4 text-white" />
+                              <span>WhatsApp</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-
-                  {/* Card Footer Actions */}
-                  <div className="p-4 bg-slate-50 border-t border-slate-100 space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-600 font-bold uppercase">Total Encaissé :</span>
-                      <span className="text-lg font-black text-emerald-950 font-mono">{formatFCFA(getOrderTotal(order))}</span>
-                    </div>
-
-                    <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold">
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>Encaissée &amp; Validée</span>
-                      </span>
-                      <span className="font-mono text-[11px] text-emerald-700">
-                        {order.servedAt ? new Date(order.servedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Payé'}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => printOrderReceipt(order)}
-                        className="py-2.5 px-2 min-h-[44px] bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
-                      >
-                        <Printer className="w-4 h-4 text-amber-400" />
-                        <span>Ticket</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSendWhatsAppReceipt(order)}
-                        className="py-2.5 px-2 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98 touch-manipulation"
-                      >
-                        <MessageCircle className="w-4 h-4 text-white" />
-                        <span>WhatsApp</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -2731,7 +2862,9 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
             const isServed = order.status === 'SERVED';
 
             // Bordure gauche sémantique selon l'état
-            const borderLeftColor = (isReady || (isServed && isPaid))
+            const borderLeftColor = (!isPaid && (isReady || isServed))
+              ? 'border-l-emerald-500'
+              : (isServed && isPaid)
               ? 'border-l-emerald-500'
               : isPending
               ? 'border-l-amber-400'
@@ -2754,25 +2887,20 @@ export default function CashierPOS({ initialRestaurantId }: CashierPOSProps = {}
                       #{order.id.slice(-4).toUpperCase()}
                     </span>
                     {/* Badge 2 : Statut unique */}
-                    {isPaid ? (
+                    {!isPaid && (isReady || isServed) ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-950 border border-emerald-400 shadow-2xs animate-pulse">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        🟢 Prêt à encaisser
+                      </span>
+                    ) : isPaid ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3" />
                         Payée
-                      </span>
-                    ) : isReady ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Prête
                       </span>
                     ) : isPreparing ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                         En cuisine
-                      </span>
-                    ) : isServed ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        À encaisser
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">

@@ -158,6 +158,68 @@ export async function POST(
       }
     }
 
+    // 5.5. 🧹 RÈGLE D'OR MÉTIER (Sections 10.4 & 14.1) : Libération de la table après encaissement
+    // Une table ne doit JAMAIS être libérée par le KDS. Elle est libérée UNIQUEMENT en caisse après paiement (paymentStatus === 'PAID')
+    if (order.tableNumber && order.tableNumber > 0) {
+      try {
+        const dbTable = await (prisma as any).table.findFirst({
+          where: { tenantId: order.tenantId, tableNumber: order.tableNumber },
+          select: { id: true, clearedAt: true },
+        });
+
+        const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+        const sinceDate = dbTable?.clearedAt && new Date(dbTable.clearedAt) > twelveHoursAgo
+          ? new Date(dbTable.clearedAt)
+          : twelveHoursAgo;
+
+        // Vérifier s'il reste d'autres commandes actives non soldées sur cette table pour la session active
+        const remainingUnpaidOrders = await prisma.order.findMany({
+          where: {
+            tenantId: order.tenantId,
+            tableNumber: order.tableNumber,
+            id: { not: orderId },
+            status: { not: 'CANCELLED' },
+            createdAt: { gte: sinceDate },
+            AND: [
+              { paymentStatus: { not: 'PAID' } },
+              { paymentStatus: { not: 'STAFF_NP' } },
+              { paymentMethod: { not: 'STAFF_MEAL' } },
+            ],
+          },
+          select: { id: true },
+        });
+
+        // S'il n'y a plus aucune commande impayée sur la table, la remettre immédiatement en service (statut 'FREE')
+        if (remainingUnpaidOrders.length === 0) {
+          await (prisma as any).table.updateMany({
+            where: {
+              tenantId: order.tenantId,
+              tableNumber: order.tableNumber,
+            },
+            data: {
+              status: 'FREE',
+              clearedAt: new Date(),
+            },
+          });
+
+          // Clôturer la session de table active
+          if (dbTable) {
+            await (prisma as any).tableSession.updateMany({
+              where: {
+                tableId: dbTable.id,
+                isActive: true,
+              },
+              data: {
+                isActive: false,
+              },
+            });
+          }
+        }
+      } catch (tableErr) {
+        console.error('Erreur lors de la libération automatique de la table après encaissement:', tableErr);
+      }
+    }
+
     // 6. Invalidation temps réel des caches Redis (Dashboard KPIs & Commandes Live)
     try {
       const { invalidateDashboardStatsCache, invalidateLiveOrdersCache } = await import('@/lib/cache');

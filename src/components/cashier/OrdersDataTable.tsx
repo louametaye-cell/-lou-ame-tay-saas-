@@ -169,11 +169,11 @@ export const OrdersDataTable: React.FC<OrdersDataTableProps> = ({
       );
     }
 
-    if (order.status === 'READY') {
+    if (order.status === 'READY' || order.status === 'SERVED') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-blue-500" />
-          Prête
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-950 border border-emerald-400 shadow-2xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          🟢 Prêt à encaisser
         </span>
       );
     }

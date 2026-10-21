@@ -108,7 +108,7 @@ export async function GET(req: Request) {
         ...o,
         total: Number(o.totalAmount ?? o.total ?? 0),
         totalAmount: Number(o.totalAmount ?? o.total ?? 0),
-        orderType: o.orderType || (isExpress ? 'TAKEAWAY' : 'TABLE'),
+        orderType: (isExpress || o.orderType === 'TAKEAWAY' || o.orderType === 'EXPRESS') ? 'TAKEAWAY' : 'TABLE',
         orderOrigin: isRoom ? 'ROOM' : isExpress ? 'COUNTER' : 'TABLE',
         orderDestination: o.destinationService || 'KITCHEN',
         originLabel,
@@ -319,7 +319,7 @@ export async function POST(req: Request) {
               ...recentDuplicate,
               total: Number(recentDuplicate.totalAmount),
               totalAmount: Number(recentDuplicate.totalAmount),
-              orderType: isExpress ? 'EXPRESS' : 'TABLE',
+              orderType: isExpress ? 'TAKEAWAY' : 'TABLE',
             },
             isDuplicateProtected: true,
           },
@@ -494,7 +494,7 @@ export async function POST(req: Request) {
       ...newOrder,
       total: Number(newOrder.totalAmount ?? 0),
       totalAmount: Number(newOrder.totalAmount ?? 0),
-      orderType: (newOrder.tableNumber === 0 || !newOrder.tableNumber) ? 'EXPRESS' : 'TABLE',
+      orderType: (newOrder.tableNumber === 0 || !newOrder.tableNumber) ? 'TAKEAWAY' : 'TABLE',
     };
 
     logApiCall({

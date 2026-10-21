@@ -233,26 +233,27 @@ export async function POST(req: Request) {
         });
       }
 
-      // 3. Création de la commande directe comptoir
+      // 3. Création de la commande directe comptoir ou sur table
       // IMPORTANT : status TOUJOURS 'PENDING' pour que la brigade/barista puisse préparer et valider !
-      const isTakeaway = (!tableNumber || Number(tableNumber) === 0) || body.orderType === 'TAKEAWAY' || !isPaidLater;
+      const cleanTableNum = Number(tableNumber || 0);
+      const isTakeaway = (!cleanTableNum || cleanTableNum === 0) || body.orderType === 'TAKEAWAY' || body.spaceType === 'COUNTER';
       const destinationService = (!hasKitchenItems && hasBarItems) ? 'BAR' : 'KITCHEN';
 
       const newOrder = await tx.order.create({
         data: {
           tenantId: resolvedTenantId,
           orderType: isTakeaway ? 'TAKEAWAY' : 'TABLE',
-          tableNumber: isTakeaway ? 0 : Number(tableNumber || 0),
+          tableNumber: isTakeaway ? 0 : cleanTableNum,
           spaceType: isTakeaway ? 'COUNTER' : 'TABLE',
           destinationService,
           locationDetail: isStaffMeal 
             ? ('REPAS PERSONNEL - ' + employeeName.trim())
             : (isTakeaway 
               ? 'À EMPORTER - Comptoir 1'
-              : (tableNumber ? 'TABLE ' + tableNumber : 'SUR PLACE')),
+              : ('TABLE ' + cleanTableNum)),
           customerName: isStaffMeal
             ? ('Employé : ' + employeeName.trim())
-            : (customerName && String(customerName).trim() ? String(customerName).trim() : (isTakeaway ? 'Client anonyme' : `Table ${tableNumber || 0}`)),
+            : (customerName && String(customerName).trim() ? String(customerName).trim() : (isTakeaway ? 'Client anonyme' : `Table ${cleanTableNum}`)),
           employeeId: isStaffMeal ? (employeeId || undefined) : undefined,
           employeeName: isStaffMeal ? employeeName.trim() : undefined,
           status: 'PENDING',
@@ -271,6 +272,18 @@ export async function POST(req: Request) {
           tenant: { select: { businessName: true } }
         }
       });
+
+      // 🔒 CYCLE DE VIE DE TABLE : Si commande sur table, passer la table à 'OCCUPIED' et réinitialiser clearedAt
+      if (!isTakeaway && cleanTableNum > 0) {
+        try {
+          await tx.table.updateMany({
+            where: { tenantId: resolvedTenantId, tableNumber: cleanTableNum },
+            data: { status: 'OCCUPIED', clearedAt: null }
+          });
+        } catch (tableErr) {
+          console.warn('Erreur non-bloquante mise à jour statut table OCCUPIED:', tableErr);
+        }
+      }
 
       return newOrder;
     });
