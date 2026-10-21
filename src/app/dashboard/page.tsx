@@ -41,8 +41,10 @@ import {
   Settings,
   Tag,
   User,
-  ChevronDown
+  ChevronDown,
+  Menu
 } from 'lucide-react';
+import { MobileSidebarDrawer } from '@/components/dashboard/MobileSidebarDrawer';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -138,6 +140,7 @@ export default function OperationalDashboardPage() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   // Tools & Settings dropdown toggle
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // Track served drinks at bar locally
   const [servedDrinkKeys, setServedDrinkKeys] = useState<string[]>([]);
@@ -427,260 +430,329 @@ export default function OperationalDashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-amber-500 selection:text-white pb-20">
       {/* 1. EN-TÊTE OPÉRATIONNEL */}
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-8 py-3.5 sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-          {/* Logo + Nom du Restaurant */}
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="shrink-0 group">
-              <img 
-                src={restaurantLogo || "/logo.png"} 
-                alt={restaurantName || "Lou Ame Tay ?"} 
-                className="w-11 h-11 rounded-2xl object-cover border border-amber-300 shadow-xs group-hover:scale-105 transition-transform" 
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/logo.png';
-                }}
-              />
-            </Link>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                  Tableau de Bord — Espace Gérant Lou Ame Tay?
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-8 py-3 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto">
+          {/* A. HEADER MOBILE COMPACT (md:hidden) */}
+          <div className="flex md:hidden items-center justify-between gap-2.5">
+            {/* Logo + Nom tronqué */}
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <Link href="/dashboard" className="shrink-0">
+                <img 
+                  src={restaurantLogo || "/logo.png"} 
+                  alt={restaurantName || "Lou Ame Tay ?"} 
+                  className="w-9 h-9 rounded-xl object-cover border border-amber-300 shadow-2xs" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/logo.png';
+                  }}
+                />
+              </Link>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate leading-tight">
+                  {restaurantName || 'Espace Gérant'}
                 </h1>
-                <span className="text-xs text-amber-900 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300">
-                  {restaurantName}
-                </span>
-                <span className="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Caisse Ouverte
-                </span>
+                  <span className="text-[10px] text-emerald-800 font-bold leading-none">Caisse Ouverte</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions rapides droite : Refresh + Notif + Hamburger */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={fetchDashboardData}
+                className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-all active:scale-95"
+                title="Rafraîchir les données"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-orange-600 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-slate-700 transition-all relative"
+                  title="Notifications"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  {alerts.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center animate-bounce">
+                      {alerts.length}
+                    </span>
+                  )}
+                </button>
               </div>
 
-              <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  {currentDateString}
-                </span>
-                <span className="text-slate-300">•</span>
-                <span className="text-[11px] text-slate-400">
-                  Actualisé à {lastRefreshed.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </span>
-              </p>
+              <button
+                type="button"
+                onClick={() => setIsMobileDrawerOpen(true)}
+                className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs transition-transform active:scale-95 flex items-center justify-center"
+                aria-label="Ouvrir le menu latéral"
+              >
+                <Menu className="w-4 h-4 text-white" />
+              </button>
             </div>
           </div>
 
-          {/* Right Header Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={fetchDashboardData}
-              className="p-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl text-slate-700 transition-all active:scale-95 shadow-2xs"
-              title="Rafraîchir les données"
-            >
-              <RefreshCw className={`w-4 h-4 text-orange-600 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-
-            {/* Notifications Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="p-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl text-slate-700 transition-all relative shadow-2xs"
-                title="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {alerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow-xs">
-                    {alerts.length}
+          {/* B. HEADER DESKTOP COMPLET (hidden md:flex) */}
+          <div className="hidden md:flex items-center justify-between gap-4 flex-wrap">
+            {/* Logo + Nom du Restaurant */}
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="shrink-0 group">
+                <img 
+                  src={restaurantLogo || "/logo.png"} 
+                  alt={restaurantName || "Lou Ame Tay ?"} 
+                  className="w-11 h-11 rounded-2xl object-cover border border-amber-300 shadow-xs group-hover:scale-105 transition-transform" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/logo.png';
+                  }}
+                />
+              </Link>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Tableau de Bord — Espace Gérant Lou Ame Tay?
+                  </h1>
+                  <span className="text-xs text-amber-900 font-bold bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300">
+                    {restaurantName}
                   </span>
-                )}
-              </button>
-
-              {/* Notifications Popover */}
-              {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-3xl p-4 shadow-xl z-50 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <span className="text-xs font-bold text-slate-900">Notifications Caisse</span>
-                    <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                      {alerts.length} alertes
-                    </span>
-                  </div>
-                  <div className="space-y-2 max-h-56 overflow-y-auto">
-                    {alerts.map((a) => (
-                      <div key={a.id} className="p-2.5 bg-rose-50 rounded-xl border border-rose-200 text-xs">
-                        <span className="font-bold text-rose-800 flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                          Rupture de stock
-                        </span>
-                        <span className="text-slate-700 mt-0.5 block">{a.itemName} ({a.unit})</span>
-                      </div>
-                    ))}
-                    {alerts.length === 0 && (
-                      <p className="text-xs text-slate-400 text-center py-2">Aucune alerte pour le moment</p>
-                    )}
-                  </div>
+                  <span className="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Caisse Ouverte
+                  </span>
                 </div>
-              )}
+
+                <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    {currentDateString}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-[11px] text-slate-400">
+                    Actualisé à {lastRefreshed.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                </p>
+              </div>
             </div>
 
-            {/* DIRECT ACTION 1 : POSTE CAISSE */}
-            <LockedHeaderButton
-              featureKey="CASHIER_POS"
-              currentPlanSlug={currentPlanSlug}
-              restaurantName={restaurantName}
-              href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
-              label="Poste Caisse"
-              icon={<CreditCard className="w-4 h-4 text-emerald-400" />}
-              title="Ouvrir le Poste Caisse Enregistreuse de votre établissement"
-              externalLink
-              className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-sm active:scale-95"
-            />
-
-            {/* DIRECT ACTION 2 : CUISINE KDS */}
-            <LockedHeaderButton
-              featureKey="KITCHEN_KDS"
-              currentPlanSlug={currentPlanSlug}
-              restaurantName={restaurantName}
-              href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
-              label="Cuisine KDS"
-              icon={<ChefHat className="w-4 h-4 text-amber-600" />}
-              title="Ouvrir l'Écran Cuisine de votre établissement"
-              externalLink
-              className="hidden sm:flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-2xs active:scale-95"
-            />
-
-            {/* DIRECT ACTION 3 : VOIR MENU CLIENT */}
-            <Link
-              href={`/r/${restaurantSubdomain || restaurantId}`}
-              target="_blank"
-              className="hidden md:flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-2xs"
-              title="Consulter le Menu Client en ligne"
-            >
-              <ExternalLink className="w-4 h-4 text-emerald-600" />
-              <span>Menu Client</span>
-            </Link>
-
-            {/* GROUPED TOOLS & CONFIGURATION DROPDOWN */}
-            <div className="relative">
+            {/* Right Header Actions */}
+            <div className="flex items-center gap-2">
               <button
-                type="button"
-                onClick={() => setIsToolsOpen(!isToolsOpen)}
-                className={`flex items-center gap-1.5 text-xs font-bold px-3.5 py-2.5 rounded-2xl border transition-all shadow-2xs ${
-                  isToolsOpen
-                    ? 'bg-slate-200 text-slate-900 border-slate-400'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
-                }`}
-                title="Modules complémentaires et configuration"
+                onClick={fetchDashboardData}
+                className="p-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl text-slate-700 transition-all active:scale-95 shadow-2xs"
+                title="Rafraîchir les données"
               >
-                <SlidersHorizontal className="w-4 h-4 text-slate-600" />
-                <span className="hidden lg:inline">Modules & Réglages</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isToolsOpen ? 'rotate-180' : ''}`} />
+                <RefreshCw className={`w-4 h-4 text-orange-600 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
 
-              {isToolsOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-3xl p-3 shadow-xl z-50 divide-y divide-slate-100 animate-in fade-in-50 duration-150"
-                  onClick={() => setIsToolsOpen(false)}
+              {/* Notifications Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="p-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl text-slate-700 transition-all relative shadow-2xs"
+                  title="Notifications"
                 >
-                  {/* Modules Visuels & Écrans */}
-                  <div className="py-2 space-y-1">
-                    <span className="text-[10px] uppercase font-black text-slate-400 px-3 tracking-wider block">
-                      Écrans & Affichage
+                  <Bell className="w-4 h-4" />
+                  {alerts.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow-xs">
+                      {alerts.length}
                     </span>
-                    <Link
-                      href="/dashboard/branding"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-orange-50 hover:text-orange-950 transition-colors"
-                    >
-                      <Palette className="w-4 h-4 text-orange-600 shrink-0" />
-                      <span>Studio de Marque</span>
-                    </Link>
-                    <Link
-                      href="/dashboard/display"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-950 transition-colors"
-                    >
-                      <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Affichage Salle TV</span>
-                    </Link>
-                    <a
-                      href={`/pickup/${restaurantSubdomain || restaurantId || 'mg-cafe-resto'}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-950 transition-colors"
-                    >
-                      <Megaphone className="w-4 h-4 text-blue-600 shrink-0" />
-                      <span>Écran Retrait Client</span>
-                    </a>
-                  </div>
+                  )}
+                </button>
 
-                  {/* Gestion & Opérations */}
-                  <div className="py-2 space-y-1">
-                    <span className="text-[10px] uppercase font-black text-slate-400 px-3 tracking-wider block">
-                      Opérations & Équipe
-                    </span>
-                    <Link
-                      href="/dashboard/orders"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-orange-600 shrink-0" />
-                      <span>Historique & Archives Commandes</span>
-                    </Link>
-                    <Link
-                      href="/dashboard/team"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                      <Users className="w-4 h-4 text-indigo-600 shrink-0" />
-                      <span>Équipe & Personnel</span>
-                    </Link>
-                    <Link
-                      href="/dashboard/cash-closures"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                      <Receipt className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Clôtures & Caisses Z</span>
-                    </Link>
-                    <Link
-                      href="/dashboard/settings"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                      <Settings className="w-4 h-4 text-slate-600 shrink-0" />
-                      <span>Paramètres Établissement</span>
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsToolsOpen(false);
-                        setIsChangePasswordOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors text-left"
-                    >
-                      <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>Changer le Mot de Passe</span>
-                    </button>
-                    <Link
-                      href="/dashboard/help"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-                    >
-                      <HelpCircle className="w-4 h-4 text-sky-600 shrink-0" />
-                      <span>Support & Documentation</span>
-                    </Link>
+                {/* Notifications Popover */}
+                {isNotificationsOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-3xl p-4 shadow-xl z-50 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <span className="text-xs font-bold text-slate-900">Notifications Caisse</span>
+                      <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        {alerts.length} alertes
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                      {alerts.map((a) => (
+                        <div key={a.id} className="p-2.5 bg-rose-50 rounded-xl border border-rose-200 text-xs">
+                          <span className="font-bold text-rose-800 flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                            Rupture de stock
+                          </span>
+                          <span className="text-slate-700 mt-0.5 block">{a.itemName} ({a.unit})</span>
+                        </div>
+                      ))}
+                      {alerts.length === 0 && (
+                        <p className="text-xs text-slate-400 text-center py-2">Aucune alerte pour le moment</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* DIRECT ACTION 1 : POSTE CAISSE */}
+              <LockedHeaderButton
+                featureKey="CASHIER_POS"
+                currentPlanSlug={currentPlanSlug}
+                restaurantName={restaurantName}
+                href={`/cashier?restaurantId=${restaurantSubdomain || restaurantId || ''}`}
+                label="Poste Caisse"
+                icon={<CreditCard className="w-4 h-4 text-emerald-400" />}
+                title="Ouvrir le Poste Caisse Enregistreuse de votre établissement"
+                externalLink
+                className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-sm active:scale-95"
+              />
+
+              {/* DIRECT ACTION 2 : CUISINE KDS */}
+              <LockedHeaderButton
+                featureKey="KITCHEN_KDS"
+                currentPlanSlug={currentPlanSlug}
+                restaurantName={restaurantName}
+                href={`/r/${restaurantSubdomain || restaurantId || 'anima-pizzeria'}/kitchen`}
+                label="Cuisine KDS"
+                icon={<ChefHat className="w-4 h-4 text-amber-600" />}
+                title="Ouvrir l'Écran Cuisine de votre établissement"
+                externalLink
+                className="hidden sm:flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-2xs active:scale-95"
+              />
+
+              {/* DIRECT ACTION 3 : VOIR MENU CLIENT */}
+              <Link
+                href={`/r/${restaurantSubdomain || restaurantId}`}
+                target="_blank"
+                className="hidden md:flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold px-3.5 py-2.5 rounded-2xl transition-all shadow-2xs"
+                title="Consulter le Menu Client en ligne"
+              >
+                <ExternalLink className="w-4 h-4 text-emerald-600" />
+                <span>Menu Client</span>
+              </Link>
+
+              {/* GROUPED TOOLS & CONFIGURATION DROPDOWN */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsToolsOpen(!isToolsOpen)}
+                  className={`flex items-center gap-1.5 text-xs font-bold px-3.5 py-2.5 rounded-2xl border transition-all shadow-2xs ${
+                    isToolsOpen
+                      ? 'bg-slate-200 text-slate-900 border-slate-400'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                  }`}
+                  title="Modules complémentaires et configuration"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-slate-600" />
+                  <span className="hidden lg:inline">Modules & Réglages</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isToolsOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isToolsOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-3xl p-3 shadow-xl z-50 divide-y divide-slate-100 animate-in fade-in-50 duration-150"
+                    onClick={() => setIsToolsOpen(false)}
+                  >
+                    {/* Modules Visuels & Écrans */}
+                    <div className="py-2 space-y-1">
+                      <span className="text-[10px] uppercase font-black text-slate-400 px-3 tracking-wider block">
+                        Écrans & Affichage
+                      </span>
+                      <Link
+                        href="/dashboard/branding"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-orange-50 hover:text-orange-950 transition-colors"
+                      >
+                        <Palette className="w-4 h-4 text-orange-600 shrink-0" />
+                        <span>Studio de Marque</span>
+                      </Link>
+                      <Link
+                        href="/dashboard/display"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-950 transition-colors"
+                      >
+                        <Tv className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Affichage Salle TV</span>
+                      </Link>
+                    </div>
+
+                    {/* Modules Opérationnels */}
+                    <div className="py-2 space-y-1">
+                      <span className="text-[10px] uppercase font-black text-slate-400 px-3 tracking-wider block">
+                        Gestion & Équipes
+                      </span>
+                      <Link
+                        href="/dashboard/cashiers"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-950 transition-colors"
+                      >
+                        <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>Équipe Caissiers</span>
+                      </Link>
+                      <Link
+                        href="/dashboard/cash-closures"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-950 transition-colors"
+                      >
+                        <DollarSign className="w-4 h-4 text-purple-600 shrink-0" />
+                        <span>Clôtures & Caisses Z</span>
+                      </Link>
+                      <Link
+                        href="/dashboard/tables"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-950 transition-colors"
+                      >
+                        <QrCode className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span>Tables & QR Codes</span>
+                      </Link>
+                      <Link
+                        href="/dashboard/stats"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-950 transition-colors"
+                      >
+                        <BarChart3 className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <span>Statistiques & Analyse</span>
+                      </Link>
+                    </div>
+
+                    {/* Paramètres & Sécurité */}
+                    <div className="py-2 space-y-1">
+                      <span className="text-[10px] uppercase font-black text-slate-400 px-3 tracking-wider block">
+                        Paramètres
+                      </span>
+                      <Link
+                        href="/dashboard/settings"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Settings className="w-4 h-4 text-slate-600 shrink-0" />
+                        <span>Configuration du Restaurant</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsToolsOpen(false);
+                          setIsChangePasswordOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors text-left"
+                      >
+                        <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>Changer le Mot de Passe</span>
+                      </button>
+                      <Link
+                        href="/dashboard/help"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <HelpCircle className="w-4 h-4 text-sky-600 shrink-0" />
+                        <span>Support & Documentation</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Badge Formule Active */}
+              <span className="hidden xl:inline-flex items-center gap-1.5 bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold px-3 py-2 rounded-2xl shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Formule {currentPlanName}</span>
+              </span>
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-3 py-2.5 rounded-2xl transition-all"
+                title="Se déconnecter"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Déconnexion</span>
+              </button>
             </div>
-
-            {/* Badge Formule Active */}
-            <span className="hidden xl:inline-flex items-center gap-1.5 bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold px-3 py-2 rounded-2xl shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Formule {currentPlanName}</span>
-            </span>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-3 py-2.5 rounded-2xl transition-all"
-              title="Se déconnecter"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Déconnexion</span>
-            </button>
           </div>
         </div>
       </header>
@@ -729,7 +801,7 @@ export default function OperationalDashboardPage() {
 
         {/* KPIS */}
         <section>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {/* KPI 1 : CA du Jour */}
             <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs relative overflow-hidden group hover:border-amber-400 transition-colors">
               <div className="flex items-center justify-between mb-2">
@@ -892,7 +964,86 @@ export default function OperationalDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
+          {/* Vue Mobile Compacte (md:hidden) */}
+          <div className="block md:hidden space-y-3">
+            {orders.slice(0, 4).map((o) => {
+              const isLate = o.status === 'LATE';
+              const isReady = o.status === 'READY' || o.status === 'SERVED';
+
+              return (
+                <div
+                  key={o.id}
+                  onClick={() => setSelectedOrder(o)}
+                  className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-2.5 active:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {o.orderType === 'EXPRESS' || o.tableNumber === 0 ? (
+                        <span className="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-lg font-black text-xs border border-purple-200 inline-flex items-center gap-1">
+                          <Zap className="w-3 h-3 text-purple-600" />
+                          Comptoir
+                        </span>
+                      ) : (
+                        <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-lg font-black text-xs border border-amber-200">
+                          Table {o.tableNumber}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-slate-400 font-medium font-mono">{o.time}</span>
+                    </div>
+
+                    <div>
+                      {isLate && (
+                        <span className="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded-lg text-[10px] font-black">
+                          En retard
+                        </span>
+                      )}
+                      {!isLate && isReady && (
+                        <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-lg text-[10px] font-black">
+                          Prêt
+                        </span>
+                      )}
+                      {!isLate && !isReady && (
+                        <span className="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg text-[10px] font-black">
+                          En cuisine
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-700 font-semibold line-clamp-2">
+                    {o.items.join(', ')}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                    <div className="font-mono font-black text-base text-slate-900">
+                      {formatFCFA(o.total)}
+                    </div>
+                    <span className="text-xs text-orange-600 font-bold inline-flex items-center gap-0.5">
+                      Détails
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {orders.length === 0 && (
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-xs text-slate-400">
+                Aucune commande en attente pour le moment.
+              </div>
+            )}
+
+            <Link
+              href="/dashboard/orders"
+              className="w-full py-3 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-800 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-2xs"
+            >
+              <span>Voir toutes les commandes ({orders.length})</span>
+              <ChevronRight className="w-4 h-4 text-slate-500" />
+            </Link>
+          </div>
+
+          {/* Vue Desktop Complète (hidden md:block) */}
+          <div className="hidden md:block bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
@@ -1025,7 +1176,7 @@ export default function OperationalDashboardPage() {
         {/* SECTION 4 : MODULES OPÉRATIONNELS & GRAPHIQUES */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Graphique d'Affluence (2 colonnes) */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="hidden md:block lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-black text-slate-900">
@@ -1114,7 +1265,7 @@ export default function OperationalDashboardPage() {
         </section>
 
         {/* SECTION 5 : RACCOURCIS MODULES & PAYWALL PROGRESSIF */}
-        <section className="space-y-4">
+        <section className="hidden md:block space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
@@ -1409,6 +1560,19 @@ export default function OperationalDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* TIROIR DE NAVIGATION MOBILE (DRAWER) */}
+      <MobileSidebarDrawer
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        restaurantName={restaurantName}
+        restaurantSubdomain={restaurantSubdomain}
+        restaurantId={restaurantId}
+        restaurantLogo={restaurantLogo}
+        currentPlanName={currentPlanName}
+        onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+        onLogout={handleLogout}
+      />
 
       {/* Change Password Modal */}
       <ChangePasswordModal
